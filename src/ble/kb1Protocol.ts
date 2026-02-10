@@ -18,9 +18,9 @@ export interface CCMapping {
 }
 
 /**
- * Lever settings model
+ * Lever settings configuration
  */
-export interface LeverModel {
+export interface LeverSettings {
   ccNumber: number;
   minCCValue: number;
   maxCCValue: number;
@@ -34,9 +34,9 @@ export interface LeverModel {
 }
 
 /**
- * Lever Push settings model
+ * Lever Push settings configuration
  */
-export interface LeverPushModel {
+export interface LeverPushSettings {
   ccNumber: number;
   minCCValue: number;
   maxCCValue: number;
@@ -48,9 +48,9 @@ export interface LeverPushModel {
 }
 
 /**
- * Touch sensor settings model
+ * Touch Sensor settings configuration
  */
-export interface TouchModel {
+export interface TouchSettings {
   ccNumber: number;
   minCCValue: number;
   maxCCValue: number;
@@ -58,9 +58,9 @@ export interface TouchModel {
 }
 
 /**
- * Scale settings model
+ * Scale settings configuration
  */
-export interface ScaleModel {
+export interface ScaleSettings {
   scaleType: number;
   rootNote: number;
 }
@@ -69,12 +69,12 @@ export interface ScaleModel {
  * Device settings configuration
  */
 export interface DeviceSettings {
-  lever1: LeverModel;
-  leverPush1: LeverPushModel;
-  lever2: LeverModel;
-  leverPush2: LeverPushModel;
-  touch: TouchModel;
-  scale: ScaleModel;
+  lever1: LeverSettings;
+  leverPush1: LeverPushSettings;
+  lever2: LeverSettings;
+  leverPush2: LeverPushSettings;
+  touch: TouchSettings;
+  scale: ScaleSettings;
 }
 
 /**
@@ -143,15 +143,13 @@ export class KB1Protocol {
   /**
    * Encode device settings to send to the device
    */
-  encodeSetSettings(settings: DeviceSettings): ArrayBuffer {
-    // TODO: Implement actual KB1 protocol encoding for setting device settings
-    // This method should encode all settings (lever1, leverPush1, lever2, leverPush2, touch, scale)
-    // into the binary format expected by the KB1 device
-    console.log('TODO: Encode settings:', settings); // Placeholder to avoid unused param error
-    const buffer = new ArrayBuffer(128); // Placeholder size, adjust based on actual protocol
+  encodeSetSettings(_settings: DeviceSettings): ArrayBuffer {
+    // TODO: Implement actual KB1 protocol encoding when binary format is finalized
+    const buffer = new ArrayBuffer(128);
     const view = new DataView(buffer);
     view.setUint8(0, KB1MessageType.SET_SETTINGS);
-    // TODO: Encode all lever, lever push, touch, and scale settings
+    // TODO: Encode all lever, push, touch, and scale settings
+    // Placeholder to maintain compilation
     return buffer;
   }
 
@@ -211,14 +209,9 @@ export class KB1Protocol {
   /**
    * Decode device settings from device response
    */
-  private decodeSettings(data: DataView): DeviceSettings | null {
-    // TODO: Implement actual KB1 protocol decoding for device settings
-    // This method should decode the binary response from the KB1 into the DeviceSettings structure
-    if (data.byteLength < 3) {
-      return null;
-    }
-
-    // Return defaults as placeholder
+  private decodeSettings(_data: DataView): DeviceSettings | null {
+    // TODO: Implement actual KB1 protocol decoding when binary format is finalized
+    // For now, return default settings structure
     return this.createDefaultSettings();
   }
 
@@ -296,12 +289,60 @@ export class KB1Protocol {
    */
   createDefaultSettings(): DeviceSettings {
     return {
-      lever1: this.createDefaultLeverSettings(),
-      leverPush1: this.createDefaultLeverPushSettings(),
-      lever2: { ...this.createDefaultLeverSettings(), ccNumber: 4 },
-      leverPush2: { ...this.createDefaultLeverPushSettings(), ccNumber: 5 },
-      touch: this.createDefaultTouchSettings(),
-      scale: this.createDefaultScaleSettings(),
+      lever1: {
+        ccNumber: 1,
+        minCCValue: 0,
+        maxCCValue: 127,
+        stepSize: 1,
+        functionMode: 0,
+        valueMode: 0,
+        onsetTime: 0,
+        offsetTime: 0,
+        onsetType: 0,
+        offsetType: 0,
+      },
+      leverPush1: {
+        ccNumber: 2,
+        minCCValue: 0,
+        maxCCValue: 127,
+        functionMode: 0,
+        onsetTime: 0,
+        offsetTime: 0,
+        onsetType: 0,
+        offsetType: 0,
+      },
+      lever2: {
+        ccNumber: 3,
+        minCCValue: 0,
+        maxCCValue: 127,
+        stepSize: 1,
+        functionMode: 0,
+        valueMode: 0,
+        onsetTime: 0,
+        offsetTime: 0,
+        onsetType: 0,
+        offsetType: 0,
+      },
+      leverPush2: {
+        ccNumber: 4,
+        minCCValue: 0,
+        maxCCValue: 127,
+        functionMode: 0,
+        onsetTime: 0,
+        offsetTime: 0,
+        onsetType: 0,
+        offsetType: 0,
+      },
+      touch: {
+        ccNumber: 5,
+        minCCValue: 0,
+        maxCCValue: 127,
+        functionMode: 0,
+      },
+      scale: {
+        scaleType: 0,
+        rootNote: 0,
+      },
     };
   }
 
@@ -323,20 +364,56 @@ export class KB1Protocol {
    * Validate device settings
    */
   validateSettings(settings: DeviceSettings): boolean {
-    // Basic validation for all settings
+    // Helper to validate lever settings
+    const validateLever = (lever: LeverSettings): boolean => {
+      return (
+        lever.ccNumber >= -1 && lever.ccNumber <= 127 &&
+        lever.minCCValue >= 0 && lever.minCCValue <= 127 &&
+        lever.maxCCValue >= 0 && lever.maxCCValue <= 127 &&
+        lever.minCCValue <= lever.maxCCValue &&
+        lever.stepSize >= 1 &&
+        lever.onsetTime >= 0 &&
+        lever.offsetTime >= 0
+      );
+    };
+
+    // Helper to validate lever push settings
+    const validateLeverPush = (leverPush: LeverPushSettings): boolean => {
+      return (
+        leverPush.ccNumber >= -1 && leverPush.ccNumber <= 127 &&
+        leverPush.minCCValue >= 0 && leverPush.minCCValue <= 127 &&
+        leverPush.maxCCValue >= 0 && leverPush.maxCCValue <= 127 &&
+        leverPush.minCCValue <= leverPush.maxCCValue &&
+        leverPush.onsetTime >= 0 &&
+        leverPush.offsetTime >= 0
+      );
+    };
+
+    // Helper to validate touch settings
+    const validateTouch = (touch: TouchSettings): boolean => {
+      return (
+        touch.ccNumber >= -1 && touch.ccNumber <= 127 &&
+        touch.minCCValue >= 0 && touch.minCCValue <= 127 &&
+        touch.maxCCValue >= 0 && touch.maxCCValue <= 127 &&
+        touch.minCCValue <= touch.maxCCValue
+      );
+    };
+
+    // Helper to validate scale settings
+    const validateScale = (scale: ScaleSettings): boolean => {
+      return (
+        scale.scaleType >= 0 &&
+        scale.rootNote >= 0 && scale.rootNote <= 11
+      );
+    };
+
     return (
-      settings.lever1 !== undefined &&
-      settings.leverPush1 !== undefined &&
-      settings.lever2 !== undefined &&
-      settings.leverPush2 !== undefined &&
-      settings.touch !== undefined &&
-      settings.scale !== undefined &&
-      // Validate CC numbers are in valid range (-1 for "Off" or 0-127 for valid CC)
-      this.isValidCC(settings.lever1.ccNumber) &&
-      this.isValidCC(settings.lever2.ccNumber) &&
-      this.isValidCC(settings.leverPush1.ccNumber) &&
-      this.isValidCC(settings.leverPush2.ccNumber) &&
-      this.isValidCC(settings.touch.ccNumber)
+      settings.lever1 !== undefined && validateLever(settings.lever1) &&
+      settings.leverPush1 !== undefined && validateLeverPush(settings.leverPush1) &&
+      settings.lever2 !== undefined && validateLever(settings.lever2) &&
+      settings.leverPush2 !== undefined && validateLeverPush(settings.leverPush2) &&
+      settings.touch !== undefined && validateTouch(settings.touch) &&
+      settings.scale !== undefined && validateScale(settings.scale)
     );
   }
 

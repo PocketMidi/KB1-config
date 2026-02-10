@@ -49,55 +49,56 @@ const model = computed({
 
 <style scoped>
 .settings-scale {
-  display: flex;
-  flex-direction: column;
-  gap: var(--settings-panel-gap, 1rem);
+  padding: 1.5rem;
+  background: var(--color-background-soft);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
 }
 
 .title {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding-bottom: var(--kb1-spacing-md, 1rem);
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
   border-bottom: 1px solid var(--color-border);
 }
 
 .title h2 {
   margin: 0;
-  font-size: var(--title-font-size, 1.25rem);
-  font-weight: var(--title-font-weight, 600);
-  color: var(--title-color, var(--color-text));
+  font-size: 1.25rem;
+  font-weight: 600;
 }
 
 .inputs {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: var(--settings-panel-gap, 1rem);
+  gap: 1rem;
 }
 
 .group {
   display: flex;
   flex-direction: column;
-  gap: var(--kb1-spacing-sm, 0.5rem);
+  gap: 0.5rem;
 }
 
 .group label {
-  font-size: var(--label-font-size, 0.875rem);
-  font-weight: var(--label-font-weight, 500);
-  color: var(--label-color, var(--color-text));
+  font-weight: 500;
+  font-size: 0.875rem;
+  color: var(--color-text);
 }
 
 .group select {
-  padding: var(--input-padding, 0.75rem);
-  background: var(--input-bg, var(--color-background));
-  border: var(--input-border, 1px solid var(--color-border));
-  border-radius: var(--input-radius, 6px);
-  color: var(--input-color, var(--color-text));
+  padding: 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  background: var(--color-background);
+  color: var(--color-text);
   font-size: 1rem;
 }
 
 .group select:focus {
   outline: none;
-  border: var(--input-border-focus, 1px solid #3b82f6);
+  border-color: var(--color-border-hover);
 }
 </style>

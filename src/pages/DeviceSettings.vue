@@ -15,58 +15,58 @@
           title="Lever"
           :lever="1"
           v-model="localSettings.lever1"
-          :cc-options="ccOptions"
-          :function-modes="functionModes"
-          :value-modes="valueModes"
+          :ccOptions="ccOptions"
+          :functionModes="functionModes"
+          :valueModes="valueModes"
           :interpolations="interpolations"
-          @update:model-value="markChanged"
+          @update:modelValue="markChanged"
         />
-
+        
         <LeverPushSettings
           title="Lever Push"
           :lever="1"
           v-model="localSettings.leverPush1"
-          :cc-options="ccOptions"
-          :function-modes="functionModes"
+          :ccOptions="ccOptions"
+          :functionModes="functionModes"
           :interpolations="interpolations"
-          @update:model-value="markChanged"
+          @update:modelValue="markChanged"
         />
-
+        
         <LeverSettings
           title="Lever"
           :lever="2"
           v-model="localSettings.lever2"
-          :cc-options="ccOptions"
-          :function-modes="functionModes"
-          :value-modes="valueModes"
+          :ccOptions="ccOptions"
+          :functionModes="functionModes"
+          :valueModes="valueModes"
           :interpolations="interpolations"
-          @update:model-value="markChanged"
+          @update:modelValue="markChanged"
         />
-
+        
         <LeverPushSettings
           title="Lever Push"
           :lever="2"
           v-model="localSettings.leverPush2"
-          :cc-options="ccOptions"
-          :function-modes="functionModes"
+          :ccOptions="ccOptions"
+          :functionModes="functionModes"
           :interpolations="interpolations"
-          @update:model-value="markChanged"
+          @update:modelValue="markChanged"
         />
-
+        
         <TouchSettings
           title="Touch Sensor"
           v-model="localSettings.touch"
-          :cc-options="ccOptions"
-          :function-modes="functionModes"
-          @update:model-value="markChanged"
+          :ccOptions="ccOptions"
+          :functionModes="functionModes"
+          @update:modelValue="markChanged"
         />
-
+        
         <ScaleSettings
           title="Scales"
           v-model="localSettings.scale"
           :scales="scales"
-          :root-notes="rootNotes"
-          @update:model-value="markChanged"
+          :rootNotes="rootNotes"
+          @update:modelValue="markChanged"
         />
       </div>
       
@@ -131,30 +131,33 @@ const {
 const localSettings = ref<DeviceSettings>({ ...deviceSettings.value });
 const hasChanges = ref(false);
 
-// Options arrays for the components
+// CC Options (0-127 MIDI CC numbers)
 const ccOptions = [
-  { value: -1, label: 'Off' },
+  { value: -1, label: 'None' },
   ...Array.from({ length: 128 }, (_, i) => ({ value: i, label: `CC ${i}` }))
 ];
 
+// Function Modes
 const functionModes = [
   { value: 0, label: 'Continuous' },
   { value: 1, label: 'Toggle' },
   { value: 2, label: 'Momentary' },
 ];
 
+// Value Modes
 const valueModes = [
   { value: 0, label: 'Absolute' },
   { value: 1, label: 'Relative' },
 ];
 
+// Interpolation Types
 const interpolations = [
   { value: 0, label: 'Linear' },
   { value: 1, label: 'Exponential' },
   { value: 2, label: 'Logarithmic' },
-  { value: 3, label: 'S-Curve' },
 ];
 
+// Scales
 const scales = [
   { value: 0, label: 'Chromatic' },
   { value: 1, label: 'Major' },
@@ -165,11 +168,11 @@ const scales = [
   { value: 6, label: 'Mixolydian' },
   { value: 7, label: 'Aeolian' },
   { value: 8, label: 'Locrian' },
-  { value: 9, label: 'Blues' },
-  { value: 10, label: 'Pentatonic Major' },
-  { value: 11, label: 'Pentatonic Minor' },
+  { value: 9, label: 'Pentatonic Major' },
+  { value: 10, label: 'Pentatonic Minor' },
 ];
 
+// Root Notes
 const rootNotes = [
   { value: 0, label: 'C' },
   { value: 1, label: 'C#' },
@@ -237,7 +240,7 @@ async function handleSave() {
 <style scoped>
 .device-settings-page {
   padding: 2rem;
-  max-width: 1400px;
+  max-width: 1200px;
   margin: 0 auto;
 }
 
@@ -271,7 +274,7 @@ async function handleSave() {
 .settings-sections {
   display: flex;
   flex-direction: column;
-  gap: 2rem;
+  gap: 1.5rem;
 }
 
 .action-bar {

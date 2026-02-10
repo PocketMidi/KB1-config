@@ -2,9 +2,42 @@
   <div class="cc-mapping-card">
     <div class="card-header">
       <h3>Fader {{ mapping.faderIndex + 1 }}</h3>
+      <div v-if="currentEntry" class="parameter-info">
+        {{ currentEntry.parameter }}
+        <span v-if="currentEntry.range" class="range-text">
+          ({{ currentEntry.range.text }})
+        </span>
+      </div>
     </div>
     
     <div class="card-body">
+      <div class="form-group">
+        <label :for="`param-${mapping.faderIndex}`">Parameter</label>
+        <select
+          :id="`param-${mapping.faderIndex}`"
+          :value="mapping.ccNumber"
+          @change="updateParameter"
+          :disabled="disabled || !ccMapLoaded"
+        >
+          <option v-if="!ccMapLoaded" value="" disabled>
+            {{ ccMapError ? 'Failed to load parameters' : 'Loading parameters...' }}
+          </option>
+          <optgroup
+            v-for="group in ccGroups"
+            :key="group.category"
+            :label="group.category"
+          >
+            <option
+              v-for="entry in group.entries"
+              :key="entry.ccNumber"
+              :value="entry.ccNumber"
+            >
+              {{ entry.parameter }} (CC {{ entry.ccNumber }})
+            </option>
+          </optgroup>
+        </select>
+      </div>
+      
       <div class="form-group">
         <label :for="`cc-${mapping.faderIndex}`">CC Number</label>
         <input
@@ -13,8 +46,8 @@
           min="0"
           max="127"
           :value="mapping.ccNumber"
-          @input="updateField('ccNumber', $event)"
-          :disabled="disabled"
+          readonly
+          disabled
         />
       </div>
       
@@ -58,12 +91,46 @@
           />
         </div>
       </div>
+      
+      <div class="form-row">
+        <div class="form-group">
+          <label :for="`rel-min-${mapping.faderIndex}`">Relative Min</label>
+          <input
+            :id="`rel-min-${mapping.faderIndex}`"
+            type="text"
+            :value="relativeMin"
+            readonly
+            disabled
+          />
+        </div>
+        
+        <div class="form-group">
+          <label :for="`rel-max-${mapping.faderIndex}`">Relative Max</label>
+          <input
+            :id="`rel-max-${mapping.faderIndex}`"
+            type="text"
+            :value="relativeMax"
+            readonly
+            disabled
+          />
+        </div>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import { computed, onMounted } from 'vue';
 import type { CCMapping } from '../ble/kb1Protocol';
+import {
+  loadPolyendCCMap,
+  getCCEntry,
+  getCCGroups,
+  isCCMapLoaded,
+  getCCMapError,
+  midiToRelative,
+  type CCGroup,
+} from '../data/ccMap';
 
 interface Props {
   mapping: CCMapping;
@@ -77,6 +144,59 @@ const props = withDefaults(defineProps<Props>(), {
 const emit = defineEmits<{
   update: [mapping: CCMapping];
 }>();
+
+// Load CC map on mount
+onMounted(async () => {
+  try {
+    await loadPolyendCCMap();
+  } catch (error) {
+    console.error('Failed to load CC map:', error);
+  }
+});
+
+// Computed properties
+const ccMapLoaded = computed(() => isCCMapLoaded());
+const ccMapError = computed(() => getCCMapError());
+const ccGroups = computed<CCGroup[]>(() => getCCGroups());
+const currentEntry = computed(() => getCCEntry(props.mapping.ccNumber));
+
+const relativeMin = computed(() => {
+  const entry = currentEntry.value;
+  if (!entry?.range) {
+    return '—';
+  }
+  const value = midiToRelative(
+    props.mapping.minValue,
+    entry.range.min,
+    entry.range.max
+  );
+  return String(value);
+});
+
+const relativeMax = computed(() => {
+  const entry = currentEntry.value;
+  if (!entry?.range) {
+    return '—';
+  }
+  const value = midiToRelative(
+    props.mapping.maxValue,
+    entry.range.min,
+    entry.range.max
+  );
+  return String(value);
+});
+
+function updateParameter(event: Event) {
+  const target = event.target as HTMLSelectElement;
+  const ccNumber = parseInt(target.value, 10);
+  
+  if (isNaN(ccNumber)) return;
+  
+  emit('update', {
+    ...props.mapping,
+    ccNumber,
+  });
+}
 
 function updateField(field: keyof CCMapping, event: Event) {
   const target = event.target as HTMLInputElement;
@@ -111,6 +231,17 @@ function updateField(field: keyof CCMapping, event: Event) {
   font-weight: 600;
 }
 
+.parameter-info {
+  margin-top: 0.25rem;
+  font-size: 0.75rem;
+  color: var(--color-text-mute);
+}
+
+.range-text {
+  color: var(--color-text-mute);
+  font-style: italic;
+}
+
 .card-body {
   padding: 1rem;
   display: flex;
@@ -136,7 +267,9 @@ label {
   color: var(--color-text);
 }
 
-input[type="number"] {
+input[type="number"],
+input[type="text"],
+select {
   padding: 0.5rem;
   border: 1px solid var(--color-border);
   border-radius: 4px;
@@ -145,13 +278,25 @@ input[type="number"] {
   font-size: 0.875rem;
 }
 
-input[type="number"]:focus {
+input[type="number"]:focus,
+input[type="text"]:focus,
+select:focus {
   outline: none;
   border-color: var(--color-border-hover);
 }
 
-input[type="number"]:disabled {
+input[type="number"]:disabled,
+input[type="text"]:disabled,
+select:disabled {
   opacity: 0.5;
+  cursor: not-allowed;
+}
+
+select {
+  cursor: pointer;
+}
+
+select:disabled {
   cursor: not-allowed;
 }
 </style>

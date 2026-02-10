@@ -306,15 +306,56 @@ export class KB1Protocol {
    * Validate device settings
    */
   validateSettings(settings: DeviceSettings): boolean {
-    // TODO: Implement comprehensive validation for all settings sections
-    // For now, basic structure validation
+    // Helper to validate lever settings
+    const validateLever = (lever: LeverSettings): boolean => {
+      return (
+        lever.ccNumber >= -1 && lever.ccNumber <= 127 &&
+        lever.minCCValue >= 0 && lever.minCCValue <= 127 &&
+        lever.maxCCValue >= 0 && lever.maxCCValue <= 127 &&
+        lever.minCCValue <= lever.maxCCValue &&
+        lever.stepSize >= 1 &&
+        lever.onsetTime >= 0 &&
+        lever.offsetTime >= 0
+      );
+    };
+
+    // Helper to validate lever push settings
+    const validateLeverPush = (leverPush: LeverPushSettings): boolean => {
+      return (
+        leverPush.ccNumber >= -1 && leverPush.ccNumber <= 127 &&
+        leverPush.minCCValue >= 0 && leverPush.minCCValue <= 127 &&
+        leverPush.maxCCValue >= 0 && leverPush.maxCCValue <= 127 &&
+        leverPush.minCCValue <= leverPush.maxCCValue &&
+        leverPush.onsetTime >= 0 &&
+        leverPush.offsetTime >= 0
+      );
+    };
+
+    // Helper to validate touch settings
+    const validateTouch = (touch: TouchSettings): boolean => {
+      return (
+        touch.ccNumber >= -1 && touch.ccNumber <= 127 &&
+        touch.minCCValue >= 0 && touch.minCCValue <= 127 &&
+        touch.maxCCValue >= 0 && touch.maxCCValue <= 127 &&
+        touch.minCCValue <= touch.maxCCValue
+      );
+    };
+
+    // Helper to validate scale settings
+    const validateScale = (scale: ScaleSettings): boolean => {
+      return (
+        scale.scaleType >= 0 &&
+        scale.rootNote >= 0 && scale.rootNote <= 11
+      );
+    };
+
     return (
-      settings.lever1 !== undefined &&
-      settings.leverPush1 !== undefined &&
-      settings.lever2 !== undefined &&
-      settings.leverPush2 !== undefined &&
-      settings.touch !== undefined &&
-      settings.scale !== undefined
+      settings.lever1 !== undefined && validateLever(settings.lever1) &&
+      settings.leverPush1 !== undefined && validateLeverPush(settings.leverPush1) &&
+      settings.lever2 !== undefined && validateLever(settings.lever2) &&
+      settings.leverPush2 !== undefined && validateLeverPush(settings.leverPush2) &&
+      settings.touch !== undefined && validateTouch(settings.touch) &&
+      settings.scale !== undefined && validateScale(settings.scale)
     );
   }
 }

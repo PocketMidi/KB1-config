@@ -66,6 +66,14 @@ export interface ScaleSettings {
 }
 
 /**
+ * Type aliases for component models
+ */
+export type LeverModel = LeverSettings;
+export type LeverPushModel = LeverPushSettings;
+export type TouchModel = TouchSettings;
+export type ScaleModel = ScaleSettings;
+
+/**
  * Device settings configuration
  */
 export interface DeviceSettings {
@@ -417,12 +425,7 @@ export class KB1Protocol {
     );
   }
 
-  /**
-   * Check if CC number is valid (-1 for "Off" or 0-127)
-   */
-  private isValidCC(ccNumber: number): boolean {
-    return ccNumber === -1 || (ccNumber >= 0 && ccNumber <= 127);
-  }
+
 }
 
 // Export singleton instance

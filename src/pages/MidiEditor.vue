@@ -1,8 +1,8 @@
 <template>
   <div class="midi-editor-page">
     <div class="page-header">
-      <h2>MIDI Editor</h2>
-      <p>Configure CC mappings for each fader</p>
+      <h2>SLIDERS</h2>
+      <p>Perform and control live CC output</p>
     </div>
     
     <div v-if="!isConnected" class="not-connected-message">

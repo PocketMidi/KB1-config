@@ -1,7 +1,7 @@
 <template>
   <div class="device-settings-page">
     <div class="page-header">
-      <h2>Device Settings</h2>
+      <h2>SETTINGS</h2>
       <p>Configure KB1 lever, touch, and scale settings</p>
     </div>
     

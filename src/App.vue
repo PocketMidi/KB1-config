@@ -84,14 +84,14 @@ async function handleDisconnect() {
         :class="{ active: activeTab === 'midi-editor' }"
         @click="activeTab = 'midi-editor'"
       >
-        MIDI Editor
+        SLIDERS
       </button>
       <button 
         class="nav-tab"
         :class="{ active: activeTab === 'device-settings' }"
         @click="activeTab = 'device-settings'"
       >
-        Device Settings
+        SETTINGS
       </button>
     </nav>
     

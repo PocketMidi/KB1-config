@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>CC Mapping Test</title>
+  <style>
+    body { font-family: system-ui; padding: 20px; background: #1a1a1a; color: #fff; }
+    .cc-mapping-card { border: 1px solid #333; border-radius: 8px; padding: 20px; margin: 20px 0; background: #2a2a2a; max-width: 500px; }
+    .form-group { margin: 15px 0; }
+    label { display: block; margin-bottom: 5px; font-size: 0.9rem; color: #ccc; }
+    input, select { width: 100%; padding: 8px; background: #1a1a1a; border: 1px solid #444; color: #fff; border-radius: 4px; font-size: 0.9rem; }
+    input:disabled { opacity: 0.5; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+    .parameter-info { margin-top: 8px; font-size: 0.85rem; color: #888; }
+    .card-header h3 { margin: 0 0 10px 0; }
+  </style>
+</head>
+<body>
+  <h1>KB1 MIDI Editor - Parameter-Centric UI</h1>
+  
+  <div class="cc-mapping-card">
+    <div class="card-header">
+      <h3>Fader 1</h3>
+      <div class="parameter-info">Cutoff (0 to 100)</div>
+    </div>
+    
+    <div class="form-group">
+      <label>Parameter</label>
+      <select id="param-select">
+        <optgroup label="GLOBAL">
+          <option value="1" selected>Cutoff (CC 1)</option>
+          <option value="3">Finetune (CC 3)</option>
+          <option value="5">Tune (CC 5)</option>
+          <option value="7">Volume (CC 7)</option>
+        </optgroup>
+        <optgroup label="VOLUME">
+          <option value="20">Automation Type (CC 20)</option>
+          <option value="21">Attack - Shape LFO (CC 21)</option>
+        </optgroup>
+        <optgroup label="PANNING">
+          <option value="26">Automation Type (CC 26)</option>
+          <option value="31">Amount (CC 31)</option>
+        </optgroup>
+      </select>
+    </div>
+    
+    <div class="form-group">
+      <label>CC Number</label>
+      <input type="number" value="1" readonly disabled>
+    </div>
+    
+    <div class="form-group">
+      <label>MIDI Channel</label>
+      <input type="number" value="1" min="1" max="16">
+    </div>
+    
+    <div class="form-row">
+      <div class="form-group">
+        <label>Min Value</label>
+        <input type="number" value="0" min="0" max="127" id="min-val">
+      </div>
+      <div class="form-group">
+        <label>Max Value</label>
+        <input type="number" value="127" min="0" max="127" id="max-val">
+      </div>
+    </div>
+    
+    <div class="form-row">
+      <div class="form-group">
+        <label>Relative Min</label>
+        <input type="text" value="0" readonly disabled id="rel-min">
+      </div>
+      <div class="form-group">
+        <label>Relative Max</label>
+        <input type="text" value="100" readonly disabled id="rel-max">
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    const paramData = {
+      1: { name: 'Cutoff', range: [0, 100] },
+      3: { name: 'Finetune', range: [-100, 100] },
+      5: { name: 'Tune', range: [-24, 24] },
+      7: { name: 'Volume', range: [-24, 24] },
+      20: { name: 'Automation Type', range: null },
+      21: { name: 'Attack - Shape LFO', range: null },
+      26: { name: 'Automation Type', range: null },
+      31: { name: 'Amount', range: [-50, 50] }
+    };
+    
+    function midiToRelative(midiVal, min, max) {
+      const normalized = midiVal / 127;
+      return Math.round((min + normalized * (max - min)) * 100) / 100;
+    }
+    
+    function updateRelative() {
+      const select = document.getElementById('param-select');
+      const cc = parseInt(select.value);
+      const minVal = parseInt(document.getElementById('min-val').value);
+      const maxVal = parseInt(document.getElementById('max-val').value);
+      
+      const param = paramData[cc];
+      if (param && param.range) {
+        document.getElementById('rel-min').value = midiToRelative(minVal, param.range[0], param.range[1]);
+        document.getElementById('rel-max').value = midiToRelative(maxVal, param.range[0], param.range[1]);
+      } else {
+        document.getElementById('rel-min').value = '—';
+        document.getElementById('rel-max').value = '—';
+      }
+    }
+    
+    document.getElementById('param-select').addEventListener('change', updateRelative);
+    document.getElementById('min-val').addEventListener('input', updateRelative);
+    document.getElementById('max-val').addEventListener('input', updateRelative);
+  </script>
+</body>
+</html>

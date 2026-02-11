@@ -113,7 +113,6 @@ import {
   loadPolyendCCMap,
   getCCEntry,
   getCCGroups,
-  getSortedCCOptions,
   isCCMapLoaded,
   getCCMapError,
   midiToRelative,
@@ -145,14 +144,6 @@ onMounted(async () => {
 // Computed properties
 const ccMapLoaded = computed(() => isCCMapLoaded());
 const ccMapError = computed(() => getCCMapError());
-
-// Get all sorted options with Velocity first
-const ccOptions = computed(() => {
-  if (!ccMapLoaded.value) {
-    return [];
-  }
-  return getSortedCCOptions();
-});
 
 // Group options by category for display
 const ccGroups = computed<CCGroup[]>(() => {

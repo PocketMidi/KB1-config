@@ -141,7 +141,6 @@ import TouchSettings from '../components/TouchSettings.vue';
 import ScaleSettings from '../components/ScaleSettings.vue';
 import {
   loadPolyendCCMap,
-  getCCGroups,
   getCCMap,
   isCCMapLoaded,
   getSortedCCOptions,

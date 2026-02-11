@@ -188,11 +188,13 @@ const ccOptions = computed(() => {
 // Expose ccMapByNumber for child components
 const ccMapByNumber = computed(() => getCCMap());
 
-// Function Modes
+// Function Modes (includes all firmware modes)
 const functionModes = [
   { value: 0, label: 'Continuous' },
   { value: 1, label: 'Toggle' },
   { value: 2, label: 'Momentary' },
+  { value: 3, label: 'Interpolated' },
+  { value: 4, label: 'Reset' },
 ];
 
 // Value Modes
@@ -223,20 +225,20 @@ const scales = [
   { value: 10, label: 'Pentatonic Minor' },
 ];
 
-// Root Notes
+// Root Notes as MIDI numbers so protocol/defaults (60=C) match UI selection
 const rootNotes = [
-  { value: 0, label: 'C' },
-  { value: 1, label: 'C#' },
-  { value: 2, label: 'D' },
-  { value: 3, label: 'D#' },
-  { value: 4, label: 'E' },
-  { value: 5, label: 'F' },
-  { value: 6, label: 'F#' },
-  { value: 7, label: 'G' },
-  { value: 8, label: 'G#' },
-  { value: 9, label: 'A' },
-  { value: 10, label: 'A#' },
-  { value: 11, label: 'B' },
+  { value: 60, label: 'C' },
+  { value: 61, label: 'C#' },
+  { value: 62, label: 'D' },
+  { value: 63, label: 'D#' },
+  { value: 64, label: 'E' },
+  { value: 65, label: 'F' },
+  { value: 66, label: 'F#' },
+  { value: 67, label: 'G' },
+  { value: 68, label: 'G#' },
+  { value: 69, label: 'A' },
+  { value: 70, label: 'A#' },
+  { value: 71, label: 'B' },
 ];
 
 // Watch for device settings changes from the device

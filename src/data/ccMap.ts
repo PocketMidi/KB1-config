@@ -87,10 +87,22 @@ function normalizeParameterName(name: string): string {
 }
 
 /**
- * Normalize category name (remove embedded newlines)
+ * Normalize category name (remove embedded newlines and convert to Title Case)
+ * Converts CSV category names to consistent Title Case format:
+ * - "GLOBAL" -> "Global"
+ * - "VOLUME" -> "Volume"
+ * - "WAVETABLE\nPosition" -> "Wavetable Position"
  */
 function normalizeCategoryName(name: string): string {
-  return name.replace(/\s*\n\s*/g, ' ').trim();
+  // Remove embedded newlines and trim
+  const cleaned = name.replace(/\s*\n\s*/g, ' ').trim();
+  
+  // Convert to Title Case
+  return cleaned
+    .toLowerCase()
+    .split(' ')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
 }
 
 /**
@@ -224,12 +236,9 @@ export function getCCGroups(): CCGroup[] {
 
 /**
  * Category overrides for factory default CCs
- * These CCs should appear under "Global" category for UI purposes
- * Note: CC 24 (Release) is in the Volume category in the CSV but should appear in Global for factory defaults
+ * Currently empty - all CCs use their natural category from the CSV
  */
-const FACTORY_DEFAULT_CATEGORY_OVERRIDES: Record<number, string> = {
-  24: 'Global',  // Release (Volume category) - override to Global for factory defaults
-};
+const FACTORY_DEFAULT_CATEGORY_OVERRIDES: Record<number, string> = {};
 
 /**
  * Get sorted CC options with Velocity first

@@ -361,7 +361,7 @@ export class KB1Protocol {
     return (
       mapping.faderIndex >= 0 &&
       mapping.ccNumber >= 0 && mapping.ccNumber <= 127 &&
-      mapping.channel >= 1 && mapping.channel <= 16 &&
+      mapping.channel === 1 &&
       mapping.minValue >= 0 && mapping.minValue <= 127 &&
       mapping.maxValue >= 0 && mapping.maxValue <= 127 &&
       mapping.minValue <= mapping.maxValue

@@ -7,6 +7,7 @@
  */
 
 import Papa from 'papaparse';
+import { reactive } from 'vue';
 
 /**
  * Range definition for a Polyend parameter
@@ -45,13 +46,13 @@ interface CCMapState {
   error: string | null;
 }
 
-// Global state
-const state: CCMapState = {
+// Global state - made reactive for Vue components
+const state: CCMapState = reactive({
   ccMap: new Map(),
   groups: [],
   loaded: false,
   error: null,
-};
+});
 
 /**
  * Parse a range string like "0 to 100" or "-50 to +50"
@@ -189,7 +190,8 @@ export async function loadPolyendCCMap(): Promise<void> {
     
     console.log('Loading Polyend CC map from:', url);
     
-    const response = await fetch(url);
+    // Fetch with cache: 'no-store' to ensure fresh data
+    const response = await fetch(url, { cache: 'no-store' });
     
     if (!response.ok) {
       throw new Error(`Failed to fetch CSV: ${response.status} ${response.statusText}`);

@@ -16,6 +16,7 @@
           :lever="1"
           v-model="localSettings.lever1"
           :ccOptions="ccOptions"
+          :ccMapByNumber="ccMapByNumber"
           :functionModes="functionModes"
           :valueModes="valueModes"
           :interpolations="interpolations"
@@ -27,6 +28,7 @@
           :lever="1"
           v-model="localSettings.leverPush1"
           :ccOptions="ccOptions"
+          :ccMapByNumber="ccMapByNumber"
           :functionModes="functionModes"
           :interpolations="interpolations"
           @update:modelValue="markChanged"
@@ -37,6 +39,7 @@
           :lever="2"
           v-model="localSettings.lever2"
           :ccOptions="ccOptions"
+          :ccMapByNumber="ccMapByNumber"
           :functionModes="functionModes"
           :valueModes="valueModes"
           :interpolations="interpolations"
@@ -48,6 +51,7 @@
           :lever="2"
           v-model="localSettings.leverPush2"
           :ccOptions="ccOptions"
+          :ccMapByNumber="ccMapByNumber"
           :functionModes="functionModes"
           :interpolations="interpolations"
           @update:modelValue="markChanged"
@@ -57,6 +61,7 @@
           title="Touch Sensor"
           v-model="localSettings.touch"
           :ccOptions="ccOptions"
+          :ccMapByNumber="ccMapByNumber"
           :functionModes="functionModes"
           @update:modelValue="markChanged"
         />
@@ -111,13 +116,19 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { ref, watch, computed, onMounted } from 'vue';
 import { useDeviceState } from '../composables/useDeviceState';
 import type { DeviceSettings } from '../ble/kb1Protocol';
 import LeverSettings from '../components/LeverSettings.vue';
 import LeverPushSettings from '../components/LeverPushSettings.vue';
 import TouchSettings from '../components/TouchSettings.vue';
 import ScaleSettings from '../components/ScaleSettings.vue';
+import {
+  loadPolyendCCMap,
+  getCCGroups,
+  getCCMap,
+  isCCMapLoaded,
+} from '../data/ccMap';
 
 const {
   isConnected,
@@ -131,11 +142,46 @@ const {
 const localSettings = ref<DeviceSettings>({ ...deviceSettings.value });
 const hasChanges = ref(false);
 
-// CC Options (0-127 MIDI CC numbers)
-const ccOptions = [
-  { value: -1, label: 'None' },
-  ...Array.from({ length: 128 }, (_, i) => ({ value: i, label: `CC ${i}` }))
-];
+// Load CC map on mount
+onMounted(async () => {
+  try {
+    await loadPolyendCCMap();
+  } catch (error) {
+    console.error('Failed to load CC map:', error);
+    // Continue with fallback CC options
+  }
+});
+
+// CC Options - either from CSV or fallback to basic labels
+const ccOptions = computed(() => {
+  if (isCCMapLoaded()) {
+    const groups = getCCGroups();
+    const options: Array<{ value: number; label: string; group?: string }> = [
+      { value: -1, label: 'None' }
+    ];
+    
+    for (const group of groups) {
+      for (const entry of group.entries) {
+        options.push({
+          value: entry.ccNumber,
+          label: entry.parameter,
+          group: group.category,
+        });
+      }
+    }
+    
+    return options;
+  } else {
+    // Fallback: basic CC 0-127 labels
+    return [
+      { value: -1, label: 'None' },
+      ...Array.from({ length: 128 }, (_, i) => ({ value: i, label: `CC ${i}` }))
+    ];
+  }
+});
+
+// Expose ccMapByNumber for child components
+const ccMapByNumber = computed(() => getCCMap());
 
 // Function Modes
 const functionModes = [

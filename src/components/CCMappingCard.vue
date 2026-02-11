@@ -51,19 +51,6 @@
         />
       </div>
       
-      <div class="form-group">
-        <label :for="`channel-${mapping.faderIndex}`">MIDI Channel</label>
-        <input
-          :id="`channel-${mapping.faderIndex}`"
-          type="number"
-          min="1"
-          max="16"
-          :value="mapping.channel"
-          @input="updateField('channel', $event)"
-          :disabled="disabled"
-        />
-      </div>
-      
       <div class="form-row">
         <div class="form-group">
           <label :for="`min-${mapping.faderIndex}`">Min Value</label>

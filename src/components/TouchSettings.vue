@@ -2,9 +2,10 @@
   <div class="settings-touch">
     <div class="title">
       <h2>{{ title }}</h2>
-      <div v-if="isValidCC">
-        <span>MIDI CC</span>
-        <span>{{ model.ccNumber }}</span>
+      <div v-if="isValidCC" class="parameter-header">
+        <div class="parameter-name">{{ parameterDisplayName }}</div>
+        <div v-if="parameterRange" class="parameter-range">{{ parameterRange }}</div>
+        <div class="cc-reference">MIDI CC {{ model.ccNumber }}</div>
       </div>
     </div>
 
@@ -12,7 +13,10 @@
       <div class="group">
         <label for="touch-ccNumber">Parameter</label>
         <select id="touch-ccNumber" v-model.number="model.ccNumber">
-          <option v-for="opt in ccOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
+          <optgroup v-for="group in groupedOptions" :key="group.category" :label="group.category">
+            <option v-for="opt in group.options" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
+          </optgroup>
+          <option v-if="ungroupedOptions.length > 0" v-for="opt in ungroupedOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
         </select>
       </div>
 
@@ -32,12 +36,23 @@
         <label for="touch-minCCValue">CC Min</label>
         <input type="number" id="touch-minCCValue" v-model.number="model.minCCValue" min="0" max="127" />
       </div>
+
+      <div class="group">
+        <label for="touch-relativeMin">Relative Min</label>
+        <input type="text" id="touch-relativeMin" :value="relativeMin" readonly class="readonly-field" />
+      </div>
+
+      <div class="group">
+        <label for="touch-relativeMax">Relative Max</label>
+        <input type="text" id="touch-relativeMax" :value="relativeMax" readonly class="readonly-field" />
+      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import { midiToRelative, type CCEntry } from '../data/ccMap'
 
 type TouchModel = {
   ccNumber: number
@@ -49,7 +64,8 @@ type TouchModel = {
 const props = defineProps<{
   title?: string
   modelValue: TouchModel
-  ccOptions: { value: number, label: string }[]
+  ccOptions: Array<{ value: number; label: string; group?: string }>
+  ccMapByNumber: Map<number, CCEntry>
   functionModes: { value: number, label: string }[]
 }>()
 
@@ -63,6 +79,80 @@ const model = computed({
 })
 
 const isValidCC = computed(() => model.value.ccNumber >= 0 && model.value.ccNumber <= 127)
+
+// Group options by category
+const groupedOptions = computed(() => {
+  const groups = new Map<string, Array<{ value: number; label: string }>>()
+  
+  for (const opt of props.ccOptions) {
+    if (opt.group) {
+      if (!groups.has(opt.group)) {
+        groups.set(opt.group, [])
+      }
+      groups.get(opt.group)!.push({ value: opt.value, label: opt.label })
+    }
+  }
+  
+  return Array.from(groups.entries()).map(([category, options]) => ({
+    category,
+    options
+  }))
+})
+
+const ungroupedOptions = computed(() => {
+  return props.ccOptions.filter(opt => !opt.group)
+})
+
+// Get current parameter entry from ccMapByNumber
+const currentEntry = computed(() => {
+  return props.ccMapByNumber.get(model.value.ccNumber)
+})
+
+// Display parameter name or fallback to CC number
+const parameterDisplayName = computed(() => {
+  const entry = currentEntry.value
+  if (entry) {
+    return entry.parameter
+  }
+  return `CC ${model.value.ccNumber}`
+})
+
+// Display Polyend range if available
+const parameterRange = computed(() => {
+  const entry = currentEntry.value
+  if (entry?.range) {
+    return entry.range.text
+  }
+  return undefined
+})
+
+// Compute relative min value
+const relativeMin = computed(() => {
+  const entry = currentEntry.value
+  if (!entry?.range) {
+    return '—'
+  }
+  const value = midiToRelative(
+    model.value.minCCValue,
+    entry.range.min,
+    entry.range.max
+  )
+  return String(value)
+})
+
+// Compute relative max value
+const relativeMax = computed(() => {
+  const entry = currentEntry.value
+  if (!entry?.range) {
+    return '—'
+  }
+  const value = midiToRelative(
+    model.value.maxCCValue,
+    entry.range.min,
+    entry.range.max
+  )
+  return String(value)
+})
 </script>
 
 <style scoped>
@@ -88,17 +178,27 @@ const isValidCC = computed(() => model.value.ccNumber >= 0 && model.value.ccNumb
   font-weight: 600;
 }
 
-.title div {
+.parameter-header {
   display: flex;
-  align-items: center;
-  gap: 0.5rem;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.25rem;
   font-size: 0.875rem;
-  color: var(--color-text-muted);
 }
 
-.title div span:last-child {
+.parameter-name {
   font-weight: 600;
-  color: #3b82f6;
+  color: var(--color-text);
+}
+
+.parameter-range {
+  color: var(--color-text-muted);
+  font-style: italic;
+}
+
+.cc-reference {
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
 }
 
 .inputs {
@@ -133,5 +233,11 @@ const isValidCC = computed(() => model.value.ccNumber >= 0 && model.value.ccNumb
 .group select:focus {
   outline: none;
   border-color: var(--color-border-hover);
+}
+
+.readonly-field {
+  background: var(--color-background-mute) !important;
+  cursor: not-allowed;
+  color: var(--color-text-muted);
 }
 </style>

@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KB1 MIDI Editor - Parameter-Centric UI Demo</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      color: #e0e0e0;
+      padding: 40px 20px;
+      min-height: 100vh;
+    }
+    .container { max-width: 600px; margin: 0 auto; }
+    h1 {
+      text-align: center;
+      margin-bottom: 40px;
+      font-size: 2rem;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .demo-info {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 30px;
+    }
+    .demo-info h2 { font-size: 1.2rem; margin-bottom: 10px; color: #667eea; }
+    .demo-info ul { margin-left: 20px; line-height: 1.8; }
+    .demo-info li { margin: 5px 0; }
+    .cc-mapping-card {
+      background: linear-gradient(145deg, #2a2a3e 0%, #1f1f2e 100%);
+      border: 1px solid rgba(102, 126, 234, 0.3);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    }
+    .card-header {
+      padding: 20px;
+      background: linear-gradient(135deg, rgba(102, 126, 234, 0.2) 0%, rgba(118, 75, 162, 0.2) 100%);
+      border-bottom: 1px solid rgba(102, 126, 234, 0.3);
+    }
+    .card-header h3 {
+      font-size: 1.3rem;
+      margin-bottom: 8px;
+      color: #fff;
+    }
+    .parameter-info {
+      font-size: 0.9rem;
+      color: #a0a0c0;
+      font-style: italic;
+    }
+    .card-body { padding: 24px; }
+    .form-group {
+      margin-bottom: 20px;
+    }
+    .form-group:last-child { margin-bottom: 0; }
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #b0b0d0;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    input, select {
+      width: 100%;
+      padding: 12px;
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(102, 126, 234, 0.3);
+      border-radius: 6px;
+      color: #fff;
+      font-size: 0.95rem;
+      transition: all 0.3s ease;
+    }
+    input:focus, select:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+    input:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      background: rgba(0, 0, 0, 0.2);
+    }
+    select {
+      cursor: pointer;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23667eea' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      padding-right: 36px;
+      appearance: none;
+    }
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    optgroup {
+      font-weight: bold;
+      color: #667eea;
+    }
+    option {
+      background: #1a1a2e;
+      color: #e0e0e0;
+    }
+    .read-only-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      background: rgba(102, 126, 234, 0.2);
+      border-radius: 4px;
+      font-size: 0.7rem;
+      margin-left: 8px;
+      color: #667eea;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🎹 KB1 MIDI Editor</h1>
+    
+    <div class="demo-info">
+      <h2>✨ Parameter-Centric UI Features</h2>
+      <ul>
+        <li><strong>Parameter Selection:</strong> Choose from grouped Polyend parameters</li>
+        <li><strong>Read-Only CC Number:</strong> Automatically set based on parameter</li>
+        <li><strong>Relative Values:</strong> See mapped Polyend ranges in real-time</li>
+        <li><strong>Live Updates:</strong> Changes to Min/Max instantly update relative values</li>
+      </ul>
+    </div>
+    
+    <div class="cc-mapping-card">
+      <div class="card-header">
+        <h3>Fader 1</h3>
+        <div class="parameter-info" id="param-info">Cutoff (0 to 100)</div>
+      </div>
+      
+      <div class="card-body">
+        <div class="form-group">
+          <label>Parameter</label>
+          <select id="param-select">
+            <optgroup label="GLOBAL">
+              <option value="1" selected>Cutoff (CC 1)</option>
+              <option value="3">Finetune (CC 3)</option>
+              <option value="5">Tune (CC 5)</option>
+              <option value="7">Volume (CC 7)</option>
+              <option value="9">Filter Type (CC 9)</option>
+              <option value="11">Resonance (CC 11)</option>
+              <option value="12">Overdrive (CC 12)</option>
+              <option value="13">Bit Depth (CC 13)</option>
+              <option value="14">Reverb Send (CC 14)</option>
+              <option value="15">Delay Send (CC 15)</option>
+            </optgroup>
+            <optgroup label="VOLUME">
+              <option value="20">Automation Type (CC 20)</option>
+              <option value="21">Attack - Shape LFO (CC 21)</option>
+              <option value="23">Sustain (CC 23)</option>
+              <option value="25">Amount (CC 25)</option>
+            </optgroup>
+            <optgroup label="PANNING">
+              <option value="26">Automation Type (CC 26)</option>
+              <option value="29">Sustain (CC 29)</option>
+              <option value="31">Amount (CC 31)</option>
+            </optgroup>
+            <optgroup label="CUTOFF">
+              <option value="83">Automation Type (CC 83)</option>
+              <option value="88">Amount (CC 88)</option>
+            </optgroup>
+            <optgroup label="WAVETABLE Position">
+              <option value="102">Automation Type (CC 102)</option>
+              <option value="107">Amount (CC 107)</option>
+            </optgroup>
+            <optgroup label="GRANULAR Position">
+              <option value="108">Automation Type (CC 108)</option>
+              <option value="113">Amount (CC 113)</option>
+            </optgroup>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label>
+            CC Number
+            <span class="read-only-badge">READ-ONLY</span>
+          </label>
+          <input type="number" id="cc-number" value="1" readonly disabled>
+        </div>
+        
+        <div class="form-group">
+          <label>MIDI Channel</label>
+          <input type="number" value="1" min="1" max="16">
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label>Min Value (0-127)</label>
+            <input type="number" value="0" min="0" max="127" id="min-val">
+          </div>
+          <div class="form-group">
+            <label>Max Value (0-127)</label>
+            <input type="number" value="127" min="0" max="127" id="max-val">
+          </div>
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label>
+              Relative Min
+              <span class="read-only-badge">MAPPED</span>
+            </label>
+            <input type="text" value="0" readonly disabled id="rel-min">
+          </div>
+          <div class="form-group">
+            <label>
+              Relative Max
+              <span class="read-only-badge">MAPPED</span>
+            </label>
+            <input type="text" value="100" readonly disabled id="rel-max">
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    const paramData = {
+      1: { name: 'Cutoff', range: [0, 100], rangeText: '0 to 100' },
+      3: { name: 'Finetune', range: [-100, 100], rangeText: '-100 to +100' },
+      5: { name: 'Tune', range: [-24, 24], rangeText: '-24 to +24' },
+      7: { name: 'Volume', range: [-24, 24], rangeText: '-24 to +24' },
+      9: { name: 'Filter Type', range: [1, 4], rangeText: '1 to 4' },
+      11: { name: 'Resonance', range: [0, 100], rangeText: '0 to 100' },
+      12: { name: 'Overdrive', range: [0, 100], rangeText: '0 to 100' },
+      13: { name: 'Bit Depth', range: [4, 16], rangeText: '4 to 16' },
+      14: { name: 'Reverb Send', range: [-40, 0], rangeText: '-40 to 0' },
+      15: { name: 'Delay Send', range: [-40, 0], rangeText: '-40 to 0' },
+      20: { name: 'Automation Type', range: null },
+      21: { name: 'Attack - Shape LFO', range: null },
+      23: { name: 'Sustain', range: null },
+      25: { name: 'Amount', range: null },
+      26: { name: 'Automation Type', range: null },
+      29: { name: 'Sustain', range: null },
+      31: { name: 'Amount', range: [-50, 50], rangeText: '-50 to +50' },
+      83: { name: 'Automation Type', range: null },
+      88: { name: 'Amount', range: null },
+      102: { name: 'Automation Type', range: null },
+      107: { name: 'Amount', range: null },
+      108: { name: 'Automation Type', range: null },
+      113: { name: 'Amount', range: null }
+    };
+    
+    function midiToRelative(midiVal, min, max) {
+      const normalized = midiVal / 127;
+      return Math.round((min + normalized * (max - min)) * 100) / 100;
+    }
+    
+    function updateUI() {
+      const select = document.getElementById('param-select');
+      const cc = parseInt(select.value);
+      const minVal = parseInt(document.getElementById('min-val').value);
+      const maxVal = parseInt(document.getElementById('max-val').value);
+      
+      // Update CC number
+      document.getElementById('cc-number').value = cc;
+      
+      const param = paramData[cc];
+      if (param) {
+        // Update parameter info
+        const infoText = param.range 
+          ? `${param.name} (${param.rangeText})`
+          : param.name;
+        document.getElementById('param-info').textContent = infoText;
+        
+        // Update relative values
+        if (param.range) {
+          const relMin = midiToRelative(minVal, param.range[0], param.range[1]);
+          const relMax = midiToRelative(maxVal, param.range[0], param.range[1]);
+          document.getElementById('rel-min').value = relMin;
+          document.getElementById('rel-max').value = relMax;
+        } else {
+          document.getElementById('rel-min').value = '—';
+          document.getElementById('rel-max').value = '—';
+        }
+      }
+    }
+    
+    document.getElementById('param-select').addEventListener('change', updateUI);
+    document.getElementById('min-val').addEventListener('input', updateUI);
+    document.getElementById('max-val').addEventListener('input', updateUI);
+    
+    // Initialize
+    updateUI();
+  </script>
+</body>
+</html>

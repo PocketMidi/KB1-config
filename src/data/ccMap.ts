@@ -129,7 +129,8 @@ async function parsePolyendCSV(csvText: string): Promise<void> {
             if (ccNumberStr && parameter) {
               const ccNumber = parseInt(ccNumberStr, 10);
               
-              if (!isNaN(ccNumber) && ccNumber >= 0 && ccNumber <= 127) {
+              // Support CC 0-128 (128 is used for Velocity)
+              if (!isNaN(ccNumber) && ccNumber >= 0 && ccNumber <= 128) {
                 const normalizedParam = normalizeParameterName(parameter);
                 const range = parseRange(rangeText);
                 
@@ -215,10 +216,47 @@ export function getCCEntry(ccNumber: number): CCEntry | undefined {
 }
 
 /**
- * Get all CC groups
+ * Get all CC groups with Velocity pinned to the top
  */
 export function getCCGroups(): CCGroup[] {
   return state.groups;
+}
+
+/**
+ * Get sorted CC options with Velocity first
+ * This ensures Velocity (CC 128) always appears at the top of parameter dropdowns
+ */
+export function getSortedCCOptions(): Array<{ value: number; label: string; group?: string }> {
+  const options: Array<{ value: number; label: string; group?: string }> = [];
+  
+  // Add "None" option first
+  options.push({ value: -1, label: 'None' });
+  
+  // Add Velocity (CC 128) first if it exists
+  const velocityEntry = state.ccMap.get(128);
+  if (velocityEntry) {
+    options.push({
+      value: 128,
+      label: velocityEntry.parameter,
+      group: velocityEntry.category,
+    });
+  }
+  
+  // Add all other entries in order
+  for (const group of state.groups) {
+    for (const entry of group.entries) {
+      // Skip Velocity as we already added it
+      if (entry.ccNumber !== 128) {
+        options.push({
+          value: entry.ccNumber,
+          label: entry.parameter,
+          group: group.category,
+        });
+      }
+    }
+  }
+  
+  return options;
 }
 
 /**

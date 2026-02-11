@@ -144,6 +144,7 @@ import {
   getCCGroups,
   getCCMap,
   isCCMapLoaded,
+  getSortedCCOptions,
 } from '../data/ccMap';
 
 const {
@@ -173,26 +174,13 @@ onMounted(async () => {
 // CC Options - either from CSV or fallback to basic labels
 const ccOptions = computed(() => {
   if (isCCMapLoaded()) {
-    const groups = getCCGroups();
-    const options: Array<{ value: number; label: string; group?: string }> = [
-      { value: -1, label: 'None' }
-    ];
-    
-    for (const group of groups) {
-      for (const entry of group.entries) {
-        options.push({
-          value: entry.ccNumber,
-          label: entry.parameter,
-          group: group.category,
-        });
-      }
-    }
-    
-    return options;
+    // Use the sorted options which puts Velocity first
+    return getSortedCCOptions();
   } else {
-    // Fallback: basic CC 0-127 labels
+    // Fallback: basic CC 0-127 labels plus CC 128 for Velocity
     return [
       { value: -1, label: 'None' },
+      { value: 128, label: 'Velocity (CC 128)' },
       ...Array.from({ length: 128 }, (_, i) => ({ value: i, label: `CC ${i}` }))
     ];
   }

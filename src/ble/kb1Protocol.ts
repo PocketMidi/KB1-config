@@ -361,7 +361,7 @@ export class KB1Protocol {
   validateCCMapping(mapping: CCMapping): boolean {
     return (
       mapping.faderIndex >= 0 &&
-      mapping.ccNumber >= 0 && mapping.ccNumber <= 127 &&
+      mapping.ccNumber >= 0 && mapping.ccNumber <= 128 && // Support CC 128 for Velocity
       mapping.channel === 1 &&
       mapping.minValue >= 0 && mapping.minValue <= 127 &&
       mapping.maxValue >= 0 && mapping.maxValue <= 127 &&
@@ -376,7 +376,7 @@ export class KB1Protocol {
     // Helper to validate lever settings
     const validateLever = (lever: LeverSettings): boolean => {
       return (
-        lever.ccNumber >= -1 && lever.ccNumber <= 127 &&
+        lever.ccNumber >= -1 && lever.ccNumber <= 128 && // Support CC 128 for Velocity
         lever.minCCValue >= 0 && lever.minCCValue <= 127 &&
         lever.maxCCValue >= 0 && lever.maxCCValue <= 127 &&
         lever.minCCValue <= lever.maxCCValue &&
@@ -389,7 +389,7 @@ export class KB1Protocol {
     // Helper to validate lever push settings
     const validateLeverPush = (leverPush: LeverPushSettings): boolean => {
       return (
-        leverPush.ccNumber >= -1 && leverPush.ccNumber <= 127 &&
+        leverPush.ccNumber >= -1 && leverPush.ccNumber <= 128 && // Support CC 128 for Velocity
         leverPush.minCCValue >= 0 && leverPush.minCCValue <= 127 &&
         leverPush.maxCCValue >= 0 && leverPush.maxCCValue <= 127 &&
         leverPush.minCCValue <= leverPush.maxCCValue &&
@@ -401,7 +401,7 @@ export class KB1Protocol {
     // Helper to validate touch settings
     const validateTouch = (touch: TouchSettings): boolean => {
       return (
-        touch.ccNumber >= -1 && touch.ccNumber <= 127 &&
+        touch.ccNumber >= -1 && touch.ccNumber <= 128 && // Support CC 128 for Velocity
         touch.minCCValue >= 0 && touch.minCCValue <= 127 &&
         touch.maxCCValue >= 0 && touch.maxCCValue <= 127 &&
         touch.minCCValue <= touch.maxCCValue

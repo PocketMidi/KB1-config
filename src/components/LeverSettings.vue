@@ -129,7 +129,7 @@ const model = computed({
   set: v => emit('update:modelValue', v)
 })
 
-const isValidCC = computed(() => model.value.ccNumber >= 0 && model.value.ccNumber <= 127)
+const isValidCC = computed(() => model.value.ccNumber >= 0 && model.value.ccNumber <= 128)
 
 // Group options by category
 const groupedOptions = computed(() => {

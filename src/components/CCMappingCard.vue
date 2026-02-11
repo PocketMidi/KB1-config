@@ -113,6 +113,7 @@ import {
   loadPolyendCCMap,
   getCCEntry,
   getCCGroups,
+  getSortedCCOptions,
   isCCMapLoaded,
   getCCMapError,
   midiToRelative,
@@ -144,7 +145,42 @@ onMounted(async () => {
 // Computed properties
 const ccMapLoaded = computed(() => isCCMapLoaded());
 const ccMapError = computed(() => getCCMapError());
-const ccGroups = computed<CCGroup[]>(() => getCCGroups());
+
+// Get all sorted options with Velocity first
+const ccOptions = computed(() => {
+  if (!ccMapLoaded.value) {
+    return [];
+  }
+  return getSortedCCOptions();
+});
+
+// Group options by category for display
+const ccGroups = computed<CCGroup[]>(() => {
+  if (!ccMapLoaded.value) {
+    return [];
+  }
+  
+  // Get groups but reorder to ensure GLOBAL with Velocity is first
+  const groups = getCCGroups();
+  const globalGroup = groups.find(g => g.category === 'GLOBAL');
+  const otherGroups = groups.filter(g => g.category !== 'GLOBAL');
+  
+  if (globalGroup) {
+    // Ensure Velocity is first in GLOBAL
+    const velocityEntry = globalGroup.entries.find(e => e.ccNumber === 128);
+    const otherEntries = globalGroup.entries.filter(e => e.ccNumber !== 128);
+    
+    const reorderedGlobal = {
+      ...globalGroup,
+      entries: velocityEntry ? [velocityEntry, ...otherEntries] : otherEntries,
+    };
+    
+    return [reorderedGlobal, ...otherGroups];
+  }
+  
+  return groups;
+});
+
 const currentEntry = computed(() => getCCEntry(props.mapping.ccNumber));
 
 const relativeMin = computed(() => {

@@ -1,5 +1,6 @@
 CC Number,Parameter,Polyend Range
 GLOBAL,,
+128,Velocity,0 to 100
 1,Cutoff,0 to 100
 3,Finetune,-100 to +100
 5,Tune,-24 to +24
@@ -31,18 +32,16 @@ CUTOFF,,
 86,Sustain ,
 87,Release,
 88,Amount ,
-"WAVETABLE
-Position",,
+WAVETABLE Position,,
 102,Automation Type ,
-103, Attack - Shape LFO ,
+103,Attack - Shape LFO ,
 104,Decay - Speed LFO ,
 105,Sustain ,
 106,Release ,
 107,Amount,
-"GRANULAR
-Position",,
+GRANULAR Position,,
 108,Automation Type ,
-109, Attack - Shape LFO ,
+109,Attack - Shape LFO ,
 110,Decay - Speed LFO ,
 111,Sustain ,
 112,Release ,

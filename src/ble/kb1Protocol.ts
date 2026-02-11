@@ -55,6 +55,8 @@ export interface TouchSettings {
   minCCValue: number;
   maxCCValue: number;
   functionMode: number;
+  /** Touch threshold value (0-65535). Default: 24000. Lower = more sensitive */
+  threshold?: number;
 }
 
 /**
@@ -104,6 +106,51 @@ export enum KB1MessageType {
   SET_SETTINGS = 0x04,
   SAVE_TO_FLASH = 0x05,
   // Add more as protocol is defined
+}
+
+/**
+ * Function mode constants (from firmware)
+ */
+export enum FunctionMode {
+  CONTINUOUS = 0,
+  TOGGLE = 1,
+  MOMENTARY = 2,
+  INTERPOLATED = 3,
+  RESET = 4,
+}
+
+/**
+ * Value mode constants (from firmware)
+ */
+export enum ValueMode {
+  ABSOLUTE = 0,
+  BIPOLAR = 1,
+}
+
+/**
+ * Interpolation type constants (from firmware)
+ */
+export enum InterpolationType {
+  LINEAR = 0,
+  EXPONENTIAL = 1,
+  LOGARITHMIC = 2,
+}
+
+/**
+ * Scale type constants (from firmware)
+ */
+export enum ScaleType {
+  CHROMATIC = 0,
+  MAJOR = 1,
+  MINOR = 2,
+  DORIAN = 3,
+  PHRYGIAN = 4,
+  LYDIAN = 5,
+  MIXOLYDIAN = 6,
+  AEOLIAN = 7,
+  LOCRIAN = 8,
+  PENTATONIC_MAJOR = 9,
+  PENTATONIC_MINOR = 10,
 }
 
 export class KB1Protocol {
@@ -230,128 +277,82 @@ export class KB1Protocol {
     return {
       faderIndex,
       ccNumber: faderIndex, // Default: fader index = CC number
-      channel: 1,
+      channel: 1, // Always channel 1
       minValue: 0,
       maxValue: 127,
     };
   }
 
   /**
-   * Create default lever settings
+   * Create default device settings aligned with firmware defaults
+   * Based on firmware/src/main.cpp
    */
-  createDefaultLeverSettings(): LeverModel {
+  createDefaultDeviceSettings(): DeviceSettings {
     return {
-      ccNumber: 1,
-      minCCValue: 0,
-      maxCCValue: 127,
-      stepSize: 1,
-      functionMode: 0,
-      valueMode: 0,
-      onsetTime: 0,
-      offsetTime: 0,
-      onsetType: 0,
-      offsetType: 0,
-    };
-  }
-
-  /**
-   * Create default lever push settings
-   */
-  createDefaultLeverPushSettings(): LeverPushModel {
-    return {
-      ccNumber: 2,
-      minCCValue: 0,
-      maxCCValue: 127,
-      functionMode: 0,
-      onsetTime: 0,
-      offsetTime: 0,
-      onsetType: 0,
-      offsetType: 0,
-    };
-  }
-
-  /**
-   * Create default touch sensor settings
-   */
-  createDefaultTouchSettings(): TouchModel {
-    return {
-      ccNumber: 3,
-      minCCValue: 0,
-      maxCCValue: 127,
-      functionMode: 0,
-    };
-  }
-
-  /**
-   * Create default scale settings
-   */
-  createDefaultScaleSettings(): ScaleModel {
-    return {
-      scaleType: 0, // Chromatic
-      rootNote: 0, // C
+      lever1: {
+        ccNumber: 3,
+        minCCValue: 0,
+        maxCCValue: 127,
+        stepSize: 1,
+        functionMode: FunctionMode.INTERPOLATED,
+        valueMode: ValueMode.BIPOLAR,
+        onsetTime: 100,
+        offsetTime: 100,
+        onsetType: InterpolationType.LINEAR,
+        offsetType: InterpolationType.LINEAR,
+      },
+      leverPush1: {
+        ccNumber: 24,
+        minCCValue: 31,
+        maxCCValue: 127,
+        functionMode: FunctionMode.INTERPOLATED,
+        onsetTime: 100,
+        offsetTime: 100,
+        onsetType: InterpolationType.LINEAR,
+        offsetType: InterpolationType.LINEAR,
+      },
+      lever2: {
+        ccNumber: 4,
+        minCCValue: 0,
+        maxCCValue: 127,
+        stepSize: 1,
+        functionMode: FunctionMode.INTERPOLATED,
+        valueMode: ValueMode.BIPOLAR,
+        onsetTime: 100,
+        offsetTime: 100,
+        onsetType: InterpolationType.LINEAR,
+        offsetType: InterpolationType.LINEAR,
+      },
+      leverPush2: {
+        ccNumber: 128,
+        minCCValue: 87,
+        maxCCValue: 87,
+        functionMode: FunctionMode.RESET,
+        onsetTime: 100,
+        offsetTime: 100,
+        onsetType: InterpolationType.LINEAR,
+        offsetType: InterpolationType.LINEAR,
+      },
+      touch: {
+        ccNumber: 1,
+        minCCValue: 64,
+        maxCCValue: 127,
+        functionMode: FunctionMode.CONTINUOUS,
+        threshold: 24000,
+      },
+      scale: {
+        scaleType: ScaleType.CHROMATIC,
+        rootNote: 60,
+      },
     };
   }
 
   /**
    * Create default device settings
+   * @deprecated Use createDefaultDeviceSettings() instead
    */
   createDefaultSettings(): DeviceSettings {
-    return {
-      lever1: {
-        ccNumber: 1,
-        minCCValue: 0,
-        maxCCValue: 127,
-        stepSize: 1,
-        functionMode: 0,
-        valueMode: 0,
-        onsetTime: 0,
-        offsetTime: 0,
-        onsetType: 0,
-        offsetType: 0,
-      },
-      leverPush1: {
-        ccNumber: 2,
-        minCCValue: 0,
-        maxCCValue: 127,
-        functionMode: 0,
-        onsetTime: 0,
-        offsetTime: 0,
-        onsetType: 0,
-        offsetType: 0,
-      },
-      lever2: {
-        ccNumber: 3,
-        minCCValue: 0,
-        maxCCValue: 127,
-        stepSize: 1,
-        functionMode: 0,
-        valueMode: 0,
-        onsetTime: 0,
-        offsetTime: 0,
-        onsetType: 0,
-        offsetType: 0,
-      },
-      leverPush2: {
-        ccNumber: 4,
-        minCCValue: 0,
-        maxCCValue: 127,
-        functionMode: 0,
-        onsetTime: 0,
-        offsetTime: 0,
-        onsetType: 0,
-        offsetType: 0,
-      },
-      touch: {
-        ccNumber: 5,
-        minCCValue: 0,
-        maxCCValue: 127,
-        functionMode: 0,
-      },
-      scale: {
-        scaleType: 0,
-        rootNote: 0,
-      },
-    };
+    return this.createDefaultDeviceSettings();
   }
 
   /**

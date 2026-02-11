@@ -20,6 +20,10 @@ const ccMappings = ref<CCMapping[]>([]);
 const deviceSettings = ref<DeviceSettings>(kb1Protocol.createDefaultSettings());
 const isLoading = ref(false);
 
+// Snapshot state for restore functionality
+const SNAPSHOT_KEY = 'kb1_snapshot_v1';
+const baselineSnapshot = ref<{ ccMappings: CCMapping[]; settings: DeviceSettings } | null>(null);
+
 // Initialize BLE client callbacks
 bleClient.setStatusChangeCallback((status) => {
   connectionStatus.value = status;
@@ -195,6 +199,114 @@ export function useDeviceState() {
   };
 
   /**
+   * Capture baseline snapshot of current state
+   * Called after successful load from device
+   */
+  const captureBaseline = () => {
+    const snapshot = {
+      ccMappings: JSON.parse(JSON.stringify(ccMappings.value)),
+      settings: JSON.parse(JSON.stringify(deviceSettings.value)),
+    };
+    
+    baselineSnapshot.value = snapshot;
+    
+    // Persist to localStorage
+    try {
+      localStorage.setItem(SNAPSHOT_KEY, JSON.stringify(snapshot));
+      console.log('Baseline snapshot captured and saved to localStorage');
+    } catch (error) {
+      console.error('Failed to save snapshot to localStorage:', error);
+    }
+  };
+
+  /**
+   * Restore from baseline snapshot
+   * Recalls last snapshot from memory or localStorage
+   */
+  const recallBaseline = () => {
+    let snapshot = baselineSnapshot.value;
+    
+    // If no snapshot in memory, try loading from localStorage
+    if (!snapshot) {
+      try {
+        const stored = localStorage.getItem(SNAPSHOT_KEY);
+        if (stored) {
+          snapshot = JSON.parse(stored);
+          baselineSnapshot.value = snapshot;
+          console.log('Loaded snapshot from localStorage');
+        }
+      } catch (error) {
+        console.error('Failed to load snapshot from localStorage:', error);
+      }
+    }
+    
+    if (snapshot) {
+      ccMappings.value = JSON.parse(JSON.stringify(snapshot.ccMappings));
+      deviceSettings.value = JSON.parse(JSON.stringify(snapshot.settings));
+      console.log('Baseline snapshot restored');
+    } else {
+      console.warn('No snapshot available to restore');
+      throw new Error('No snapshot available to restore. Please load from device first.');
+    }
+  };
+
+  /**
+   * Reset to firmware defaults
+   * Sets ccMappings and settings to firmware-aligned defaults
+   */
+  const resetToDefaults = () => {
+    // Reset device settings to firmware defaults
+    deviceSettings.value = kb1Protocol.createDefaultDeviceSettings();
+    
+    // Reset CC mappings to defaults with channel 1
+    ccMappings.value = Array.from({ length: 8 }, (_, i) => 
+      kb1Protocol.createDefaultCCMapping(i)
+    );
+    
+    console.log('Reset to firmware defaults');
+  };
+
+  /**
+   * Load all data from the device (CC mappings + settings)
+   */
+  const handleLoad = async () => {
+    if (!connectionStatus.value.connected) {
+      throw new Error('Not connected to device');
+    }
+
+    isLoading.value = true;
+    try {
+      // Read settings from BLE characteristics
+      const settings = await bleClient.readAllSettings();
+      
+      // Update device settings with data from device
+      if (settings.lever1) deviceSettings.value.lever1 = settings.lever1;
+      if (settings.leverPush1) deviceSettings.value.leverPush1 = settings.leverPush1;
+      if (settings.lever2) deviceSettings.value.lever2 = settings.lever2;
+      if (settings.leverPush2) deviceSettings.value.leverPush2 = settings.leverPush2;
+      if (settings.touch) deviceSettings.value.touch = settings.touch;
+      if (settings.scale) deviceSettings.value.scale = settings.scale;
+      
+      // Initialize CC mappings if needed
+      if (ccMappings.value.length === 0) {
+        ccMappings.value = Array.from({ length: 8 }, (_, i) => 
+          kb1Protocol.createDefaultCCMapping(i)
+        );
+      }
+      
+      // Capture baseline snapshot after successful load
+      captureBaseline();
+      
+      console.log('Successfully loaded from device and captured snapshot');
+    } catch (error) {
+      console.error('Failed to load from device:', error);
+      throw error;
+    } finally {
+      isLoading.value = false;
+    }
+  };
+
+  /**
    * Check if Web Bluetooth is available
    */
   const isBluetoothAvailable = computed(() => bleClient.isBluetoothAvailable());
@@ -233,5 +345,9 @@ export function useDeviceState() {
     updateSettings,
     sendSettings,
     saveToFlash,
+    handleLoad,
+    captureBaseline,
+    recallBaseline,
+    resetToDefaults,
   };
 }

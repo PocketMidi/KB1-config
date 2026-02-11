@@ -121,9 +121,20 @@ const model = computed({
 
 const isValidCC = computed(() => model.value.ccNumber >= 0 && model.value.ccNumber <= 128)
 
-// Initialize selectedCategory from current ccNumber's category (fallback to "GLOBAL")
-const initialCategory = props.ccMapByNumber.get(model.value.ccNumber)?.category ?? 'GLOBAL'
-const selectedCategory = ref<string>(initialCategory)
+// Initialize selectedCategory from current ccNumber's category (fallback to first available category)
+const initialCategory = computed(() => {
+  const cat = props.ccMapByNumber.get(model.value.ccNumber)?.category
+  return cat || props.categories[0] || 'Global'
+})
+const selectedCategory = ref<string>(initialCategory.value)
+
+// Watch for ccMapByNumber changes to initialize category when map loads
+watch(() => props.ccMapByNumber.size, () => {
+  const cat = props.ccMapByNumber.get(model.value.ccNumber)?.category
+  if (cat && cat !== selectedCategory.value) {
+    selectedCategory.value = cat
+  }
+}, { immediate: true })
 
 // Filter options by selected category
 const filteredOptions = computed(() => {

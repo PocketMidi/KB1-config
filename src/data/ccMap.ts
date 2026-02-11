@@ -120,10 +120,14 @@ async function parsePolyendCSV(csvText: string): Promise<void> {
           let currentCategory = '';
           let currentGroup: CCGroup | null = null;
 
+          // Get the correct keys from the first row
+          const firstRow = results.data[0] as any;
+          const { ccKey, paramKey, rangeKey } = getRowKeys(firstRow);
+
           for (const row of results.data as any[]) {
-            const ccNumberStr = row['CC Number']?.trim();
-            const parameter = row['Parameter']?.trim();
-            const rangeText = row['Polyend Range']?.trim();
+            const ccNumberStr = row[ccKey]?.trim();
+            const parameter = row[paramKey]?.trim();
+            const rangeText = row[rangeKey]?.trim();
 
             // Check if this is a category row (CC Number field contains non-numeric text)
             if (ccNumberStr && isNaN(parseInt(ccNumberStr, 10))) {

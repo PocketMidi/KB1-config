@@ -17,7 +17,7 @@
           v-model="localSettings.lever1"
           :ccOptions="ccOptions"
           :ccMapByNumber="ccMapByNumber"
-          :functionModes="functionModes"
+          :functionModes="leverFunctionModes"
           :valueModes="valueModes"
           :interpolations="interpolations"
           @update:modelValue="markChanged"
@@ -29,7 +29,7 @@
           v-model="localSettings.leverPush1"
           :ccOptions="ccOptions"
           :ccMapByNumber="ccMapByNumber"
-          :functionModes="functionModes"
+          :functionModes="leverPushFunctionModes"
           :interpolations="interpolations"
           @update:modelValue="markChanged"
         />
@@ -40,7 +40,7 @@
           v-model="localSettings.lever2"
           :ccOptions="ccOptions"
           :ccMapByNumber="ccMapByNumber"
-          :functionModes="functionModes"
+          :functionModes="leverFunctionModes"
           :valueModes="valueModes"
           :interpolations="interpolations"
           @update:modelValue="markChanged"
@@ -52,7 +52,7 @@
           v-model="localSettings.leverPush2"
           :ccOptions="ccOptions"
           :ccMapByNumber="ccMapByNumber"
-          :functionModes="functionModes"
+          :functionModes="leverPushFunctionModes"
           :interpolations="interpolations"
           @update:modelValue="markChanged"
         />
@@ -62,7 +62,7 @@
           v-model="localSettings.touch"
           :ccOptions="ccOptions"
           :ccMapByNumber="ccMapByNumber"
-          :functionModes="functionModes"
+          :functionModes="touchFunctionModes"
           @update:modelValue="markChanged"
         />
         
@@ -188,13 +188,26 @@ const ccOptions = computed(() => {
 // Expose ccMapByNumber for child components
 const ccMapByNumber = computed(() => getCCMap());
 
-// Function Modes (includes all firmware modes)
-const functionModes = [
-  { value: 0, label: 'Continuous' },
+// Lever Function Modes (firmware values)
+const leverFunctionModes = [
+  { value: 0, label: 'Interpolated' },
+  { value: 1, label: 'Peak & Decay' },
+  { value: 2, label: 'Incremental' },
+];
+
+// Lever Push Function Modes (firmware values)
+const leverPushFunctionModes = [
+  { value: 0, label: 'Interpolated' },
+  { value: 1, label: 'Peak & Decay' },
+  { value: 2, label: 'Static' },
+  { value: 3, label: 'Reset' },
+];
+
+// Touch Function Modes (firmware values)
+const touchFunctionModes = [
+  { value: 0, label: 'Hold' },
   { value: 1, label: 'Toggle' },
-  { value: 2, label: 'Momentary' },
-  { value: 3, label: 'Interpolated' },
-  { value: 4, label: 'Reset' },
+  { value: 2, label: 'Continuous' },
 ];
 
 // Value Modes

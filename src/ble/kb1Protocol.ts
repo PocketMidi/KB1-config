@@ -110,13 +110,43 @@ export enum KB1MessageType {
 
 /**
  * Function mode constants (from firmware)
+ * Note: Different sections use different numeric values for their modes
  */
 export enum FunctionMode {
+  // Generic/shared modes
   CONTINUOUS = 0,
   TOGGLE = 1,
   MOMENTARY = 2,
   INTERPOLATED = 3,
   RESET = 4,
+}
+
+/**
+ * Lever Function Mode constants (firmware values)
+ */
+export enum LeverFunctionMode {
+  INTERPOLATED = 0,
+  PEAK_DECAY = 1,
+  INCREMENTAL = 2,
+}
+
+/**
+ * Lever Push Function Mode constants (firmware values)
+ */
+export enum LeverPushFunctionMode {
+  INTERPOLATED = 0,
+  PEAK_DECAY = 1,
+  STATIC = 2,
+  RESET = 3,
+}
+
+/**
+ * Touch Function Mode constants (firmware values)
+ */
+export enum TouchFunctionMode {
+  HOLD = 0,
+  TOGGLE = 1,
+  CONTINUOUS = 2,
 }
 
 /**
@@ -286,6 +316,7 @@ export class KB1Protocol {
   /**
    * Create default device settings aligned with firmware defaults
    * Based on firmware/src/main.cpp
+   * Uses section-specific function mode enums to match firmware numeric values
    */
   createDefaultDeviceSettings(): DeviceSettings {
     return {
@@ -294,7 +325,7 @@ export class KB1Protocol {
         minCCValue: 0,
         maxCCValue: 127,
         stepSize: 1,
-        functionMode: FunctionMode.INTERPOLATED,
+        functionMode: LeverFunctionMode.INTERPOLATED, // 0 in firmware
         valueMode: ValueMode.BIPOLAR,
         onsetTime: 100,
         offsetTime: 100,
@@ -305,7 +336,7 @@ export class KB1Protocol {
         ccNumber: 24,
         minCCValue: 31,
         maxCCValue: 127,
-        functionMode: FunctionMode.INTERPOLATED,
+        functionMode: LeverPushFunctionMode.INTERPOLATED, // 0 in firmware
         onsetTime: 100,
         offsetTime: 100,
         onsetType: InterpolationType.LINEAR,
@@ -316,7 +347,7 @@ export class KB1Protocol {
         minCCValue: 0,
         maxCCValue: 127,
         stepSize: 1,
-        functionMode: FunctionMode.INTERPOLATED,
+        functionMode: LeverFunctionMode.INTERPOLATED, // 0 in firmware
         valueMode: ValueMode.BIPOLAR,
         onsetTime: 100,
         offsetTime: 100,
@@ -327,7 +358,7 @@ export class KB1Protocol {
         ccNumber: 128,
         minCCValue: 87,
         maxCCValue: 87,
-        functionMode: FunctionMode.RESET,
+        functionMode: LeverPushFunctionMode.RESET, // 3 in firmware
         onsetTime: 100,
         offsetTime: 100,
         onsetType: InterpolationType.LINEAR,
@@ -337,7 +368,7 @@ export class KB1Protocol {
         ccNumber: 1,
         minCCValue: 64,
         maxCCValue: 127,
-        functionMode: FunctionMode.CONTINUOUS,
+        functionMode: TouchFunctionMode.CONTINUOUS, // 2 in firmware
         threshold: 24000,
       },
       scale: {

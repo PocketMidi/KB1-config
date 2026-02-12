@@ -4,6 +4,12 @@ import ConnectionStatus from './components/ConnectionStatus.vue';
 import MidiEditor from './pages/MidiEditor.vue';
 import DeviceSettings from './pages/DeviceSettings.vue';
 import LandingPage from './pages/LandingPage.vue';
+import MobileHeader from './components/MobileHeader.vue';
+import MobileTabNav from './components/MobileTabNav.vue';
+import BottomNav from './components/BottomNav.vue';
+import MobileControls from './pages/MobileControls.vue';
+import MobileScales from './pages/MobileScales.vue';
+import MobileSliders from './pages/MobileSliders.vue';
 import { useDeviceState } from './composables/useDeviceState';
 import './styles/themes/kb1.css';
 
@@ -14,11 +20,24 @@ const {
   connectionStatus,
   connect, 
   disconnect,
-  isLoading 
+  isLoading,
+  handleLoad,
+  saveToFlash
 } = useDeviceState();
 
-type Tab = 'midi-editor' | 'device-settings' | 'live-sliders';
-const activeTab = ref<Tab>('midi-editor');
+// Desktop tabs
+type DesktopTab = 'midi-editor' | 'device-settings' | 'live-sliders';
+const activeDesktopTab = ref<DesktopTab>('midi-editor');
+
+// Mobile tabs
+type MobileTab = 'controls' | 'scales' | 'sliders';
+const activeMobileTab = ref<MobileTab>('controls');
+
+const mobileTabs = [
+  { id: 'controls', label: 'Controls' },
+  { id: 'scales', label: 'Scales' },
+  { id: 'sliders', label: 'Sliders' }
+];
 
 async function handleConnect() {
   try {
@@ -35,87 +54,183 @@ async function handleDisconnect() {
     console.error('Disconnect failed:', error);
   }
 }
+
+// Handler functions for mobile header actions
+// Note: Back and Menu buttons are placeholders for future functionality
+// Back: Could navigate to a home/landing screen or previous view
+// Menu: Could open a settings drawer or additional options menu
+function handleBack() {
+  // TODO: Implement navigation to home screen or previous view
+  console.log('Back button clicked - navigation not yet implemented');
+}
+
+function handleMenu() {
+  // TODO: Implement settings menu or options drawer
+  console.log('Menu button clicked - menu not yet implemented');
+}
+
+async function handleBottomSync() {
+  if (!isConnected) return;
+  try {
+    await handleLoad();
+    alert('Settings synced from device');
+  } catch (error) {
+    console.error('Sync failed:', error);
+    alert('Failed to sync settings');
+  }
+}
+
+async function handleBottomSave() {
+  if (!isConnected) return;
+  try {
+    await saveToFlash();
+    alert('Settings saved to device');
+  } catch (error) {
+    console.error('Save failed:', error);
+    alert('Failed to save settings');
+  }
+}
+
+function handleBottomHome() {
+  activeMobileTab.value = 'controls';
+}
 </script>
 
 <template>
   <div class="app theme-kb1">
-    <header class="app-header">
-      <div class="header-content">
-        <div class="logo-section">
-          <h1>KB1 MIDI Editor</h1>
-          <p class="tagline">Wireless Bluetooth Configuration</p>
-        </div>
-        
-        <div class="header-actions">
-          <ConnectionStatus 
-            :is-connected="isConnected"
-            :device-name="deviceName"
-            :error="connectionStatus.error"
-          />
-          
-          <button 
-            v-if="!isConnected"
-            class="btn btn-connect"
-            @click="handleConnect"
-            :disabled="!isBluetoothAvailable || isLoading"
-          >
-            <span v-if="isLoading">Connecting...</span>
-            <span v-else>Connect Device</span>
-          </button>
-          
-          <button 
-            v-else
-            class="btn btn-disconnect"
-            @click="handleDisconnect"
-            :disabled="isLoading"
-          >
-            Disconnect
-          </button>
-        </div>
-      </div>
+    <!-- Mobile Layout (< 769px) -->
+    <div class="mobile-layout">
+      <MobileHeader
+        :is-connected="isConnected"
+        :device-name="deviceName"
+        @back="handleBack"
+        @menu="handleMenu"
+      />
       
       <div v-if="!isBluetoothAvailable" class="warning-banner">
         ⚠️ Web Bluetooth is not supported in this browser. Please use Chrome, Edge, or Opera.
       </div>
-    </header>
-    
-    <nav class="app-nav">
+      
+      <div class="mobile-connect-section" v-if="!isConnected">
+        <button 
+          class="btn btn-connect mobile-connect-btn"
+          @click="handleConnect"
+          :disabled="!isBluetoothAvailable || isLoading"
+        >
+          <span v-if="isLoading">Connecting...</span>
+          <span v-else>Connect Device</span>
+        </button>
+      </div>
+      
       <button 
-        class="nav-tab"
-        :class="{ active: activeTab === 'midi-editor' }"
-        @click="activeTab = 'midi-editor'"
+        v-if="isConnected"
+        class="btn btn-disconnect mobile-disconnect-btn"
+        @click="handleDisconnect"
+        :disabled="isLoading"
       >
-        FADERS
+        Disconnect
       </button>
-      <button 
-        class="nav-tab"
-        :class="{ active: activeTab === 'live-sliders' }"
-        @click="activeTab = 'live-sliders'"
-      >
-        LIVE SLIDERS
-      </button>
-      <button 
-        class="nav-tab"
-        :class="{ active: activeTab === 'device-settings' }"
-        @click="activeTab = 'device-settings'"
-      >
-        SETTINGS
-      </button>
-    </nav>
+      
+      <MobileTabNav
+        :tabs="mobileTabs"
+        v-model="activeMobileTab"
+      />
+      
+      <main class="mobile-main">
+        <MobileControls v-if="activeMobileTab === 'controls'" />
+        <MobileScales v-if="activeMobileTab === 'scales'" />
+        <MobileSliders v-if="activeMobileTab === 'sliders'" />
+      </main>
+      
+      <BottomNav
+        :is-connected="isConnected"
+        :disabled="isLoading"
+        @home="handleBottomHome"
+        @sync="handleBottomSync"
+        @save="handleBottomSave"
+      />
+    </div>
     
-    <main class="app-main">
-      <MidiEditor v-if="activeTab === 'midi-editor'" />
-      <LandingPage v-if="activeTab === 'live-sliders'" />
-      <DeviceSettings v-if="activeTab === 'device-settings'" />
-    </main>
-    
-    <footer class="app-footer">
-      <p>KB1 MIDI Editor - Web Bluetooth Configuration Tool</p>
-      <p class="footer-note">
-        <strong>Note:</strong> This app requires HTTPS and a Bluetooth-enabled device. 
-        Ensure your browser supports Web Bluetooth API.
-      </p>
-    </footer>
+    <!-- Desktop Layout (>= 769px) -->
+    <div class="desktop-layout">
+      <header class="app-header">
+        <div class="header-content">
+          <div class="logo-section">
+            <h1>KB1 MIDI Editor</h1>
+            <p class="tagline">Wireless Bluetooth Configuration</p>
+          </div>
+          
+          <div class="header-actions">
+            <ConnectionStatus 
+              :is-connected="isConnected"
+              :device-name="deviceName"
+              :error="connectionStatus.error"
+            />
+            
+            <button 
+              v-if="!isConnected"
+              class="btn btn-connect"
+              @click="handleConnect"
+              :disabled="!isBluetoothAvailable || isLoading"
+            >
+              <span v-if="isLoading">Connecting...</span>
+              <span v-else>Connect Device</span>
+            </button>
+            
+            <button 
+              v-else
+              class="btn btn-disconnect"
+              @click="handleDisconnect"
+              :disabled="isLoading"
+            >
+              Disconnect
+            </button>
+          </div>
+        </div>
+        
+        <div v-if="!isBluetoothAvailable" class="warning-banner">
+          ⚠️ Web Bluetooth is not supported in this browser. Please use Chrome, Edge, or Opera.
+        </div>
+      </header>
+      
+      <nav class="app-nav">
+        <button 
+          class="nav-tab"
+          :class="{ active: activeDesktopTab === 'midi-editor' }"
+          @click="activeDesktopTab = 'midi-editor'"
+        >
+          FADERS
+        </button>
+        <button 
+          class="nav-tab"
+          :class="{ active: activeDesktopTab === 'live-sliders' }"
+          @click="activeDesktopTab = 'live-sliders'"
+        >
+          LIVE SLIDERS
+        </button>
+        <button 
+          class="nav-tab"
+          :class="{ active: activeDesktopTab === 'device-settings' }"
+          @click="activeDesktopTab = 'device-settings'"
+        >
+          SETTINGS
+        </button>
+      </nav>
+      
+      <main class="app-main">
+        <MidiEditor v-if="activeDesktopTab === 'midi-editor'" />
+        <LandingPage v-if="activeDesktopTab === 'live-sliders'" />
+        <DeviceSettings v-if="activeDesktopTab === 'device-settings'" />
+      </main>
+      
+      <footer class="app-footer">
+        <p>KB1 MIDI Editor - Web Bluetooth Configuration Tool</p>
+        <p class="footer-note">
+          <strong>Note:</strong> This app requires HTTPS and a Bluetooth-enabled device. 
+          Ensure your browser supports Web Bluetooth API.
+        </p>
+      </footer>
+    </div>
   </div>
 </template>
 
@@ -155,6 +270,52 @@ body {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+}
+
+/* Mobile Layout - Show by default, hide on desktop */
+.mobile-layout {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.mobile-connect-section {
+  padding: 1rem;
+  display: flex;
+  justify-content: center;
+}
+
+.mobile-connect-btn {
+  width: 100%;
+  max-width: 400px;
+}
+
+.mobile-disconnect-btn {
+  margin: 0.5rem 1rem;
+  width: calc(100% - 2rem);
+}
+
+.mobile-main {
+  flex: 1;
+  overflow-y: auto;
+  background: var(--color-background);
+}
+
+/* Desktop Layout - Hidden by default, show on tablet/desktop */
+.desktop-layout {
+  display: none;
+}
+
+@media (min-width: 769px) {
+  .mobile-layout {
+    display: none;
+  }
+  
+  .desktop-layout {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+  }
 }
 
 .app-header {
@@ -267,6 +428,7 @@ body {
   cursor: pointer;
   transition: all 0.2s;
   white-space: nowrap;
+  min-height: 44px; /* Mobile touch target */
 }
 
 .btn:disabled {
@@ -283,6 +445,10 @@ body {
   background: #2563eb;
 }
 
+.btn-connect:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
 .btn-disconnect {
   background: transparent;
   color: var(--color-text);
@@ -293,23 +459,7 @@ body {
   background: var(--color-background-mute);
 }
 
-@media (max-width: 768px) {
-  .header-content {
-    flex-direction: column;
-    align-items: stretch;
-  }
-  
-  .header-actions {
-    flex-direction: column;
-  }
-  
-  .app-nav {
-    padding: 0 1rem;
-  }
-  
-  .nav-tab {
-    flex: 1;
-    text-align: center;
-  }
+.btn-disconnect:active:not(:disabled) {
+  transform: scale(0.98);
 }
 </style>

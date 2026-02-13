@@ -5,7 +5,7 @@
         <span>←</span>
       </button>
       
-      <h1 class="header-title">KB1 CONFIGURATOR</h1>
+      <h1 class="header-title">KB1 config</h1>
       
       <button class="header-icon-btn" @click="$emit('menu')" aria-label="Menu">
         <span>☰</span>

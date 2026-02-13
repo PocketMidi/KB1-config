@@ -1,9 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import ConnectionStatus from './components/ConnectionStatus.vue';
-import MidiEditor from './pages/MidiEditor.vue';
-import DeviceSettings from './pages/DeviceSettings.vue';
-import LandingPage from './pages/LandingPage.vue';
 import MobileHeader from './components/MobileHeader.vue';
 import MobileTabNav from './components/MobileTabNav.vue';
 import BottomNav from './components/BottomNav.vue';
@@ -25,9 +22,9 @@ const {
   saveToFlash
 } = useDeviceState();
 
-// Desktop tabs
-type DesktopTab = 'midi-editor' | 'device-settings' | 'live-sliders';
-const activeDesktopTab = ref<DesktopTab>('midi-editor');
+// Desktop tabs - now matching mobile structure
+type DesktopTab = 'controls' | 'scales' | 'sliders';
+const activeDesktopTab = ref<DesktopTab>('controls');
 
 // Mobile tabs
 type MobileTab = 'controls' | 'scales' | 'sliders';
@@ -156,8 +153,7 @@ function handleBottomHome() {
       <header class="app-header">
         <div class="header-content">
           <div class="logo-section">
-            <h1>KB1 MIDI Editor</h1>
-            <p class="tagline">Wireless Bluetooth Configuration</p>
+            <h1>KB1 config</h1>
           </div>
           
           <div class="header-actions">
@@ -196,35 +192,35 @@ function handleBottomHome() {
       <nav class="app-nav">
         <button 
           class="nav-tab"
-          :class="{ active: activeDesktopTab === 'midi-editor' }"
-          @click="activeDesktopTab = 'midi-editor'"
+          :class="{ active: activeDesktopTab === 'controls' }"
+          @click="activeDesktopTab = 'controls'"
         >
-          FADERS
+          Controls
         </button>
         <button 
           class="nav-tab"
-          :class="{ active: activeDesktopTab === 'live-sliders' }"
-          @click="activeDesktopTab = 'live-sliders'"
+          :class="{ active: activeDesktopTab === 'scales' }"
+          @click="activeDesktopTab = 'scales'"
         >
-          LIVE SLIDERS
+          Scales
         </button>
         <button 
           class="nav-tab"
-          :class="{ active: activeDesktopTab === 'device-settings' }"
-          @click="activeDesktopTab = 'device-settings'"
+          :class="{ active: activeDesktopTab === 'sliders' }"
+          @click="activeDesktopTab = 'sliders'"
         >
-          SETTINGS
+          Sliders
         </button>
       </nav>
       
       <main class="app-main">
-        <MidiEditor v-if="activeDesktopTab === 'midi-editor'" />
-        <LandingPage v-if="activeDesktopTab === 'live-sliders'" />
-        <DeviceSettings v-if="activeDesktopTab === 'device-settings'" />
+        <MobileControls v-if="activeDesktopTab === 'controls'" />
+        <MobileScales v-if="activeDesktopTab === 'scales'" />
+        <MobileSliders v-if="activeDesktopTab === 'sliders'" />
       </main>
       
       <footer class="app-footer">
-        <p>KB1 MIDI Editor - Web Bluetooth Configuration Tool</p>
+        <p>KB1 config - Web Bluetooth Configuration Tool</p>
         <p class="footer-note">
           <strong>Note:</strong> This app requires HTTPS and a Bluetooth-enabled device. 
           Ensure your browser supports Web Bluetooth API.

@@ -3,7 +3,6 @@ import { ref } from 'vue';
 import ConnectionStatus from './components/ConnectionStatus.vue';
 import MobileHeader from './components/MobileHeader.vue';
 import MobileTabNav from './components/MobileTabNav.vue';
-import BottomNav from './components/BottomNav.vue';
 import MobileControls from './pages/MobileControls.vue';
 import MobileScales from './pages/MobileScales.vue';
 import MobileSliders from './pages/MobileSliders.vue';
@@ -17,9 +16,7 @@ const {
   connectionStatus,
   connect, 
   disconnect,
-  isLoading,
-  handleLoad,
-  saveToFlash
+  isLoading
 } = useDeviceState();
 
 // Desktop tabs - now matching mobile structure
@@ -52,45 +49,7 @@ async function handleDisconnect() {
   }
 }
 
-// Handler functions for mobile header actions
-// Note: Back and Menu buttons are placeholders for future functionality
-// Back: Could navigate to a home/landing screen or previous view
-// Menu: Could open a settings drawer or additional options menu
-function handleBack() {
-  // TODO: Implement navigation to home screen or previous view
-  console.log('Back button clicked - navigation not yet implemented');
-}
 
-function handleMenu() {
-  // TODO: Implement settings menu or options drawer
-  console.log('Menu button clicked - menu not yet implemented');
-}
-
-async function handleBottomSync() {
-  if (!isConnected) return;
-  try {
-    await handleLoad();
-    alert('Settings synced from device');
-  } catch (error) {
-    console.error('Sync failed:', error);
-    alert('Failed to sync settings');
-  }
-}
-
-async function handleBottomSave() {
-  if (!isConnected) return;
-  try {
-    await saveToFlash();
-    alert('Settings saved to device');
-  } catch (error) {
-    console.error('Save failed:', error);
-    alert('Failed to save settings');
-  }
-}
-
-function handleBottomHome() {
-  activeMobileTab.value = 'controls';
-}
 </script>
 
 <template>
@@ -100,8 +59,6 @@ function handleBottomHome() {
       <MobileHeader
         :is-connected="isConnected"
         :device-name="deviceName"
-        @back="handleBack"
-        @menu="handleMenu"
       />
       
       <div v-if="!isBluetoothAvailable" class="warning-banner">
@@ -138,14 +95,6 @@ function handleBottomHome() {
         <MobileScales v-if="activeMobileTab === 'scales'" />
         <MobileSliders v-if="activeMobileTab === 'sliders'" />
       </main>
-      
-      <BottomNav
-        :is-connected="isConnected"
-        :disabled="isLoading"
-        @home="handleBottomHome"
-        @sync="handleBottomSync"
-        @save="handleBottomSave"
-      />
     </div>
     
     <!-- Desktop Layout (>= 769px) -->

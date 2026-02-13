@@ -1,15 +1,7 @@
 <template>
   <header class="mobile-header">
     <div class="header-top">
-      <button class="header-icon-btn" @click="$emit('back')" aria-label="Back">
-        <span>←</span>
-      </button>
-      
       <h1 class="header-title">KB1 config</h1>
-      
-      <button class="header-icon-btn" @click="$emit('menu')" aria-label="Menu">
-        <span>☰</span>
-      </button>
     </div>
     
     <!-- Connection status bar showing device connection state and optional timeout warnings.
@@ -38,11 +30,6 @@ const props = defineProps<{
   timeout?: number;
 }>();
 
-defineEmits<{
-  back: [];
-  menu: [];
-}>();
-
 const statusText = computed(() => {
   if (props.isConnected) {
     return props.deviceName ? `Connected: ${props.deviceName}` : 'Connected';
@@ -66,36 +53,11 @@ const connectionClass = computed(() => ({
 .header-top {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 0.75rem 1rem;
-  gap: 1rem;
-}
-
-.header-icon-btn {
-  width: 44px;
-  height: 44px;
-  display: flex;
-  align-items: center;
   justify-content: center;
-  background: transparent;
-  border: none;
-  color: var(--color-text);
-  font-size: 1.5rem;
-  cursor: pointer;
-  border-radius: var(--kb1-radius-sm, 4px);
-  transition: background 0.2s;
-}
-
-.header-icon-btn:hover {
-  background: var(--color-background-mute);
-}
-
-.header-icon-btn:active {
-  transform: scale(0.95);
+  padding: 0.75rem 1rem;
 }
 
 .header-title {
-  flex: 1;
   margin: 0;
   font-size: 1.125rem;
   font-weight: 700;

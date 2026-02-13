@@ -141,7 +141,6 @@ async function handleSaveToDevice() {
   display: flex;
   flex-direction: column;
   height: 100%;
-  padding-bottom: 80px; /* Space for bottom nav on mobile */
 }
 
 .not-connected-message {

@@ -32,7 +32,7 @@
       </div>
 
       <div class="group">
-        <label :for="`lever-valueMode-${lever}`">Value Mode</label>
+        <label :for="`lever-valueMode-${lever}`">Mode</label>
         <select :id="`lever-valueMode-${lever}`" v-model.number="model.valueMode">
           <option v-for="opt in valueModes" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
         </select>

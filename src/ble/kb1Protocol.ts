@@ -151,9 +151,11 @@ export enum TouchFunctionMode {
 
 /**
  * Value mode constants (from firmware)
+ * UNIPOLAR: Incremental from minimum to maximum (0 to 127)
+ * BIPOLAR: Center position = 0 (MIDI 64), Range: -100 (MIDI 0) to +100 (MIDI 127)
  */
 export enum ValueMode {
-  ABSOLUTE = 0,
+  UNIPOLAR = 0,
   BIPOLAR = 1,
 }
 

@@ -206,8 +206,8 @@ const touchFunctionModes = [
 
 // Value Modes
 const valueModes = [
-  { value: 0, label: 'Absolute' },
-  { value: 1, label: 'Relative' },
+  { value: 0, label: 'Unipolar' },
+  { value: 1, label: 'Bipolar' },
 ];
 
 // Interpolation Types

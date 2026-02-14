@@ -14,8 +14,6 @@ interface SliderConfig {
 
 // Preset structure
 interface Preset {
-  presetName: string;
-  settingsVisible: boolean;
   sliders: SliderConfig[];
 }
 
@@ -41,7 +39,12 @@ function initializeSliders() {
     try {
       const preset: Preset = JSON.parse(savedPreset);
       sliders.value = preset.sliders;
-      settingsVisible.value = preset.settingsVisible;
+      
+      // Load settings visibility separately
+      const savedVisibility = localStorage.getItem(PRESET_KEY + '.settingsVisible');
+      if (savedVisibility) {
+        settingsVisible.value = JSON.parse(savedVisibility);
+      }
       return;
     } catch (e) {
       console.error('Failed to load saved preset', e);
@@ -99,13 +102,13 @@ function valueToCC(slider: SliderConfig): number {
 //   }
 // }
 
-// Get default value based on mode
-function getDefaultValue(slider: SliderConfig): number {
-  return slider.bipolar ? 0 : 0;
+// Get default value based on mode (always 0 for both bipolar center and unipolar bottom)
+function getDefaultValue(_slider: SliderConfig): number {
+  return 0;
 }
 
-// Handle slider change
-async function handleSliderChange(index: number, newValue: number) {
+// Handle slider change with optional flag to skip save
+async function handleSliderChange(index: number, newValue: number, skipSave = false) {
   const slider = sliders.value[index];
   if (!slider) return;
   
@@ -119,7 +122,10 @@ async function handleSliderChange(index: number, newValue: number) {
     console.error('Failed to send CC', e);
   }
   
-  savePreset();
+  // Only save preset when explicitly requested (not during animations)
+  if (!skipSave) {
+    savePreset();
+  }
 }
 
 // Handle slider mouse down
@@ -151,10 +157,15 @@ function handleMouseUp(index: number) {
       const easeOut = 1 - Math.pow(1 - progress, 3);
       
       const currentValue = startValue + (defaultValue - startValue) * easeOut;
-      handleSliderChange(index, Math.round(currentValue));
+      
+      // Skip save during animation frames, only MIDI updates
+      handleSliderChange(index, Math.round(currentValue), true);
       
       if (progress < 1) {
         requestAnimationFrame(animate);
+      } else {
+        // Save preset only at the end of animation
+        savePreset();
       }
     };
     
@@ -207,11 +218,12 @@ function toggleSettings() {
 // Save preset to localStorage
 function savePreset() {
   const preset: Preset = {
-    presetName: 'Performance 1',
-    settingsVisible: settingsVisible.value,
     sliders: sliders.value,
   };
   localStorage.setItem(PRESET_KEY, JSON.stringify(preset));
+  
+  // Also save settings visibility separately
+  localStorage.setItem(PRESET_KEY + '.settingsVisible', JSON.stringify(settingsVisible.value));
 }
 
 // Load preset (placeholder for future implementation)

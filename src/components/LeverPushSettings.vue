@@ -221,6 +221,17 @@ const relativeMax = computed(() => {
   border-radius: 8px;
 }
 
+@media (max-width: 768px) {
+  .settings-leverpush {
+    padding: 1rem;
+  }
+  
+  .title {
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+  }
+}
+
 .title {
   display: flex;
   justify-content: space-between;
@@ -265,6 +276,13 @@ const relativeMax = computed(() => {
   gap: 1rem;
 }
 
+@media (min-width: 769px) {
+  .inputs {
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+  }
+}
+
 @media (max-width: 768px) {
   .inputs {
     grid-template-columns: repeat(2, 1fr);
@@ -298,6 +316,13 @@ const relativeMax = computed(() => {
   background: var(--color-background);
   color: var(--color-text);
   font-size: 1rem;
+}
+
+@media (max-width: 768px) {
+  .group input,
+  .group select {
+    padding: 0.625rem 0.5rem;
+  }
 }
 
 .group input:focus,

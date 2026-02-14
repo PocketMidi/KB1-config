@@ -122,11 +122,15 @@ function toggle() {
 
 @media (max-width: 768px) {
   .accordion-header {
-    padding: 1rem;
+    padding: 0.875rem 1rem;
   }
   
   .accordion-body {
     padding: 0 1rem 1rem 1rem;
+  }
+  
+  .accordion-icon {
+    margin-left: 0.5rem;
   }
 }
 </style>

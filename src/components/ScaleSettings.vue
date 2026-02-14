@@ -76,6 +76,13 @@ const model = computed({
   gap: 1rem;
 }
 
+@media (min-width: 769px) {
+  .inputs {
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+  }
+}
+
 @media (max-width: 768px) {
   .inputs {
     grid-template-columns: repeat(2, 1fr);
@@ -108,6 +115,12 @@ const model = computed({
   background: var(--color-background);
   color: var(--color-text);
   font-size: 1rem;
+}
+
+@media (max-width: 768px) {
+  .group select {
+    padding: 0.625rem 0.5rem;
+  }
 }
 
 .group select:focus {

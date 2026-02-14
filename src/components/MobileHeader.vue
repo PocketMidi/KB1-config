@@ -48,6 +48,9 @@ const connectionClass = computed(() => ({
 .mobile-header {
   background: var(--color-background-soft);
   border-bottom: 1px solid var(--color-border);
+  position: sticky;
+  top: 0;
+  z-index: 100;
 }
 
 .header-top {

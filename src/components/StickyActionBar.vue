@@ -143,7 +143,8 @@ defineEmits<{
 
 @media (min-width: 769px) {
   .sticky-action-bar {
-    position: sticky;
+    /* Not sticky on desktop - nav bar is not sticky */
+    position: static;
     padding: 1rem;
   }
   

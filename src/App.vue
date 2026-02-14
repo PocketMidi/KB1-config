@@ -331,6 +331,9 @@ body {
 .app-header {
   background: var(--color-background-soft);
   border-bottom: 1px solid var(--color-border);
+  position: sticky;
+  top: 0;
+  z-index: 100;
 }
 
 .header-content {
@@ -383,6 +386,7 @@ body {
   margin: 0 auto;
   width: 100%;
   padding: 0 2rem;
+  /* Not sticky on desktop - only header is sticky */
 }
 
 .nav-tab {

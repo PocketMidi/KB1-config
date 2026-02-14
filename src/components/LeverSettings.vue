@@ -239,12 +239,13 @@ const isIncrementalMode = computed(() => model.value.functionMode === 2)
 
 // Step options for Incremental mode
 // MIDI range is 0-127 (128 total values)
+// stepSize represents the number of MIDI values per step
 const stepOptions = [
-  { value: 32, label: '4 steps (32 MIDI values per step)' },
-  { value: 16, label: '8 steps (16 MIDI values per step)' },
-  { value: 8, label: '16 steps (8 MIDI values per step)' },
-  { value: 4, label: '32 steps (4 MIDI values per step)' },
-  { value: 2, label: '64 steps (2 MIDI values per step)' },
+  { value: 32, label: '4 steps (32 MIDI values per step)' },   // 128/32 = 4 steps
+  { value: 16, label: '8 steps (16 MIDI values per step)' },   // 128/16 = 8 steps
+  { value: 8, label: '16 steps (8 MIDI values per step)' },    // 128/8 = 16 steps
+  { value: 4, label: '32 steps (4 MIDI values per step)' },    // 128/4 = 32 steps
+  { value: 2, label: '64 steps (2 MIDI values per step)' },    // 128/2 = 64 steps
 ]
 
 // Computed property for Interpolated mode to gang attack and decay types together
@@ -252,11 +253,8 @@ const interpolatedType = computed({
   get: () => model.value.onsetType,
   set: (value: number) => {
     // Set both onset and offset types to the same value
-    model.value = {
-      ...model.value,
-      onsetType: value,
-      offsetType: value
-    }
+    model.value.onsetType = value
+    model.value.offsetType = value
   }
 })
 </script>

@@ -22,7 +22,7 @@ const tabs = [
   { id: 'sliders' as Tab, label: 'SLIDERS' }
 ];
 
-// Hover state for bluetooth status text
+// Hover state for bluetooth connection section (text and icon)
 const isHoveringStatus = ref(false);
 
 async function handleConnect() {
@@ -74,7 +74,7 @@ async function handleConnect() {
           :class="{ connected: isConnected, hoverable: !isConnected }"
           @click="!isConnected && handleConnect()"
           @touchstart="!isConnected && (isHoveringStatus = true)"
-          @touchend="isHoveringStatus = false"
+          @touchend="!isConnected && (isHoveringStatus = false)"
           @mouseenter="!isConnected && (isHoveringStatus = true)"
           @mouseleave="isHoveringStatus = false"
         >
@@ -377,7 +377,7 @@ body {
 }
 
 .bluetooth-icon {
-  height: 32px; /* Scaled up by 60% per requirements */
+  height: 32px; /* Scaled up ~60% from typical 20px base for better visibility */
   width: auto;
   transition: filter 0.5s ease-in-out, 
               transform 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);

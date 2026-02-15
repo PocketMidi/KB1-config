@@ -545,7 +545,7 @@ const duration = computed({
   display: flex;
   justify-content: center;
   align-items: center;
-  width: 100%;
+  width: 95%;
 }
 
 .profile-visualization img {

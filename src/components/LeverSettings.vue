@@ -481,16 +481,23 @@ const duration = computed({
   align-items: center;
   gap: 2rem;
   margin-bottom: 2rem;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .toggle-container {
   flex-shrink: 0;
+  max-width: 180px;
+  display: flex;
+  justify-content: center;
 }
 
 .toggle-image {
   display: block;
-  height: 30px;
+  height: 35px;
   width: auto;
+  max-width: 100%;
   cursor: pointer;
   transition: opacity 0.2s ease;
 }
@@ -545,7 +552,8 @@ const duration = computed({
   display: flex;
   justify-content: center;
   align-items: center;
-  width: 95%;
+  max-width: 600px;
+  overflow: hidden;
 }
 
 .profile-visualization img {

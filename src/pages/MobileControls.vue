@@ -211,7 +211,7 @@ function getLeverSubtitle(lever: LeverSettingsType): string {
   const paramName = ccInfo?.parameter || `CC ${lever.ccNumber}`;
   // Show user-facing range based on polarity
   const range = lever.valueMode === 1 ? '-100 to 100' : '0 to 100';
-  return `${paramName} | ${range} | MIDI CC ${lever.ccNumber}`;
+  return `${paramName} | ${range}`;
 }
 
 function getLeverPushSubtitle(leverPush: LeverPushSettingsType): string {
@@ -220,14 +220,14 @@ function getLeverPushSubtitle(leverPush: LeverPushSettingsType): string {
   const paramName = ccInfo?.parameter || `CC ${leverPush.ccNumber}`;
   // Press is always unipolar (0-100)
   const range = '0 to 100';
-  return `${paramName} | ${range} | MIDI CC ${leverPush.ccNumber}`;
+  return `${paramName} | ${range}`;
 }
 
 function getTouchSubtitle(touch: TouchSettingsType): string {
   const ccMap = ccMapByNumber.value;
   const ccInfo = ccMap.get(touch.ccNumber);
   const paramName = ccInfo?.parameter || `CC ${touch.ccNumber}`;
-  return `${paramName} | MIDI CC ${touch.ccNumber}`;
+  return `${paramName}`;
 }
 
 // Watch for device settings changes

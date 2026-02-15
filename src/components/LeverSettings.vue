@@ -473,6 +473,27 @@ const duration = computed({
   .settings-lever {
     padding: 1rem;
   }
+  
+  .profile-visualization {
+    margin: 1rem auto;
+    padding: 0.75rem;
+    min-height: 200px;
+  }
+  
+  .profile-visualization img {
+    min-width: 100%;
+    object-fit: contain;
+  }
+}
+
+@media (max-width: 480px) {
+  .controls-row {
+    gap: 1rem;
+  }
+  
+  .profile-visualization {
+    min-height: 180px;
+  }
 }
 
 .controls-row {
@@ -484,6 +505,7 @@ const duration = computed({
   max-width: 600px;
   margin-left: auto;
   margin-right: auto;
+  flex-wrap: wrap;
 }
 
 .toggle-container {
@@ -495,7 +517,7 @@ const duration = computed({
 
 .toggle-image {
   display: block;
-  height: 35px;
+  height: 48px;
   width: auto;
   max-width: 100%;
   cursor: pointer;
@@ -544,19 +566,20 @@ const duration = computed({
 }
 
 .profile-visualization {
-  margin: 2rem auto;
-  padding: 1.5rem;
+  margin: 1.5rem auto;
+  padding: 1rem;
   background: var(--color-background);
   border: 1px solid var(--color-border);
   border-radius: 6px;
   display: flex;
   justify-content: center;
   align-items: center;
-  max-width: 600px;
-  overflow: hidden;
+  max-width: 100%;
+  width: 100%;
 }
 
 .profile-visualization img {
+  max-width: 100%;
   width: 100%;
   height: auto;
   display: block;

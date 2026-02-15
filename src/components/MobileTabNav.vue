@@ -1,30 +1,44 @@
 <template>
-  <nav class="mobile-tab-nav">
-    <!-- Tab buttons -->
-    <div class="tab-buttons">
-      <button
-        v-for="tab in tabs"
-        :key="tab.id"
-        class="tab-button"
-        :class="{ active: modelValue === tab.id }"
-        @click="$emit('update:modelValue', tab.id)"
+  <div class="mobile-tab-nav-wrapper">
+    <nav class="mobile-tab-nav">
+      <!-- Tab buttons -->
+      <div class="tab-buttons">
+        <button
+          v-for="tab in tabs"
+          :key="tab.id"
+          class="tab-button"
+          :class="{ active: modelValue === tab.id }"
+          @click="$emit('update:modelValue', tab.id)"
+        >
+          {{ tab.label }}
+        </button>
+      </div>
+      
+      <!-- Bluetooth status section -->
+      <div 
+        class="bluetooth-status" 
+        :class="{ connected: isConnected, hoverable: !isConnected }"
+        @click="!isConnected && $emit('connect')"
+        @touchstart="!isConnected && (isHovering = true)"
+        @touchend="isHovering = false"
+        @mouseenter="!isConnected && (isHovering = true)"
+        @mouseleave="isHovering = false"
       >
-        {{ tab.label }}
-      </button>
-    </div>
-    
-    <!-- Bluetooth status section -->
-    <div class="bluetooth-status">
-      <div class="separator"></div>
-      <span class="status-text" :class="{ connected: isConnected }">
-        {{ isConnected ? 'CONNECTED' : 'DISCONNECTED' }}
-      </span>
-      <img src="/bluetooth-icon.svg" alt="Bluetooth" class="bluetooth-icon" />
-    </div>
-  </nav>
+        <div class="separator"></div>
+        <span class="status-text">
+          {{ isConnected ? 'CONNECTED' : (isHovering ? 'CONNECT' : 'DISCONNECTED') }}
+        </span>
+        <img src="/bluetooth-icon.svg" alt="Bluetooth" class="bluetooth-icon" />
+      </div>
+    </nav>
+    <!-- Horizontal divider -->
+    <div class="nav-divider"></div>
+  </div>
 </template>
 
 <script setup lang="ts">
+import { ref } from 'vue';
+
 export interface Tab {
   id: string;
   label: string;
@@ -38,14 +52,21 @@ defineProps<{
 
 defineEmits<{
   'update:modelValue': [value: string];
+  connect: [];
 }>();
+
+const isHovering = ref(false);
 </script>
 
 <style scoped>
-.mobile-tab-nav {
+.mobile-tab-nav-wrapper {
   position: sticky;
   top: 0;
   z-index: 200;
+  background: #0F0F0F;
+}
+
+.mobile-tab-nav {
   display: flex;
   justify-content: space-between;
   align-items: stretch;
@@ -101,6 +122,19 @@ defineEmits<{
   border-radius: 1px;
 }
 
+/* Inactive tab underline */
+.tab-button:not(.active)::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: #EAEAEA;
+  opacity: 0.32;
+  border-radius: 1px;
+}
+
 .tab-button:active {
   transform: scale(0.98);
 }
@@ -114,11 +148,16 @@ defineEmits<{
   white-space: nowrap;
 }
 
+.bluetooth-status.hoverable {
+  cursor: pointer;
+}
+
 .separator {
   width: 2px;
   height: 1.25rem;
-  background: #EAEAEA;
+  background: rgba(234, 234, 234, 0.3);
   align-self: center;
+  flex-shrink: 0;
 }
 
 .status-text {
@@ -127,15 +166,45 @@ defineEmits<{
   font-size: 0.875rem;
   color: #47708E;
   opacity: 0.5;
+  transition: color 0.5s ease-in-out, opacity 0.5s ease-in-out, transform 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  transform-origin: center;
 }
 
-.status-text.connected {
+.bluetooth-status.hoverable:hover .status-text,
+.bluetooth-status.hoverable:active .status-text {
+  color: #74C4FF;
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+.bluetooth-status.connected .status-text {
   opacity: 1;
 }
 
 .bluetooth-icon {
-  height: 20px;
+  height: 32px; /* Scaled up by 60% (160% of original 20px) per requirements */
   width: auto;
+  transition: filter 0.5s ease-in-out, transform 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  transform-origin: center;
+}
+
+/* Bluetooth icon hover effect */
+.bluetooth-status.hoverable:hover .bluetooth-icon,
+.bluetooth-status.hoverable:active .bluetooth-icon {
+  filter: brightness(0) saturate(100%) invert(65%) sepia(45%) saturate(1154%) hue-rotate(174deg) brightness(101%) contrast(101%);
+  transform: scale(1.15);
+}
+
+.bluetooth-status.connected .bluetooth-icon {
+  filter: none;
+  transform: none;
+}
+
+/* Horizontal divider under navigation */
+.nav-divider {
+  height: 3px;
+  background: rgba(234, 234, 234, 0.3);
+  width: 100%;
 }
 
 @media (max-width: 768px) {
@@ -150,7 +219,7 @@ defineEmits<{
   }
   
   .bluetooth-icon {
-    height: 18px;
+    height: 32px; /* Scaled up by 60% per requirements, even on smaller screens */
   }
 }
 </style>

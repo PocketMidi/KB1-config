@@ -91,6 +91,7 @@ async function handleDisconnect() {
         :tabs="mobileTabs"
         :is-connected="isConnected"
         v-model="activeMobileTab"
+        @connect="handleConnect"
       />
       
       <main class="mobile-main">
@@ -141,7 +142,7 @@ async function handleDisconnect() {
         </div>
         
         <!-- Bluetooth status section -->
-        <div class="bluetooth-status">
+        <div class="bluetooth-status" :class="{ connected: isConnected }">
           <div class="separator"></div>
           <span 
             class="status-text" 
@@ -349,7 +350,7 @@ body {
 }
 
 .header-logo {
-  height: 60px;
+  height: 90px; /* 150% of original 60px */
   width: auto;
 }
 
@@ -442,6 +443,7 @@ body {
   height: 1.25rem;
   background: rgba(234, 234, 234, 0.3);
   align-self: center;
+  flex-shrink: 0; /* Prevent separator from moving */
 }
 
 .status-text {
@@ -450,7 +452,8 @@ body {
   font-size: 0.875rem;
   color: #47708E;
   opacity: 0.5;
-  transition: all 0.2s;
+  transition: color 0.5s ease-in-out, opacity 0.5s ease-in-out, transform 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  transform-origin: center;
 }
 
 .status-text.hoverable {
@@ -460,6 +463,7 @@ body {
 .status-text.hoverable:hover {
   color: #74C4FF;
   opacity: 1;
+  transform: scale(1.1);
 }
 
 .status-text.connected {
@@ -467,8 +471,26 @@ body {
 }
 
 .bluetooth-icon {
-  height: 32px;
+  height: 32px; /* Scaled up by 60% per requirements (160% of original) */
   width: auto;
+  transition: filter 0.5s ease-in-out, transform 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  transform-origin: center;
+}
+
+/* Bluetooth status hover effect for icon */
+.bluetooth-status:hover .bluetooth-icon {
+  filter: brightness(0) saturate(100%) invert(65%) sepia(45%) saturate(1154%) hue-rotate(174deg) brightness(101%) contrast(101%);
+  transform: scale(1.15);
+}
+
+.bluetooth-status.connected .bluetooth-icon {
+  filter: none;
+  transform: none;
+}
+
+.bluetooth-status.connected:hover .bluetooth-icon {
+  filter: none;
+  transform: none;
 }
 
 /* Horizontal divider under navigation */

@@ -26,9 +26,9 @@ type MobileTab = 'controls' | 'scales' | 'sliders';
 const activeMobileTab = ref<MobileTab>('controls');
 
 const mobileTabs = [
-  { id: 'controls', label: 'Controls' },
-  { id: 'scales', label: 'Scales' },
-  { id: 'sliders', label: 'Sliders' }
+  { id: 'controls', label: 'CONTROLS' },
+  { id: 'scales', label: 'SCALES' },
+  { id: 'sliders', label: 'SLIDERS' }
 ];
 
 async function handleConnect() {
@@ -342,10 +342,14 @@ body {
   gap: 2rem;
 }
 
+/* When only logo is present (connected state), center it */
+.header-content:not(:has(.btn-bluetooth-connect)) {
+  justify-content: center;
+}
+
 .logo-section {
   display: flex;
   align-items: center;
-  margin-left: auto;
 }
 
 .header-logo {

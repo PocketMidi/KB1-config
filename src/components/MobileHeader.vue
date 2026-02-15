@@ -44,6 +44,11 @@ defineEmits<{
   gap: 2rem;
 }
 
+/* When only logo is present (connected state), center it */
+.header-top:not(:has(.bluetooth-connect-btn)) {
+  justify-content: center;
+}
+
 /* Bluetooth Connect Button - Disconnected State */
 .bluetooth-connect-btn {
   padding: 0.75rem 1.5rem;
@@ -70,9 +75,5 @@ defineEmits<{
 .header-logo {
   height: 40px;
   width: auto;
-  margin-left: auto;
 }
-
-/* When disconnected, logo stays on right */
-/* When connected, logo is centered (no button on left) */
 </style>

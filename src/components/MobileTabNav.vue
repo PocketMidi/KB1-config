@@ -9,7 +9,7 @@
         :class="{ active: modelValue === tab.id }"
         @click="$emit('update:modelValue', tab.id)"
       >
-        {{ tab.label.toUpperCase() }}
+        {{ tab.label }}
       </button>
     </div>
     

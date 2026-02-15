@@ -10,6 +10,7 @@ const {
   isBluetoothAvailable, 
   isConnected, 
   connect,
+  disconnect,
 } = useDeviceState();
 
 // Single unified tab state
@@ -30,6 +31,14 @@ async function handleConnect() {
     await connect();
   } catch (error) {
     console.error('Connection failed:', error);
+  }
+}
+
+async function handleDisconnect() {
+  try {
+    await disconnect();
+  } catch (error) {
+    console.error('Disconnection failed:', error);
   }
 }
 
@@ -71,15 +80,15 @@ async function handleConnect() {
         <!-- Bluetooth status section -->
         <div 
           class="bluetooth-status" 
-          :class="{ connected: isConnected, hoverable: !isConnected }"
-          @click="!isConnected && handleConnect()"
-          @touchstart="!isConnected && (isHoveringStatus = true)"
-          @touchend="!isConnected && (isHoveringStatus = false)"
-          @mouseenter="!isConnected && (isHoveringStatus = true)"
+          :class="{ connected: isConnected, hoverable: true }"
+          @click="isConnected ? handleDisconnect() : handleConnect()"
+          @touchstart="isHoveringStatus = true"
+          @touchend="isHoveringStatus = false"
+          @mouseenter="isHoveringStatus = true"
           @mouseleave="isHoveringStatus = false"
         >
           <span class="status-text">
-            {{ isConnected ? 'CONNECTED' : (isHoveringStatus ? 'CONNECT' : 'DISCONNECTED') }}
+            {{ isConnected ? (isHoveringStatus ? 'DISCONNECT' : 'CONNECTED') : (isHoveringStatus ? 'CONNECT' : 'DISCONNECTED') }}
           </span>
           <img src="/bluetooth-icon.svg" alt="Bluetooth" class="bluetooth-icon" />
         </div>
@@ -333,7 +342,7 @@ body {
 /* Vertical separator (divider) after tabs */
 .separator {
   width: 2px;
-  height: 70%;
+  height: 50%;
   background: rgba(234, 234, 234, 0.3);
   align-self: center;
   flex-shrink: 0;
@@ -397,9 +406,9 @@ body {
   transform: none;
 }
 
-.bluetooth-status.connected:hover .bluetooth-icon {
-  filter: none;
-  transform: none;
+.bluetooth-status.connected.hoverable:hover .bluetooth-icon {
+  filter: brightness(0) saturate(100%) invert(65%) sepia(45%) saturate(1154%) hue-rotate(174deg) brightness(101%) contrast(101%);
+  transform: scale(1.15);
 }
 
 /* Horizontal divider under navigation */

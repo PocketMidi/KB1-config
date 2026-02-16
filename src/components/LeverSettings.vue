@@ -691,6 +691,14 @@ const duration = computed({
   padding-right: 2rem;
 }
 
+.group option {
+  background: var(--color-background);
+  color: #EAEAEA;
+  font-family: 'Roboto Mono';
+  font-weight: 400;
+  font-size: 0.8125rem;
+}
+
 .group input:focus,
 .group select:focus {
   outline: none;

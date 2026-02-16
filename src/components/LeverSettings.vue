@@ -469,7 +469,7 @@ const duration = computed({
 <style scoped>
 
 .settings-lever {
-  padding: 1rem 1rem 1rem 0.25rem; /* top right bottom left - minimal left padding */
+  padding: 1rem 1rem 1rem 0; /* Remove left padding for flush alignment */
   background: var(--color-background-soft);
   border: 1px solid var(--color-border);
   border-radius: 8px;
@@ -483,16 +483,18 @@ const duration = computed({
 
 @media (max-width: 768px) {
   .settings-lever {
-    padding: 0.75rem;
+    padding: 0.75rem 0.75rem 0.75rem 0; /* Keep left padding at 0 */
   }
 }
 
 .controls-row {
   display: flex;
-  justify-content: center;
+  justify-content: flex-start; /* Align to left for flush alignment */
   align-items: center;
   gap: 1rem;
   margin-bottom: 1.5rem;
+  margin-left: 0;
+  padding-left: 0;
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;
@@ -558,7 +560,9 @@ const duration = computed({
 
 .profile-visualization {
   margin: 1.5rem 0; /* Remove auto left/right margin */
+  margin-left: 0;
   padding: 0; /* Remove padding that creates space */
+  padding-left: 0;
   background: var(--color-background);
   border: 1px solid var(--color-border);
   border-radius: 6px;
@@ -602,6 +606,8 @@ const duration = computed({
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 1rem;
+  padding-left: 0;
+  margin-left: 0;
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;

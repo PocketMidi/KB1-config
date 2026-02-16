@@ -484,6 +484,7 @@ const duration = computed({
   max-width: 600px;
   margin-left: auto;
   margin-right: auto;
+  flex-wrap: wrap;
 }
 
 .toggle-container {
@@ -495,7 +496,7 @@ const duration = computed({
 
 .toggle-image {
   display: block;
-  height: 35px;
+  height: 48px;
   width: auto;
   max-width: 100%;
   cursor: pointer;
@@ -544,14 +545,15 @@ const duration = computed({
 }
 
 .profile-visualization {
-  margin: 2rem auto;
-  padding: 1.5rem;
+  margin: 1.5rem auto;
+  padding: 1rem;
   background: var(--color-background);
   border: 1px solid var(--color-border);
   border-radius: 6px;
   display: flex;
   justify-content: center;
   align-items: center;
+  width: 100%;
   max-width: 600px;
   overflow: hidden;
 }
@@ -560,6 +562,29 @@ const duration = computed({
   width: 100%;
   height: auto;
   display: block;
+}
+
+/* Mobile-specific sizing */
+@media (max-width: 768px) {
+  .profile-visualization {
+    margin: 1rem auto;
+    padding: 0.75rem;
+    min-height: 200px;
+  }
+  
+  .profile-visualization img {
+    object-fit: contain;
+  }
+}
+
+@media (max-width: 480px) {
+  .controls-row {
+    gap: 1rem;
+  }
+  
+  .profile-visualization {
+    min-height: 180px;
+  }
 }
 
 .inputs {

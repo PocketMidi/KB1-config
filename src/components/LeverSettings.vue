@@ -481,7 +481,6 @@ const duration = computed({
   }
   
   .profile-visualization img {
-    min-width: 100%;
     object-fit: contain;
   }
 }
@@ -574,12 +573,10 @@ const duration = computed({
   display: flex;
   justify-content: center;
   align-items: center;
-  max-width: 100%;
   width: 100%;
 }
 
 .profile-visualization img {
-  max-width: 100%;
   width: 100%;
   height: auto;
   display: block;

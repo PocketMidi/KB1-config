@@ -475,12 +475,6 @@ const duration = computed({
   }
 }
 
-@media (max-width: 480px) {
-  .settings-lever {
-    padding: 0.75rem;
-  }
-}
-
 .controls-row {
   display: flex;
   justify-content: center;
@@ -501,7 +495,7 @@ const duration = computed({
 
 .toggle-image {
   display: block;
-  height: 48px;
+  height: 32px;
   width: auto;
   cursor: pointer;
   transition: opacity 0.2s ease;
@@ -575,30 +569,6 @@ const duration = computed({
   .profile-visualization {
     margin: 1rem auto;
     padding: 0.5rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .controls-row {
-    gap: 0.75rem;
-  }
-  
-  .profile-selector {
-    gap: 1rem;
-  }
-  
-  .profile-btn {
-    font-size: 0.9rem;
-    padding: 0.5rem 0.25rem;
-  }
-  
-  .toggle-image {
-    height: 40px;
-  }
-  
-  .profile-visualization {
-    margin: 0.75rem auto;
-    padding: 0.25rem;
   }
 }
 

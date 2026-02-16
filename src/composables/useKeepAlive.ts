@@ -17,6 +17,9 @@ export function useKeepAlive(bleClient: BLEClient) {
   const isKeepAliveActive = ref(false);
   let stabilizationTimeout: ReturnType<typeof setTimeout> | null = null;
 
+  // Delay to allow BLE connection to stabilize before starting keep-alive
+  const STABILIZATION_DELAY_MS = 3000;
+
   /**
    * Initialize keep-alive service with ping callback
    */
@@ -48,7 +51,7 @@ export function useKeepAlive(bleClient: BLEClient) {
       } else {
         console.warn('Connection lost during stabilization period');
       }
-    }, 3000); // 3 second stabilization delay
+    }, STABILIZATION_DELAY_MS);
   };
 
   /**

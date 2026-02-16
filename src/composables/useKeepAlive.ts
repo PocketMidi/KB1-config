@@ -10,11 +10,18 @@ import { KeepAliveService } from '../services/KeepAliveService';
 import type { BLEClient } from '../ble/bleClient';
 
 /**
+ * Delay before starting keep-alive after BLE connection (in milliseconds)
+ * This prevents immediate keep-alive pings that can cause disconnection
+ */
+const KEEP_ALIVE_START_DELAY_MS = 3000;
+
+/**
  * Vue composable for managing keep-alive pings
  */
 export function useKeepAlive(bleClient: BLEClient) {
   const keepAliveService = new KeepAliveService();
   const isKeepAliveActive = ref(false);
+  let startDelayTimeout: ReturnType<typeof setTimeout> | null = null;
 
   /**
    * Initialize keep-alive service with ping callback
@@ -30,10 +37,16 @@ export function useKeepAlive(bleClient: BLEClient) {
    */
   const startIfConnected = () => {
     if (bleClient.isConnected()) {
-      setTimeout(() => {
+      // Clear any pending start timeout
+      if (startDelayTimeout) {
+        clearTimeout(startDelayTimeout);
+      }
+      
+      startDelayTimeout = setTimeout(() => {
         keepAliveService.startKeepAlive();
         isKeepAliveActive.value = true;
-      }, 3000);
+        startDelayTimeout = null;
+      }, KEEP_ALIVE_START_DELAY_MS);
     }
   };
 
@@ -41,6 +54,12 @@ export function useKeepAlive(bleClient: BLEClient) {
    * Stop keep-alive
    */
   const stop = () => {
+    // Clear any pending start timeout
+    if (startDelayTimeout) {
+      clearTimeout(startDelayTimeout);
+      startDelayTimeout = null;
+    }
+    
     keepAliveService.stopKeepAlive();
     isKeepAliveActive.value = false;
   };
@@ -72,10 +91,16 @@ export function useKeepAlive(bleClient: BLEClient) {
     // Listen for connection status changes
     bleClient.setStatusChangeCallback((status) => {
       if (status.connected) {
-        setTimeout(() => {
+        // Clear any pending start timeout
+        if (startDelayTimeout) {
+          clearTimeout(startDelayTimeout);
+        }
+        
+        startDelayTimeout = setTimeout(() => {
           keepAliveService.startKeepAlive();
           isKeepAliveActive.value = true;
-        }, 3000);
+          startDelayTimeout = null;
+        }, KEEP_ALIVE_START_DELAY_MS);
       } else {
         stop();
       }

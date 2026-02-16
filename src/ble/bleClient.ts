@@ -20,6 +20,7 @@ const LEVERPUSH2_SETTINGS_UUID = '52629808-3d14-4ae8-a826-40bcec6467d5';
 const TOUCH_SETTINGS_UUID = '5612b54d-8bfe-4217-a079-c9c95ab32c41';
 const SCALE_SETTINGS_UUID = '297bd635-c3e8-4fb4-b5e0-93586da8f14c';
 const MIDI_UUID = 'eb58b31b-d963-4c7d-9a11-e8aabec2fe32';
+const KEEPALIVE_UUID = 'a8f3d5e2-9c4b-11ef-8e7a-325096b39f47';
 
 export interface BLEConnectionStatus {
   connected: boolean;
@@ -41,6 +42,12 @@ export class BLEClient {
   private leverPush2Characteristic: BluetoothRemoteGATTCharacteristic | null = null;
   private touchCharacteristic: BluetoothRemoteGATTCharacteristic | null = null;
   private scaleCharacteristic: BluetoothRemoteGATTCharacteristic | null = null;
+  private keepAliveCharacteristic: BluetoothRemoteGATTCharacteristic | null = null;
+
+  // Keep-alive mechanism (firmware expects writes within 2 minute grace period)
+  private keepAliveTimer: ReturnType<typeof setInterval> | null = null;
+  private keepAliveIntervalMs: number = 60000; // 60 seconds (well within 2 min grace period)
+  private keepAliveEnabled: boolean = true;
 
   /**
    * Register a callback for connection status changes
@@ -108,6 +115,7 @@ export class BLEClient {
         this.leverPush2Characteristic = await service.getCharacteristic(LEVERPUSH2_SETTINGS_UUID);
         this.touchCharacteristic = await service.getCharacteristic(TOUCH_SETTINGS_UUID);
         this.scaleCharacteristic = await service.getCharacteristic(SCALE_SETTINGS_UUID);
+        this.keepAliveCharacteristic = await service.getCharacteristic(KEEPALIVE_UUID);
         console.log('All settings characteristics obtained');
       } catch (e) {
         console.warn('Some settings characteristics not available:', e);
@@ -121,6 +129,9 @@ export class BLEClient {
       } catch (e) {
         console.warn('Notifications not supported:', e);
       }
+
+      // Start keep-alive timer to maintain connection
+      this.startKeepAlive();
 
       this.notifyStatusChange(true);
     } catch (error) {
@@ -333,14 +344,78 @@ export class BLEClient {
    */
   private onDisconnected(): void {
     console.log('Device disconnected');
+    this.stopKeepAlive();
     this.cleanup();
     this.notifyStatusChange(false);
+  }
+
+  /**
+   * Start keep-alive timer to maintain BLE connection
+   * Writes to the dedicated KEEPALIVE characteristic every 60 seconds
+   * (firmware has a 2 minute grace period)
+   */
+  private startKeepAlive(): void {
+    if (!this.keepAliveEnabled) {
+      return;
+    }
+
+    // Stop any existing timer
+    this.stopKeepAlive();
+
+    console.log(`Starting BLE keep-alive (interval: ${this.keepAliveIntervalMs}ms)`);
+
+    this.keepAliveTimer = setInterval(() => {
+      if (this.isConnected() && this.keepAliveCharacteristic) {
+        try {
+          // Write a single byte to the keep-alive characteristic
+          // The firmware doesn't care about the content, just that a write occurred
+          const pingData = new Uint8Array([1]);
+          this.keepAliveCharacteristic.writeValueWithoutResponse(pingData).catch((error) => {
+            console.warn('Keep-alive ping failed:', error);
+          });
+        } catch (error) {
+          console.warn('Failed to send keep-alive ping:', error);
+        }
+      } else {
+        // If not connected or characteristic not available, stop the timer
+        this.stopKeepAlive();
+      }
+    }, this.keepAliveIntervalMs);
+  }
+
+  /**
+   * Stop keep-alive timer
+   */
+  private stopKeepAlive(): void {
+    if (this.keepAliveTimer) {
+      clearInterval(this.keepAliveTimer);
+      this.keepAliveTimer = null;
+      console.log('Stopped BLE keep-alive');
+    }
+  }
+
+  /**
+   * Configure keep-alive settings
+   * @param enabled Whether to enable keep-alive
+   * @param intervalMs Keep-alive interval in milliseconds (default: 60000)
+   */
+  setKeepAlive(enabled: boolean, intervalMs: number = 60000): void {
+    this.keepAliveEnabled = enabled;
+    this.keepAliveIntervalMs = intervalMs;
+
+    // Restart timer if currently connected
+    if (this.isConnected() && enabled) {
+      this.startKeepAlive();
+    } else if (!enabled) {
+      this.stopKeepAlive();
+    }
   }
 
   /**
    * Clean up resources
    */
   private cleanup(): void {
+    this.stopKeepAlive();
     if (this.characteristic) {
       this.characteristic.removeEventListener('characteristicvaluechanged', 
         this.onCharacteristicValueChanged.bind(this));
@@ -352,6 +427,7 @@ export class BLEClient {
     this.leverPush2Characteristic = null;
     this.touchCharacteristic = null;
     this.scaleCharacteristic = null;
+    this.keepAliveCharacteristic = null;
     this.server = null;
     // Note: We don't set device to null to preserve device info
   }

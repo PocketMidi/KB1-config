@@ -30,8 +30,18 @@ export function useKeepAlive(bleClient: BLEClient) {
    */
   const startIfConnected = () => {
     if (bleClient.isConnected()) {
-      keepAliveService.startKeepAlive();
-      isKeepAliveActive.value = true;
+      // Add stabilization delay before starting keep-alive
+      console.log('Connection successful - waiting 3 seconds before starting keep-alive...');
+      setTimeout(() => {
+        // Double-check connection is still valid after delay
+        if (bleClient.isConnected()) {
+          keepAliveService.startKeepAlive();
+          isKeepAliveActive.value = true;
+          console.log('Keep-alive started after stabilization period');
+        } else {
+          console.warn('Connection lost during stabilization period');
+        }
+      }, 3000); // 3 second stabilization delay
     }
   };
 
@@ -70,8 +80,18 @@ export function useKeepAlive(bleClient: BLEClient) {
     // Listen for connection status changes
     bleClient.setStatusChangeCallback((status) => {
       if (status.connected) {
-        keepAliveService.startKeepAlive();
-        isKeepAliveActive.value = true;
+        // Add stabilization delay before starting keep-alive
+        console.log('Connection successful - waiting 3 seconds before starting keep-alive...');
+        setTimeout(() => {
+          // Double-check connection is still valid after delay
+          if (bleClient.isConnected()) {
+            keepAliveService.startKeepAlive();
+            isKeepAliveActive.value = true;
+            console.log('Keep-alive started after stabilization period');
+          } else {
+            console.warn('Connection lost during stabilization period');
+          }
+        }, 3000); // 3 second stabilization delay
       } else {
         stop();
       }

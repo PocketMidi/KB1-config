@@ -43,8 +43,11 @@ export function useKeepAlive(bleClient: BLEClient) {
       }
       
       startDelayTimeout = setTimeout(() => {
-        keepAliveService.startKeepAlive();
-        isKeepAliveActive.value = true;
+        // Verify connection still active before starting
+        if (bleClient.isConnected()) {
+          keepAliveService.startKeepAlive();
+          isKeepAliveActive.value = true;
+        }
         startDelayTimeout = null;
       }, KEEP_ALIVE_START_DELAY_MS);
     }
@@ -97,8 +100,11 @@ export function useKeepAlive(bleClient: BLEClient) {
         }
         
         startDelayTimeout = setTimeout(() => {
-          keepAliveService.startKeepAlive();
-          isKeepAliveActive.value = true;
+          // Verify connection still active before starting
+          if (bleClient.isConnected()) {
+            keepAliveService.startKeepAlive();
+            isKeepAliveActive.value = true;
+          }
           startDelayTimeout = null;
         }, KEEP_ALIVE_START_DELAY_MS);
       } else {

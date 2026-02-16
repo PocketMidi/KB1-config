@@ -50,7 +50,7 @@ function toggle() {
   background: var(--color-background-soft);
   border: 1px solid var(--color-border);
   border-radius: var(--kb1-radius-md, 8px);
-  margin-bottom: 1rem;
+  margin-bottom: 0;
   overflow: hidden;
   width: 100%;
   max-width: 100%;

@@ -32,6 +32,8 @@
         />
       </AccordionSection>
       
+      <div class="accordion-divider"></div>
+      
       <AccordionSection
         :title="`Press 1`"
         :subtitle="getLeverPushSubtitle(localSettings.leverPush1)"
@@ -51,6 +53,8 @@
           @update:modelValue="markChanged"
         />
       </AccordionSection>
+      
+      <div class="accordion-divider"></div>
       
       <AccordionSection
         :title="`Lever 2`"
@@ -73,6 +77,8 @@
         />
       </AccordionSection>
       
+      <div class="accordion-divider"></div>
+      
       <AccordionSection
         :title="`Press 2`"
         :subtitle="getLeverPushSubtitle(localSettings.leverPush2)"
@@ -92,6 +98,8 @@
           @update:modelValue="markChanged"
         />
       </AccordionSection>
+      
+      <div class="accordion-divider"></div>
       
       <AccordionSection
         title="Touch Sensor"
@@ -310,6 +318,13 @@ async function handleSaveToDevice() {
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;
+}
+
+.accordion-divider {
+  height: 2px;
+  background: rgba(234, 234, 234, 0.3);
+  margin: 0 0 1rem 0;
+  width: 100%;
 }
 
 @media (max-width: 768px) {

@@ -17,6 +17,11 @@
       :step="step"
       @input="handleInput"
       @blur="validateAndUpdate"
+      @wheel="handleWheel"
+      @mousedown="handleMouseDown"
+      @touchstart="handleTouchStart"
+      @touchmove="handleTouchMove"
+      @touchend="handleTouchEnd"
     />
     <button 
       class="stepper-btn"
@@ -30,7 +35,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref, onBeforeUnmount } from 'vue'
 
 const props = withDefaults(defineProps<{
   modelValue: number
@@ -50,6 +55,11 @@ const props = withDefaults(defineProps<{
 const emit = defineEmits<{
   (e: 'update:modelValue', value: number): void
 }>()
+
+// Drag tracking
+const isDragging = ref(false)
+const dragStartX = ref(0)
+const dragStartValue = ref(0)
 
 const isAtMin = computed(() => props.modelValue <= props.min)
 const isAtMax = computed(() => props.modelValue >= props.max)
@@ -110,6 +120,73 @@ function validateAndUpdate(event: Event) {
     emit('update:modelValue', clamped)
   }
 }
+
+// Mouse wheel scroll support
+function handleWheel(event: WheelEvent) {
+  event.preventDefault()
+  const delta = event.deltaY > 0 ? -1 : 1
+  const change = delta * props.smallStep
+  const newValue = snapToStep(props.modelValue + change)
+  emit('update:modelValue', clamp(newValue))
+}
+
+// Mouse drag support
+function handleMouseDown(event: MouseEvent) {
+  event.preventDefault()
+  isDragging.value = true
+  dragStartX.value = event.clientX
+  dragStartValue.value = props.modelValue
+  
+  document.addEventListener('mousemove', handleMouseMove)
+  document.addEventListener('mouseup', handleMouseUp)
+}
+
+function handleMouseMove(event: MouseEvent) {
+  if (!isDragging.value) return
+  
+  const deltaX = event.clientX - dragStartX.value
+  // Scale: 5 pixels of movement = 1 step
+  const steps = Math.round(deltaX / 5)
+  const change = steps * props.step
+  const newValue = snapToStep(dragStartValue.value + change)
+  emit('update:modelValue', clamp(newValue))
+}
+
+function handleMouseUp() {
+  isDragging.value = false
+  document.removeEventListener('mousemove', handleMouseMove)
+  document.removeEventListener('mouseup', handleMouseUp)
+}
+
+// Touch gesture support (horizontal drag)
+function handleTouchStart(event: TouchEvent) {
+  if (!event.touches[0]) return
+  isDragging.value = true
+  dragStartX.value = event.touches[0].clientX
+  dragStartValue.value = props.modelValue
+}
+
+function handleTouchMove(event: TouchEvent) {
+  if (!isDragging.value || !event.touches[0]) return
+  event.preventDefault()
+  
+  const deltaX = event.touches[0].clientX - dragStartX.value
+  // Scale: 5 pixels of movement = 1 step
+  const steps = Math.round(deltaX / 5)
+  const change = steps * props.step
+  const newValue = snapToStep(dragStartValue.value + change)
+  emit('update:modelValue', clamp(newValue))
+}
+
+function handleTouchEnd() {
+  isDragging.value = false
+}
+
+// Cleanup on unmount
+onBeforeUnmount(() => {
+  document.removeEventListener('mousemove', handleMouseMove)
+  document.removeEventListener('mouseup', handleMouseUp)
+})
 </script>
 
 <style scoped>
@@ -155,6 +232,9 @@ function validateAndUpdate(event: Event) {
   font-family: 'Roboto Mono';
   font-weight: 400;
   text-align: center;
+  cursor: ew-resize; /* Indicates horizontal dragging */
+  touch-action: none; /* Prevent default touch behaviors */
+  user-select: none; /* Prevent text selection while dragging */
 }
 
 .value-input:focus {

@@ -119,9 +119,39 @@
       <template v-if="!isIncrementalMode">
         <div class="group">
           <label :for="`lever-duration-${lever}`">DURATION</label>
-          <div class="number-with-unit">
-            <input type="number" :id="`lever-duration-${lever}`" v-model.number="duration" min="0" max="10000" step="10" />
-            <span>ms</span>
+          <div class="value-control">
+            <button 
+              class="stepper-btn"
+              :disabled="duration <= 0"
+              @click="decreaseDuration"
+              title="Decrease by 10ms"
+            >
+              ◄
+            </button>
+            <div class="duration-wrapper">
+              <input 
+                type="number" 
+                :id="`lever-duration-${lever}`" 
+                v-model.number="duration" 
+                min="0" 
+                max="10000" 
+                step="10"
+                class="duration-input"
+                @wheel="handleDurationWheel"
+                @mousedown="handleDurationMouseDown"
+                @touchstart="handleDurationTouchStart"
+                @touchmove="handleDurationTouchMove"
+                @touchend="handleDurationTouchEnd"
+              /><span class="unit-label">ms</span>
+            </div>
+            <button 
+              class="stepper-btn"
+              :disabled="duration >= 10000"
+              @click="increaseDuration"
+              title="Increase by 10ms"
+            >
+              ►
+            </button>
           </div>
         </div>
       </template>
@@ -130,9 +160,34 @@
       <template v-else>
         <div class="group">
           <label :for="`lever-steps-${lever}`">STEPS</label>
-          <select :id="`lever-steps-${lever}`" v-model.number="stepsValue">
-            <option v-for="opt in stepOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
-          </select>
+          <div class="value-control">
+            <button 
+              class="stepper-btn"
+              :disabled="isStepsAtMin"
+              @click="decreaseSteps"
+              title="Previous step value"
+            >
+              ◄
+            </button>
+            <div 
+              class="draggable-value-inline"
+              @mousedown="handleStepsMouseDown"
+              @touchstart="handleStepsTouchStart"
+              @touchmove="handleStepsTouchMove"
+              @touchend="handleStepsTouchEnd"
+              @wheel="handleStepsWheel"
+            >
+              {{ stepsValue }}
+            </div>
+            <button 
+              class="stepper-btn"
+              :disabled="isStepsAtMax"
+              @click="increaseSteps"
+              title="Next step value"
+            >
+              ►
+            </button>
+          </div>
         </div>
       </template>
     </div>
@@ -240,6 +295,12 @@ onBeforeUnmount(() => {
   if (animationTimeoutId.value !== null) {
     clearTimeout(animationTimeoutId.value)
   }
+  // Cleanup duration drag event listeners
+  document.removeEventListener('mousemove', handleDurationMouseMove)
+  document.removeEventListener('mouseup', handleDurationMouseUp)
+  // Cleanup steps drag event listeners
+  document.removeEventListener('mousemove', handleStepsMouseMove)
+  document.removeEventListener('mouseup', handleStepsMouseUp)
 })
 
 // Profile selection logic
@@ -481,6 +542,171 @@ const duration = computed({
     model.value.offsetTime = value
   }
 })
+
+// Touch tracking for duration input
+const durationDragging = ref(false)
+const durationDragStartX = ref(0)
+const durationDragStartValue = ref(0)
+
+// Mouse wheel scroll for duration
+function handleDurationWheel(event: WheelEvent) {
+  event.preventDefault()
+  const delta = event.deltaY > 0 ? -10 : 10
+  const newValue = Math.max(0, Math.min(10000, duration.value + delta))
+  duration.value = newValue
+}
+
+// Mouse drag support for duration
+function handleDurationMouseDown(event: MouseEvent) {
+  event.preventDefault()
+  durationDragging.value = true
+  durationDragStartX.value = event.clientX
+  durationDragStartValue.value = duration.value
+  
+  document.addEventListener('mousemove', handleDurationMouseMove)
+  document.addEventListener('mouseup', handleDurationMouseUp)
+}
+
+function handleDurationMouseMove(event: MouseEvent) {
+  if (!durationDragging.value) return
+  
+  const deltaX = event.clientX - durationDragStartX.value
+  // Scale: 2 pixels of movement = 10ms change
+  const change = Math.round(deltaX / 2) * 10
+  const newValue = Math.max(0, Math.min(10000, durationDragStartValue.value + change))
+  duration.value = newValue
+}
+
+function handleDurationMouseUp() {
+  durationDragging.value = false
+  document.removeEventListener('mousemove', handleDurationMouseMove)
+  document.removeEventListener('mouseup', handleDurationMouseUp)
+}
+
+// Touch gesture support for duration (horizontal drag)
+function handleDurationTouchStart(event: TouchEvent) {
+  if (!event.touches[0]) return
+  durationDragging.value = true
+  durationDragStartX.value = event.touches[0].clientX
+  durationDragStartValue.value = duration.value
+}
+
+function handleDurationTouchMove(event: TouchEvent) {
+  if (!durationDragging.value || !event.touches[0]) return
+  event.preventDefault()
+  
+  const deltaX = event.touches[0].clientX - durationDragStartX.value
+  // Scale: 2 pixels of movement = 10ms change
+  const change = Math.round(deltaX / 2) * 10
+  const newValue = Math.max(0, Math.min(10000, durationDragStartValue.value + change))
+  duration.value = newValue
+}
+
+function handleDurationTouchEnd() {
+  durationDragging.value = false
+}
+
+// Steps drag support
+const stepsDragging = ref(false)
+const stepsDragStartX = ref(0)
+const stepsDragStartIndex = ref(0)
+const stepsOptions = [4, 8, 16, 32, 64]
+
+// Mouse wheel for steps
+function handleStepsWheel(event: WheelEvent) {
+  event.preventDefault()
+  const currentIndex = stepsOptions.indexOf(stepsValue.value)
+  const delta = event.deltaY > 0 ? -1 : 1
+  const newIndex = Math.max(0, Math.min(stepsOptions.length - 1, currentIndex + delta))
+  stepsValue.value = stepsOptions[newIndex]
+}
+
+// Mouse drag for steps
+function handleStepsMouseDown(event: MouseEvent) {
+  event.preventDefault()
+  stepsDragging.value = true
+  stepsDragStartX.value = event.clientX
+  stepsDragStartIndex.value = stepsOptions.indexOf(stepsValue.value)
+  
+  document.addEventListener('mousemove', handleStepsMouseMove)
+  document.addEventListener('mouseup', handleStepsMouseUp)
+}
+
+function handleStepsMouseMove(event: MouseEvent) {
+  if (!stepsDragging.value) return
+  
+  const deltaX = event.clientX - stepsDragStartX.value
+  // Scale: 30 pixels of movement = 1 step in the array
+  const indexChange = Math.round(deltaX / 30)
+  const newIndex = Math.max(0, Math.min(stepsOptions.length - 1, stepsDragStartIndex.value + indexChange))
+  stepsValue.value = stepsOptions[newIndex]
+}
+
+function handleStepsMouseUp() {
+  stepsDragging.value = false
+  document.removeEventListener('mousemove', handleStepsMouseMove)
+  document.removeEventListener('mouseup', handleStepsMouseUp)
+}
+
+// Touch drag for steps
+function handleStepsTouchStart(event: TouchEvent) {
+  if (!event.touches[0]) return
+  stepsDragging.value = true
+  stepsDragStartX.value = event.touches[0].clientX
+  stepsDragStartIndex.value = stepsOptions.indexOf(stepsValue.value)
+}
+
+function handleStepsTouchMove(event: TouchEvent) {
+  if (!stepsDragging.value || !event.touches[0]) return
+  event.preventDefault()
+  
+  const deltaX = event.touches[0].clientX - stepsDragStartX.value
+  // Scale: 30 pixels of movement = 1 step in the array
+  const indexChange = Math.round(deltaX / 30)
+  const newIndex = Math.max(0, Math.min(stepsOptions.length - 1, stepsDragStartIndex.value + indexChange))
+  stepsValue.value = stepsOptions[newIndex]
+}
+
+function handleStepsTouchEnd() {
+  stepsDragging.value = false
+}
+
+// Arrow button functions for duration
+function decreaseDuration() {
+  const newValue = Math.max(0, duration.value - 10)
+  duration.value = newValue
+}
+
+function increaseDuration() {
+  const newValue = Math.min(10000, duration.value + 10)
+  duration.value = newValue
+}
+
+// Computed properties for steps min/max
+const isStepsAtMin = computed(() => {
+  const currentIndex = stepsOptions.indexOf(stepsValue.value)
+  return currentIndex <= 0
+})
+
+const isStepsAtMax = computed(() => {
+  const currentIndex = stepsOptions.indexOf(stepsValue.value)
+  return currentIndex >= stepsOptions.length - 1
+})
+
+// Arrow button functions for steps
+function decreaseSteps() {
+  const currentIndex = stepsOptions.indexOf(stepsValue.value)
+  if (currentIndex > 0) {
+    stepsValue.value = stepsOptions[currentIndex - 1]
+  }
+}
+
+function increaseSteps() {
+  const currentIndex = stepsOptions.indexOf(stepsValue.value)
+  if (currentIndex < stepsOptions.length - 1) {
+    stepsValue.value = stepsOptions[currentIndex + 1]
+  }
+}
 </script>
 
 <style scoped>
@@ -707,7 +933,10 @@ const duration = computed({
   font-size: 0.8125rem;
   font-family: 'Roboto Mono';
   font-weight: 400;
-  text-align: right;
+  text-align: center;
+  cursor: ew-resize; /* Indicates horizontal dragging */
+  touch-action: none; /* Prevent default touch behaviors */
+  user-select: none; /* Prevent text selection while dragging */
 }
 
 .number-with-unit input:focus {
@@ -730,6 +959,128 @@ const duration = computed({
   color: #EAEAEA;
   font-family: 'Roboto Mono';
   font-weight: 400;
+}
+
+.draggable-value {
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: #EAEAEA;
+  font-size: 0.8125rem; /* 13px */
+  font-family: 'Roboto Mono';
+  font-weight: 400;
+  text-align: right;
+  cursor: ew-resize; /* Indicates horizontal dragging */
+  touch-action: none; /* Prevent default touch behaviors */
+  user-select: none; /* Prevent text selection while dragging */
+  min-width: 60px;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.draggable-value:hover {
+  opacity: 0.8;
+}
+
+.draggable-value-inline {
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: #EAEAEA;
+  font-size: 0.8125rem; /* 13px */
+  font-family: 'Roboto Mono';
+  font-weight: 400;
+  text-align: center;
+  cursor: ew-resize; /* Indicates horizontal dragging */
+  touch-action: none; /* Prevent default touch behaviors */
+  user-select: none; /* Prevent text selection while dragging */
+  width: 60px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.draggable-value-inline:hover {
+  opacity: 0.8;
+}
+
+.stepper-btn {
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: #EAEAEA;
+  cursor: pointer;
+  font-size: 0.8125rem; /* 13px */
+  font-family: 'Roboto Mono';
+  transition: opacity 0.2s;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stepper-btn:hover:not(:disabled) {
+  opacity: 0.7;
+}
+
+.stepper-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.value-control {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+.duration-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0; /* No gap */
+}
+
+.duration-input {
+  width: 60px;
+  padding: 0;
+  margin: 0;
+  border: none;
+  background: transparent;
+  color: #EAEAEA;
+  font-size: 0.8125rem;
+  font-family: 'Roboto Mono';
+  font-weight: 400;
+  text-align: right; /* Right-align to be flush with unit */
+  cursor: ew-resize !important;
+  touch-action: none;
+  user-select: none;
+}
+
+.duration-input:focus {
+  outline: none;
+}
+
+/* Hide number input spinners for duration */
+.duration-input::-webkit-inner-spin-button,
+.duration-input::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.duration-input[type=number] {
+  -moz-appearance: textfield;
+}
+
+.unit-label {
+  font-size: 0.8125rem;
+  color: #EAEAEA;
+  font-family: 'Roboto Mono';
+  font-weight: 400;
+  cursor: default; /* Normal cursor on unit label */
+  user-select: none; /* Prevent text selection */
 }
 
 .readonly-field {

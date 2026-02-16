@@ -557,8 +557,8 @@ const duration = computed({
 }
 
 .profile-visualization {
-  margin: 1.5rem auto;
-  padding: 1rem 0.5rem;
+  margin: 1.5rem 0; /* Remove auto left/right margin */
+  padding: 0; /* Remove padding that creates space */
   background: var(--color-background);
   border: 1px solid var(--color-border);
   border-radius: 6px;
@@ -587,8 +587,8 @@ const duration = computed({
   }
   
   .profile-visualization {
-    margin: 1rem auto;
-    padding: 0.5rem 0.25rem;
+    margin: 1rem 0;
+    padding: 0;
   }
 }
 

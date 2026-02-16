@@ -475,16 +475,21 @@ const duration = computed({
   }
 }
 
+@media (max-width: 480px) {
+  .settings-lever {
+    padding: 0.75rem;
+  }
+}
+
 .controls-row {
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 2rem;
-  margin-bottom: 2rem;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
   max-width: 600px;
   margin-left: auto;
   margin-right: auto;
-  flex-wrap: wrap;
 }
 
 .toggle-container {
@@ -498,7 +503,6 @@ const duration = computed({
   display: block;
   height: 48px;
   width: auto;
-  max-width: 100%;
   cursor: pointer;
   transition: opacity 0.2s ease;
 }
@@ -553,9 +557,8 @@ const duration = computed({
   display: flex;
   justify-content: center;
   align-items: center;
+  max-width: 100%;
   width: 100%;
-  max-width: 600px;
-  overflow: hidden;
 }
 
 .profile-visualization img {
@@ -566,24 +569,37 @@ const duration = computed({
 
 /* Mobile-specific sizing */
 @media (max-width: 768px) {
-  .profile-visualization {
-    margin: 1rem auto;
-    padding: 0.75rem;
-    min-height: 200px;
-  }
-  
-  .profile-visualization img {
-    object-fit: contain;
-  }
-}
-
-@media (max-width: 480px) {
   .controls-row {
     gap: 1rem;
   }
   
   .profile-visualization {
-    min-height: 180px;
+    margin: 1rem auto 1rem auto;
+    padding: 0.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .controls-row {
+    gap: 0.75rem;
+  }
+  
+  .profile-selector {
+    gap: 1rem;
+  }
+  
+  .profile-btn {
+    font-size: 0.9rem;
+    padding: 0.5rem 0.25rem;
+  }
+  
+  .toggle-image {
+    height: 40px;
+  }
+  
+  .profile-visualization {
+    margin: 0.75rem auto;
+    padding: 0.25rem;
   }
 }
 

@@ -116,7 +116,7 @@ onUnmounted(() => {
   align-items: center;
   justify-content: flex-end;
   gap: 0.5rem;
-  padding: 1px 0.5rem 1px 0.5rem;
+  padding: 1px 0.5rem 1px 0.25rem;
   background: var(--color-background);
   border: none;
   color: #EAEAEA;
@@ -170,7 +170,7 @@ onUnmounted(() => {
 .dropdown-item {
   display: block;
   width: 100%;
-  padding: 1px 0.5rem 1px 0.5rem;
+  padding: 1px 0.5rem 1px 0.25rem;
   background: transparent;
   border: none;
   border-bottom: 3px solid #0F0F0F;
@@ -227,6 +227,25 @@ onUnmounted(() => {
   to {
     opacity: 0;
     transform: translateY(-8px);
+  }
+}
+
+/* Mobile responsive styles */
+@media (max-width: 768px) {
+  .dropdown-trigger {
+    min-width: 150px;
+    max-width: 100%;
+  }
+
+  .dropdown-menu {
+    min-width: 150px;
+    max-width: min(280px, calc(100vw - 3rem));
+    right: 0.5rem;
+  }
+
+  .dropdown-item {
+    white-space: nowrap;
+    overflow: visible;
   }
 }
 </style>

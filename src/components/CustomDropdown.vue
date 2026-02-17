@@ -158,7 +158,6 @@ onUnmounted(() => {
   background: #1A1A1A;
   overflow: visible;
   z-index: 1000;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
 }
 
 .dropdown-spacer {
@@ -171,7 +170,7 @@ onUnmounted(() => {
   display: block;
   width: 100%;
   padding: 1px 0.5rem 1px 0.25rem;
-  background: transparent;
+  background: linear-gradient(to right, #0F0F0F, transparent);
   border: none;
   border-bottom: 3px solid #0F0F0F;
   color: #EAEAEA;
@@ -191,11 +190,11 @@ onUnmounted(() => {
 }
 
 .dropdown-item:hover {
-  background: rgba(66, 63, 59, 0.3);
+  background: linear-gradient(to right, #0F0F0F, rgba(66, 63, 59, 0.6));
 }
 
 .dropdown-item.is-selected {
-  background: rgba(66, 63, 59, 0.5);
+  background: linear-gradient(to right, #0F0F0F, rgba(66, 63, 59, 0.8));
   font-weight: 600;
 }
 

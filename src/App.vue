@@ -143,7 +143,7 @@ function handleMainClick(event: MouseEvent) {
       <div class="header-content">
         <!-- KB1 logo - centered, no buttons -->
         <div class="logo-section">
-          <img src="/KB1-config/kb1_title.svg" alt="KB1 CONFIGURATOR" class="header-logo" />
+          <img src="/kb1_title.svg" alt="KB1 CONFIGURATOR" class="header-logo" />
         </div>
       </div>
       

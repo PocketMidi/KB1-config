@@ -447,20 +447,7 @@ watch(selectedCategory, (cat) => {
 })
 
 // Computed properties for mode detection
-const isInterpolatedMode = computed(() => model.value.functionMode === 0)
-const isPeakDecayMode = computed(() => model.value.functionMode === 1)
 const isIncrementalMode = computed(() => model.value.functionMode === 2)
-
-// Step options for Incremental mode
-// MIDI range is 0-127 (128 total values)
-// Display: number of steps, Value: stepSize (MIDI values per step)
-const stepOptions = [
-  { value: 4, label: '4' },
-  { value: 8, label: '8' },
-  { value: 16, label: '16' },
-  { value: 32, label: '32' },
-  { value: 64, label: '64' },
-]
 
 // Map between displayed step count and firmware stepSize
 const stepSizeMap: Record<number, number> = {
@@ -662,7 +649,7 @@ function handleStepsWheel(event: WheelEvent) {
   const currentIndex = stepsOptions.indexOf(stepsValue.value)
   const delta = event.deltaY > 0 ? -1 : 1
   const newIndex = Math.max(0, Math.min(stepsOptions.length - 1, currentIndex + delta))
-  stepsValue.value = stepsOptions[newIndex]
+  stepsValue.value = stepsOptions[newIndex]!
 }
 
 // Mouse drag for steps
@@ -683,7 +670,7 @@ function handleStepsMouseMove(event: MouseEvent) {
   // Scale: 30 pixels of movement = 1 step in the array
   const indexChange = Math.round(deltaX / 30)
   const newIndex = Math.max(0, Math.min(stepsOptions.length - 1, stepsDragStartIndex.value + indexChange))
-  stepsValue.value = stepsOptions[newIndex]
+  stepsValue.value = stepsOptions[newIndex]!
 }
 
 function handleStepsMouseUp() {
@@ -708,7 +695,7 @@ function handleStepsTouchMove(event: TouchEvent) {
   // Scale: 30 pixels of movement = 1 step in the array
   const indexChange = Math.round(deltaX / 30)
   const newIndex = Math.max(0, Math.min(stepsOptions.length - 1, stepsDragStartIndex.value + indexChange))
-  stepsValue.value = stepsOptions[newIndex]
+  stepsValue.value = stepsOptions[newIndex]!
 }
 
 function handleStepsTouchEnd() {
@@ -741,14 +728,14 @@ const isStepsAtMax = computed(() => {
 function decreaseSteps() {
   const currentIndex = stepsOptions.indexOf(stepsValue.value)
   if (currentIndex > 0) {
-    stepsValue.value = stepsOptions[currentIndex - 1]
+    stepsValue.value = stepsOptions[currentIndex - 1]!
   }
 }
 
 function increaseSteps() {
   const currentIndex = stepsOptions.indexOf(stepsValue.value)
   if (currentIndex < stepsOptions.length - 1) {
-    stepsValue.value = stepsOptions[currentIndex + 1]
+    stepsValue.value = stepsOptions[currentIndex + 1]!
   }
 }
 </script>

@@ -11,7 +11,7 @@
       </button>
       
       <!-- Always show KB1 logo -->
-      <img src="/KB1-config/kb1_title.svg" alt="KB1 CONFIGURATOR" class="header-logo" />
+      <img src="/kb1_title.svg" alt="KB1 CONFIGURATOR" class="header-logo" />
     </div>
   </header>
 </template>

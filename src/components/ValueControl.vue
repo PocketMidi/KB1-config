@@ -77,18 +77,8 @@ function decreaseSmall() {
   emit('update:modelValue', clamp(newValue))
 }
 
-function decreaseLarge() {
-  const newValue = snapToStep(props.modelValue - props.largeStep)
-  emit('update:modelValue', clamp(newValue))
-}
-
 function increaseSmall() {
   const newValue = snapToStep(props.modelValue + props.smallStep)
-  emit('update:modelValue', clamp(newValue))
-}
-
-function increaseLarge() {
-  const newValue = snapToStep(props.modelValue + props.largeStep)
   emit('update:modelValue', clamp(newValue))
 }
 
@@ -99,13 +89,6 @@ function handleInput(event: Event) {
   if (!isNaN(value)) {
     emit('update:modelValue', clamp(snapToStep(value)))
   }
-}
-
-function handleSliderInput(event: Event) {
-  const target = event.target as HTMLInputElement
-  const value = parseFloat(target.value)
-  
-  emit('update:modelValue', snapToStep(value))
 }
 
 function validateAndUpdate(event: Event) {

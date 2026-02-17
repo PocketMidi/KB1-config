@@ -318,6 +318,7 @@ export class BLEClient {
     return {
       scaleType: data.getInt32(0, true),
       rootNote: data.getInt32(4, true),
+      keyMapping: data.getInt32(8, true),
     };
   }
 

@@ -74,30 +74,19 @@
 
     <div class="inputs">
       <div class="group">
-        <label :for="`lever-category-${lever}`">CATEGORY</label>
-        <select :id="`lever-category-${lever}`" v-model="selectedCategory">
-          <option v-for="cat in props.categories" :key="cat" :value="cat">{{ cat }}</option>
-        </select>
+        <label>CATEGORY</label>
+        <CustomDropdown 
+          v-model="selectedCategory" 
+          :options="categoryOptions"
+        />
       </div>
       <div class="input-divider"></div>
 
       <div class="group">
-        <label :for="`lever-ccNumber-${lever}`">PARAMETER</label>
-        <select :id="`lever-ccNumber-${lever}`" v-model.number="model.ccNumber">
-          <option v-for="opt in filteredOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
-        </select>
-      </div>
-      <div class="input-divider"></div>
-
-      <div class="group">
-        <label :for="`lever-max-${lever}`">MAX</label>
-        <ValueControl
-          v-model="userMax"
-          :min="minRange"
-          :max="maxRange"
-          :step="1"
-          :small-step="5"
-          :large-step="10"
+        <label>PARAMETER</label>
+        <CustomDropdown
+          v-model="model.ccNumber"
+          :options="filteredOptions"
         />
       </div>
       <div class="input-divider"></div>
@@ -115,46 +104,59 @@
       </div>
       <div class="input-divider"></div>
 
+      <div class="group">
+        <label :for="`lever-max-${lever}`">MAX</label>
+        <ValueControl
+          v-model="userMax"
+          :min="minRange"
+          :max="maxRange"
+          :step="1"
+          :small-step="5"
+          :large-step="10"
+        />
+      </div>
+
       <!-- Duration for non-incremental modes, Steps for incremental mode -->
       <template v-if="!isIncrementalMode">
-        <!-- Duration Meter Visual -->
-        <div class="duration-meter">
-          <div class="meter-bar-container">
-            <!-- Bipolar mode: blue and pink bars -->
-            <template v-if="model.valueMode === 1">
-              <div class="meter-bar-wrapper">
-                <div class="meter-bar blue-bar-base"></div>
-                <div 
-                  class="meter-bar blue-bar-active"
-                  :style="{ width: `${10 + ((duration - 100) / 1900) * 90}%` }"
-                ></div>
-              </div>
-              <div class="meter-divider"></div>
-              <div class="meter-bar-wrapper">
-                <div class="meter-bar pink-bar-base"></div>
-                <div 
-                  class="meter-bar pink-bar-active"
-                  :style="{ width: `${10 + ((duration - 100) / 1900) * 90}%` }"
-                ></div>
-              </div>
-            </template>
-            <!-- Unipolar mode: only pink bar -->
-            <template v-else>
-              <div class="meter-divider"></div>
-              <div class="meter-bar-wrapper">
-                <div class="meter-bar pink-bar-base"></div>
-                <div 
-                  class="meter-bar pink-bar-active"
-                  :style="{ width: `${10 + ((duration - 100) / 1900) * 90}%` }"
-                ></div>
-              </div>
-            </template>
+        <div class="duration-container">
+          <!-- Duration Meter Visual -->
+          <div class="duration-meter">
+            <div class="meter-bar-container">
+              <!-- Bipolar mode: blue and pink bars -->
+              <template v-if="model.valueMode === 1">
+                <div class="meter-bar-wrapper">
+                  <div class="meter-bar blue-bar-base"></div>
+                  <div 
+                    class="meter-bar blue-bar-active"
+                    :style="{ width: `${10 + ((duration - 100) / 1900) * 90}%` }"
+                  ></div>
+                </div>
+                <div class="meter-divider"></div>
+                <div class="meter-bar-wrapper">
+                  <div class="meter-bar pink-bar-base"></div>
+                  <div 
+                    class="meter-bar pink-bar-active"
+                    :style="{ width: `${10 + ((duration - 100) / 1900) * 90}%` }"
+                  ></div>
+                </div>
+              </template>
+              <!-- Unipolar mode: only pink bar -->
+              <template v-else>
+                <div class="meter-divider"></div>
+                <div class="meter-bar-wrapper">
+                  <div class="meter-bar pink-bar-base"></div>
+                  <div 
+                    class="meter-bar pink-bar-active"
+                    :style="{ width: `${10 + ((duration - 100) / 1900) * 90}%` }"
+                  ></div>
+                </div>
+              </template>
+            </div>
           </div>
-        </div>
 
-        <div class="group">
-          <label :for="`lever-duration-${lever}`">DURATION</label>
-          <div class="value-control">
+          <div class="group">
+            <label :for="`lever-duration-${lever}`">DURATION</label>
+            <div class="value-control">
             <button 
               class="stepper-btn"
               :disabled="duration <= 100"
@@ -188,6 +190,7 @@
               ►
             </button>
           </div>
+        </div>
         </div>
       </template>
 
@@ -234,6 +237,7 @@ import { computed, ref, watch, onBeforeUnmount } from 'vue'
 import { type CCEntry } from '../data/ccMap'
 import ValueControl from './ValueControl.vue'
 import LevelMeter from './LevelMeter.vue'
+import CustomDropdown from './CustomDropdown.vue'
 
 type LeverModel = {
   ccNumber: number
@@ -403,6 +407,11 @@ const initialCategory = computed(() => {
   return cat || props.categories[0] || 'Global'
 })
 const selectedCategory = ref<string>(initialCategory.value)
+
+// Convert categories to dropdown options
+const categoryOptions = computed(() => 
+  props.categories.map(cat => ({ label: cat, value: cat }))
+)
 
 // Watch for ccMapByNumber changes to initialize category when map loads
 watch(() => props.ccMapByNumber.size, () => {
@@ -747,7 +756,7 @@ function increaseSteps() {
 <style scoped>
 
 .settings-lever {
-  padding: 1rem 1rem 1rem 0; /* Remove left padding for flush alignment */
+  padding: 1rem 1rem 1rem 0; /* Bottom padding back to 16px */
   background: var(--color-background-soft);
   border: 1px solid var(--color-border);
   border-radius: 8px;
@@ -756,7 +765,7 @@ function increaseSteps() {
   width: 100%; /* Ensure it takes available width */
   max-width: 100%; /* Don't exceed container */
   box-sizing: border-box; /* Include padding in width calculation */
-  overflow-x: hidden; /* Prevent horizontal overflow */
+  overflow: visible; /* Allow dropdowns to extend beyond bounds */
 }
 
 @media (max-width: 768px) {
@@ -770,7 +779,7 @@ function increaseSteps() {
   justify-content: flex-start; /* Align to left for flush alignment */
   align-items: center;
   gap: 1rem;
-  margin-bottom: 1.5rem;
+  margin-bottom: 0.75rem;
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;
@@ -835,7 +844,7 @@ function increaseSteps() {
 }
 
 .profile-visualization {
-  margin: 1.5rem 0; /* Remove auto left/right margin */
+  margin: 0.5rem 0; /* Reduced from 1.5rem to 0.5rem */
   padding: 0; /* Remove padding that creates space */
   background: var(--color-background);
   border: 1px solid var(--color-border);
@@ -891,10 +900,24 @@ function increaseSteps() {
   width: 100%;
 }
 
+/* Duration Container with border */
+.duration-container {
+  border: 1px solid var(--color-divider);
+  border-radius: 6px;
+  padding: 0.5rem 1rem;
+  margin-top: 0.5rem;
+  margin-left: -1rem;
+  margin-right: -1rem;
+}
+
+.duration-container .group {
+  padding: 0.35rem 0 0.5rem 0;
+}
+
 /* Duration Meter Styles */
 .duration-meter {
   width: 100%;
-  padding: 1.5rem 0 1rem 0;
+  padding: 0.5rem 0 0.35rem 0;
 }
 
 .meter-bar-container {
@@ -1001,6 +1024,15 @@ function increaseSteps() {
   background-position: right 0.5rem center;
   background-size: 1rem;
   padding-right: 2rem;
+}
+
+/* CustomDropdown right-justification */
+.group :deep(.custom-dropdown) {
+  flex: 1;
+}
+
+.group :deep(.dropdown-label) {
+  text-align: right;
 }
 
 .group option {

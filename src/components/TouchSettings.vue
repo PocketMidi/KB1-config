@@ -35,9 +35,9 @@
       <div class="input-divider"></div>
 
       <div class="group">
-        <label for="touch-max">MAX</label>
+        <label for="touch-min">MIN</label>
         <ValueControl
-          v-model="userMax"
+          v-model="userMin"
           :min="0"
           :max="100"
           :step="1"
@@ -48,9 +48,9 @@
       <div class="input-divider"></div>
 
       <div class="group">
-        <label for="touch-min">MIN</label>
+        <label for="touch-max">MAX</label>
         <ValueControl
-          v-model="userMin"
+          v-model="userMax"
           :min="0"
           :max="100"
           :step="1"

@@ -49,7 +49,7 @@ function toggle() {
 .accordion-section {
   background: var(--color-background-soft);
   border: 1px solid var(--color-border);
-  border-radius: var(--kb1-radius-md, 8px);
+  border-radius: 0;
   margin-bottom: 0;
   overflow: hidden;
   width: 100%;
@@ -62,8 +62,8 @@ function toggle() {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 1rem 1.25rem;
-  background: transparent;
+  padding: 0.75rem 1.25rem 0.5rem; /* 12px top, 20px left/right, 8px bottom */
+  background: rgba(29, 29, 29, 0.2); /* #1D1D1D at 20% */
   border: none;
   color: var(--color-text);
   cursor: pointer;
@@ -73,12 +73,16 @@ function toggle() {
   font-family: 'Roboto Mono';
 }
 
+.accordion-section.is-open .accordion-header {
+  background: #1D1D1D; /* Brighter when selected */
+}
+
 .accordion-header:hover {
-  background: var(--color-background-mute);
+  background: rgba(29, 29, 29, 0.6);
 }
 
 .accordion-header:active {
-  background: var(--color-background);
+  background: rgba(29, 29, 29, 0.8);
 }
 
 .accordion-title {
@@ -92,6 +96,11 @@ function toggle() {
   color: #848484;
   text-transform: uppercase;
   font-family: 'Roboto Mono';
+}
+
+.accordion-section.is-open .accordion-title h3 {
+  font-weight: 700;
+  color: #EAEAEA;
 }
 
 .accordion-subtitle {

@@ -10,10 +10,11 @@
       <div class="input-divider"></div>
 
       <div class="group">
-        <label :for="`push-ccNumber-${lever}`">PARAMETER</label>
-        <select :id="`push-ccNumber-${lever}`" v-model.number="model.ccNumber">
-          <option v-for="opt in filteredOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
-        </select>
+        <label>PARAMETER</label>
+        <CustomDropdown
+          v-model="model.ccNumber"
+          :options="filteredOptions"
+        />
       </div>
       <div class="input-divider"></div>
 
@@ -28,9 +29,9 @@
       <template v-if="showValueControls">
         <div class="input-divider"></div>
         <div class="group">
-          <label :for="`push-max-${lever}`">MAX</label>
+          <label :for="`push-min-${lever}`">MIN</label>
           <ValueControl
-            v-model="userMax"
+            v-model="userMin"
             :min="0"
             :max="100"
             :step="1"
@@ -40,9 +41,9 @@
         </div>
         <div class="input-divider"></div>
         <div class="group">
-          <label :for="`push-min-${lever}`">MIN</label>
+          <label :for="`push-max-${lever}`">MAX</label>
           <ValueControl
-            v-model="userMin"
+            v-model="userMax"
             :min="0"
             :max="100"
             :step="1"
@@ -94,6 +95,7 @@
 import { computed, ref, watch } from 'vue'
 import { type CCEntry } from '../data/ccMap'
 import ValueControl from './ValueControl.vue'
+import CustomDropdown from './CustomDropdown.vue'
 
 type LeverPushModel = {
   ccNumber: number
@@ -248,7 +250,7 @@ const pressType = computed({
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;
-  overflow-x: hidden;
+  overflow: visible; /* Allow dropdowns to extend beyond bounds */
 }
 
 @media (max-width: 768px) {
@@ -377,5 +379,14 @@ const pressType = computed({
   background: var(--color-background-mute) !important;
   cursor: not-allowed;
   color: var(--color-text-muted);
+}
+
+/* CustomDropdown right-justification */
+.group :deep(.custom-dropdown) {
+  flex: 1;
+}
+
+.group :deep(.dropdown-label) {
+  text-align: right;
 }
 </style>

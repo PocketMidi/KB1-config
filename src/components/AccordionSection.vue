@@ -7,7 +7,10 @@
       :aria-controls="`accordion-content-${id}`"
     >
       <div class="accordion-title">
-        <h3>{{ title }}</h3>
+        <h3>
+          {{ title }}
+          <span v-if="titleSuffix" class="title-suffix" :class="{ fading: titleSuffixFading }">{{ titleSuffix }}</span>
+        </h3>
         <div v-if="subtitle" class="accordion-subtitle">{{ subtitle }}</div>
       </div>
       <div v-if="midiCc !== undefined" class="midi-cc-display">
@@ -36,6 +39,8 @@ const props = defineProps<{
   midiCc?: number;
   id?: string;
   defaultOpen?: boolean;
+  titleSuffix?: string;
+  titleSuffixFading?: boolean;
 }>();
 
 const isOpen = ref(props.defaultOpen ?? false);
@@ -96,6 +101,20 @@ function toggle() {
   color: #848484;
   text-transform: uppercase;
   font-family: 'Roboto Mono';
+}
+
+.title-suffix {
+  color: #F9AC20;
+  margin-left: 0.5rem;
+  font-weight: 500;
+  text-transform: none;
+  opacity: 1;
+  transition: none;
+}
+
+.title-suffix.fading {
+  opacity: 0;
+  transition: opacity 2s ease-out;
 }
 
 .accordion-section.is-open .accordion-title h3 {

@@ -265,6 +265,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: 'update:modelValue', v: LeverModel): void
+  (e: 'profileChanged', profileName: string): void
 }>()
 
 const model = computed({
@@ -326,6 +327,10 @@ const handleToggleClick = () => {
     isAnimating.value = false
     transitionDirection.value = null
     animationTimeoutId.value = null
+    
+    // Emit the new mode name for parent to display
+    const newModeName = model.value.valueMode === 0 ? 'Unipolar' : 'Bipolar'
+    emit('valueModeChanged', newModeName)
   }, TOGGLE_ANIMATION_DURATION)
 }
 
@@ -358,6 +363,20 @@ const isProfileActive = (profile: ProfileType): boolean => {
   return false
 }
 
+// Active profile name (full description)
+const activeProfileName = computed(() => {
+  if (model.value.functionMode === 2) {
+    return 'Incremental'
+  } else if (model.value.functionMode === 1) {
+    return 'Peak & Decay'
+  } else if (model.value.functionMode === 0) {
+    if (model.value.onsetType === 1) return 'Exponential'
+    if (model.value.onsetType === 2) return 'Logarithmic'
+    return 'Linear'
+  }
+  return 'Linear'
+})
+
 const selectProfile = (profile: ProfileType) => {
   if (profile === 'inc') {
     model.value.functionMode = 2
@@ -379,6 +398,9 @@ const selectProfile = (profile: ProfileType) => {
       model.value.offsetType = 0
     }
   }
+  
+  // Emit profile change event
+  emit('profileChanged', activeProfileName.value)
 }
 
 // Profile visualization
@@ -753,6 +775,7 @@ function increaseSteps() {
   max-width: 100%; /* Don't exceed container */
   box-sizing: border-box; /* Include padding in width calculation */
   overflow: visible; /* Allow dropdowns to extend beyond bounds */
+  position: relative; /* For popup positioning */
 }
 
 @media (max-width: 768px) {

@@ -232,6 +232,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: 'update:modelValue', v: LeverPushModel): void
+  (e: 'profileChanged', profileName: string): void
 }>()
 
 const model = computed({
@@ -348,9 +349,11 @@ function handleToggleClick() {
     const timeValue = model.value.onsetTime || 100
     model.value.onsetTime = timeValue
     model.value.offsetTime = timeValue
+    emit('behaviourChanged', 'Latched')
   } else {
     // Switch to momentary - set offsetTime to 0
     model.value.offsetTime = 0
+    emit('behaviourChanged', 'Momentary')
   }
 }
 
@@ -367,6 +370,22 @@ const isProfileActive = (profile: ProfileType) => {
   }
   return false
 }
+
+// Active profile name (full description)
+const activeProfileName = computed(() => {
+  if (model.value.functionMode === 3) {
+    return 'Reset'
+  } else if (model.value.functionMode === 2) {
+    return 'Static'
+  } else if (model.value.functionMode === 1) {
+    return 'Peak & Decay'
+  } else if (model.value.functionMode === 0) {
+    if (model.value.onsetType === 1) return 'Exponential'
+    if (model.value.onsetType === 2) return 'Logarithmic'
+    return 'Linear'
+  }
+  return 'Linear'
+})
 
 const selectProfile = (profile: ProfileType) => {
   if (profile === 'inc') {
@@ -389,6 +408,9 @@ const selectProfile = (profile: ProfileType) => {
       model.value.offsetType = 0
     }
   }
+  
+  // Emit profile change event
+  emit('profileChanged', activeProfileName.value)
 }
 
 // Profile visualization
@@ -566,6 +588,7 @@ onBeforeUnmount(() => {
   max-width: 100%;
   box-sizing: border-box;
   overflow: visible; /* Allow dropdowns to extend beyond bounds */
+  position: relative; /* For popup positioning */
 }
 
 @media (max-width: 768px) {

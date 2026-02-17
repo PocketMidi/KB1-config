@@ -44,9 +44,9 @@ export class BLEClient {
   private scaleCharacteristic: BluetoothRemoteGATTCharacteristic | null = null;
   private keepAliveCharacteristic: BluetoothRemoteGATTCharacteristic | null = null;
 
-  // Keep-alive mechanism (firmware expects writes within 2 minute grace period)
+  // Keep-alive mechanism (firmware expects writes within 10 minute grace period)
   private keepAliveTimer: ReturnType<typeof setInterval> | null = null;
-  private keepAliveIntervalMs: number = 60000; // 60 seconds (well within 2 min grace period)
+  private keepAliveIntervalMs: number = 60000; // 60 seconds (well within 10 min grace period)
   private keepAliveEnabled: boolean = true;
 
   /**
@@ -352,7 +352,7 @@ export class BLEClient {
   /**
    * Start keep-alive timer to maintain BLE connection
    * Writes to the dedicated KEEPALIVE characteristic every 60 seconds
-   * (firmware has a 2 minute grace period)
+   * (firmware has a 10 minute grace period)
    */
   private startKeepAlive(): void {
     if (!this.keepAliveEnabled) {

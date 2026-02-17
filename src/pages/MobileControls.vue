@@ -116,6 +116,20 @@
           @update:modelValue="markChanged"
         />
       </AccordionSection>
+      
+      <div class="accordion-divider"></div>
+      
+      <AccordionSection
+        title="SYSTEM"
+        subtitle="Power & Timeout Settings"
+        :id="'system-settings'"
+        :default-open="false"
+      >
+        <SystemSettings
+          v-model="localSettings.system"
+          @update:modelValue="markChanged"
+        />
+      </AccordionSection>
     </div>
   </div>
 </template>
@@ -134,6 +148,7 @@ import StickyActionBar from '../components/StickyActionBar.vue';
 import LeverSettings from '../components/LeverSettings.vue';
 import LeverPushSettings from '../components/LeverPushSettings.vue';
 import TouchSettings from '../components/TouchSettings.vue';
+import SystemSettings from '../components/SystemSettings.vue';
 import {
   loadPolyendCCMap,
   getCCMap,

@@ -68,12 +68,29 @@ export interface ScaleSettings {
 }
 
 /**
+ * System/Power settings configuration
+ * Note: These settings are stored in the web app but require firmware support to be functional.
+ * Current firmware has these as compile-time constants.
+ */
+export interface SystemSettings {
+  /** Light sleep timeout in seconds (firmware default: 90s) */
+  lightSleepTimeout: number;
+  /** Deep sleep timeout in seconds (firmware default: 330s = 5.5 minutes) */
+  deepSleepTimeout: number;
+  /** Bluetooth keepalive timeout in seconds (firmware default: 120s = 2 minutes) */
+  bleTimeout: number;
+  /** Idle confirmation window in seconds (firmware default: 2s) */
+  idleConfirmTimeout: number;
+}
+
+/**
  * Type aliases for component models
  */
 export type LeverModel = LeverSettings;
 export type LeverPushModel = LeverPushSettings;
 export type TouchModel = TouchSettings;
 export type ScaleModel = ScaleSettings;
+export type SystemModel = SystemSettings;
 
 /**
  * Device settings configuration
@@ -85,6 +102,7 @@ export interface DeviceSettings {
   leverPush2: LeverPushSettings;
   touch: TouchSettings;
   scale: ScaleSettings;
+  system: SystemSettings;
 }
 
 /**
@@ -377,6 +395,12 @@ export class KB1Protocol {
         scaleType: ScaleType.CHROMATIC,
         rootNote: 60,
       },
+      system: {
+        lightSleepTimeout: 90, // 90 seconds (firmware: LIGHT_SLEEP_MAX_MS)
+        deepSleepTimeout: 330, // 5.5 minutes (firmware: DEEP_SLEEP_IDLE_MS)
+        bleTimeout: 120, // 2 minutes (firmware: KEEPALIVE_GRACE_PERIOD_MS)
+        idleConfirmTimeout: 2, // 2 seconds (firmware: IDLE_CONFIRM_MS)
+      },
     };
   }
 
@@ -449,13 +473,24 @@ export class KB1Protocol {
       );
     };
 
+    // Helper to validate system settings
+    const validateSystem = (system: SystemSettings): boolean => {
+      return (
+        system.lightSleepTimeout >= 30 && system.lightSleepTimeout <= 300 &&
+        system.deepSleepTimeout >= 120 && system.deepSleepTimeout <= 1800 &&
+        system.bleTimeout >= 30 && system.bleTimeout <= 600 &&
+        system.idleConfirmTimeout >= 1 && system.idleConfirmTimeout <= 10
+      );
+    };
+
     return (
       settings.lever1 !== undefined && validateLever(settings.lever1) &&
       settings.leverPush1 !== undefined && validateLeverPush(settings.leverPush1) &&
       settings.lever2 !== undefined && validateLever(settings.lever2) &&
       settings.leverPush2 !== undefined && validateLeverPush(settings.leverPush2) &&
       settings.touch !== undefined && validateTouch(settings.touch) &&
-      settings.scale !== undefined && validateScale(settings.scale)
+      settings.scale !== undefined && validateScale(settings.scale) &&
+      settings.system !== undefined && validateSystem(settings.system)
     );
   }
 

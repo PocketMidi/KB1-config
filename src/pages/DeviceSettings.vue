@@ -105,6 +105,11 @@
           @update:modelValue="markChanged"
         />
         
+        <SystemSettings
+          v-model="localSettings.system"
+          @update:modelValue="markChanged"
+        />
+        
         <ScaleSettings
           title="Scales"
           v-model="localSettings.scale"
@@ -124,6 +129,7 @@ import type { DeviceSettings } from '../ble/kb1Protocol';
 import LeverSettings from '../components/LeverSettings.vue';
 import LeverPushSettings from '../components/LeverPushSettings.vue';
 import TouchSettings from '../components/TouchSettings.vue';
+import SystemSettings from '../components/SystemSettings.vue';
 import ScaleSettings from '../components/ScaleSettings.vue';
 import {
   loadPolyendCCMap,

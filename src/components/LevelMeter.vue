@@ -83,7 +83,7 @@ const markers = computed<Marker[]>(() => {
     if (props.mode === 'reset') {
       // Reset mode: highlight only the marker closest to the reset value
       const distanceToValue = Math.abs(value - props.value)
-      const tolerance = 3
+      const tolerance = 1
       highlighted = distanceToValue <= tolerance
     } else {
       // Range mode: highlight markers near min or max
@@ -152,9 +152,9 @@ const labels = computed<Label[]>(() => {
   position: absolute;
   width: 0;
   height: 0;
-  border-left: 5px solid transparent;
-  border-right: 5px solid transparent;
-  border-bottom: 13px solid #4A4A4A;
+  border-left: 3.5px solid transparent;
+  border-right: 3.5px solid transparent;
+  border-bottom: 9px solid #4A4A4A;
   transform: translateX(-50%);
   transition: border-bottom-color 0.2s ease;
   opacity: 0.3;

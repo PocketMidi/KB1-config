@@ -181,7 +181,7 @@ onUnmounted(() => {
   white-space: nowrap;
   cursor: pointer;
   transition: background 0.15s ease;
-  margin-bottom: 1px;
+  margin-bottom: 0;
 }
 
 .dropdown-item:last-child {

@@ -102,6 +102,7 @@
       <AccordionSection
         title="Touch Sensor"
         :subtitle="getTouchSubtitle(localSettings.touch)"
+        :midi-cc="localSettings.touch.ccNumber"
         :id="'touch-sensor'"
         :default-open="false"
       >
@@ -233,7 +234,11 @@ function getTouchSubtitle(touch: TouchSettingsType): string {
   const ccMap = ccMapByNumber.value;
   const ccInfo = ccMap.get(touch.ccNumber);
   const paramName = ccInfo?.parameter || `CC ${touch.ccNumber}`;
-  return `${paramName}`;
+  // Touch is always unipolar, convert MIDI values (0-127) to display range (0-100)
+  const min = Math.round((touch.minCCValue / 127) * 100);
+  const max = Math.round((touch.maxCCValue / 127) * 100);
+  const range = `${min} to ${max}`;
+  return `${paramName} | ${range}`;
 }
 
 // Watch for device settings changes

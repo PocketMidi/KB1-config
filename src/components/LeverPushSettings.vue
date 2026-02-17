@@ -53,15 +53,6 @@
         >
           P&D
         </button>
-        <button 
-          class="profile-btn"
-          :class="{ active: isProfileActive('inc') }"
-          :disabled="isResetMode"
-          @click="selectProfile('inc')"
-          title="Static"
-        >
-          Inc
-        </button>
       </div>
     </div>
 
@@ -804,10 +795,13 @@ onBeforeUnmount(() => {
 .duration-input::-webkit-outer-spin-button {
   -webkit-appearance: none;
   margin: 0;
+  display: none;
 }
 
 .duration-input[type=number] {
   -moz-appearance: textfield;
+  appearance: none;
+  -webkit-appearance: none;
 }
 
 .unit-label {
@@ -938,10 +932,13 @@ onBeforeUnmount(() => {
 .number-with-unit input::-webkit-outer-spin-button {
   -webkit-appearance: none;
   margin: 0;
+  display: none;
 }
 
 .number-with-unit input[type=number] {
   -moz-appearance: textfield;
+  appearance: none;
+  -webkit-appearance: none;
 }
 
 .number-with-unit span {

@@ -1,36 +1,38 @@
 <template>
   <div class="settings-touch">
-    <div class="title">
-      <h2>{{ title }}</h2>
-      <div v-if="isValidCC" class="parameter-header">
-        <div class="parameter-name">{{ parameterDisplayName }}</div>
-        <div v-if="parameterRange" class="parameter-range">{{ parameterRange }}</div>
-        <div class="cc-reference">MIDI CC {{ model.ccNumber }}</div>
-      </div>
-    </div>
+    <!-- Level Meter -->
+    <LevelMeter 
+      :min="userMin" 
+      :max="userMax" 
+      :is-bipolar="false"
+      mode="range"
+    />
 
     <div class="inputs">
       <div class="group">
-        <label for="touch-category">CATEGORY</label>
-        <select id="touch-category" v-model="selectedCategory">
-          <option v-for="cat in props.categories" :key="cat" :value="cat">{{ cat }}</option>
-        </select>
+        <label>CATEGORY</label>
+        <CustomDropdown 
+          v-model="selectedCategory" 
+          :options="categoryOptions"
+        />
       </div>
       <div class="input-divider"></div>
 
       <div class="group">
-        <label for="touch-ccNumber">PARAMETER</label>
-        <select id="touch-ccNumber" v-model.number="model.ccNumber">
-          <option v-for="opt in filteredOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
-        </select>
+        <label>PARAMETER</label>
+        <CustomDropdown
+          v-model="model.ccNumber"
+          :options="filteredOptions"
+        />
       </div>
       <div class="input-divider"></div>
 
       <div class="group">
-        <label for="touch-functionMode">MODE</label>
-        <select id="touch-functionMode" v-model.number="model.functionMode">
-          <option v-for="opt in functionModes" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
-        </select>
+        <label>MODE</label>
+        <CustomDropdown
+          v-model="model.functionMode"
+          :options="functionModes"
+        />
       </div>
       <div class="input-divider"></div>
 
@@ -80,6 +82,8 @@
 import { computed, ref, watch } from 'vue'
 import { type CCEntry } from '../data/ccMap'
 import ValueControl from './ValueControl.vue'
+import LevelMeter from './LevelMeter.vue'
+import CustomDropdown from './CustomDropdown.vue'
 
 type TouchModel = {
   ccNumber: number
@@ -107,14 +111,16 @@ const model = computed({
   set: v => emit('update:modelValue', v)
 })
 
-const isValidCC = computed(() => model.value.ccNumber >= 0 && model.value.ccNumber <= 128)
-
 // Initialize selectedCategory from current ccNumber's category (fallback to first available category)
 const initialCategory = computed(() => {
   const cat = props.ccMapByNumber.get(model.value.ccNumber)?.category
   return cat || props.categories[0] || 'Global'
 })
 const selectedCategory = ref<string>(initialCategory.value)
+
+const categoryOptions = computed(() => {
+  return props.categories.map(cat => ({ label: cat, value: cat }))
+})
 
 // Watch for ccMapByNumber changes to initialize category when map loads
 watch(() => props.ccMapByNumber.size, () => {
@@ -147,29 +153,6 @@ watch(selectedCategory, (cat) => {
     const first = filteredOptions.value.find(o => o.value >= 0)
     if (first) model.value.ccNumber = first.value
   }
-})
-
-// Get current parameter entry from ccMapByNumber
-const currentEntry = computed(() => {
-  return props.ccMapByNumber.get(model.value.ccNumber)
-})
-
-// Display parameter name or fallback to CC number
-const parameterDisplayName = computed(() => {
-  const entry = currentEntry.value
-  if (entry) {
-    return entry.parameter
-  }
-  return `CC ${model.value.ccNumber}`
-})
-
-// Display Polyend range if available
-const parameterRange = computed(() => {
-  const entry = currentEntry.value
-  if (entry?.range) {
-    return entry.range.text
-  }
-  return undefined
 })
 
 // Conversion functions

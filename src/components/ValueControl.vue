@@ -242,9 +242,12 @@ onBeforeUnmount(() => {
 .value-input::-webkit-outer-spin-button {
   -webkit-appearance: none;
   margin: 0;
+  display: none;
 }
 
 .value-input[type=number] {
   -moz-appearance: textfield;
+  appearance: none;
+  -webkit-appearance: none;
 }
 </style>

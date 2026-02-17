@@ -12,7 +12,6 @@
     <!-- Always show content, but apply disconnected styling -->
     <div class="scales-content" :class="{ 'disconnected-state': !isConnected }">
       <ScaleSettings
-        title="Scales"
         v-model="localSettings.scale"
         :scales="scales"
         :rootNotes="rootNotes"

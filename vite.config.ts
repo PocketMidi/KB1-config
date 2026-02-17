@@ -5,6 +5,11 @@ import vue from '@vitejs/plugin-vue'
 export default defineConfig({
   plugins: [vue()],
   base: '/KB1-config/',
+  server: {
+    port: 5173,
+    strictPort: false, // Try next port if 5173 is busy
+    host: true,
+  },
   build: {
     outDir: 'dist',
     assetsDir: 'assets',

@@ -181,6 +181,12 @@ const isHovering = ref(false);
 
 .bluetooth-status.connected .status-text {
   opacity: 1;
+  animation: breathe 3s ease-in-out infinite;
+}
+
+.bluetooth-status.connected.hoverable:hover .status-text,
+.bluetooth-status.connected.hoverable:active .status-text {
+  animation: none; /* Disable breathing on hover/active */
 }
 
 .bluetooth-icon {
@@ -198,8 +204,31 @@ const isHovering = ref(false);
 }
 
 .bluetooth-status.connected .bluetooth-icon {
-  filter: none;
-  transform: none;
+  animation: breatheScale 3s ease-in-out infinite;
+}
+
+.bluetooth-status.connected.hoverable:hover .bluetooth-icon,
+.bluetooth-status.connected.hoverable:active .bluetooth-icon {
+  animation: none; /* Disable breathing on hover/active */
+}
+
+/* Breathing animation for connected state */
+@keyframes breathe {
+  0%, 100% {
+    opacity: 0.7;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes breatheScale {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.15);
+  }
 }
 
 /* Horizontal divider under navigation */

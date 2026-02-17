@@ -65,6 +65,7 @@ export interface TouchSettings {
 export interface ScaleSettings {
   scaleType: number;
   rootNote: number;
+  keyMapping: number; // 0 = Standard, 1 = Condensed
 }
 
 /**
@@ -394,6 +395,7 @@ export class KB1Protocol {
       scale: {
         scaleType: ScaleType.CHROMATIC,
         rootNote: 60,
+        keyMapping: 0, // Standard
       },
       system: {
         lightSleepTimeout: 90, // 90 seconds (firmware: LIGHT_SLEEP_MAX_MS)
@@ -468,7 +470,8 @@ export class KB1Protocol {
     const validateScale = (scale: ScaleSettings): boolean => {
       return (
         scale.scaleType >= 0 &&
-        scale.rootNote >= 0 && scale.rootNote <= 11
+        scale.rootNote >= 0 && scale.rootNote <= 11 &&
+        (scale.keyMapping === 0 || scale.keyMapping === 1)
       );
     };
 

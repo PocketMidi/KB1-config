@@ -266,6 +266,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: 'update:modelValue', v: LeverModel): void
   (e: 'profileChanged', profileName: string): void
+  (e: 'valueModeChanged', modeName: string): void
 }>()
 
 const model = computed({

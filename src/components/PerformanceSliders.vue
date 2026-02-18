@@ -678,7 +678,7 @@ function getSliderPercent(slider: SliderConfig): number {
             
             <!-- CC Number -->
             <div class="cc-section">
-              <span class="cc-label-text">MIDI CC </span><span class="cc-label">{{ slider.cc }}</span>
+              <span class="cc-label-text">CC </span><span class="cc-label">{{ slider.cc }}</span>
             </div>
             
             <!-- Inline toggles -->
@@ -808,7 +808,7 @@ function getSliderPercent(slider: SliderConfig): number {
 
 .btn-live {
   flex: 0 0 auto;
-  padding: 0.25rem 1.25rem;
+  padding: 0.5rem 1.25rem;
   background: rgba(106, 104, 83, 0.2);
   border: none;
   color: #EAEAEA;
@@ -1001,7 +1001,7 @@ function getSliderPercent(slider: SliderConfig): number {
   display: flex;
   flex-direction: row;
   gap: 0.5rem;
-  margin-left: 1rem;
+  margin-left: 0.5rem;
 }
 
 .slider-toggle-image {

@@ -164,41 +164,18 @@
 
           <div class="group">
             <label :for="`lever-duration-${lever}`">DURATION</label>
-            <div class="value-control">
-            <button 
-              class="stepper-btn"
-              :disabled="duration <= 100"
-              @click="decreaseDuration"
-              title="Decrease by 10ms"
-            >
-              ◀
-            </button>
-            <div class="duration-wrapper">
-              <input 
-                type="number" 
-                :id="`lever-duration-${lever}`" 
-                v-model.number="duration" 
-                min="100" 
-                max="2000" 
-                step="10"
-                class="duration-input"
-                @wheel="handleDurationWheel"
-                @mousedown="handleDurationMouseDown"
-                @touchstart="handleDurationTouchStart"
-                @touchmove="handleDurationTouchMove"
-                @touchend="handleDurationTouchEnd"
-              /><span class="unit-label">ms</span>
+            <div class="duration-control-wrapper">
+              <ValueControl
+                v-model="duration"
+                :min="100"
+                :max="2000"
+                :step="10"
+                :small-step="10"
+                :large-step="100"
+              />
+              <span class="unit-label">ms</span>
             </div>
-            <button 
-              class="stepper-btn"
-              :disabled="duration >= 2000"
-              @click="increaseDuration"
-              title="Increase by 10ms"
-            >
-              ▶
-            </button>
           </div>
-        </div>
         </div>
       </template>
 
@@ -206,33 +183,35 @@
       <template v-else>
         <div class="group">
           <label :for="`lever-steps-${lever}`">STEPS</label>
-          <div class="value-control">
-            <button 
-              class="stepper-btn"
-              :disabled="isStepsAtMin"
-              @click="decreaseSteps"
-              title="Previous step value"
-            >
-              ◀
-            </button>
-            <div 
-              class="draggable-value-inline"
-              @mousedown="handleStepsMouseDown"
-              @touchstart="handleStepsTouchStart"
-              @touchmove="handleStepsTouchMove"
-              @touchend="handleStepsTouchEnd"
-              @wheel="handleStepsWheel"
-            >
-              {{ stepsValue }}
+          <div class="steps-control">
+            <div class="steps-input-wrapper">
+              <div 
+                class="tap-zone tap-zone-left"
+                :class="{ disabled: isStepsAtMin }"
+                @click="decreaseSteps"
+                title="Previous step value"
+              >
+                <span class="tap-indicator">−</span>
+              </div>
+              <div 
+                class="draggable-value-inline"
+                @mousedown="handleStepsMouseDown"
+                @touchstart="handleStepsTouchStart"
+                @touchmove="handleStepsTouchMove"
+                @touchend="handleStepsTouchEnd"
+                @wheel="handleStepsWheel"
+              >
+                {{ stepsValue }}
+              </div>
+              <div 
+                class="tap-zone tap-zone-right"
+                :class="{ disabled: isStepsAtMax }"
+                @click="increaseSteps"
+                title="Next step value"
+              >
+                <span class="tap-indicator">+</span>
+              </div>
             </div>
-            <button 
-              class="stepper-btn"
-              :disabled="isStepsAtMax"
-              @click="increaseSteps"
-              title="Next step value"
-            >
-              ▶
-            </button>
           </div>
         </div>
       </template>
@@ -633,69 +612,6 @@ const duration = computed({
   }
 })
 
-// Touch tracking for duration input
-const durationDragging = ref(false)
-const durationDragStartX = ref(0)
-const durationDragStartValue = ref(0)
-
-// Mouse wheel scroll for duration
-function handleDurationWheel(event: WheelEvent) {
-  event.preventDefault()
-  const delta = event.deltaY > 0 ? -10 : 10
-  const newValue = Math.max(100, Math.min(2000, duration.value + delta))
-  duration.value = newValue
-}
-
-// Mouse drag support for duration
-function handleDurationMouseDown(event: MouseEvent) {
-  event.preventDefault()
-  durationDragging.value = true
-  durationDragStartX.value = event.clientX
-  durationDragStartValue.value = duration.value
-  
-  document.addEventListener('mousemove', handleDurationMouseMove)
-  document.addEventListener('mouseup', handleDurationMouseUp)
-}
-
-function handleDurationMouseMove(event: MouseEvent) {
-  if (!durationDragging.value) return
-  
-  const deltaX = event.clientX - durationDragStartX.value
-  // Scale: 2 pixels of movement = 10ms change
-  const change = Math.round(deltaX / 2) * 10
-  const newValue = Math.max(100, Math.min(2000, durationDragStartValue.value + change))
-  duration.value = newValue
-}
-
-function handleDurationMouseUp() {
-  durationDragging.value = false
-  document.removeEventListener('mousemove', handleDurationMouseMove)
-  document.removeEventListener('mouseup', handleDurationMouseUp)
-}
-
-// Touch gesture support for duration (horizontal drag)
-function handleDurationTouchStart(event: TouchEvent) {
-  if (!event.touches[0]) return
-  durationDragging.value = true
-  durationDragStartX.value = event.touches[0].clientX
-  durationDragStartValue.value = duration.value
-}
-
-function handleDurationTouchMove(event: TouchEvent) {
-  if (!durationDragging.value || !event.touches[0]) return
-  event.preventDefault()
-  
-  const deltaX = event.touches[0].clientX - durationDragStartX.value
-  // Scale: 2 pixels of movement = 10ms change
-  const change = Math.round(deltaX / 2) * 10
-  const newValue = Math.max(100, Math.min(2000, durationDragStartValue.value + change))
-  duration.value = newValue
-}
-
-function handleDurationTouchEnd() {
-  durationDragging.value = false
-}
-
 // Steps drag support
 const stepsDragging = ref(false)
 const stepsDragStartX = ref(0)
@@ -759,17 +675,6 @@ function handleStepsTouchMove(event: TouchEvent) {
 
 function handleStepsTouchEnd() {
   stepsDragging.value = false
-}
-
-// Arrow button functions for duration
-function decreaseDuration() {
-  const newValue = Math.max(100, duration.value - 10)
-  duration.value = newValue
-}
-
-function increaseDuration() {
-  const newValue = Math.min(2000, duration.value + 10)
-  duration.value = newValue
 }
 
 // Computed properties for steps min/max
@@ -1205,7 +1110,7 @@ function increaseSteps() {
 }
 
 .draggable-value-inline {
-  padding: 0;
+  padding: 0 22px; /* Space for tap zones */
   border: none;
   background: transparent;
   color: #EAEAEA;
@@ -1216,7 +1121,7 @@ function increaseSteps() {
   cursor: ew-resize; /* Indicates horizontal dragging */
   touch-action: none; /* Prevent default touch behaviors */
   user-select: none; /* Prevent text selection while dragging */
-  width: 60px;
+  width: 100%;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -1226,29 +1131,57 @@ function increaseSteps() {
   opacity: 0.8;
 }
 
-.stepper-btn {
-  padding: 0;
-  border: none;
-  background: transparent;
-  color: #EAEAEA;
-  cursor: pointer;
-  font-size: 0.625rem; /* 10px - match dropdown triangle */
-  font-family: 'Roboto Mono';
-  transition: opacity 0.2s;
+.steps-control {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.steps-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 80px;
+}
+
+.tap-zone {
+  position: absolute;
+  top: 0;
+  bottom: 0;
   width: 20px;
-  height: 20px;
   display: flex;
   align-items: center;
   justify-content: center;
+  cursor: pointer;
+  z-index: 1;
+  transition: opacity 0.2s;
 }
 
-.stepper-btn:hover:not(:disabled) {
-  opacity: 0.7;
+.tap-zone-left {
+  left: 0;
 }
 
-.stepper-btn:disabled {
-  opacity: 0.3;
+.tap-zone-right {
+  right: 0;
+}
+
+.tap-zone:hover:not(.disabled) .tap-indicator {
+  opacity: 0.6;
+}
+
+.tap-zone.disabled {
+  opacity: 0.2;
   cursor: not-allowed;
+  pointer-events: none;
+}
+
+.tap-indicator {
+  font-size: 0.75rem; /* 12px */
+  font-family: 'Roboto Mono';
+  color: #EAEAEA;
+  opacity: 0.4;
+  transition: opacity 0.2s;
+  user-select: none;
 }
 
 .value-control {
@@ -1258,60 +1191,11 @@ function increaseSteps() {
   justify-content: flex-end;
 }
 
-.duration-wrapper {
+.duration-control-wrapper {
   display: flex;
   align-items: center;
-  gap: 0; /* No gap */
-}
-
-.duration-input {
-  width: 75px;
-  padding: 0;
-  margin: 0;
-  border: none;
-  background: transparent;
-  color: #EAEAEA;
-  font-size: 0.8125rem;
-  font-family: 'Roboto Mono';
-  font-weight: 400;
-  text-align: right; /* Right-align to be flush with unit */
-  cursor: ew-resize !important;
-  touch-action: none;
-  user-select: none;
-  /* Aggressive iOS Safari number input suppression */
-  -webkit-appearance: none !important;
-  -moz-appearance: textfield !important;
-  appearance: none !important;
-}
-
-.duration-input::-webkit-textfield-decoration-container {
-  display: none !important;
-}
-
-.duration-input::-webkit-contacts-auto-fill-button,
-.duration-input::-webkit-credentials-auto-fill-button {
-  display: none !important;
-}
-
-.duration-input:focus {
-  outline: none;
-}
-
-/* Hide number input spinners for duration */
-.duration-input::-webkit-inner-spin-button,
-.duration-input::-webkit-outer-spin-button {
-  -webkit-appearance: none !important;
-  appearance: none !important;
-  margin: 0 !important;
-  display: none !important;
-  opacity: 0 !important;
-  pointer-events: none !important;
-}
-
-.duration-input[type=number] {
-  -moz-appearance: textfield !important;
-  appearance: none !important;
-  -webkit-appearance: none !important;
+  gap: 0.25rem;
+  justify-content: flex-end;
 }
 
 .unit-label {

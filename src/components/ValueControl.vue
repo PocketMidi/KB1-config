@@ -1,37 +1,39 @@
 <template>
   <div class="value-control" :class="{ disabled }">
-    <button 
-      class="stepper-btn"
-      :disabled="isAtMin || disabled"
-      @click="decreaseSmall"
-      :title="`Decrease by ${smallStep}`"
-    >
-      ◀
-    </button>
-    <input
-      type="number"
-      class="value-input"
-      :value="modelValue"
-      :min="min"
-      :max="max"
-      :step="step"
-      :disabled="disabled"
-      @input="handleInput"
-      @blur="validateAndUpdate"
-      @wheel="handleWheel"
-      @mousedown="handleMouseDown"
-      @touchstart="handleTouchStart"
-      @touchmove="handleTouchMove"
-      @touchend="handleTouchEnd"
-    />
-    <button 
-      class="stepper-btn"
-      :disabled="isAtMax || disabled"
-      @click="increaseSmall"
-      :title="`Increase by ${smallStep}`"
-    >
-      ▶
-    </button>
+    <div class="input-wrapper">
+      <div 
+        class="tap-zone tap-zone-left"
+        :class="{ disabled: isAtMin || disabled }"
+        @click="decreaseSmall"
+        :title="`Decrease by ${smallStep}`"
+      >
+        <span class="tap-indicator">−</span>
+      </div>
+      <input
+        type="number"
+        class="value-input"
+        :value="modelValue"
+        :min="min"
+        :max="max"
+        :step="step"
+        :disabled="disabled"
+        @input="handleInput"
+        @blur="validateAndUpdate"
+        @wheel="handleWheel"
+        @mousedown="handleMouseDown"
+        @touchstart="handleTouchStart"
+        @touchmove="handleTouchMove"
+        @touchend="handleTouchEnd"
+      />
+      <div 
+        class="tap-zone tap-zone-right"
+        :class="{ disabled: isAtMax || disabled }"
+        @click="increaseSmall"
+        :title="`Increase by ${smallStep}`"
+      >
+        <span class="tap-indicator">+</span>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -179,7 +181,6 @@ onBeforeUnmount(() => {
 .value-control {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
   justify-content: flex-end;
 }
 
@@ -193,34 +194,60 @@ onBeforeUnmount(() => {
   cursor: not-allowed;
 }
 
-.stepper-btn {
-  padding: 0;
-  border: none;
-  background: transparent;
-  color: #EAEAEA;
-  cursor: pointer;
-  font-size: 0.625rem; /* 10px - match dropdown triangle */
-  font-family: 'Roboto Mono';
-  transition: opacity 0.2s;
+.input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 90px;
+  height: 24px; /* Fixed height */
+}
+
+.tap-zone {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 100%;
   width: 20px;
-  height: 20px;
   display: flex;
   align-items: center;
   justify-content: center;
+  cursor: pointer;
+  z-index: 2;
+  transition: opacity 0.2s;
 }
 
-.stepper-btn:hover:not(:disabled) {
-  opacity: 0.7;
+.tap-zone-left {
+  left: 0;
 }
 
-.stepper-btn:disabled {
-  opacity: 0.3;
+.tap-zone-right {
+  right: 0;
+}
+
+.tap-zone:hover:not(.disabled) .tap-indicator {
+  opacity: 0.6;
+}
+
+.tap-zone.disabled {
+  opacity: 0.2;
   cursor: not-allowed;
+  pointer-events: none;
+}
+
+.tap-indicator {
+  font-size: 0.75rem; /* 12px */
+  font-family: 'Roboto Mono';
+  color: #EAEAEA;
+  opacity: 0.4;
+  transition: opacity 0.2s;
+  user-select: none;
+  pointer-events: none; /* Let clicks pass through to parent tap-zone */
 }
 
 .value-input {
-  width: 60px;
-  padding: 0;
+  width: 100%;
+  height: 100%;
+  padding: 0 22px; /* Space for tap zones */
   border: none;
   background: transparent;
   color: #EAEAEA;
@@ -231,6 +258,8 @@ onBeforeUnmount(() => {
   cursor: ew-resize; /* Indicates horizontal dragging */
   touch-action: none; /* Prevent default touch behaviors */
   user-select: none; /* Prevent text selection while dragging */
+  position: relative;
+  z-index: 1;
   /* Aggressive iOS Safari number input suppression */
   -webkit-appearance: none !important;
   -moz-appearance: textfield !important;

@@ -148,39 +148,16 @@
 
           <div class="group">
             <label :for="`push-duration-${lever}`">DURATION</label>
-            <div class="value-control">
-              <button 
-                class="stepper-btn"
-                :disabled="duration <= 100"
-                @click="decreaseDuration"
-                title="Decrease by 10ms"
-              >
-                ◀
-              </button>
-              <div class="duration-wrapper">
-                <input 
-                  type="number" 
-                  :id="`push-duration-${lever}`" 
-                  v-model.number="duration" 
-                  min="100" 
-                  max="2000" 
-                  step="10"
-                  class="duration-input"
-                  @wheel="handleDurationWheel"
-                  @mousedown="handleDurationMouseDown"
-                  @touchstart="handleDurationTouchStart"
-                  @touchmove="handleDurationTouchMove"
-                  @touchend="handleDurationTouchEnd"
-                /><span class="unit-label">ms</span>
-              </div>
-              <button 
-                class="stepper-btn"
-                :disabled="duration >= 2000"
-                @click="increaseDuration"
-                title="Increase by 10ms"
-              >
-                ▶
-              </button>
+            <div class="duration-control-wrapper">
+              <ValueControl
+                v-model="duration"
+                :min="100"
+                :max="2000"
+                :step="10"
+                :small-step="10"
+                :large-step="100"
+              />
+              <span class="unit-label">ms</span>
             </div>
           </div>
         </div>
@@ -532,85 +509,6 @@ const duration = computed({
   }
 })
 
-// Touch tracking for duration input
-const durationDragging = ref(false)
-const durationDragStartX = ref(0)
-const durationDragStartValue = ref(0)
-
-// Mouse wheel scroll for duration
-function handleDurationWheel(event: WheelEvent) {
-  event.preventDefault()
-  const delta = event.deltaY > 0 ? -10 : 10
-  const newValue = Math.max(100, Math.min(2000, duration.value + delta))
-  duration.value = newValue
-}
-
-// Mouse drag support for duration
-function handleDurationMouseDown(event: MouseEvent) {
-  event.preventDefault()
-  durationDragging.value = true
-  durationDragStartX.value = event.clientX
-  durationDragStartValue.value = duration.value
-  
-  document.addEventListener('mousemove', handleDurationMouseMove)
-  document.addEventListener('mouseup', handleDurationMouseUp)
-}
-
-function handleDurationMouseMove(event: MouseEvent) {
-  if (!durationDragging.value) return
-  
-  const deltaX = event.clientX - durationDragStartX.value
-  // Scale: 2 pixels of movement = 10ms change
-  const change = Math.round(deltaX / 2) * 10
-  const newValue = Math.max(100, Math.min(2000, durationDragStartValue.value + change))
-  duration.value = newValue
-}
-
-function handleDurationMouseUp() {
-  durationDragging.value = false
-  document.removeEventListener('mousemove', handleDurationMouseMove)
-  document.removeEventListener('mouseup', handleDurationMouseUp)
-}
-
-// Touch gesture support for duration (horizontal drag)
-function handleDurationTouchStart(event: TouchEvent) {
-  if (!event.touches[0]) return
-  durationDragging.value = true
-  durationDragStartX.value = event.touches[0].clientX
-  durationDragStartValue.value = duration.value
-}
-
-function handleDurationTouchMove(event: TouchEvent) {
-  if (!durationDragging.value || !event.touches[0]) return
-  event.preventDefault()
-  
-  const deltaX = event.touches[0].clientX - durationDragStartX.value
-  // Scale: 2 pixels of movement = 10ms change
-  const change = Math.round(deltaX / 2) * 10
-  const newValue = Math.max(100, Math.min(2000, durationDragStartValue.value + change))
-  duration.value = newValue
-}
-
-function handleDurationTouchEnd() {
-  durationDragging.value = false
-}
-
-// Arrow button functions for duration
-function decreaseDuration() {
-  const newValue = Math.max(100, duration.value - 10)
-  duration.value = newValue
-}
-
-function increaseDuration() {
-  const newValue = Math.min(2000, duration.value + 10)
-  duration.value = newValue
-}
-
-// Cleanup duration drag event listeners on unmount
-onBeforeUnmount(() => {
-  document.removeEventListener('mousemove', handleDurationMouseMove)
-  document.removeEventListener('mouseup', handleDurationMouseUp)
-})
 </script>
 
 <style scoped>
@@ -824,60 +722,11 @@ onBeforeUnmount(() => {
   z-index: 2;
 }
 
-.duration-wrapper {
+.duration-control-wrapper {
   display: flex;
   align-items: center;
-  gap: 0; /* No gap */
-}
-
-.duration-input {
-  width: 75px;
-  padding: 0;
-  margin: 0;
-  border: none;
-  background: transparent;
-  color: #EAEAEA;
-  font-size: 0.8125rem;
-  font-family: 'Roboto Mono';
-  font-weight: 400;
-  text-align: right; /* Right-align to be flush with unit */
-  cursor: ew-resize !important;
-  touch-action: none;
-  user-select: none;
-  /* Aggressive iOS Safari number input suppression */
-  -webkit-appearance: none !important;
-  -moz-appearance: textfield !important;
-  appearance: none !important;
-}
-
-.duration-input::-webkit-textfield-decoration-container {
-  display: none !important;
-}
-
-.duration-input::-webkit-contacts-auto-fill-button,
-.duration-input::-webkit-credentials-auto-fill-button {
-  display: none !important;
-}
-
-.duration-input:focus {
-  outline: none;
-}
-
-/* Hide number input spinners for duration */
-.duration-input::-webkit-inner-spin-button,
-.duration-input::-webkit-outer-spin-button {
-  -webkit-appearance: none !important;
-  appearance: none !important;
-  margin: 0 !important;
-  display: none !important;
-  opacity: 0 !important;
-  pointer-events: none !important;
-}
-
-.duration-input[type=number] {
-  -moz-appearance: textfield !important;
-  appearance: none !important;
-  -webkit-appearance: none !important;
+  gap: 0.25rem;
+  justify-content: flex-end;
 }
 
 .unit-label {
@@ -885,6 +734,8 @@ onBeforeUnmount(() => {
   color: #EAEAEA;
   font-family: 'Roboto Mono';
   font-weight: 400;
+  cursor: default; /* Normal cursor on unit label */
+  user-select: none; /* Prevent text selection */
 }
 
 .value-control {

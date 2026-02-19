@@ -65,6 +65,8 @@ const showRotateBackPrompt = ref(false); // Show "rotate back" prompt on exit
 // Touch tracking for slider dragging
 const activeTouchSlider = ref<number | null>(null);
 const activeTouchTrack = ref<HTMLElement | null>(null);
+const swipeStartX = ref<number | null>(null);
+const swipeStartY = ref<number | null>(null);
 
 // Initialize sliders
 const sliders = ref<SliderConfig[]>([]);
@@ -194,6 +196,10 @@ function handleTrackTouchStart(event: TouchEvent, index: number) {
   const touch = event.touches[0];
   if (!touch) return;
   
+  // Store swipe start position
+  swipeStartX.value = touch.clientX;
+  swipeStartY.value = touch.clientY;
+  
   // Get the track that was touched directly
   const track = event.currentTarget as HTMLElement;
   if (!track) return;
@@ -204,9 +210,6 @@ function handleTrackTouchStart(event: TouchEvent, index: number) {
   
   // Process the initial touch position
   handleTrackTouchMove(event, index);
-  
-  // Show exit button
-  showExitButton.value = true;
 }
 
 function handleTrackTouchMove(event: TouchEvent, index: number) {
@@ -246,15 +249,26 @@ function handleTrackTouchMove(event: TouchEvent, index: number) {
   handleSliderChange(index, newValue, false);
 }
 
-function handleTrackTouchEnd() {
+function handleTrackTouchEnd(event: TouchEvent) {
+  // Check for horizontal swipe to exit
+  if (swipeStartX.value !== null && swipeStartY.value !== null) {
+    const touch = event.changedTouches[0];
+    if (touch) {
+      const deltaX = Math.abs(touch.clientX - swipeStartX.value);
+      const deltaY = Math.abs(touch.clientY - swipeStartY.value);
+      
+      // If horizontal swipe > 100px and more horizontal than vertical, exit
+      if (deltaX > 100 && deltaX > deltaY * 2) {
+        exitLiveMode();
+        return;
+      }
+    }
+  }
+  
   activeTouchSlider.value = null;
   activeTouchTrack.value = null;
-  // Hide X after 2 seconds of no interaction
-  setTimeout(() => {
-    if (activeTouchSlider.value === null) {
-      showExitButton.value = false;
-    }
-  }, 2000);
+  swipeStartX.value = null;
+  swipeStartY.value = null;
 }
 
 // Reset to defaults (full reset - colors, settings, values)
@@ -926,24 +940,13 @@ defineExpose({
       class="live-mode" 
       :class="{ 'mobile-landscape': isMobile }"
     >
-      <!-- Exit button (top-right corner) for mobile - shows on interaction -->
-      <div 
-        v-if="isMobile && !isPortrait && showExitButton"
-        class="mobile-exit-button"
-        @click="exitLiveMode"
-        @touchend.prevent.stop="exitLiveMode"
-      >
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <line x1="18" y1="6" x2="6" y2="18"></line>
-          <line x1="6" y1="6" x2="18" y2="18"></line>
-        </svg>
-      </div>
       <!-- iOS Portrait Prompt -->
       <div v-if="isMobile && isIOS && isPortrait" class="portrait-prompt">
         <div class="prompt-content">
           <img src="/rotate.gif" alt="Rotate device" class="rotate-icon-img" />
-          <div class="prompt-text">Please rotate your device [22:49]</div>
+          <div class="prompt-text">Please rotate your device [22:54]</div>
           <div class="prompt-subtext">Landscape orientation required</div>
+          <div class="prompt-subtext" style="margin-top: 0.5rem; font-size: 0.7rem; opacity: 0.6;">Swipe left or right to exit</div>
         </div>
       </div>
       
@@ -951,7 +954,7 @@ defineExpose({
       <div v-if="showRotateBackPrompt" class="portrait-prompt">
         <div class="prompt-content">
           <img src="/rotate.gif" alt="Rotate device" class="rotate-icon-img" />
-          <div class="prompt-text">Rotate back to portrait [22:49]</div>
+          <div class="prompt-text">Rotate back to portrait [22:54]</div>
           <div class="prompt-subtext">or wait 3 seconds</div>
         </div>
       </div>
@@ -981,8 +984,8 @@ defineExpose({
             @dblclick="handleDoubleClick(index)"
             @touchstart="handleTrackTouchStart($event, index)"
             @touchmove="handleTrackTouchMove($event, index)"
-            @touchend="handleTrackTouchEnd"
-            @touchcancel="handleTrackTouchEnd"
+            @touchend="handleTrackTouchEnd($event)"
+            @touchcancel="handleTrackTouchEnd($event)"
             :style="{
               backgroundColor: hexToRgba(slider.color, 0.2)
             }"

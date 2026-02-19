@@ -60,6 +60,7 @@ const isMobile = ref(false);
 const isIOS = ref(false);
 const isPortrait = ref(false);
 const showExitButton = ref(false); // Control X button visibility
+const showRotateBackPrompt = ref(false); // Show "rotate back" prompt on exit
 
 // Touch tracking for slider dragging
 const activeTouchSlider = ref<number | null>(null);
@@ -196,11 +197,15 @@ function handleTrackTouchStart(event: TouchEvent, index: number) {
 function handleTrackTouchMove(event: TouchEvent, index: number) {
   if (!isMobile.value || viewMode.value !== 'live' || activeTouchSlider.value !== index) return;
   event.preventDefault();
+  event.stopPropagation();
   
   const touch = event.touches[0];
   if (!touch) return;
   
-  const track = (event.currentTarget as HTMLElement);
+  // Get the track element directly - it's the currentTarget
+  const track = event.currentTarget as HTMLElement;
+  if (!track) return;
+  
   const rect = track.getBoundingClientRect();
   
   // Calculate position from bottom (0 = bottom, 1 = top)
@@ -721,6 +726,28 @@ async function enterLiveMode() {
 }
 
 async function exitLiveMode() {
+  // Show rotate-back prompt for iOS mobile users
+  if (isMobile.value && isIOS.value && !isPortrait.value) {
+    showRotateBackPrompt.value = true;
+    // Wait 3 seconds or until portrait orientation detected
+    const checkInterval = setInterval(() => {
+      if (window.innerHeight > window.innerWidth) {
+        clearInterval(checkInterval);
+        completeExit();
+      }
+    }, 100);
+    // Auto-complete after 3 seconds regardless
+    setTimeout(() => {
+      clearInterval(checkInterval);
+      completeExit();
+    }, 3000);
+  } else {
+    completeExit();
+  }
+}
+
+async function completeExit() {
+  showRotateBackPrompt.value = false;
   viewMode.value = 'setup';
   showExitButton.value = false; // Reset button visibility
   activeTouchSlider.value = null; // Reset active slider
@@ -896,9 +923,18 @@ defineExpose({
       <!-- iOS Portrait Prompt -->
       <div v-if="isMobile && isIOS && isPortrait" class="portrait-prompt">
         <div class="prompt-content">
-          <div class="rotate-icon">📱 → 📱</div>
+          <img src="/rotate.gif" alt="Rotate device" class="rotate-icon-img" />
           <div class="prompt-text">Please rotate your device</div>
           <div class="prompt-subtext">Landscape orientation required</div>
+        </div>
+      </div>
+      
+      <!-- Rotate Back Prompt (on exit) -->
+      <div v-if="showRotateBackPrompt" class="portrait-prompt">
+        <div class="prompt-content">
+          <img src="/rotate.gif" alt="Rotate device" class="rotate-icon-img" />
+          <div class="prompt-text">Rotate back to portrait</div>
+          <div class="prompt-subtext">or wait 3 seconds</div>
         </div>
       </div>
       
@@ -1307,6 +1343,15 @@ defineExpose({
   font-size: 4rem;
   margin-bottom: 1rem;
   animation: rotate-hint 2s ease-in-out infinite;
+}
+
+.rotate-icon-img {
+  width: 120px;
+  height: 120px;
+  margin-bottom: 1rem;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 @keyframes rotate-hint {

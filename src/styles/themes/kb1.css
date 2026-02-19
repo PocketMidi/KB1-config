@@ -5,9 +5,16 @@
  * 1. Export assets from Figma to src/assets/ui/
  * 2. Update the URLs in this file to reference new assets
  * 3. No code changes needed - components automatically pick up new visuals
+ * 
+ * Theme Modes:
+ * - .theme-kb1-dark - Dark mode (default)
+ * - .theme-kb1-light - Light mode
+ * 
+ * All components use CSS variables, so switching themes is automatic.
  */
 
-.theme-kb1 {
+/* ===== DARK MODE (Default) ===== */
+.theme-kb1-dark {
   /* ===== KB1 Brand Colors ===== */
   --kb1-background: #0F0F0F;
   --kb1-text-primary: #EAEAEA;
@@ -118,12 +125,43 @@
   --title-cc-radius: var(--kb1-radius-md);
 }
 
+/* ===== LIGHT MODE (To be defined) ===== */
+.theme-kb1-light {
+  /* TODO: Define light mode color values here */
+  /* Example structure (placeholder values): */
+  /*
+  --kb1-background: #FFFFFF;
+  --kb1-text-primary: #1A1A1A;
+  --kb1-text-secondary: rgba(26, 26, 26, 0.5);
+  
+  --btn-primary-bg: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  --btn-primary-bg-hover: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
+  
+  ... (copy all variables from dark mode and adjust colors)
+  */
+}
+
+/* ===== Smooth Theme Transitions ===== */
+.theme-kb1-dark,
+.theme-kb1-light {
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.theme-kb1-dark *,
+.theme-kb1-light * {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
 /* ===== Helper: Fallback for missing images ===== */
 /* If designer hasn't exported an image yet, show a gradient placeholder */
-.theme-kb1 .settings-lever,
-.theme-kb1 .settings-leverpush,
-.theme-kb1 .settings-touch,
-.theme-kb1 .settings-scale {
+.theme-kb1-dark .settings-lever,
+.theme-kb1-dark .settings-leverpush,
+.theme-kb1-dark .settings-touch,
+.theme-kb1-dark .settings-scale,
+.theme-kb1-light .settings-lever,
+.theme-kb1-light .settings-leverpush,
+.theme-kb1-light .settings-touch,
+.theme-kb1-light .settings-scale {
   background: var(--settings-panel-bg);
   border: var(--settings-panel-border);
   border-radius: var(--settings-panel-radius);
@@ -131,25 +169,29 @@
 }
 
 /* Individual panel background images (when provided) */
-.theme-kb1 .settings-lever {
+.theme-kb1-dark .settings-lever,
+.theme-kb1-light .settings-lever {
   /* background-image: var(--lever-panel-bg); */
   background-size: cover;
   background-position: center;
 }
 
-.theme-kb1 .settings-leverpush {
+.theme-kb1-dark .settings-leverpush,
+.theme-kb1-light .settings-leverpush {
   /* background-image: var(--lever-push-panel-bg); */
   background-size: cover;
   background-position: center;
 }
 
-.theme-kb1 .settings-touch {
+.theme-kb1-dark .settings-touch,
+.theme-kb1-light .settings-touch {
   /* background-image: var(--touch-panel-bg); */
   background-size: cover;
   background-position: center;
 }
 
-.theme-kb1 .settings-scale {
+.theme-kb1-dark .settings-scale,
+.theme-kb1-light .settings-scale {
   /* background-image: var(--scale-panel-bg); */
   background-size: cover;
   background-position: center;

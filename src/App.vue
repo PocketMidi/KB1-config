@@ -33,6 +33,21 @@ const isHoveringStatus = ref(false);
 const showFirstTimeOverlay = ref(false);
 const showContextualModal = ref(false);
 
+// Theme state
+const THEME_KEY = 'kb1-theme-preference';
+const isDarkMode = ref(localStorage.getItem(THEME_KEY) !== 'light');
+
+// Computed property for theme icon
+const themeIcon = computed(() => {
+  const baseUrl = import.meta.env.BASE_URL || '/';
+  return isDarkMode.value ? `${baseUrl}lite.svg` : `${baseUrl}dark.svg`;
+});
+
+function toggleTheme() {
+  isDarkMode.value = !isDarkMode.value;
+  localStorage.setItem(THEME_KEY, isDarkMode.value ? 'dark' : 'light');
+}
+
 // Computed property for bluetooth status text
 const bluetoothStatusText = computed(() => {
   if (isConnected.value) {
@@ -167,7 +182,7 @@ function handleTabClick(tabId: Tab) {
 </script>
 
 <template>
-  <div class="app theme-kb1">
+  <div class="app" :class="isDarkMode ? 'theme-kb1-dark' : 'theme-kb1-light'">
     <!-- First-Time Overlay -->
     <FirstTimeOverlay
       :show="showFirstTimeOverlay"
@@ -209,6 +224,16 @@ function handleTabClick(tabId: Tab) {
           >
             {{ tab.label }}
           </button>
+          
+          <!-- Theme toggle button -->
+          <button 
+            class="theme-toggle"
+            @click="toggleTheme"
+            :title="isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'"
+          >
+            <img :src="themeIcon" :alt="isDarkMode ? 'Light Mode' : 'Dark Mode'" class="theme-icon" />
+          </button>
+          
           <!-- Vertical divider after tabs -->
           <div class="separator"></div>
         </div>
@@ -418,7 +443,7 @@ body {
 }
 
 .nav-tab {
-  padding: 1rem 1.5rem;
+  padding: 1rem 0.75rem;
   background: transparent;
   border: none;
   border-radius: 0;
@@ -468,6 +493,30 @@ body {
   background: #EAEAEA;
   opacity: 0.32;
   border-radius: 1px;
+}
+
+/* Theme toggle button */
+.theme-toggle {
+  padding: 0.5rem 0.75rem;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.2s, transform 0.2s;
+  opacity: 0.6;
+}
+
+.theme-toggle:hover {
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+.theme-icon {
+  height: 28px;
+  width: 28px;
+  display: block;
 }
 
 /* Vertical separator (divider) after tabs */
@@ -600,7 +649,7 @@ body {
   
   .nav-tab {
     font-size: 0.8125rem;
-    padding: 0.75rem 1rem;
+    padding: 0.75rem 0.5rem;
   }
   
   .bluetooth-status {
@@ -619,6 +668,15 @@ body {
   .separator {
     margin: 0 0.25rem;
   }
+  
+  .theme-toggle {
+    padding: 0.5rem 0.5rem;
+  }
+  
+  .theme-icon {
+    height: 24px;
+    width: 24px;
+  }
 }
 
 @media (max-width: 480px) {
@@ -633,7 +691,7 @@ body {
   
   .nav-tab {
     font-size: 0.8125rem; /* 13px */
-    padding: 0.75rem 0.75rem;
+    padding: 0.75rem 0.5rem;
   }
   
   .bluetooth-status {

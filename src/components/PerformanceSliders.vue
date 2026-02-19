@@ -1582,12 +1582,14 @@ defineExpose({
 }
 
 .rotate-icon-img {
-  width: 120px;
-  height: 120px;
+  width: auto;
+  height: min(60vh, 400px);
+  max-width: 90vw;
   margin-bottom: 1rem;
   display: block;
   margin-left: auto;
   margin-right: auto;
+  object-fit: contain;
 }
 
 @keyframes rotate-hint {

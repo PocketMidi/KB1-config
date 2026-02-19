@@ -57,17 +57,17 @@ const viewMode = ref<ViewMode>('setup');
 
 // Mobile detection and fullscreen state
 const isMobile = ref(false);
-const showExitButton = ref(false);
-const exitButtonExpanded = ref(false);
+const isIOS = ref(false);
+const isPortrait = ref(false);
+// Exit button state (mobile long-press)
+const longPressTimer = ref<number | null>(null);
+const longPressProgress = ref(0);
+const longPressActive = ref(false);
 
 // Initialize sliders
 const sliders = ref<SliderConfig[]>([]);
 const dragging = ref<number | null>(null);
 const isDragging = ref(false);
-
-// Touch tracking for swipe-to-exit in live mode
-const touchStartY = ref<number>(0);
-const touchStartTime = ref<number>(0);
 
 // Color swatch dragging
 const colorDragStartY = ref<number>(0);
@@ -109,6 +109,111 @@ function initializeSliders() {
   links.value = new Array(11).fill(false);
 }
 
+// === UTILITY FUNCTIONS (must be declared first) ===
+
+// Save preset to localStorage
+function savePreset() {
+  const preset: Preset = {
+    sliders: sliders.value,
+    links: links.value,
+  };
+  SliderPresetStore.saveCurrentState(preset);
+}
+
+// Show explainer text with fade effect
+function showExplainerText(text: string) {
+  // Clear any existing timeout
+  if (explainerTimeout) {
+    clearTimeout(explainerTimeout);
+  }
+  
+  // Reset fade state
+  explainerFading.value = false;
+  explainerText.value = text;
+  
+  // Start fade out after 2 seconds
+  explainerTimeout = window.setTimeout(() => {
+    explainerFading.value = true;
+  }, 2000);
+}
+
+// Convert hex color to rgba with alpha
+function hexToRgba(hex: string, alpha: number): string {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+// Calculate slider fill height for visual display
+function getSliderFillHeight(slider: SliderConfig): number {
+  const trackHeight = 490;
+  const minFillHeight = 20;
+  const minPercent = (minFillHeight / trackHeight) * 100;
+  
+  if (slider.bipolar) {
+    const halfHeight = Math.abs(slider.value) / 2;
+    if (halfHeight < minPercent / 2) {
+      return minPercent;
+    }
+    return halfHeight;
+  } else {
+    return Math.max(slider.value, minPercent);
+  }
+}
+
+// Calculate slider fill bottom position (only for bipolar)
+function getSliderFillBottom(slider: SliderConfig): number {
+  if (!slider.bipolar) return 0;
+  
+  const trackHeight = 490;
+  const minFillHeight = 20;
+  const minPercent = (minFillHeight / trackHeight) * 100;
+  const halfHeight = Math.abs(slider.value) / 2;
+  
+  if (halfHeight < minPercent / 2) {
+    return 50 - minPercent / 2;
+  }
+  
+  if (slider.value >= 0) {
+    return 50;
+  } else {
+    return 50 - halfHeight;
+  }
+}
+
+// Handle long press to exit (mobile)
+function startLongPress(event: TouchEvent | MouseEvent) {
+  if (!isMobile.value || viewMode.value !== 'live') return;
+  
+  event.preventDefault();
+  longPressActive.value = true;
+  longPressProgress.value = 0;
+  
+  const duration = 2000; // 2 seconds
+  const interval = 50; // Update every 50ms
+  const increment = (interval / duration) * 100;
+  
+  longPressTimer.value = window.setInterval(() => {
+    longPressProgress.value += increment;
+    if (longPressProgress.value >= 100) {
+      cancelLongPress();
+      exitLiveMode();
+    }
+  }, interval);
+}
+
+function cancelLongPress() {
+  if (longPressTimer.value) {
+    clearInterval(longPressTimer.value);
+    longPressTimer.value = null;
+  }
+  longPressActive.value = false;
+  longPressProgress.value = 0;
+}
+
+// === END UTILITY FUNCTIONS ===
+
 // Reset to defaults (full reset - colors, settings, values)
 function resetToDefaults() {
   sliders.value = [];
@@ -135,16 +240,6 @@ function resetValuesToZero() {
   savePreset();
   showExplainerText('Values Reset to Zero');
 }
-
-// Expose functions for parent component
-defineExpose({
-  resetToDefaults,
-  resetValuesToZero,
-  getCurrentPreset,
-  loadPreset,
-  viewMode,
-  exitLiveMode,
-});
 
 onMounted(() => {
   initializeSliders();
@@ -555,130 +650,84 @@ function detectMobile() {
   const hasTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
   const isSmallScreen = window.innerWidth < 768;
   isMobile.value = hasTouch && isSmallScreen;
+  
+  // Detect iOS
+  const userAgent = navigator.userAgent.toLowerCase();
+  isIOS.value = /iphone|ipad|ipod/.test(userAgent) || 
+                (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  
+  // Check orientation
+  checkOrientation();
+}
+
+function checkOrientation() {
+  isPortrait.value = window.innerHeight > window.innerWidth;
 }
 
 async function enterLiveMode() {
   detectMobile();
   viewMode.value = 'live';
   
-  // On mobile: enter fullscreen and lock orientation to landscape
+  // Platform-specific mobile handling
   if (isMobile.value) {
-    try {
-      // Request fullscreen
-      const elem = document.documentElement;
-      if (elem.requestFullscreen) {
-        await elem.requestFullscreen();
-      }
-      
-      // Lock orientation to landscape
-      if (screen.orientation && 'lock' in screen.orientation) {
-        try {
-          await (screen.orientation as any).lock('landscape');
-        } catch (e) {
-          console.log('Orientation lock not supported:', e);
+    if (isIOS.value) {
+      // iOS: No fullscreen API support, just use viewport optimization
+      // Portrait prompt will show if needed
+      window.addEventListener('resize', checkOrientation);
+      window.addEventListener('orientationchange', checkOrientation);
+    } else {
+      // Android: Full fullscreen + orientation lock support
+      try {
+        // Request fullscreen (removes ALL browser UI)
+        const elem = document.documentElement;
+        if (elem.requestFullscreen) {
+          await elem.requestFullscreen();
         }
+        
+        // Lock orientation to landscape
+        if (screen.orientation && 'lock' in screen.orientation) {
+          try {
+            await (screen.orientation as any).lock('landscape');
+          } catch (e) {
+            console.log('Orientation lock not supported:', e);
+          }
+        }
+      } catch (e) {
+        console.error('Fullscreen error:', e);
       }
-      
-      // Show exit button after entering fullscreen
-      showExitButton.value = true;
-    } catch (e) {
-      console.error('Fullscreen error:', e);
-      // Still show exit button even if fullscreen fails
-      showExitButton.value = true;
     }
   }
 }
 
 async function exitLiveMode() {
   viewMode.value = 'setup';
-  exitButtonExpanded.value = false;
-  showExitButton.value = false;
   
-  // On mobile: exit fullscreen and unlock orientation
+  // Clear any active long press
+  cancelLongPress();
+  
+  // Platform-specific cleanup
   if (isMobile.value) {
-    try {
-      // Exit fullscreen
-      if (document.fullscreenElement && document.exitFullscreen) {
-        await document.exitFullscreen();
+    if (isIOS.value) {
+      // iOS: Remove orientation listeners
+      window.removeEventListener('resize', checkOrientation);
+      window.removeEventListener('orientationchange', checkOrientation);
+    } else {
+      // Android: Exit fullscreen and unlock orientation
+      try {
+        // Exit fullscreen
+        if (document.fullscreenElement && document.exitFullscreen) {
+          await document.exitFullscreen();
+        }
+        
+        // Unlock orientation
+        if (screen.orientation && 'unlock' in screen.orientation) {
+          (screen.orientation as any).unlock();
+        }
+      } catch (e) {
+        console.error('Exit fullscreen error:', e);
       }
-      
-      // Unlock orientation
-      if (screen.orientation && 'unlock' in screen.orientation) {
-        (screen.orientation as any).unlock();
-      }
-    } catch (e) {
-      console.error('Exit fullscreen error:', e);
     }
   }
-}
-
-// Handle exit button interaction
-function handleExitButtonClick() {
-  if (!exitButtonExpanded.value) {
-    // First tap: expand
-    exitButtonExpanded.value = true;
-  } else {
-    // Second tap: exit
-    exitLiveMode();
-  }
-}
-
-// Show explainer text with fade effect
-function showExplainerText(text: string) {
-  // Clear any existing timeout
-  if (explainerTimeout) {
-    clearTimeout(explainerTimeout);
-  }
-  
-  // Reset fade state
-  explainerFading.value = false;
-  explainerText.value = text;
-  
-  // Start fade out after 2 seconds
-  explainerTimeout = window.setTimeout(() => {
-    explainerFading.value = true;
-  }, 2000);
-}
-
-// Touch/swipe handling for exiting live mode
-function handleTouchStart(event: TouchEvent) {
-  if (viewMode.value === 'live' && event.touches.length === 1) {
-    const touch = event.touches[0];
-    if (touch) {
-      touchStartY.value = touch.clientY;
-      touchStartTime.value = Date.now();
-    }
-  }
-}
-
-function handleTouchEnd(event: TouchEvent) {
-  if (viewMode.value === 'live' && event.changedTouches.length === 1) {
-    const touch = event.changedTouches[0];
-    if (!touch) return;
-    const touchEndY = touch.clientY;
-    const deltaY = touchEndY - touchStartY.value;
-    const deltaTime = Date.now() - touchStartTime.value;
-    
-    // Swipe down from top: deltaY > 100px, within 500ms, starting near top
-    if (deltaY > 100 && deltaTime < 500 && touchStartY.value < 100) {
-      exitLiveMode();
-    }
-  }
-}
-
-// Toggle settings visibility (removed - no longer needed in setup mode)
-// function toggleSettings() {
-//   settingsVisible.value = !settingsVisible.value;
-//   savePreset();
-// }
-
-// Save preset to localStorage
-function savePreset() {
-  const preset: Preset = {
-    sliders: sliders.value,
-    links: links.value,
-  };
-  SliderPresetStore.saveCurrentState(preset);
 }
 
 // Get current preset state
@@ -697,65 +746,21 @@ function loadPreset(preset: SliderPreset) {
   showExplainerText('Preset Loaded');
 }
 
-// Convert hex color to rgba with alpha
-function hexToRgba(hex: string, alpha: number): string {
-  const r = parseInt(hex.slice(1, 3), 16);
-  const g = parseInt(hex.slice(3, 5), 16);
-  const b = parseInt(hex.slice(5, 7), 16);
-  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-}
-
-// Calculate slider fill height for visual display
-function getSliderFillHeight(slider: SliderConfig): number {
-  const trackHeight = 490;
-  const minFillHeight = 20;
-  const minPercent = (minFillHeight / trackHeight) * 100; // ~6.12%
-  
-  if (slider.bipolar) {
-    // For bipolar, height is distance from center (50%)
-    const halfHeight = Math.abs(slider.value) / 2; // -100 to +100 -> 0 to 50
-    // Always show at least minPercent, centered around 50%
-    if (halfHeight < minPercent / 2) {
-      return minPercent;
-    }
-    return halfHeight;
-  } else {
-    // For unipolar, height is direct percentage
-    return Math.max(slider.value, minPercent);
-  }
-}
-
-// Calculate slider fill bottom position (only for bipolar)
-function getSliderFillBottom(slider: SliderConfig): number {
-  if (!slider.bipolar) return 0;
-  
-  const trackHeight = 490;
-  const minFillHeight = 20;
-  const minPercent = (minFillHeight / trackHeight) * 100; // ~6.12%
-  const halfHeight = Math.abs(slider.value) / 2;
-  
-  // If value is near zero, center the minimum fill around 50%
-  if (halfHeight < minPercent / 2) {
-    return 50 - minPercent / 2;
-  }
-  
-  // If positive, fill goes up from center (50%)
-  // If negative, fill goes down from center
-  if (slider.value >= 0) {
-    return 50; // Start at center, extend upward
-  } else {
-    // Position so fill extends downward from center
-    return 50 - halfHeight;
-  }
-}
+// Expose functions for parent component
+defineExpose({
+  resetToDefaults,
+  resetValuesToZero,
+  getCurrentPreset,
+  loadPreset,
+  viewMode,
+  exitLiveMode,
+});
 </script>
 
 <template>
   <div 
     class="performance-sliders"
     :class="{ 'live-mode': viewMode === 'live' }"
-    @touchstart="handleTouchStart"
-    @touchend="handleTouchEnd"
   >
     <!-- SETUP MODE -->
     <div v-if="viewMode === 'setup'" class="setup-mode" @click="closeColorPicker">
@@ -851,16 +856,52 @@ function getSliderFillBottom(slider: SliderConfig): number {
     </div>
     
     <!-- LIVE MODE -->
-    <div v-if="viewMode === 'live'" class="live-mode" :class="{ 'mobile-landscape': isMobile }">
-      <!-- Exit button (mobile only, lower-left corner) -->
-      <div 
-        v-if="showExitButton" 
-        class="exit-button"
-        :class="{ expanded: exitButtonExpanded }"
-        @click="handleExitButtonClick"
-      >
-        <div class="exit-triangle" v-if="!exitButtonExpanded"></div>
-        <div class="exit-text" v-if="exitButtonExpanded">Tap to Exit</div>
+    <div 
+      v-if="viewMode === 'live'" 
+      class="live-mode" 
+      :class="{ 'mobile-landscape': isMobile }"
+      @touchstart="startLongPress"
+      @touchend="cancelLongPress"
+      @touchcancel="cancelLongPress"
+      @mousedown="startLongPress"
+      @mouseup="cancelLongPress"
+      @mouseleave="cancelLongPress"
+    >
+      <!-- iOS Portrait Prompt -->
+      <div v-if="isMobile && isIOS && isPortrait" class="portrait-prompt">
+        <div class="prompt-content">
+          <div class="rotate-icon">📱 → 📱</div>
+          <div class="prompt-text">Please rotate your device</div>
+          <div class="prompt-subtext">Landscape orientation required</div>
+        </div>
+      </div>
+      
+      <!-- Long press indicator (mobile) -->
+      <div v-if="longPressActive" class="long-press-indicator">
+        <div class="progress-ring">
+          <svg width="80" height="80">
+            <circle
+              cx="40"
+              cy="40"
+              r="35"
+              stroke="rgba(116, 196, 255, 0.3)"
+              stroke-width="4"
+              fill="none"
+            />
+            <circle
+              cx="40"
+              cy="40"
+              r="35"
+              stroke="#74C4FF"
+              stroke-width="4"
+              fill="none"
+              :stroke-dasharray="220"
+              :stroke-dashoffset="220 - (220 * longPressProgress / 100)"
+              class="progress-circle"
+            />
+          </svg>
+          <div class="progress-text">Release<br>to Cancel</div>
+        </div>
       </div>
       
       <!-- Sliders container -->
@@ -1238,50 +1279,83 @@ function getSliderFillBottom(slider: SliderConfig): number {
   opacity: 1;
 }
 
-/* Exit Button (Mobile) */
-.exit-button {
+/* Portrait Prompt (iOS) */
+.portrait-prompt {
   position: fixed;
-  bottom: 0;
+  top: 0;
   left: 0;
-  z-index: 100;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.exit-button:not(.expanded) {
-  width: 60px;
-  height: 60px;
-}
-
-.exit-button.expanded {
-  width: 150px;
-  height: 60px;
-  background: rgba(116, 196, 255, 0.2);
-  border: 2px solid #74C4FF;
-  border-bottom: none;
-  border-left: none;
-  border-top-right-radius: 12px;
+  right: 0;
+  bottom: 0;
+  background: var(--color-background, #0F0F0F);
   display: flex;
   align-items: center;
   justify-content: center;
+  z-index: 1000;
 }
 
-.exit-triangle {
-  width: 0;
-  height: 0;
-  border-style: solid;
-  border-width: 0 0 50px 50px;
-  border-color: transparent transparent rgba(116, 196, 255, 0.3) transparent;
-  position: absolute;
-  bottom: 0;
-  left: 0;
+.prompt-content {
+  text-align: center;
+  padding: 2rem;
 }
 
-.exit-text {
+.rotate-icon {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+  animation: rotate-hint 2s ease-in-out infinite;
+}
+
+@keyframes rotate-hint {
+  0%, 100% { transform: rotate(0deg); }
+  50% { transform: rotate(90deg); }
+}
+
+.prompt-text {
+  font-family: 'Roboto Mono';
+  font-size: 1.5rem;
   color: #74C4FF;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.prompt-subtext {
   font-family: 'Roboto Mono';
   font-size: 0.875rem;
+  color: rgba(234, 234, 234, 0.6);
+}
+
+/* Long press indicator (mobile) */
+.long-press-indicator {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1000;
+  pointer-events: none;
+}
+
+.progress-ring {
+  position: relative;
+  width: 80px;
+  height: 80px;
+}
+
+.progress-circle {
+  transform: rotate(-90deg);
+  transform-origin: center;
+  transition: stroke-dashoffset 0.05s linear;
+}
+
+.progress-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: #74C4FF;
+  font-family: 'Roboto Mono';
+  font-size: 0.625rem;
   font-weight: 600;
+  text-align: center;
+  line-height: 1.2;
   text-transform: uppercase;
 }
 
@@ -1295,23 +1369,29 @@ function getSliderFillBottom(slider: SliderConfig): number {
   gap: 0.5rem;
   overflow: hidden;
   min-height: 0;
+  height: 100dvh;
+  height: 100vh;
 }
 
 .live-mode.mobile-landscape .live-slider-wrapper {
   flex: 1;
   min-width: 0;
-  gap: 0.25rem;
+  gap: 0;
   height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 .live-mode.mobile-landscape .live-slider-track {
   width: 100%;
   height: 100%;
+  min-height: 0;
   flex: 1;
+  border-radius: 8px;
 }
 
 .live-mode.mobile-landscape .live-cc-label {
-  font-size: 0.625rem;
+  display: none;
 }
 
 .live-sliders-container {

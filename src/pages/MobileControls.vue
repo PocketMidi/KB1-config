@@ -36,8 +36,6 @@
         />
       </AccordionSection>
       
-      <div class="accordion-divider"></div>
-      
       <AccordionSection
         ref="leverPush1Accordion"
         :title="`Press 1`"
@@ -62,8 +60,6 @@
           @behaviourChanged="handleLeverPush1BehaviourChange"
         />
       </AccordionSection>
-      
-      <div class="accordion-divider"></div>
       
       <AccordionSection
         ref="lever2Accordion"
@@ -90,8 +86,6 @@
         />
       </AccordionSection>
       
-      <div class="accordion-divider"></div>
-      
       <AccordionSection
         ref="leverPush2Accordion"
         :title="`Press 2`"
@@ -116,8 +110,6 @@
           @behaviourChanged="handleLeverPush2BehaviourChange"
         />
       </AccordionSection>
-      
-      <div class="accordion-divider"></div>
       
       <AccordionSection
         ref="touchAccordion"
@@ -475,13 +467,6 @@ defineExpose({
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;
-}
-
-.accordion-divider {
-  height: 2px;
-  background: rgba(234, 234, 234, 0.3);
-  margin: 0 0 1rem 0;
-  width: 100%;
 }
 
 @media (max-width: 768px) {

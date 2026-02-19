@@ -34,8 +34,6 @@
         />
       </AccordionSection>
       
-      <div class="accordion-divider"></div>
-      
       <AccordionSection
         ref="presetsAccordion"
         title="PRESETS"
@@ -50,8 +48,6 @@
           @preset-activated="handlePresetActivated"
         />
       </AccordionSection>
-      
-      <div class="accordion-divider"></div>
       
       <AccordionSection
         ref="systemAccordion"
@@ -291,13 +287,6 @@ defineExpose({
 .root-note-value {
   color: #F9AC20;
   font-weight: 600;
-}
-
-.accordion-divider {
-  height: 2px;
-  background: rgba(234, 234, 234, 0.3);
-  margin: 0 0 1rem 0;
-  width: 100%;
 }
 
 @media (max-width: 768px) {

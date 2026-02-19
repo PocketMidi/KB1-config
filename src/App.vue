@@ -18,7 +18,7 @@ const {
 
 // Single unified tab state
 type Tab = 'settings' | 'controls' | 'sliders';
-const activeTab = ref<Tab>('controls');
+const activeTab = ref<Tab>('settings');
 
 const tabs = [
   { id: 'settings' as Tab, label: 'SETTINGS' },

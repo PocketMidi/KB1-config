@@ -63,9 +63,9 @@ defineExpose({
 <style scoped>
 .accordion-section {
   background: var(--color-background-soft);
-  border: 1px solid var(--color-border);
+  border: none;
   border-radius: 0;
-  margin-bottom: 0;
+  margin-bottom: 6px;
   overflow: hidden;
   width: 100%;
   max-width: 100%;
@@ -77,7 +77,7 @@ defineExpose({
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.75rem 1.25rem 0.5rem; /* 12px top, 20px left/right, 8px bottom */
+  padding: 0.25rem 1rem; /* 4px top/bottom, 16px left/right */
   background: rgba(106, 104, 83, 0.2); /* #6A6853 at 20% */
   border: none;
   color: var(--color-text);
@@ -184,7 +184,7 @@ defineExpose({
 
 @media (max-width: 768px) {
   .accordion-header {
-    padding: 0.875rem 1rem;
+    padding: 0.25rem 1rem;
   }
   
   .accordion-body {

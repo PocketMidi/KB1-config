@@ -978,7 +978,7 @@ defineExpose({
       <div v-if="isMobile && isIOS && isPortrait" class="portrait-prompt">
         <div class="prompt-content">
           <img src="/rotate.gif" alt="Rotate device" class="rotate-icon-img" />
-          <div class="prompt-text">Please rotate your device [23:12]</div>
+          <div class="prompt-text">Please rotate your device [23:28]</div>
           <div class="prompt-subtext">Landscape orientation required</div>
           <div class="prompt-subtext" style="margin-top: 0.5rem; font-size: 0.7rem; opacity: 0.6;">Swipe left or right to exit</div>
         </div>
@@ -988,7 +988,7 @@ defineExpose({
       <div v-if="showRotateBackPrompt" class="portrait-prompt">
         <div class="prompt-content">
           <img src="/rotate.gif" alt="Rotate device" class="rotate-icon-img" />
-          <div class="prompt-text">Rotate back to portrait [23:12]</div>
+          <div class="prompt-text">Rotate back to portrait [23:28]</div>
           <div class="prompt-subtext">or wait 3 seconds</div>
         </div>
       </div>
@@ -1170,9 +1170,9 @@ defineExpose({
 }
 
 .color-swatch {
-  width: 20px;
-  height: 30px;
-  border-radius: 6px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
   border: 2px solid rgba(234, 234, 234, 0.3);
   cursor: pointer;
   transition: all 0.2s;
@@ -1240,9 +1240,9 @@ defineExpose({
 }
 
 .color-picker-item {
-  height: 30px;
-  width: 20px;
-  border-radius: 6px;
+  height: 18px;
+  width: 18px;
+  border-radius: 50%;
   cursor: pointer;
   scroll-snap-align: center;
   transition: opacity 0.1s, filter 0.1s;

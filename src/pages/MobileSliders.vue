@@ -1,7 +1,7 @@
 <template>
   <div class="mobile-sliders-tab">
     <StickyActionBar
-      v-if="!isLiveMode"
+      v-if="!hideFooter"
       :is-connected="isConnected"
       :is-loading="false"
       :has-changes="false"
@@ -93,6 +93,18 @@ const performanceSlidersRef = ref<InstanceType<typeof PerformanceSliders> | null
 // Check if in live mode
 const isLiveMode = computed(() => {
   return performanceSlidersRef.value?.viewMode === 'live';
+});
+
+// Detect if mobile device
+const isMobile = computed(() => {
+  const hasTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+  const isSmallScreen = window.innerWidth < 768;
+  return hasTouch && isSmallScreen;
+});
+
+// Only hide footer on mobile live mode
+const hideFooter = computed(() => {
+  return isMobile.value && isLiveMode.value;
 });
 
 // Save dialog

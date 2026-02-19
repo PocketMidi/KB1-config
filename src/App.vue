@@ -46,6 +46,18 @@ const isInLiveMode = computed(() => {
   return activeTab.value === 'sliders' && mobileSlidersRef.value?.isInLiveMode();
 });
 
+// Detect if mobile device
+const isMobile = computed(() => {
+  const hasTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+  const isSmallScreen = window.innerWidth < 768;
+  return hasTouch && isSmallScreen;
+});
+
+// Only hide header/footer on mobile live mode
+const hideUI = computed(() => {
+  return isMobile.value && isInLiveMode.value;
+});
+
 // Check if first-time overlay should be shown
 onMounted(() => {
   const hasSeenIntro = localStorage.getItem(FIRST_TIME_BLE_INTRO_KEY);
@@ -171,7 +183,7 @@ function handleTabClick(tabId: Tab) {
     />
     
     <!-- Unified Responsive Layout -->
-    <header v-if="!isInLiveMode" class="app-header">
+    <header v-if="!hideUI" class="app-header">
       <div class="header-content">
         <!-- KB1 logo - centered, no buttons -->
         <div class="logo-section">
@@ -185,7 +197,7 @@ function handleTabClick(tabId: Tab) {
     </header>
     
     <!-- Unified Tab Navigation with Bluetooth Controls -->
-    <div v-if="!isInLiveMode" class="tab-nav-wrapper">
+    <div v-if="!hideUI" class="tab-nav-wrapper">
       <nav class="app-nav">
         <div class="nav-tabs">
           <button 
@@ -222,7 +234,7 @@ function handleTabClick(tabId: Tab) {
       <div class="nav-divider"></div>
     </div>
     
-    <main class="app-main" :class="{ 'live-fullscreen': isInLiveMode }" @click="handleMainClick">
+    <main class="app-main" :class="{ 'live-fullscreen': hideUI }" @click="handleMainClick">
       <MobileControls v-if="activeTab === 'controls'" ref="mobileControlsRef" />
       <MobileScales v-if="activeTab === 'settings'" ref="mobileScalesRef" />
       <MobileSliders v-if="activeTab === 'sliders'" ref="mobileSlidersRef" />

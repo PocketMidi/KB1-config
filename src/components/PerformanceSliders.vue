@@ -860,13 +860,23 @@ defineExpose({
       v-if="viewMode === 'live'" 
       class="live-mode" 
       :class="{ 'mobile-landscape': isMobile }"
-      @touchstart="startLongPress"
-      @touchend="cancelLongPress"
-      @touchcancel="cancelLongPress"
-      @mousedown="startLongPress"
-      @mouseup="cancelLongPress"
-      @mouseleave="cancelLongPress"
     >
+      <!-- Exit button (top-right corner) for mobile -->
+      <div 
+        v-if="isMobile"
+        class="mobile-exit-button"
+        @touchstart="startLongPress"
+        @touchend="cancelLongPress"
+        @touchcancel="cancelLongPress"
+        @mousedown="startLongPress"
+        @mouseup="cancelLongPress"
+        @mouseleave="cancelLongPress"
+      >
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </div>
       <!-- iOS Portrait Prompt -->
       <div v-if="isMobile && isIOS && isPortrait" class="portrait-prompt">
         <div class="prompt-content">
@@ -876,32 +886,29 @@ defineExpose({
         </div>
       </div>
       
-      <!-- Long press indicator (mobile) -->
+      <!-- Long press indicator (mobile) - overlays exit button -->
       <div v-if="longPressActive" class="long-press-indicator">
-        <div class="progress-ring">
-          <svg width="80" height="80">
-            <circle
-              cx="40"
-              cy="40"
-              r="35"
-              stroke="rgba(116, 196, 255, 0.3)"
-              stroke-width="4"
-              fill="none"
-            />
-            <circle
-              cx="40"
-              cy="40"
-              r="35"
-              stroke="#74C4FF"
-              stroke-width="4"
-              fill="none"
-              :stroke-dasharray="220"
-              :stroke-dashoffset="220 - (220 * longPressProgress / 100)"
-              class="progress-circle"
-            />
-          </svg>
-          <div class="progress-text">Release<br>to Cancel</div>
-        </div>
+        <svg width="48" height="48">
+          <circle
+            cx="24"
+            cy="24"
+            r="20"
+            stroke="rgba(116, 196, 255, 0.3)"
+            stroke-width="3"
+            fill="none"
+          />
+          <circle
+            cx="24"
+            cy="24"
+            r="20"
+            stroke="#74C4FF"
+            stroke-width="3"
+            fill="none"
+            :stroke-dasharray="126"
+            :stroke-dashoffset="126 - (126 * longPressProgress / 100)"
+            class="progress-circle"
+          />
+        </svg>
       </div>
       
       <!-- Sliders container -->
@@ -931,6 +938,9 @@ defineExpose({
               backgroundColor: hexToRgba(slider.color, 0.2)
             }"
           >
+            <!-- CC number inside track (top) -->
+            <div class="live-slider-cc-inside">{{ slider.cc }}</div>
+            
             <!-- Slider fill -->
             <div 
               class="live-slider-fill"
@@ -1324,39 +1334,43 @@ defineExpose({
 }
 
 /* Long press indicator (mobile) */
-.long-press-indicator {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  z-index: 1000;
-  pointer-events: none;
+.mobile-exit-button {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  width: 48px;
+  height: 48px;
+  background: rgba(15, 15, 15, 0.8);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(234, 234, 234, 0.5);
+  cursor: pointer;
+  z-index: 100;
+  transition: all 0.2s;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 
-.progress-ring {
-  position: relative;
-  width: 80px;
-  height: 80px;
+.mobile-exit-button:active {
+  background: rgba(15, 15, 15, 0.95);
+  color: #74C4FF;
+  transform: scale(0.95);
+}
+
+.long-press-indicator {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  z-index: 101;
+  pointer-events: none;
 }
 
 .progress-circle {
   transform: rotate(-90deg);
   transform-origin: center;
   transition: stroke-dashoffset 0.05s linear;
-}
-
-.progress-text {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  color: #74C4FF;
-  font-family: 'Roboto Mono';
-  font-size: 0.625rem;
-  font-weight: 600;
-  text-align: center;
-  line-height: 1.2;
-  text-transform: uppercase;
 }
 
 /* Mobile Landscape Optimizations */
@@ -1376,6 +1390,7 @@ defineExpose({
 .live-mode.mobile-landscape .live-slider-wrapper {
   flex: 1;
   min-width: 0;
+  max-width: 32px; /* 25% thinner than default 42px */
   gap: 0;
   height: 100%;
   display: flex;
@@ -1390,8 +1405,9 @@ defineExpose({
   border-radius: 8px;
 }
 
-.live-mode.mobile-landscape .live-cc-label {
-  display: none;
+.live-mode.mobile-landscape .center-marker-left,
+.live-mode.mobile-landscape .center-marker-right {
+  top: 50%; /* Use percentage for dynamic height */
 }
 
 .live-sliders-container {
@@ -1453,6 +1469,20 @@ defineExpose({
   z-index: 1;
 }
 
+.live-slider-cc-inside {
+  position: absolute;
+  top: 0.5rem;
+  left: 0;
+  right: 0;
+  text-align: center;
+  color: rgba(234, 234, 234, 0.8);
+  font-size: 0.75rem;
+  font-family: 'Roboto Mono';
+  font-weight: 600;
+  pointer-events: none;
+  z-index: 2;
+}
+
 .live-slider-input {
   position: absolute;
   top: 0;
@@ -1503,10 +1533,7 @@ defineExpose({
 }
 
 .live-cc-label {
-  font-size: 0.8125rem;
-  font-family: 'Roboto Mono';
-  color: rgba(234, 234, 234, 0.6);
-  font-weight: 600;
+  display: none; /* Hidden - CC numbers now shown inside sliders */
 }
 
 /* Landscape optimization for live mode */

@@ -13,7 +13,7 @@
         class="preset-item"
         :class="{ active: preset.id === activePresetId, selected: selectedPresets.has(preset.id) }"
       >
-        <!-- Checkbox for selection -->
+        <!-- Checkbox for selection (shy - only shows when in selection mode) -->
         <div v-if="showCheckboxes" class="preset-checkbox" @click.stop="togglePresetSelection(preset.id)">
           <input 
             type="checkbox" 
@@ -22,7 +22,7 @@
           />
         </div>
         
-        <div class="preset-info" @click="showCheckboxes ? togglePresetSelection(preset.id) : null" :style="{ cursor: showCheckboxes ? 'pointer' : 'default' }">
+        <div class="preset-info" @click="togglePresetSelection(preset.id)" style="cursor: pointer;">
           <div class="preset-name">
             <span class="active-indicator" v-if="preset.id === activePresetId">●</span>
             {{ preset.name }}
@@ -66,6 +66,13 @@
         Import Preset
       </button>
       <button 
+        v-if="showCheckboxes && selectedPresets.size < presets.length" 
+        class="btn-secondary" 
+        @click="selectAll"
+      >
+        Select All
+      </button>
+      <button 
         v-if="showCheckboxes" 
         class="btn-secondary" 
         @click="clearSelection"
@@ -77,7 +84,7 @@
         @click="selectedPresets.size > 0 ? exportSelectedPresets() : exportAllPresets()" 
         :disabled="presets.length === 0"
       >
-        {{ selectedPresets.size > 0 ? `Export (${selectedPresets.size})` : 'Export All' }}
+        {{ selectedPresets.size > 0 ? `Export (${selectedPresets.size})` : 'Export' }}
       </button>
     </div>
 
@@ -354,6 +361,10 @@ function clearSelection() {
   showCheckboxes.value = false;
 }
 
+function selectAll() {
+  selectedPresets.value = new Set(presets.value.map(p => p.id));
+}
+
 function exportSelectedPresets() {
   if (selectedPresets.value.size === 0) return;
   
@@ -481,6 +492,7 @@ function formatDate(timestamp: number): string {
   flex-direction: column;
   gap: 0.5rem;
   margin-bottom: 1rem;
+  overflow: visible;
 }
 
 .preset-item {
@@ -590,9 +602,9 @@ function formatDate(timestamp: number): string {
   border: 1px solid rgba(234, 234, 234, 0.2);
   border-radius: 4px;
   padding: 0.25rem;
-  z-index: 1000;
-  min-width: 120px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  z-index: 9999;
+  min-width: 140px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.8);
 }
 
 .preset-menu button {

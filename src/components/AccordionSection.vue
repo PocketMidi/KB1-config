@@ -66,10 +66,14 @@ defineExpose({
   border: none;
   border-radius: 4px;
   margin-bottom: 6px;
-  overflow: hidden;
+  overflow: visible;
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;
+}
+
+.accordion-section:not(.is-open) {
+  overflow: hidden;
 }
 
 .accordion-header {

@@ -62,6 +62,14 @@ const isPortrait = ref(false);
 const showExitButton = ref(false); // Control X button visibility
 const showRotateBackPrompt = ref(false); // Show "rotate back" prompt on exit
 
+// Animation frame state
+const toLandFrame = ref(0);
+const toPortFrame = ref(0);
+let toLandInterval: number | null = null;
+let toPortInterval: number | null = null;
+const TOTAL_FRAMES = 73; // 00000 to 00072
+const FRAME_RATE = 24; // 24fps
+
 // Touch tracking for slider dragging
 const activeTouchSlider = ref<number | null>(null);
 const activeTouchTrack = ref<HTMLElement | null>(null);
@@ -839,7 +847,51 @@ function detectMobile() {
 }
 
 function checkOrientation() {
+  const wasPortrait = isPortrait.value;
   isPortrait.value = window.innerHeight > window.innerWidth;
+  
+  // Start/stop animations based on orientation
+  if (isPortrait.value && !wasPortrait) {
+    startToLandAnimation();
+    stopToPortAnimation();
+  } else if (!isPortrait.value && wasPortrait) {
+    stopToLandAnimation();
+  }
+}
+
+function startToLandAnimation() {
+  if (toLandInterval) return;
+  toLandFrame.value = 0;
+  toLandInterval = window.setInterval(() => {
+    toLandFrame.value = (toLandFrame.value + 1) % TOTAL_FRAMES;
+  }, 1000 / FRAME_RATE);
+}
+
+function stopToLandAnimation() {
+  if (toLandInterval) {
+    clearInterval(toLandInterval);
+    toLandInterval = null;
+  }
+}
+
+function startToPortAnimation() {
+  if (toPortInterval) return;
+  toPortFrame.value = 0;
+  toPortInterval = window.setInterval(() => {
+    toPortFrame.value = (toPortFrame.value + 1) % TOTAL_FRAMES;
+  }, 1000 / FRAME_RATE);
+}
+
+function stopToPortAnimation() {
+  if (toPortInterval) {
+    clearInterval(toPortInterval);
+    toPortInterval = null;
+  }
+}
+
+function getFramePath(folder: string, frame: number): string {
+  const frameStr = frame.toString().padStart(5, '0');
+  return `/${folder}/${folder}_${frameStr}.png`;
 }
 
 async function enterLiveMode() {
@@ -854,6 +906,10 @@ async function enterLiveMode() {
       // Portrait prompt will show if needed
       window.addEventListener('resize', checkOrientation);
       window.addEventListener('orientationchange', checkOrientation);
+      // Start animation if in portrait
+      if (isPortrait.value) {
+        startToLandAnimation();
+      }
     } else {
       // Android: Full fullscreen + orientation lock support
       try {
@@ -882,6 +938,7 @@ async function exitLiveMode() {
   // Show rotate-back prompt for iOS mobile users
   if (isMobile.value && isIOS.value && !isPortrait.value) {
     showRotateBackPrompt.value = true;
+    startToPortAnimation();
     // Wait 3 seconds or until portrait orientation detected
     const checkInterval = setInterval(() => {
       if (window.innerHeight > window.innerWidth) {
@@ -904,6 +961,10 @@ async function completeExit() {
   viewMode.value = 'setup';
   showExitButton.value = false; // Reset button visibility
   activeTouchSlider.value = null; // Reset active slider
+  
+  // Stop all animations
+  stopToLandAnimation();
+  stopToPortAnimation();
   
   // Platform-specific cleanup
   if (isMobile.value) {
@@ -1071,19 +1132,15 @@ defineExpose({
       <!-- iOS Portrait Prompt -->
       <div v-if="isMobile && isIOS && isPortrait" class="portrait-prompt">
         <div class="prompt-content">
-          <img src="/rotate.gif" alt="Rotate device" class="rotate-icon-img" />
-          <div class="prompt-text">Please rotate your device [23:28]</div>
-          <div class="prompt-subtext">Landscape orientation required</div>
-          <div class="prompt-subtext" style="margin-top: 0.5rem; font-size: 0.7rem; opacity: 0.6;">Swipe left or right to exit</div>
+          <img :src="getFramePath('to_land', toLandFrame)" alt="Rotate to landscape" class="rotate-animation" />
+          <div class="prompt-subtext" style="margin-top: 1rem; font-size: 0.7rem; opacity: 0.6;">Swipe left or right to exit</div>
         </div>
       </div>
       
       <!-- Rotate Back Prompt (on exit) -->
       <div v-if="showRotateBackPrompt" class="portrait-prompt">
         <div class="prompt-content">
-          <img src="/rotate.gif" alt="Rotate device" class="rotate-icon-img" />
-          <div class="prompt-text">Rotate back to portrait [23:28]</div>
-          <div class="prompt-subtext">or wait 3 seconds</div>
+          <img :src="getFramePath('to_port', toPortFrame)" alt="Rotate to portrait" class="rotate-animation" />
         </div>
       </div>
       

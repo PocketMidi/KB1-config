@@ -826,7 +826,7 @@ defineExpose({
     >
       <!-- Exit button (top-right corner) for mobile - simple tap -->
       <div 
-        v-if="isMobile"
+        v-if="isMobile && !isPortrait"
         class="mobile-exit-button"
         @click="exitLiveMode"
         @touchend.prevent="exitLiveMode"
@@ -1314,7 +1314,7 @@ defineExpose({
   min-height: 0;
   height: 100dvh;
   height: 100vh;
-  touch-action: none; /* Prevent scrolling */
+  touch-action: manipulation; /* Allow touch but prevent zoom/scroll */
 }
 
 .live-mode.mobile-landscape .live-slider-wrapper {
@@ -1325,7 +1325,7 @@ defineExpose({
   height: 100%;
   display: flex;
   flex-direction: column;
-  touch-action: none; /* Prevent scrolling on sliders */
+  touch-action: pan-y; /* Allow vertical panning for sliders */
 }
 
 .live-mode.mobile-landscape .live-slider-track {
@@ -1334,7 +1334,7 @@ defineExpose({
   min-height: 0;
   flex: 1;
   border-radius: 8px;
-  touch-action: none; /* Prevent iOS interference */
+  touch-action: pan-y; /* Allow vertical dragging on slider */
   -webkit-touch-callout: none;
 }
 
@@ -1408,7 +1408,7 @@ defineExpose({
   left: 0;
   right: 0;
   text-align: center;
-  color: rgba(234, 234, 234, 0.8);
+  color: rgba(234, 234, 234, 0.5); /* Changed from 0.8 to 0.5 */
   font-size: 0.75rem;
   font-family: 'Roboto Mono';
   font-weight: 600;
@@ -1417,7 +1417,7 @@ defineExpose({
 }
 
 .live-slider-input {
-  touch-action: none !important; /* Critical for slider control */
+  touch-action: pan-y !important; /* Allow vertical pan for slider control */
   -webkit-touch-callout: none;
   position: absolute;
   top: 0;

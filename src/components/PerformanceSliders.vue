@@ -59,10 +59,6 @@ const viewMode = ref<ViewMode>('setup');
 const isMobile = ref(false);
 const isIOS = ref(false);
 const isPortrait = ref(false);
-// Exit button state (mobile long-press)
-const longPressTimer = ref<number | null>(null);
-const longPressProgress = ref(0);
-const longPressActive = ref(false);
 
 // Initialize sliders
 const sliders = ref<SliderConfig[]>([]);
@@ -180,36 +176,6 @@ function getSliderFillBottom(slider: SliderConfig): number {
   } else {
     return 50 - halfHeight;
   }
-}
-
-// Handle long press to exit (mobile)
-function startLongPress(event: TouchEvent | MouseEvent) {
-  if (!isMobile.value || viewMode.value !== 'live') return;
-  
-  event.preventDefault();
-  longPressActive.value = true;
-  longPressProgress.value = 0;
-  
-  const duration = 2000; // 2 seconds
-  const interval = 50; // Update every 50ms
-  const increment = (interval / duration) * 100;
-  
-  longPressTimer.value = window.setInterval(() => {
-    longPressProgress.value += increment;
-    if (longPressProgress.value >= 100) {
-      cancelLongPress();
-      exitLiveMode();
-    }
-  }, interval);
-}
-
-function cancelLongPress() {
-  if (longPressTimer.value) {
-    clearInterval(longPressTimer.value);
-    longPressTimer.value = null;
-  }
-  longPressActive.value = false;
-  longPressProgress.value = 0;
 }
 
 // === END UTILITY FUNCTIONS ===
@@ -702,9 +668,6 @@ async function enterLiveMode() {
 async function exitLiveMode() {
   viewMode.value = 'setup';
   
-  // Clear any active long press
-  cancelLongPress();
-  
   // Platform-specific cleanup
   if (isMobile.value) {
     if (isIOS.value) {
@@ -861,16 +824,12 @@ defineExpose({
       class="live-mode" 
       :class="{ 'mobile-landscape': isMobile }"
     >
-      <!-- Exit button (top-right corner) for mobile -->
+      <!-- Exit button (top-right corner) for mobile - simple tap -->
       <div 
         v-if="isMobile"
         class="mobile-exit-button"
-        @touchstart="startLongPress"
-        @touchend="cancelLongPress"
-        @touchcancel="cancelLongPress"
-        @mousedown="startLongPress"
-        @mouseup="cancelLongPress"
-        @mouseleave="cancelLongPress"
+        @click="exitLiveMode"
+        @touchend.prevent="exitLiveMode"
       >
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -884,31 +843,6 @@ defineExpose({
           <div class="prompt-text">Please rotate your device</div>
           <div class="prompt-subtext">Landscape orientation required</div>
         </div>
-      </div>
-      
-      <!-- Long press indicator (mobile) - overlays exit button -->
-      <div v-if="longPressActive" class="long-press-indicator">
-        <svg width="48" height="48">
-          <circle
-            cx="24"
-            cy="24"
-            r="20"
-            stroke="rgba(116, 196, 255, 0.3)"
-            stroke-width="3"
-            fill="none"
-          />
-          <circle
-            cx="24"
-            cy="24"
-            r="20"
-            stroke="#74C4FF"
-            stroke-width="3"
-            fill="none"
-            :stroke-dasharray="126"
-            :stroke-dashoffset="126 - (126 * longPressProgress / 100)"
-            class="progress-circle"
-          />
-        </svg>
       </div>
       
       <!-- Sliders container -->
@@ -1351,6 +1285,10 @@ defineExpose({
   transition: all 0.2s;
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
+  touch-action: manipulation; /* Allow tap but prevent other gestures */
+  -webkit-touch-callout: none; /* Prevent iOS context menu */
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 .mobile-exit-button:active {
@@ -1359,42 +1297,35 @@ defineExpose({
   transform: scale(0.95);
 }
 
-.long-press-indicator {
-  position: absolute;
-  top: 0.75rem;
-  right: 0.75rem;
-  z-index: 101;
-  pointer-events: none;
-}
-
-.progress-circle {
-  transform: rotate(-90deg);
-  transform-origin: center;
-  transition: stroke-dashoffset 0.05s linear;
-}
-
 /* Mobile Landscape Optimizations */
 .live-mode.mobile-landscape {
   padding: 0;
+  touch-action: none; /* Prevent iOS scrolling */
+  -webkit-touch-callout: none; /* Prevent iOS context menu */
+  -webkit-user-select: none;
+  user-select: none;
+  overflow: hidden;
 }
 
 .live-mode.mobile-landscape .live-sliders-container {
   padding: 0.5rem;
-  gap: 0.5rem;
+  gap: 1.5rem; /* Increased spacing to fill screen */
   overflow: hidden;
   min-height: 0;
   height: 100dvh;
   height: 100vh;
+  touch-action: none; /* Prevent scrolling */
 }
 
 .live-mode.mobile-landscape .live-slider-wrapper {
   flex: 1;
   min-width: 0;
-  max-width: 32px; /* 25% thinner than default 42px */
+  max-width: 36px; /* Split difference - was 32px, now 36px */
   gap: 0;
   height: 100%;
   display: flex;
   flex-direction: column;
+  touch-action: none; /* Prevent scrolling on sliders */
 }
 
 .live-mode.mobile-landscape .live-slider-track {
@@ -1403,6 +1334,8 @@ defineExpose({
   min-height: 0;
   flex: 1;
   border-radius: 8px;
+  touch-action: none; /* Prevent iOS interference */
+  -webkit-touch-callout: none;
 }
 
 .live-mode.mobile-landscape .center-marker-left,
@@ -1484,6 +1417,8 @@ defineExpose({
 }
 
 .live-slider-input {
+  touch-action: none !important; /* Critical for slider control */
+  -webkit-touch-callout: none;
   position: absolute;
   top: 0;
   left: 0;

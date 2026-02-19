@@ -12,6 +12,8 @@ import { kb1Protocol, type CCMapping, type DeviceSettings } from '../ble/kb1Prot
 // ============================================
 // DEV MODE - Set to true to work without hardware
 // ============================================
+// WARNING: Set DEV_MODE to false for production builds
+// When true, simulates device connection with mock data for development
 const DEV_MODE = true;
 
 // Global reactive state

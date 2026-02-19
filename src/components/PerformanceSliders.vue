@@ -388,17 +388,6 @@ function valueToCC(slider: SliderConfig): number {
   }
 }
 
-// Map CC value (0-127) back to slider value (unused for now, reserved for future use)
-// function ccToValue(cc: number, bipolar: boolean): number {
-//   if (bipolar) {
-//     // 0-127 maps to -100 to +100
-//     return Math.round((cc / 127) * 200 - 100);
-//   } else {
-//     // 0-127 maps to 0 to +100
-//     return Math.round((cc / 127) * 100);
-//   }
-// }
-
 // Get default value based on mode (always 0 for both bipolar center and unipolar bottom)
 function getDefaultValue(_slider: SliderConfig): number {
   return 0;
@@ -900,22 +889,17 @@ function stopToPortAnimation() {
 // Computed properties for reactive image paths
 const toLandImageSrc = computed(() => {
   const frameStr = toLandFrame.value.toString().padStart(5, '0');
-  const path = `${import.meta.env.BASE_URL}to_land/to_land_${frameStr}.png`;
-  console.log('toLandImageSrc computed:', path);
-  return path;
+  return `${import.meta.env.BASE_URL}to_land/to_land_${frameStr}.png`;
 });
 
 const toPortImageSrc = computed(() => {
   const frameStr = toPortFrame.value.toString().padStart(5, '0');
-  const path = `${import.meta.env.BASE_URL}to_port/to_port_${frameStr}.png`;
-  console.log('toPortImageSrc computed:', path);
-  return path;
+  return `${import.meta.env.BASE_URL}to_port/to_port_${frameStr}.png`;
 });
 
 // Preload animation frames for smooth playback
 function preloadRotationFrames() {
   const baseUrl = import.meta.env.BASE_URL;
-  console.log('Preloading rotation frames from:', baseUrl);
   
   // Preload to_land frames
   for (let i = 0; i < TOTAL_FRAMES; i++) {
@@ -961,8 +945,8 @@ async function enterLiveMode() {
         if (screen.orientation && 'lock' in screen.orientation) {
           try {
             await (screen.orientation as any).lock('landscape');
-          } catch (e) {
-            console.log('Orientation lock not supported:', e);
+          } catch {
+            // Orientation lock not supported on this device
           }
         }
       } catch (e) {

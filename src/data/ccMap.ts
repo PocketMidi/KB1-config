@@ -199,12 +199,7 @@ async function parsePolyendCSV(csvText: string): Promise<void> {
           state.loaded = true;
           state.error = null;
           
-          // Debug logging (commented out to prevent console overflow)
-          // console.log('Polyend CC map loaded:', {
-          //   entries: newCCMap.size,
-          //   groups: newGroups.length,
-          // });
-          
+
           resolve();
         } catch (error) {
           const errorMsg = error instanceof Error ? error.message : String(error);
@@ -244,21 +239,15 @@ export async function loadPolyendCCMap(): Promise<void> {
     
     for (const url of urls) {
       try {
-        console.log('Attempting to load Polyend CC map from:', url);
-        
         // Fetch with cache: 'no-store' to ensure fresh data
         const response = await fetch(url, { cache: 'no-store' });
         
         if (response.ok) {
           csvText = await response.text();
-          console.log('Successfully loaded CSV from:', url);
           break;
-        } else {
-          console.warn(`Failed to fetch from ${url}: ${response.status} ${response.statusText}`);
         }
       } catch (error) {
         lastError = error instanceof Error ? error : new Error(String(error));
-        console.warn(`Error fetching from ${url}:`, lastError.message);
       }
     }
     

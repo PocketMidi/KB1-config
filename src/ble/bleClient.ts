@@ -119,7 +119,6 @@ export class BLEClient {
         this.scaleCharacteristic = await service.getCharacteristic(SCALE_SETTINGS_UUID);
         this.systemCharacteristic = await service.getCharacteristic(SYSTEM_SETTINGS_UUID);
         this.keepAliveCharacteristic = await service.getCharacteristic(KEEPALIVE_UUID);
-        console.log('All settings characteristics obtained');
       } catch (e) {
         console.warn('Some settings characteristics not available:', e);
       }
@@ -257,7 +256,6 @@ export class BLEClient {
         settings.system = this.parseSystemData(data);
       }
 
-      console.log('Read all settings from device:', settings);
       return settings;
     } catch (error) {
       console.error('Failed to read settings:', error);
@@ -414,7 +412,6 @@ export class BLEClient {
    * Handle device disconnection
    */
   private onDisconnected(): void {
-    console.log('Device disconnected');
     this.stopKeepAlive();
     this.cleanup();
     this.notifyStatusChange(false);
@@ -432,8 +429,6 @@ export class BLEClient {
 
     // Stop any existing timer
     this.stopKeepAlive();
-
-    console.log(`Starting BLE keep-alive (interval: ${this.keepAliveIntervalMs}ms)`);
 
     this.keepAliveTimer = setInterval(() => {
       if (this.isConnected() && this.keepAliveCharacteristic) {
@@ -461,7 +456,6 @@ export class BLEClient {
     if (this.keepAliveTimer) {
       clearInterval(this.keepAliveTimer);
       this.keepAliveTimer = null;
-      console.log('Stopped BLE keep-alive');
     }
   }
 

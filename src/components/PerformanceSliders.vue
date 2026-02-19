@@ -89,6 +89,10 @@ let explainerTimeout: number | null = null;
 // Link state - 11 links between 12 sliders
 const links = ref<boolean[]>(new Array(11).fill(false));
 
+// Link drag selection state
+const isDraggingLinks = ref(false);
+const linkDragState = ref<boolean | null>(null); // The state to apply when dragging (true for link, false for unlink)
+
 // Initialize sliders
 function initializeSliders() {
   const savedPreset = SliderPresetStore.loadCurrentState();
@@ -513,21 +517,104 @@ function toggleMomentary(index: number) {
   savePreset();
 }
 
-// Toggle link between adjacent sliders
-function toggleLink(linkIndex: number) {
-  const currentlyLinked = links.value[linkIndex];
+// Link drag selection handlers
+function handleLinkMouseDown(event: MouseEvent, linkIndex: number) {
+  event.preventDefault();
+  event.stopPropagation();
   
-  if (currentlyLinked) {
-    // Unlinking - split the gang
-    unlinkSliders(linkIndex);
-    showExplainerText('Unlinked');
-  } else {
-    // Linking - merge gangs and adopt settings
-    linkSliders(linkIndex);
-    showExplainerText('Linked');
+  isDraggingLinks.value = true;
+  // Set the drag state to the opposite of the current link state (toggle on first click)
+  linkDragState.value = !links.value[linkIndex];
+  
+  // Apply to the clicked link
+  applyLinkDragState(linkIndex);
+  
+  // Add global listeners
+  document.addEventListener('mousemove', handleLinkMouseMove);
+  document.addEventListener('mouseup', handleLinkMouseUp);
+}
+
+function handleLinkMouseMove(event: MouseEvent) {
+  if (!isDraggingLinks.value || linkDragState.value === null) return;
+  
+  // Find which link icon we're over
+  const target = document.elementFromPoint(event.clientX, event.clientY);
+  if (target) {
+    const linkIcon = target.closest('.link-icon-container');
+    if (linkIcon) {
+      const linkIndex = parseInt(linkIcon.getAttribute('data-link-index') || '-1');
+      if (linkIndex >= 0 && linkIndex < links.value.length) {
+        applyLinkDragState(linkIndex);
+      }
+    }
   }
+}
+
+function handleLinkMouseUp() {
+  if (linkDragState.value !== null) {
+    showExplainerText(linkDragState.value ? 'Linked' : 'Unlinked');
+  }
+  isDraggingLinks.value = false;
+  linkDragState.value = null;
+  document.removeEventListener('mousemove', handleLinkMouseMove);
+  document.removeEventListener('mouseup', handleLinkMouseUp);
+}
+
+function handleLinkTouchStart(event: TouchEvent, linkIndex: number) {
+  event.preventDefault();
+  event.stopPropagation();
   
-  savePreset();
+  isDraggingLinks.value = true;
+  // Set the drag state to the opposite of the current link state (toggle on first touch)
+  linkDragState.value = !links.value[linkIndex];
+  
+  // Apply to the touched link
+  applyLinkDragState(linkIndex);
+}
+
+function handleLinkTouchMove(event: TouchEvent) {
+  if (!isDraggingLinks.value || linkDragState.value === null) return;
+  
+  const touch = event.touches[0];
+  if (!touch) return;
+  
+  // Find which link icon we're over
+  const target = document.elementFromPoint(touch.clientX, touch.clientY);
+  if (target) {
+    const linkIcon = target.closest('.link-icon-container');
+    if (linkIcon) {
+      const linkIndex = parseInt(linkIcon.getAttribute('data-link-index') || '-1');
+      if (linkIndex >= 0 && linkIndex < links.value.length) {
+        applyLinkDragState(linkIndex);
+      }
+    }
+  }
+}
+
+function handleLinkTouchEnd() {
+  if (linkDragState.value !== null) {
+    showExplainerText(linkDragState.value ? 'Linked' : 'Unlinked');
+  }
+  isDraggingLinks.value = false;
+  linkDragState.value = null;
+}
+
+function applyLinkDragState(linkIndex: number) {
+  if (linkDragState.value === null) return;
+  
+  const currentState = links.value[linkIndex];
+  
+  // Only apply if different from current state
+  if (currentState !== linkDragState.value) {
+    if (linkDragState.value) {
+      // Linking
+      linkSliders(linkIndex);
+    } else {
+      // Unlinking
+      unlinkSliders(linkIndex);
+    }
+    savePreset();
+  }
 }
 
 // Link two adjacent sliders
@@ -955,13 +1042,20 @@ defineExpose({
           </div>
           
           <!-- Link icon between sliders (not after last slider) -->
-          <div v-if="index < sliders.length - 1" class="link-icon-container">
+          <div 
+            v-if="index < sliders.length - 1" 
+            class="link-icon-container"
+            :data-link-index="index"
+          >
             <img 
               :src="`/KB1-config/${links[index] ? 'link' : 'unlink'}.svg`"
               :alt="links[index] ? 'Linked' : 'Unlinked'"
               class="link-icon"
               :class="{ linked: links[index] }"
-              @click="toggleLink(index)"
+              @mousedown="handleLinkMouseDown($event, index)"
+              @touchstart="handleLinkTouchStart($event, index)"
+              @touchmove="handleLinkTouchMove"
+              @touchend="handleLinkTouchEnd"
             />
           </div>
         </template>
@@ -1141,7 +1235,7 @@ defineExpose({
 .sliders-list {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.25rem;
 }
 
 .slider-row {
@@ -1321,6 +1415,8 @@ defineExpose({
   margin-top: -0.5rem;
   margin-bottom: -0.5rem;
   height: 16px;
+  user-select: none;
+  touch-action: none;
 }
 
 .link-icon {
@@ -1338,7 +1434,8 @@ defineExpose({
 }
 
 .link-icon:active {
-  transform: scale(0.95);
+  opacity: 0.8;
+  transform: scale(1.2);
 }
 
 .link-icon.linked {

@@ -387,9 +387,9 @@ function formatDate(timestamp: number): string {
 
 .btn-create-preset {
   width: 100%;
-  padding: 0.75rem;
+  padding: 0.25rem 1rem;
   background: rgba(106, 104, 83, 0.2);
-  border: 1px solid #6A6853;
+  border: none;
   color: #EAEAEA;
   font-size: 0.875rem;
   font-weight: 500;
@@ -402,7 +402,6 @@ function formatDate(timestamp: number): string {
 
 .btn-create-preset:hover {
   background: rgba(106, 104, 83, 0.3);
-  border-color: #7A7863;
 }
 
 .presets-list {
@@ -414,9 +413,9 @@ function formatDate(timestamp: number): string {
 
 .preset-item {
   background: rgba(29, 29, 29, 0.4);
-  border: 1px solid rgba(234, 234, 234, 0.1);
+  border: none;
   border-radius: 4px;
-  padding: 0.75rem;
+  padding: 0.25rem 1rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -424,12 +423,11 @@ function formatDate(timestamp: number): string {
 }
 
 .preset-item.active {
-  border-color: #6A6853;
-  background: rgba(106, 104, 83, 0.15);
+  background: rgba(106, 104, 83, 0.25);
 }
 
 .preset-item:hover {
-  border-color: rgba(234, 234, 234, 0.3);
+  background: rgba(234, 234, 234, 0.1);
 }
 
 .preset-info {
@@ -465,9 +463,9 @@ function formatDate(timestamp: number): string {
 }
 
 .btn-small {
-  padding: 0.375rem 0.75rem;
+  padding: 0.25rem 0.75rem;
   background: rgba(234, 234, 234, 0.1);
-  border: 1px solid rgba(234, 234, 234, 0.2);
+  border: none;
   color: #EAEAEA;
   font-size: 0.75rem;
   border-radius: 3px;
@@ -479,7 +477,6 @@ function formatDate(timestamp: number): string {
 
 .btn-small:hover:not(:disabled) {
   background: rgba(234, 234, 234, 0.2);
-  border-color: rgba(234, 234, 234, 0.3);
 }
 
 .btn-small:disabled {
@@ -559,14 +556,14 @@ function formatDate(timestamp: number): string {
   display: flex;
   gap: 0.5rem;
   padding-top: 1rem;
-  border-top: 1px solid rgba(234, 234, 234, 0.1);
+  border-top: none;
 }
 
 .btn-secondary {
   flex: 1;
-  padding: 0.625rem;
+  padding: 0.25rem 1rem;
   background: rgba(234, 234, 234, 0.05);
-  border: 1px solid rgba(234, 234, 234, 0.2);
+  border: none;
   color: #EAEAEA;
   font-size: 0.75rem;
   border-radius: 4px;
@@ -577,7 +574,6 @@ function formatDate(timestamp: number): string {
 
 .btn-secondary:hover:not(:disabled) {
   background: rgba(234, 234, 234, 0.1);
-  border-color: rgba(234, 234, 234, 0.3);
 }
 
 .btn-secondary:disabled {
@@ -630,9 +626,9 @@ function formatDate(timestamp: number): string {
 
 .input-text {
   width: 100%;
-  padding: 0.625rem;
+  padding: 0.25rem 1rem;
   background: rgba(234, 234, 234, 0.05);
-  border: 1px solid rgba(234, 234, 234, 0.2);
+  border: none;
   border-radius: 4px;
   color: #EAEAEA;
   font-size: 0.875rem;
@@ -642,7 +638,7 @@ function formatDate(timestamp: number): string {
 
 .input-text:focus {
   outline: none;
-  border-color: #6A6853;
+  background: rgba(234, 234, 234, 0.08);
 }
 
 .form-actions {
@@ -656,7 +652,7 @@ function formatDate(timestamp: number): string {
 }
 
 .btn-primary {
-  padding: 0.625rem 1.25rem;
+  padding: 0.25rem 1rem;
   background: #6A6853;
   border: none;
   color: #EAEAEA;

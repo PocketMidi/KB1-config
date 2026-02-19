@@ -64,7 +64,7 @@ defineExpose({
 .accordion-section {
   background: var(--color-background-soft);
   border: none;
-  border-radius: 0;
+  border-radius: 4px;
   margin-bottom: 6px;
   overflow: hidden;
   width: 100%;

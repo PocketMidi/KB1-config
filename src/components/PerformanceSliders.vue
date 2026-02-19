@@ -1583,7 +1583,7 @@ defineExpose({
 
 .rotate-icon-img {
   width: auto;
-  height: min(60vh, 400px);
+  height: min(70vh, 500px);
   max-width: 90vw;
   margin-bottom: 1rem;
   display: block;

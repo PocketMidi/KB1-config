@@ -109,7 +109,12 @@ function refreshPresets() {
 // Handle reset to defaults
 function handleResetDefaults() {
   if (performanceSlidersRef.value) {
-    performanceSlidersRef.value.resetToDefaults();
+    // In live mode, only reset values to 0, not full reset
+    if (isInLiveMode()) {
+      performanceSlidersRef.value.resetValuesToZero();
+    } else {
+      performanceSlidersRef.value.resetToDefaults();
+    }
   }
 }
 
@@ -189,6 +194,23 @@ function formatDate(timestamp: number): string {
   
   return date.toLocaleDateString();
 }
+
+// Helper methods for parent component
+function isInLiveMode(): boolean {
+  return performanceSlidersRef.value?.viewMode === 'live';
+}
+
+async function exitLiveMode() {
+  if (performanceSlidersRef.value) {
+    await performanceSlidersRef.value.exitLiveMode();
+  }
+}
+
+// Expose methods for parent
+defineExpose({
+  isInLiveMode,
+  exitLiveMode
+});
 </script>
 
 <style scoped>

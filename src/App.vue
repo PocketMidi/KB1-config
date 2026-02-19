@@ -123,8 +123,17 @@ function handleMainClick(event: MouseEvent) {
 // Refs for page components
 const mobileControlsRef = ref<InstanceType<typeof MobileControls> | null>(null);
 const mobileScalesRef = ref<InstanceType<typeof MobileScales> | null>(null);
+const mobileSlidersRef = ref<InstanceType<typeof MobileSliders> | null>(null);
 
 function handleTabClick(tabId: Tab) {
+  // If clicking on sliders tab while in live mode, exit live mode
+  if (tabId === 'sliders' && activeTab.value === 'sliders') {
+    if (mobileSlidersRef.value?.isInLiveMode()) {
+      mobileSlidersRef.value?.exitLiveMode();
+      return;
+    }
+  }
+  
   // If clicking on already active tab, close all accordions
   if (activeTab.value === tabId) {
     if (tabId === 'controls') {
@@ -211,7 +220,7 @@ function handleTabClick(tabId: Tab) {
     <main class="app-main" @click="handleMainClick">
       <MobileControls v-if="activeTab === 'controls'" ref="mobileControlsRef" />
       <MobileScales v-if="activeTab === 'settings'" ref="mobileScalesRef" />
-      <MobileSliders v-if="activeTab === 'sliders'" />
+      <MobileSliders v-if="activeTab === 'sliders'" ref="mobileSlidersRef" />
     </main>
   </div>
 </template>

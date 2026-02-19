@@ -109,7 +109,7 @@ function initializeSliders() {
   links.value = new Array(11).fill(false);
 }
 
-// Reset to defaults
+// Reset to defaults (full reset - colors, settings, values)
 function resetToDefaults() {
   sliders.value = [];
   for (let i = 0; i < 12; i++) {
@@ -127,11 +127,23 @@ function resetToDefaults() {
   showExplainerText('Reset to Defaults');
 }
 
+// Reset values to zero (only values, keep colors/settings)
+function resetValuesToZero() {
+  for (const slider of sliders.value) {
+    slider.value = 0;
+  }
+  savePreset();
+  showExplainerText('Values Reset to Zero');
+}
+
 // Expose functions for parent component
 defineExpose({
   resetToDefaults,
+  resetValuesToZero,
   getCurrentPreset,
   loadPreset,
+  viewMode,
+  exitLiveMode,
 });
 
 onMounted(() => {
@@ -685,14 +697,55 @@ function loadPreset(preset: SliderPreset) {
   showExplainerText('Preset Loaded');
 }
 
-// Calculate slider percentage for visual display
-function getSliderPercent(slider: SliderConfig): number {
+// Convert hex color to rgba with alpha
+function hexToRgba(hex: string, alpha: number): string {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+// Calculate slider fill height for visual display
+function getSliderFillHeight(slider: SliderConfig): number {
+  const trackHeight = 490;
+  const minFillHeight = 20;
+  const minPercent = (minFillHeight / trackHeight) * 100; // ~6.12%
+  
   if (slider.bipolar) {
-    // -100 to +100 maps to 0-100%
-    return ((slider.value + 100) / 200) * 100;
+    // For bipolar, height is distance from center (50%)
+    const halfHeight = Math.abs(slider.value) / 2; // -100 to +100 -> 0 to 50
+    // Always show at least minPercent, centered around 50%
+    if (halfHeight < minPercent / 2) {
+      return minPercent;
+    }
+    return halfHeight;
   } else {
-    // 0 to +100 maps to 0-100%
-    return slider.value;
+    // For unipolar, height is direct percentage
+    return Math.max(slider.value, minPercent);
+  }
+}
+
+// Calculate slider fill bottom position (only for bipolar)
+function getSliderFillBottom(slider: SliderConfig): number {
+  if (!slider.bipolar) return 0;
+  
+  const trackHeight = 490;
+  const minFillHeight = 20;
+  const minPercent = (minFillHeight / trackHeight) * 100; // ~6.12%
+  const halfHeight = Math.abs(slider.value) / 2;
+  
+  // If value is near zero, center the minimum fill around 50%
+  if (halfHeight < minPercent / 2) {
+    return 50 - minPercent / 2;
+  }
+  
+  // If positive, fill goes up from center (50%)
+  // If negative, fill goes down from center
+  if (slider.value >= 0) {
+    return 50; // Start at center, extend upward
+  } else {
+    // Position so fill extends downward from center
+    return 50 - halfHeight;
   }
 }
 </script>
@@ -810,9 +863,6 @@ function getSliderPercent(slider: SliderConfig): number {
         <div class="exit-text" v-if="exitButtonExpanded">Tap to Exit</div>
       </div>
       
-      <!-- Exit hint (desktop only) -->
-      <div v-if="!isMobile" class="exit-hint">Swipe down to exit</div>
-      
       <!-- Sliders container -->
       <div class="live-sliders-container">
         <div 
@@ -820,22 +870,33 @@ function getSliderPercent(slider: SliderConfig): number {
           :key="slider.cc"
           class="live-slider-wrapper"
         >
+          <!-- Center markers for bipolar mode (outside track) -->
+          <template v-if="slider.bipolar">
+            <div 
+              class="center-marker-left"
+              :style="{ backgroundColor: slider.color }"
+            ></div>
+            <div 
+              class="center-marker-right"
+              :style="{ backgroundColor: slider.color }"
+            ></div>
+          </template>
+          
           <!-- Slider track -->
           <div 
             class="live-slider-track"
             @dblclick="handleDoubleClick(index)"
+            :style="{
+              backgroundColor: hexToRgba(slider.color, 0.2)
+            }"
           >
-            <!-- Center marker for bipolar mode -->
-            <div 
-              v-if="slider.bipolar"
-              class="center-marker"
-            ></div>
-            
             <!-- Slider fill -->
             <div 
               class="live-slider-fill"
+              :class="{ 'bipolar': slider.bipolar }"
               :style="{
-                height: `${getSliderPercent(slider)}%`,
+                height: `${getSliderFillHeight(slider)}%`,
+                bottom: slider.bipolar ? `${getSliderFillBottom(slider)}%` : '0',
                 backgroundColor: slider.color,
               }"
             ></div>
@@ -1233,18 +1294,20 @@ function getSliderPercent(slider: SliderConfig): number {
   padding: 0.5rem;
   gap: 0.5rem;
   overflow: hidden;
+  min-height: 0;
 }
 
 .live-mode.mobile-landscape .live-slider-wrapper {
   flex: 1;
   min-width: 0;
   gap: 0.25rem;
+  height: 100%;
 }
 
 .live-mode.mobile-landscape .live-slider-track {
   width: 100%;
-  min-height: 0;
-  border-width: 1px;
+  height: 100%;
+  flex: 1;
 }
 
 .live-mode.mobile-landscape .live-cc-label {
@@ -1254,103 +1317,109 @@ function getSliderPercent(slider: SliderConfig): number {
 .live-sliders-container {
   display: flex;
   flex: 1;
-  gap: 1rem;
+  gap: 1.75rem;
   padding: 3rem 1rem 1rem;
   justify-content: center;
-  align-items: stretch;
+  align-items: center;
   overflow-x: auto;
   overflow-y: hidden;
+  min-height: 490px;
 }
 
 .live-slider-wrapper {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 0.5rem;
-  min-width: 60px;
+  min-width: 42px;
 }
 
 .live-slider-track {
   position: relative;
-  width: 60px;
-  flex: 1;
-  min-height: 200px;
-  background: rgba(234, 234, 234, 0.05);
-  border: 2px solid rgba(234, 234, 234, 0.2);
-  border-radius: 8px;
+  width: 42px;
+  height: 490px;
+  border-radius: 12px;
   overflow: hidden;
   cursor: pointer;
-  transition: border-color 0.2s;
 }
 
-.live-slider-track:hover {
-  border-color: rgba(234, 234, 234, 0.4);
-}
-
-.center-marker {
+/* Bipolar center markers - positioned outside track */
+.center-marker-left,
+.center-marker-right {
   position: absolute;
-  top: 50%;
-  left: 0;
-  right: 0;
-  height: 2px;
-  background: rgba(255, 255, 255, 0.5);
+  top: 245px; /* Center of 490px track */
   transform: translateY(-50%);
-  z-index: 1;
+  width: 3px;
+  height: 25px;
+  border-radius: 1.5px;
+  z-index: 2;
   pointer-events: none;
+}
+
+.center-marker-left {
+  left: -6px;
+}
+
+.center-marker-right {
+  right: -6px;
 }
 
 .live-slider-fill {
   position: absolute;
-  bottom: 0;
   left: 0;
   right: 0;
-  transition: height 0.1s ease-out;
   pointer-events: none;
-  opacity: 0.9;
+  z-index: 1;
 }
 
 .live-slider-input {
   position: absolute;
-  top: 50%;
-  left: 50%;
-  width: calc(100% - 4px);
-  height: calc(100% - 4px);
-  transform: translate(-50%, -50%) rotate(-90deg);
-  transform-origin: center;
+  top: 0;
+  left: 0;
+  width: 42px;
+  height: 490px;
   -webkit-appearance: none;
   appearance: none;
   background: transparent;
   cursor: pointer;
-  z-index: 2;
+  z-index: 3;
+  writing-mode: bt-lr;
+  -webkit-writing-mode: bt-lr;
+  -webkit-appearance: slider-vertical;
+  opacity: 0;
 }
 
 .live-slider-input::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 16px;
-  height: 50px;
-  background: rgba(255, 255, 255, 0.95);
+  width: 42px;
+  height: 8px;
+  background: transparent;
   cursor: pointer;
-  border-radius: 4px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+  border: none;
+  opacity: 0;
 }
 
 .live-slider-input::-moz-range-thumb {
-  width: 16px;
-  height: 50px;
-  background: rgba(255, 255, 255, 0.95);
+  width: 42px;
+  height: 8px;
+  background: transparent;
   cursor: pointer;
-  border-radius: 4px;
   border: none;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+  opacity: 0;
 }
 
 .live-slider-input::-webkit-slider-runnable-track {
   background: transparent;
+  border: none;
+  box-shadow: none;
 }
 
 .live-slider-input::-moz-range-track {
   background: transparent;
+  border: none;
+  box-shadow: none;
 }
 
 .live-cc-label {

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, nextTick } from 'vue';
+import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue';
 import { midiBle } from '../services/midiBle';
 import { SliderPresetStore, type SliderPreset } from '../state/sliderPresets';
 
@@ -897,9 +897,24 @@ function stopToPortAnimation() {
 function getFramePath(folder: string, frame: number): string {
   const frameStr = frame.toString().padStart(5, '0');
   const path = `/${folder}/${folder}_${frameStr}.png`;
-  console.log('Generated path:', path);
+  console.log('Generated path:', path, 'for frame:', frame);
   return path;
 }
+
+// Computed properties for reactive image paths
+const toLandImageSrc = computed(() => {
+  const frameStr = toLandFrame.value.toString().padStart(5, '0');
+  const path = `/to_land/to_land_${frameStr}.png`;
+  console.log('toLandImageSrc computed:', path);
+  return path;
+});
+
+const toPortImageSrc = computed(() => {
+  const frameStr = toPortFrame.value.toString().padStart(5, '0');
+  const path = `/to_port/to_port_${frameStr}.png`;
+  console.log('toPortImageSrc computed:', path);
+  return path;
+});
 
 async function enterLiveMode() {
   detectMobile();
@@ -1128,7 +1143,7 @@ defineExpose({
       <!-- iOS Portrait Prompt -->
       <div v-if="isMobile && isIOS && isPortrait" class="portrait-prompt">
         <div class="prompt-content">
-          <img :src="getFramePath('to_land', toLandFrame)" alt="Rotate to landscape" class="rotate-icon-img" />
+          <img :src="toLandImageSrc" alt="Rotate to landscape" class="rotate-icon-img" />
           <div class="prompt-subtext" style="margin-top: 1rem; font-size: 0.7rem; opacity: 0.6;">Swipe left or right to exit</div>
         </div>
       </div>
@@ -1136,7 +1151,7 @@ defineExpose({
       <!-- Rotate Back Prompt (on exit) -->
       <div v-if="showRotateBackPrompt" class="portrait-prompt">
         <div class="prompt-content">
-          <img :src="getFramePath('to_port', toPortFrame)" alt="Rotate to portrait" class="rotate-icon-img" />
+          <img :src="toPortImageSrc" alt="Rotate to portrait" class="rotate-icon-img" />
         </div>
       </div>
       

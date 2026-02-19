@@ -896,7 +896,9 @@ function stopToPortAnimation() {
 
 function getFramePath(folder: string, frame: number): string {
   const frameStr = frame.toString().padStart(5, '0');
-  return `/${folder}/${folder}_${frameStr}.png`;
+  const path = `/${folder}/${folder}_${frameStr}.png`;
+  console.log('Generated path:', path);
+  return path;
 }
 
 async function enterLiveMode() {

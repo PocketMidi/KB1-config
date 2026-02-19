@@ -59,6 +59,10 @@ const viewMode = ref<ViewMode>('setup');
 const isMobile = ref(false);
 const isIOS = ref(false);
 const isPortrait = ref(false);
+const showExitButton = ref(false); // Control X button visibility
+
+// Touch tracking for slider dragging
+const activeTouchSlider = ref<number | null>(null);
 
 // Initialize sliders
 const sliders = ref<SliderConfig[]>([]);
@@ -179,6 +183,56 @@ function getSliderFillBottom(slider: SliderConfig): number {
 }
 
 // === END UTILITY FUNCTIONS ===
+
+// Handle touch drag on slider track (for mobile)
+function handleTrackTouchStart(event: TouchEvent, index: number) {
+  if (!isMobile.value || viewMode.value !== 'live') return;
+  event.preventDefault();
+  activeTouchSlider.value = index;
+  handleTrackTouchMove(event, index);
+  showExitButton.value = true; // Show X when interacting
+}
+
+function handleTrackTouchMove(event: TouchEvent, index: number) {
+  if (!isMobile.value || viewMode.value !== 'live' || activeTouchSlider.value !== index) return;
+  event.preventDefault();
+  
+  const touch = event.touches[0];
+  if (!touch) return;
+  
+  const track = (event.currentTarget as HTMLElement);
+  const rect = track.getBoundingClientRect();
+  
+  // Calculate position from bottom (0 = bottom, 1 = top)
+  const y = touch.clientY - rect.top;
+  const height = rect.height;
+  const positionFromTop = Math.max(0, Math.min(1, y / height));
+  const positionFromBottom = 1 - positionFromTop;
+  
+  const slider = sliders.value[index];
+  if (!slider) return;
+  
+  let newValue;
+  if (slider.bipolar) {
+    // Bipolar: -100 to +100
+    newValue = Math.round((positionFromBottom * 200) - 100);
+  } else {
+    // Unipolar: 0 to 100
+    newValue = Math.round(positionFromBottom * 100);
+  }
+  
+  handleSliderChange(index, newValue, false);
+}
+
+function handleTrackTouchEnd() {
+  activeTouchSlider.value = null;
+  // Hide X after 2 seconds of no interaction
+  setTimeout(() => {
+    if (activeTouchSlider.value === null) {
+      showExitButton.value = false;
+    }
+  }, 2000);
+}
 
 // Reset to defaults (full reset - colors, settings, values)
 function resetToDefaults() {
@@ -633,6 +687,7 @@ function checkOrientation() {
 async function enterLiveMode() {
   detectMobile();
   viewMode.value = 'live';
+  showExitButton.value = false; // Start with X hidden
   
   // Platform-specific mobile handling
   if (isMobile.value) {
@@ -667,6 +722,8 @@ async function enterLiveMode() {
 
 async function exitLiveMode() {
   viewMode.value = 'setup';
+  showExitButton.value = false; // Reset button visibility
+  activeTouchSlider.value = null; // Reset active slider
   
   // Platform-specific cleanup
   if (isMobile.value) {
@@ -824,14 +881,14 @@ defineExpose({
       class="live-mode" 
       :class="{ 'mobile-landscape': isMobile }"
     >
-      <!-- Exit button (top-right corner) for mobile - simple tap -->
+      <!-- Exit button (top-right corner) for mobile - shows on interaction -->
       <div 
-        v-if="isMobile && !isPortrait"
+        v-if="isMobile && !isPortrait && showExitButton"
         class="mobile-exit-button"
         @click="exitLiveMode"
-        @touchend.prevent="exitLiveMode"
+        @touchend.prevent.stop="exitLiveMode"
       >
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <line x1="18" y1="6" x2="6" y2="18"></line>
           <line x1="6" y1="6" x2="18" y2="18"></line>
         </svg>
@@ -868,6 +925,10 @@ defineExpose({
           <div 
             class="live-slider-track"
             @dblclick="handleDoubleClick(index)"
+            @touchstart="handleTrackTouchStart($event, index)"
+            @touchmove="handleTrackTouchMove($event, index)"
+            @touchend="handleTrackTouchEnd"
+            @touchcancel="handleTrackTouchEnd"
             :style="{
               backgroundColor: hexToRgba(slider.color, 0.2)
             }"
@@ -1270,21 +1331,21 @@ defineExpose({
 /* Long press indicator (mobile) */
 .mobile-exit-button {
   position: absolute;
-  top: 0.75rem;
-  right: 0.75rem;
-  width: 48px;
-  height: 48px;
-  background: rgba(15, 15, 15, 0.8);
+  top: 0.25rem;
+  right: 0.25rem;
+  width: 32px;
+  height: 32px;
+  background: rgba(15, 15, 15, 0.6);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: rgba(234, 234, 234, 0.5);
+  color: rgba(234, 234, 234, 0.4);
   cursor: pointer;
   z-index: 100;
-  transition: all 0.2s;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  transition: all 0.3s ease;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
   touch-action: manipulation; /* Allow tap but prevent other gestures */
   -webkit-touch-callout: none; /* Prevent iOS context menu */
   -webkit-user-select: none;
@@ -1292,9 +1353,14 @@ defineExpose({
 }
 
 .mobile-exit-button:active {
-  background: rgba(15, 15, 15, 0.95);
+  background: rgba(15, 15, 15, 0.9);
   color: #74C4FF;
-  transform: scale(0.95);
+  transform: scale(1.1);
+}
+
+.mobile-exit-button svg {
+  width: 16px;
+  height: 16px;
 }
 
 /* Mobile Landscape Optimizations */
@@ -1335,8 +1401,9 @@ defineExpose({
   min-height: 0;
   flex: 1;
   border-radius: 8px;
-  touch-action: auto; /* Allow default touch for range input */
+  touch-action: none; /* Prevent default, we handle touch manually */
   -webkit-touch-callout: none;
+  cursor: pointer;
 }
 
 .live-mode.mobile-landscape .center-marker-left,

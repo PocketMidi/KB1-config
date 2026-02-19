@@ -200,8 +200,8 @@ function handleTrackTouchStart(event: TouchEvent, _index: number) {
   
   const containerRect = container.getBoundingClientRect();
   
-  // Apply 50px offset to compensate for touch misalignment
-  const adjustedTouchX = touch.clientX - 50;
+  // Apply 60px offset to compensate for touch misalignment
+  const adjustedTouchX = touch.clientX - 60;
   const touchX = adjustedTouchX - containerRect.left;
   
   // Calculate which slider based on X position

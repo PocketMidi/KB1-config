@@ -20,8 +20,9 @@ if (typeof window !== 'undefined') {
   }, { passive: true });
   
   window.addEventListener('touchstart', (e) => {
-    if (e.touches.length > 0) {
-      lastPointerPosition = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    const touch = e.touches[0];
+    if (touch) {
+      lastPointerPosition = { x: touch.clientX, y: touch.clientY };
     }
   }, { passive: true });
 }
@@ -44,7 +45,9 @@ export function useConfirm() {
     const index = dialogs.value.findIndex(d => d.id === id);
     if (index !== -1) {
       const dialog = dialogs.value[index];
-      dialog.resolve(result);
+      if (dialog) {
+        dialog.resolve(result);
+      }
       dialogs.value.splice(index, 1);
     }
   }

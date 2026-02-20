@@ -6,7 +6,7 @@
  * connecting, disconnecting, and sending/receiving data.
  */
 
-import type { LeverSettings, LeverPushSettings, TouchSettings, ScaleSettings, SystemSettings, DevicePresetMetadata } from './kb1Protocol';
+import type { LeverSettings, LeverPushSettings, TouchSettings, ScaleSettings, SystemSettings, DeviceSettings, DevicePresetMetadata } from './kb1Protocol';
 import { PRESET_CHARACTERISTIC_UUIDS, encodePresetSave, encodePresetLoad, encodePresetDelete, decodePresetList } from './kb1Protocol';
 
 // KB1-specific BLE UUIDs (custom, not standard MIDI BLE)

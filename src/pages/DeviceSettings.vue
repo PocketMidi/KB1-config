@@ -141,6 +141,9 @@ import {
   getCCGroups,
 } from '../data/ccMap';
 
+const toast = useToast();
+const confirm = useConfirm();
+
 const {
   isConnected,
   deviceSettings,

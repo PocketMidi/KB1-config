@@ -41,11 +41,18 @@ const isDarkMode = ref(localStorage.getItem(THEME_KEY) !== 'light');
 const logoClickCount = ref(0);
 const logoClickTimer = ref<ReturnType<typeof setTimeout> | null>(null);
 const showDevModeModal = ref(false);
+const modalJustOpened = ref(false);
 
 // Show counter after 2nd tap
 const showTapCounter = computed(() => logoClickCount.value >= 2 && logoClickCount.value < 5);
 
-function handleLogoClick() {
+function handleLogoClick(event?: Event) {
+  // Prevent default behavior and stop propagation
+  if (event) {
+    event.preventDefault();
+    event.stopPropagation();
+  }
+  
   logoClickCount.value++;
   
   // Reset timer
@@ -55,6 +62,11 @@ function handleLogoClick() {
   if (logoClickCount.value >= 5) {
     showDevModeModal.value = true;
     logoClickCount.value = 0;
+    // Prevent modal from closing immediately
+    modalJustOpened.value = true;
+    setTimeout(() => {
+      modalJustOpened.value = false;
+    }, 300);
     return;
   }
   
@@ -70,6 +82,8 @@ function toggleDevMode() {
 }
 
 function closeDevModeModal() {
+  // Prevent closing if modal just opened
+  if (modalJustOpened.value) return;
   showDevModeModal.value = false;
 }
 
@@ -235,7 +249,7 @@ function handleTabClick(tabId: Tab) {
     <header v-if="!hideUI" class="app-header">
       <div class="header-content">
         <!-- KB1 logo - centered, no buttons -->
-        <div class="logo-section" @click="handleLogoClick" style="cursor: pointer; position: relative;">
+        <div class="logo-section logo-tap-zone" @click="handleLogoClick" @touchend.prevent="handleLogoClick">
           <img src="/kb1_title.svg" alt="KB1 CONFIGURATOR" class="header-logo" />
           <!-- Tap counter (shows after 2nd tap) -->
           <div v-if="showTapCounter" class="tap-counter">{{ logoClickCount }}</div>
@@ -473,6 +487,15 @@ body {
 .logo-section {
   display: flex;
   align-items: center;
+}
+
+.logo-tap-zone {
+  cursor: pointer;
+  position: relative;
+  touch-action: manipulation; /* Disable double-tap zoom */
+  user-select: none; /* Prevent text selection */
+  -webkit-user-select: none;
+  -webkit-touch-callout: none; /* Disable iOS callout */
 }
 
 /* Logo - consistent size across all screens (mobile size from original) */
@@ -886,6 +909,9 @@ body {
   z-index: 9999;
   padding: 1rem;
   backdrop-filter: blur(4px);
+  touch-action: manipulation; /* Prevent zoom on mobile */
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .dev-mode-modal {
@@ -897,6 +923,9 @@ body {
   padding: 1.5rem;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
   animation: modal-slide-in 0.3s ease-out;
+  touch-action: manipulation; /* Prevent zoom */
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 @keyframes modal-slide-in {

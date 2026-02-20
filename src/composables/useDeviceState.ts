@@ -14,7 +14,7 @@ import { kb1Protocol, type CCMapping, type DeviceSettings, type DevicePresetMeta
 // ============================================
 // WARNING: Set DEV_MODE to false for production builds
 // When true, simulates device connection with mock data for development
-const DEV_MODE = true;
+const DEV_MODE = false;
 
 // Global reactive state
 const connectionStatus = ref<BLEConnectionStatus>({

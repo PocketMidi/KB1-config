@@ -472,7 +472,7 @@ export function useDeviceState() {
     if (DEV_MODE) {
       console.log(`🔧 DEV MODE: Loading from device slot ${slot}`);
       const preset = devicePresets.value[slot];
-      if (preset.isValid) {
+      if (preset && preset.isValid) {
         console.log(`Loaded preset: "${preset.name}"`);
         // In real implementation, this would update deviceSettings
       } else {

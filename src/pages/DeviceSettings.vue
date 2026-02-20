@@ -131,6 +131,8 @@ import LeverPushSettings from '../components/LeverPushSettings.vue';
 import TouchSettings from '../components/TouchSettings.vue';
 import SystemSettings from '../components/SystemSettings.vue';
 import ScaleSettings from '../components/ScaleSettings.vue';
+import { useToast } from '../composables/useToast';
+import { useConfirm } from '../composables/useConfirm';
 import {
   loadPolyendCCMap,
   getCCMap,
@@ -233,7 +235,7 @@ const scales = [
   { value: 10, label: 'Pentatonic Minor' },
 ];
 
-// Root Notes as MIDI numbers so protocol/defaults (60=C) match UI selection
+// Root Notes (MIDI note numbers - firmware uses these as absolute pitches)
 const rootNotes = [
   { value: 60, label: 'C' },
   { value: 61, label: 'C#' },
@@ -267,19 +269,19 @@ async function handleLoadClick() {
     hasChanges.value = false;
   } catch (error) {
     console.error('Failed to load settings:', error);
-    alert('Failed to load settings from device');
+    toast.error('Failed to load settings from device');
   }
 }
 
 async function handleResetDefaults() {
-  if (confirm('Reset all settings to firmware defaults? This will discard current changes.')) {
+  if (await confirm('Reset all settings to firmware defaults? This will discard current changes.')) {
     try {
       resetToDefaults();
       localSettings.value = { ...deviceSettings.value };
       hasChanges.value = true;
     } catch (error) {
       console.error('Failed to reset to defaults:', error);
-      alert('Failed to reset to defaults');
+      toast.error('Failed to reset to defaults');
     }
   }
 }
@@ -298,14 +300,14 @@ async function handleSaveToDevice() {
     try {
       await saveToFlash();
       hasChanges.value = false;
-      alert('Settings saved to device successfully');
+      toast.success('Settings uploaded to device');
     } catch (flashError) {
       console.error('Failed to save to flash after applying to RAM:', flashError);
-      alert('Settings applied to device RAM but failed to save to flash memory. Settings will be lost on power cycle.');
+      toast.warning('Settings applied but may not persist on reboot');
     }
   } catch (error) {
     console.error('Failed to apply settings to device:', error);
-    alert('Failed to apply settings to device');
+    toast.error('Failed to apply settings to device');
   }
 }
 </script>

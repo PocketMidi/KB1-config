@@ -413,7 +413,7 @@ export class KB1Protocol {
       },
       scale: {
         scaleType: ScaleType.CHROMATIC,
-        rootNote: 60,
+        rootNote: 60, // Middle C (MIDI note, not pitch class)
         keyMapping: 0, // Natural
       },
       system: {
@@ -489,7 +489,7 @@ export class KB1Protocol {
     const validateScale = (scale: ScaleSettings): boolean => {
       return (
         scale.scaleType >= 0 &&
-        scale.rootNote >= 0 && scale.rootNote <= 11 &&
+        scale.rootNote >= 48 && scale.rootNote <= 84 && // MIDI note range (allow 3 octaves centered on middle C)
         (scale.keyMapping === 0 || scale.keyMapping === 1)
       );
     };

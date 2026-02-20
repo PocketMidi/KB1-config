@@ -250,16 +250,16 @@ export function useDeviceState() {
    * Send settings to the device
    */
   const sendSettings = async (settings: DeviceSettings) => {
-    if (!connectionStatus.value.connected) {
-      throw new Error('Not connected to device');
-    }
-
     // In dev mode, just update locally
     if (devMode.value) {
       console.log('🔧 DEV MODE: Simulating send settings');
       await new Promise(resolve => setTimeout(resolve, 200));
       updateSettings(settings);
       return;
+    }
+
+    if (!connectionStatus.value.connected) {
+      throw new Error('Not connected to device');
     }
 
     try {
@@ -278,16 +278,16 @@ export function useDeviceState() {
    * This function exists for API compatibility but doesn't need to do anything.
    */
   const saveToFlash = async () => {
-    if (!connectionStatus.value.connected) {
-      throw new Error('Not connected to device');
-    }
-
     // In dev mode, simulate save
     if (devMode.value) {
       console.log('🔧 DEV MODE: Simulating save to flash');
       await new Promise(resolve => setTimeout(resolve, 500));
       console.log('🔧 DEV MODE: Save complete');
       return;
+    }
+
+    if (!connectionStatus.value.connected) {
+      throw new Error('Not connected to device');
     }
 
     // Settings are automatically saved to flash when written via BLE characteristics

@@ -268,6 +268,8 @@ import { ref, onMounted, nextTick, watch } from 'vue';
 import { PresetStore, generateRandomName, type Preset } from '../state/presets';
 import type { DeviceSettings } from '../ble/kb1Protocol';
 import { useDeviceState } from '../composables/useDeviceState';
+import { useToast } from '../composables/useToast';
+import { useConfirm } from '../composables/useConfirm';
 
 const {
   isConnected,
@@ -278,6 +280,9 @@ const {
   deleteDevicePreset,
   refreshDevicePresets,
 } = useDeviceState();
+
+const toast = useToast();
+const { confirm } = useConfirm();
 
 const props = defineProps<{
   currentSettings: DeviceSettings;
@@ -347,12 +352,12 @@ async function saveToDevice(slot: number) {
   
   // Warn if slot is filled
   if (preset.isValid) {
-    const overwrite = confirm(`Slot ${slot + 1} contains "${preset.name}".\n\nDo you want to overwrite it?\n\nClick Cancel to choose a different slot.`);
+    const overwrite = await confirm(`Slot ${slot + 1} contains "${preset.name}".\n\nDo you want to overwrite it?\n\nClick Cancel to choose a different slot.`);
     if (!overwrite) {
       // Find next empty slot
       const emptySlot = devicePresets.value.findIndex(p => !p.isValid);
       if (emptySlot >= 0) {
-        const useEmpty = confirm(`Use empty slot ${emptySlot + 1} instead?`);
+        const useEmpty = await confirm(`Use empty slot ${emptySlot + 1} instead?`);
         if (useEmpty) {
           saveToDevice(emptySlot);
           return;
@@ -375,7 +380,7 @@ async function loadFromDevice(slot: number) {
   console.log(`📥 Load from device slot ${slot}:`, { isValid: preset.isValid, name: preset.name });
   
   if (!preset.isValid) {
-    alert('Slot is empty');
+    toast.info('Slot is empty');
     return;
   }
   
@@ -386,26 +391,26 @@ async function loadFromDevice(slot: number) {
     activePresetId.value = null;
     emit('presetActivated', null);
     console.log(`✅ Successfully loaded from slot ${slot + 1}:`, preset.name);
-    alert(`Loaded from device slot ${slot + 1}: "${preset.name}"`);
+    toast.success(`Loaded from device slot ${slot + 1}: "${preset.name}"`);
   } catch (error) {
     console.error('❌ Failed to load device preset:', error);
-    alert('Failed to load from device');
+    toast.error('Failed to load from device');
   }
 }
 
 async function deleteFromDevice(slot: number) {
   const preset = getDevicePreset(slot);
-  if (!confirm(`Delete "${preset.name}" from slot ${slot + 1}?`)) return;
+  if (!await confirm(`Delete "${preset.name}" from slot ${slot + 1}?`)) return;
   
   try {
     await deleteDevicePreset(slot);
     if (activeDeviceSlot.value === slot) {
       activeDeviceSlot.value = null;
     }
-    alert(`Deleted from device slot ${slot + 1}`);
+    toast.success(`Deleted from device slot ${slot + 1}`);
   } catch (error) {
     console.error('Failed to delete device preset:', error);
-    alert('Failed to delete device preset');
+    toast.error('Failed to delete device preset');
   }
 }
 
@@ -485,7 +490,7 @@ async function refreshSlots() {
     await refreshDevicePresets();
   } catch (error) {
     console.error('Failed to refresh device presets:', error);
-    alert('Failed to refresh device slots');
+    toast.error('Failed to refresh device slots');
   }
 }
 
@@ -506,8 +511,8 @@ async function confirmCreate() {
     
     // Warn if overwriting
     if (preset.isValid) {
-      const confirm = window.confirm(`Slot ${slot + 1} contains "${preset.name}".\n\nOverwrite with "${name}"?`);
-      if (!confirm) {
+      const shouldOverwrite = await confirm(`Slot ${slot + 1} contains "${preset.name}".\n\nOverwrite with "${name}"?`);
+      if (!shouldOverwrite) {
         return; // Stay in dialog
       }
     }
@@ -518,10 +523,10 @@ async function confirmCreate() {
       activeDeviceSlot.value = slot;
       console.log(`✅ Successfully saved to device slot ${slot + 1}`);
       console.log('📊 Device presets after save:', devicePresets.value);
-      alert(`Saved to device slot ${slot + 1}`);
+      toast.success(`Saved to device slot ${slot + 1}`);
     } catch (error) {
       console.error('❌ Failed to save device preset:', error);
-      alert('Failed to save to device');
+      toast.error('Failed to save to device');
     }
     savingDeviceSlot.value = null;
   } else if (savingDeviceSlot.value !== null) {
@@ -533,10 +538,10 @@ async function confirmCreate() {
       activeDeviceSlot.value = slot;
       console.log(`✅ Successfully saved to device slot ${slot + 1}`);
       console.log('📊 Device presets after save:', devicePresets.value);
-      alert(`Saved to device slot ${slot + 1}`);
+      toast.success(`Saved to device slot ${slot + 1}`);
     } catch (error) {
       console.error('❌ Failed to save device preset:', error);
-      alert('Failed to save to device');
+      toast.error('Failed to save to device');
     }
     savingDeviceSlot.value = null;
   } else {
@@ -552,12 +557,12 @@ async function confirmCreate() {
   newPresetName.value = '';
 }
 
-function loadPreset(id: string) {
+async function loadPreset(id: string) {
   const preset = PresetStore.getPreset(id);
   if (!preset) return;
 
   if (props.hasUnsavedChanges && activePresetId.value !== id) {
-    if (!confirm('You have unsaved changes. Loading this preset will discard them. Continue?')) {
+    if (!await confirm('You have unsaved changes. Loading this preset will discard them. Continue?')) {
       return;
     }
   }
@@ -569,8 +574,8 @@ function loadPreset(id: string) {
   openMenuId.value = null;
 }
 
-function updatePreset(id: string) {
-  if (!confirm('Update this preset with current settings?')) return;
+async function updatePreset(id: string) {
+  if (!await confirm('Update this preset with current settings?')) return;
 
   PresetStore.updatePreset(id, { settings: props.currentSettings });
   refreshPresets();
@@ -632,11 +637,11 @@ function duplicatePreset(id: string) {
   openMenuId.value = null;
 }
 
-function deletePreset(id: string) {
+async function deletePreset(id: string) {
   const preset = PresetStore.getPreset(id);
   if (!preset) return;
 
-  if (!confirm(`Delete preset "${preset.name}"? This cannot be undone.`)) return;
+  if (!await confirm(`Delete preset "${preset.name}"? This cannot be undone.`)) return;
 
   PresetStore.deletePreset(id);
   
@@ -767,19 +772,19 @@ async function handleFileImport(event: Event) {
     // Check if it's a single preset or array
     if (Array.isArray(json)) {
       const count = PresetStore.importAllPresets(text);
-      alert(`Successfully imported ${count} preset(s)`);
+      toast.success(`Successfully imported ${count} preset(s)`);
     } else {
       const preset = PresetStore.importPreset(text);
       if (preset) {
-        alert(`Successfully imported preset "${preset.name}"`);
+        toast.success(`Successfully imported preset "${preset.name}"`);
       } else {
-        alert('Failed to import preset. Invalid format.');
+        toast.error('Failed to import preset. Invalid format.');
       }
     }
     
     refreshPresets();
   } catch (error) {
-    alert('Failed to import preset file. Please check the file format.');
+    toast.error('Failed to import preset file. Please check the file format.');
   }
   
   // Reset input

@@ -631,20 +631,88 @@ export class BLEClient {
       throw new Error('Not connected to device');
     }
 
+    const errors: string[] = [];
+    
     try {
-      // Write all settings to their respective characteristics
+      console.log('Writing lever1 settings...');
       await this.writeLever1Settings(settings.lever1);
-      await this.writeLeverPush1Settings(settings.leverPush1);
-      await this.writeLever2Settings(settings.lever2);
-      await this.writeLeverPush2Settings(settings.leverPush2);
-      await this.writeTouchSettings(settings.touch);
-      await this.writeScaleSettings(settings.scale);
-      await this.writeSystemSettings(settings.system);
-      console.log('✅ All settings written to device');
+      console.log('✓ Lever1 settings written');
     } catch (error) {
-      console.error('Failed to write all settings:', error);
-      throw error;
+      const msg = `Failed to write lever1 settings: ${error}`;
+      console.warn(msg);
+      errors.push(msg);
     }
+
+    try {
+      console.log('Writing leverPush1 settings...');
+      await this.writeLeverPush1Settings(settings.leverPush1);
+      console.log('✓ LeverPush1 settings written');
+    } catch (error) {
+      const msg = `Failed to write leverPush1 settings: ${error}`;
+      console.warn(msg);
+      errors.push(msg);
+    }
+
+    try {
+      console.log('Writing lever2 settings...');
+      await this.writeLever2Settings(settings.lever2);
+      console.log('✓ Lever2 settings written');
+    } catch (error) {
+      const msg = `Failed to write lever2 settings: ${error}`;
+      console.warn(msg);
+      errors.push(msg);
+    }
+
+    try {
+      console.log('Writing leverPush2 settings...');
+      await this.writeLeverPush2Settings(settings.leverPush2);
+      console.log('✓ LeverPush2 settings written');
+    } catch (error) {
+      const msg = `Failed to write leverPush2 settings: ${error}`;
+      console.warn(msg);
+      errors.push(msg);
+    }
+
+    try {
+      console.log('Writing touch settings...');
+      await this.writeTouchSettings(settings.touch);
+      console.log('✓ Touch settings written');
+    } catch (error) {
+      const msg = `Failed to write touch settings: ${error}`;
+      console.warn(msg);
+      errors.push(msg);
+    }
+
+    try {
+      console.log('Writing scale settings...');
+      await this.writeScaleSettings(settings.scale);
+      console.log('✓ Scale settings written');
+    } catch (error) {
+      const msg = `Failed to write scale settings: ${error}`;
+      console.warn(msg);
+      errors.push(msg);
+    }
+
+    try {
+      console.log('Writing system settings...');
+      await this.writeSystemSettings(settings.system);
+      console.log('✓ System settings written');
+    } catch (error) {
+      const msg = `Failed to write system settings: ${error}`;
+      console.warn(msg);
+      errors.push(msg);
+    }
+
+    if (errors.length > 0) {
+      console.warn(`⚠️ ${errors.length} setting(s) failed to write:`, errors);
+      // Only throw if ALL settings failed
+      if (errors.length === 7) {
+        throw new Error('Failed to write any settings to device');
+      }
+      // Otherwise just log warnings but don't throw (partial success)
+    }
+    
+    console.log(`✅ Settings written (${7 - errors.length}/7 successful)`);
   }
 
   /**

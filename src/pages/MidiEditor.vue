@@ -69,6 +69,8 @@
 import { ref } from 'vue';
 import CCMappingCard from '../components/CCMappingCard.vue';
 import { useDeviceState } from '../composables/useDeviceState';
+import { useToast } from '../composables/useToast';
+import { useConfirm } from '../composables/useConfirm';
 import type { CCMapping } from '../ble/kb1Protocol';
 
 const {
@@ -82,6 +84,9 @@ const {
   resetToDefaults,
 } = useDeviceState();
 
+const toast = useToast();
+const { confirm } = useConfirm();
+
 const hasChanges = ref(false);
 
 async function handleLoadClick() {
@@ -90,7 +95,7 @@ async function handleLoadClick() {
     hasChanges.value = false;
   } catch (error) {
     console.error('Failed to load from device:', error);
-    alert('Failed to load from device');
+    toast.error('Failed to load from device');
   }
 }
 
@@ -100,18 +105,18 @@ async function handleRestoreSnapshot() {
     hasChanges.value = false;
   } catch (error) {
     console.error('Failed to restore from snapshot:', error);
-    alert('No snapshot available to restore');
+    toast.info('No snapshot available to restore');
   }
 }
 
 async function handleResetDefaults() {
-  if (confirm('Reset all settings to firmware defaults? This will discard current changes.')) {
+  if (await confirm('Reset all settings to firmware defaults? This will discard current changes.')) {
     try {
       resetToDefaults();
       hasChanges.value = true;
     } catch (error) {
       console.error('Failed to reset to defaults:', error);
-      alert('Failed to reset to defaults');
+      toast.error('Failed to reset to defaults');
     }
   }
 }
@@ -130,7 +135,7 @@ async function handleMappingUpdate(mapping: CCMapping) {
     }
   } catch (error) {
     console.error('Failed to update CC mapping:', error);
-    alert('Failed to update CC mapping');
+    toast.error('Failed to update CC mapping');
   }
 }
 
@@ -141,20 +146,20 @@ async function handleApply() {
       await sendCCMapping(mapping);
     }
     hasChanges.value = false;
-    alert('CC mappings applied successfully');
+    toast.success('CC mappings applied successfully');
   } catch (error) {
     console.error('Failed to apply CC mappings:', error);
-    alert('Failed to apply CC mappings to device');
+    toast.error('Failed to apply CC mappings to device');
   }
 }
 
 async function handleSave() {
   try {
     await saveToFlash();
-    alert('Settings saved to device flash memory');
+    toast.success('Settings saved to device flash');
   } catch (error) {
-    console.error('Failed to save to flash:', error);
-    alert('Failed to save to device flash memory');
+    console.error('Failed to save to device flash memory:', error);
+    toast.error('Failed to save to device flash memory');
   }
 }
 </script>

@@ -83,11 +83,13 @@
 <script setup lang="ts">
 import { ref, nextTick, onMounted, computed } from 'vue';
 import { useDeviceState } from '../composables/useDeviceState';
+import { useConfirm } from '../composables/useConfirm';
 import PerformanceSliders from '../components/PerformanceSliders.vue';
 import StickyActionBar from '../components/StickyActionBar.vue';
 import { SliderPresetStore, generateRandomSliderName, type NamedSliderPreset } from '../state/sliderPresets';
 
 const { isConnected } = useDeviceState();
+const { confirm } = useConfirm();
 const performanceSlidersRef = ref<InstanceType<typeof PerformanceSliders> | null>(null);
 
 // Check if in live mode
@@ -180,11 +182,11 @@ function loadPreset(id: string) {
 }
 
 // Delete preset
-function deletePreset(id: string) {
+async function deletePreset(id: string) {
   const preset = SliderPresetStore.getPreset(id);
   if (!preset) return;
 
-  if (!confirm(`Delete preset "${preset.name}"? This cannot be undone.`)) return;
+  if (!await confirm(`Delete preset "${preset.name}"? This cannot be undone.`)) return;
 
   SliderPresetStore.deletePreset(id);
   refreshPresets();

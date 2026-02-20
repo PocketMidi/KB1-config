@@ -5,8 +5,10 @@ import MobileSliders from './pages/MobileSliders.vue';
 import FirstTimeOverlay from './components/FirstTimeOverlay.vue';
 import ContextualConnectionModal from './components/ContextualConnectionModal.vue';
 import ToastNotification from './components/ToastNotification.vue';
+import ConfirmDialog from './components/ConfirmDialog.vue';
 import { useDeviceState } from './composables/useDeviceState';
 import { useToast } from './composables/useToast';
+import { useConfirm } from './composables/useConfirm';
 import { FIRST_TIME_BLE_INTRO_KEY } from './constants';
 import './styles/themes/kb1.css';
 
@@ -18,6 +20,7 @@ const {
   devMode,
   setDevMode,
 } = useDeviceState();
+const { dialogs, remove: removeDialog } = useConfirm();
 
 const { toasts, remove } = useToast();
 
@@ -353,6 +356,8 @@ function handleTabClick(tabId: Tab) {
         <div class="dev-mode-actions">
           <button class="btn-modal-close" @click="closeDevModeModal">Close</button>
         </div>
+      </div>
+    </div>
     
     <!-- Toast Notifications Container -->
     <div class="toast-container">
@@ -365,8 +370,16 @@ function handleTabClick(tabId: Tab) {
         @close="remove(toast.id)"
       />
     </div>
-      </div>
-    </div>
+    
+    <!-- Confirm Dialogs -->
+    <ConfirmDialog
+      v-for="dialog in dialogs"
+      :key="dialog.id"
+      :message="dialog.message"
+      :position="dialog.position"
+      @confirm="removeDialog(dialog.id, true)"
+      @cancel="removeDialog(dialog.id, false)"
+    />
   </div>
 </template>
 

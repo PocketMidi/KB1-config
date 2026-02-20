@@ -122,7 +122,14 @@ export function useDeviceState() {
     try {
       await bleClient.connect();
       // On successful connection, load device state
-      // TODO: Implement loading CC mappings and settings from device
+      // Try to refresh device presets if supported
+      try {
+        if (bleClient.hasDevicePresetSupport()) {
+          await refreshDevicePresets();
+        }
+      } catch (error) {
+        console.warn('Could not refresh device presets:', error);
+      }
     } catch (error) {
       console.error('Connection failed:', error);
       throw error;
@@ -256,8 +263,8 @@ export function useDeviceState() {
     }
 
     try {
-      const data = kb1Protocol.encodeSetSettings(settings);
-      await bleClient.sendData(data);
+      // Write all settings to their individual characteristics
+      await bleClient.writeAllSettings(settings);
       updateSettings(settings);
     } catch (error) {
       console.error('Failed to send settings:', error);
@@ -267,6 +274,8 @@ export function useDeviceState() {
 
   /**
    * Save current state to device flash memory
+   * NOTE: Settings are already auto-saved to flash when written via BLE characteristics.
+   * This function exists for API compatibility but doesn't need to do anything.
    */
   const saveToFlash = async () => {
     if (!connectionStatus.value.connected) {
@@ -281,13 +290,9 @@ export function useDeviceState() {
       return;
     }
 
-    try {
-      const data = kb1Protocol.encodeSaveToFlash();
-      await bleClient.sendData(data);
-    } catch (error) {
-      console.error('Failed to save to flash:', error);
-      throw error;
-    }
+    // Settings are automatically saved to flash when written via BLE characteristics
+    // No additional action needed
+    console.log('✅ Settings already persisted to flash (auto-save)');
   };
 
   /**
@@ -491,11 +496,21 @@ export function useDeviceState() {
     if (devMode.value) {
       console.log('🔧 DEV MODE: Refreshing device presets (mock)');
       return;
-
     }
     
-    // TODO: Implement real BLE preset list
-    console.log('Device presets: Real implementation pending firmware update');
+    if (!bleClient.hasDevicePresetSupport()) {
+      console.log('ℹ️ Device preset support not available (requires firmware update)');
+      return;
+    }
+    
+    try {
+      const presets = await bleClient.listDevicePresets();
+      devicePresets.value = presets;
+      console.log('✅ Device presets refreshed:', presets);
+    } catch (error) {
+      console.error('❌ Failed to refresh device presets:', error);
+      throw error;
+    }
   };
   
   const saveDevicePreset = async (slot: number, name: string) => {
@@ -520,8 +535,10 @@ export function useDeviceState() {
       return;
     }
     
-    // TODO: Implement real BLE preset save
-    console.log(`Save to device slot ${slot}: ${name}`);
+    // Save current settings to device
+    await bleClient.saveDevicePreset(slot, name);
+    // Refresh the preset list to get updated metadata
+    await refreshDevicePresets();
   };
   
   const loadDevicePreset = async (slot: number) => {
@@ -541,8 +558,10 @@ export function useDeviceState() {
       return;
     }
     
-    // TODO: Implement real BLE preset load
-    console.log(`Load from device slot ${slot}`);
+    // Load preset from device (will update device's active settings)
+    await bleClient.loadDevicePreset(slot);
+    // Reload settings from device to reflect the loaded preset
+    await loadSettings();
   };
   
   const deleteDevicePreset = async (slot: number) => {
@@ -567,8 +586,10 @@ export function useDeviceState() {
       return;
     }
     
-    // TODO: Implement real BLE preset delete
-    console.log(`Delete device slot ${slot}`);
+    // Delete preset from device
+    await bleClient.deleteDevicePreset(slot);
+    // Refresh the preset list to reflect the deletion
+    await refreshDevicePresets();
   };
 
   return {

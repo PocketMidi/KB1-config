@@ -4,10 +4,12 @@
       class="action-icon-btn"
       title="Load"
       aria-label="Load"
-      @click="$emit('load')"
+      @click="handleLoad"
       :disabled="!isConnected || isLoading"
+      :class="{ 'upload-success': showLoadCheckmark }"
     >
-      <img src="/load.svg" alt="" class="action-icon" />
+      <img v-if="!showLoadCheckmark" src="/load.svg" alt="" class="action-icon" />
+      <span v-else class="checkmark">✓</span>
     </button>
     
     <button
@@ -22,28 +24,53 @@
     
     <button
       class="action-icon-btn"
-      title="Save"
-      aria-label="Save"
-      @click="$emit('save')"
-      :disabled="!isConnected || isLoading || !hasChanges"
+      title="Upload"
+      aria-label="Upload"
+      @click="handleUpload"
+      :disabled="!isConnected || isLoading"
+      :class="{ 'upload-success': showUploadCheckmark }"
     >
-      <img src="/save.svg" alt="" class="action-icon" />
+      <img v-if="!showUploadCheckmark" src="/save.svg" alt="" class="action-icon" />
+      <span v-else class="checkmark">✓</span>
     </button>
   </div>
 </template>
 
 <script setup lang="ts">
+import { ref } from 'vue';
+
 defineProps<{
   isConnected: boolean;
   isLoading: boolean;
   hasChanges: boolean;
 }>();
 
-defineEmits<{
+const emit = defineEmits<{
   load: [];
   'reset-defaults': [];
   save: [];
 }>();
+
+const showLoadCheckmark = ref(false);
+const showUploadCheckmark = ref(false);
+
+function handleLoad() {
+  emit('load');
+  // Show checkmark feedback
+  showLoadCheckmark.value = true;
+  setTimeout(() => {
+    showLoadCheckmark.value = false;
+  }, 2000);
+}
+
+function handleUpload() {
+  emit('save');
+  // Show checkmark feedback
+  showUploadCheckmark.value = true;
+  setTimeout(() => {
+    showUploadCheckmark.value = false;
+  }, 2000);
+}
 </script>
 
 <style scoped>
@@ -95,6 +122,17 @@ defineEmits<{
   height: 41px;
   display: block;
   pointer-events: none;
+}
+
+.checkmark {
+  font-size: 48px;
+  color: #4CAF50;
+  font-weight: bold;
+  line-height: 1;
+}
+
+.upload-success {
+  opacity: 1.0 !important;
 }
 
 @media (max-width: 640px) {

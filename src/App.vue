@@ -4,7 +4,9 @@ import MobileScales from './pages/MobileScales.vue';
 import MobileSliders from './pages/MobileSliders.vue';
 import FirstTimeOverlay from './components/FirstTimeOverlay.vue';
 import ContextualConnectionModal from './components/ContextualConnectionModal.vue';
+import ToastNotification from './components/ToastNotification.vue';
 import { useDeviceState } from './composables/useDeviceState';
+import { useToast } from './composables/useToast';
 import { FIRST_TIME_BLE_INTRO_KEY } from './constants';
 import './styles/themes/kb1.css';
 
@@ -16,6 +18,8 @@ const {
   devMode,
   setDevMode,
 } = useDeviceState();
+
+const { toasts, remove } = useToast();
 
 // Single unified tab state
 type Tab = 'settings' | 'sliders';
@@ -349,6 +353,18 @@ function handleTabClick(tabId: Tab) {
         <div class="dev-mode-actions">
           <button class="btn-modal-close" @click="closeDevModeModal">Close</button>
         </div>
+    
+    <!-- Toast Notifications Container -->
+    <div class="toast-container">
+      <ToastNotification
+        v-for="toast in toasts"
+        :key="toast.id"
+        :message="toast.message"
+        :type="toast.type"
+        :duration="toast.duration"
+        @close="remove(toast.id)"
+      />
+    </div>
       </div>
     </div>
   </div>
@@ -1096,5 +1112,25 @@ input:checked + .toggle-slider:before {
 
 .btn-modal-close:active {
   transform: scale(0.98);
+}
+
+/* Toast Notifications Container */
+.toast-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  pointer-events: none;
+}
+
+@media (max-width: 640px) {
+  .toast-container {
+    top: 10px;
+    right: 10px;
+    left: 10px;
+  }
 }
 </style>

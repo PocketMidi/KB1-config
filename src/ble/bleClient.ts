@@ -6,7 +6,8 @@
  * connecting, disconnecting, and sending/receiving data.
  */
 
-import type { LeverSettings, LeverPushSettings, TouchSettings, ScaleSettings, SystemSettings } from './kb1Protocol';
+import type { LeverSettings, LeverPushSettings, TouchSettings, ScaleSettings, SystemSettings, DevicePresetMetadata } from './kb1Protocol';
+import { PRESET_CHARACTERISTIC_UUIDS, encodePresetSave, encodePresetLoad, encodePresetDelete, decodePresetList } from './kb1Protocol';
 
 // KB1-specific BLE UUIDs (custom, not standard MIDI BLE)
 // These UUIDs are defined in the KB1 firmware (firmware/src/objects/Constants.h)
@@ -45,11 +46,21 @@ export class BLEClient {
   private scaleCharacteristic: BluetoothRemoteGATTCharacteristic | null = null;
   private systemCharacteristic: BluetoothRemoteGATTCharacteristic | null = null;
   private keepAliveCharacteristic: BluetoothRemoteGATTCharacteristic | null = null;
+  
+  // Preset management characteristics
+  private presetSaveCharacteristic: BluetoothRemoteGATTCharacteristic | null = null;
+  private presetLoadCharacteristic: BluetoothRemoteGATTCharacteristic | null = null;
+  private presetListCharacteristic: BluetoothRemoteGATTCharacteristic | null = null;
+  private presetDeleteCharacteristic: BluetoothRemoteGATTCharacteristic | null = null;
 
   // Keep-alive mechanism (firmware expects writes within 10 minute grace period)
   private keepAliveTimer: ReturnType<typeof setInterval> | null = null;
   private keepAliveIntervalMs: number = 60000; // 60 seconds (well within 10 min grace period)
   private keepAliveEnabled: boolean = true;
+
+  // MIDI CC throttling
+  private lastMidiSendMs: number = 0;
+  private midiThrottleMs: number = 8;
 
   /**
    * Register a callback for connection status changes
@@ -118,9 +129,38 @@ export class BLEClient {
         this.touchCharacteristic = await service.getCharacteristic(TOUCH_SETTINGS_UUID);
         this.scaleCharacteristic = await service.getCharacteristic(SCALE_SETTINGS_UUID);
         this.systemCharacteristic = await service.getCharacteristic(SYSTEM_SETTINGS_UUID);
-        this.keepAliveCharacteristic = await service.getCharacteristic(KEEPALIVE_UUID);
       } catch (e) {
-        console.warn('Some settings characteristics not available:', e);
+        console.warn('⚠️ Some settings characteristics not available:', e);
+      }
+
+      // Try to get keepalive characteristic (optional, may not be in older firmware)
+      try {
+        this.keepAliveCharacteristic = await service.getCharacteristic(KEEPALIVE_UUID);
+        console.log('✅ Keep-alive characteristic found');
+      } catch (e) {
+        console.log('ℹ️ Keep-alive characteristic not available (connection may timeout after 10 minutes)');
+      }
+
+      // Try to get preset characteristics (optional, may not be in older firmware)
+      try {
+        console.log('🔍 Looking for preset characteristics...');
+        this.presetSaveCharacteristic = await service.getCharacteristic(PRESET_CHARACTERISTIC_UUIDS.SAVE);
+        console.log('  ✅ SAVE found:', PRESET_CHARACTERISTIC_UUIDS.SAVE);
+        this.presetLoadCharacteristic = await service.getCharacteristic(PRESET_CHARACTERISTIC_UUIDS.LOAD);
+        console.log('  ✅ LOAD found:', PRESET_CHARACTERISTIC_UUIDS.LOAD);
+        this.presetListCharacteristic = await service.getCharacteristic(PRESET_CHARACTERISTIC_UUIDS.LIST);
+        console.log('  ✅ LIST found:', PRESET_CHARACTERISTIC_UUIDS.LIST);
+        this.presetDeleteCharacteristic = await service.getCharacteristic(PRESET_CHARACTERISTIC_UUIDS.DELETE);
+        console.log('  ✅ DELETE found:', PRESET_CHARACTERISTIC_UUIDS.DELETE);
+        console.log('✅ All preset characteristics found');
+      } catch (e) {
+        console.log('ℹ️ Preset characteristics not available (requires updated firmware)');
+        console.log('   Expected UUIDs:');
+        console.log('   - SAVE:', PRESET_CHARACTERISTIC_UUIDS.SAVE);
+        console.log('   - LOAD:', PRESET_CHARACTERISTIC_UUIDS.LOAD);
+        console.log('   - LIST:', PRESET_CHARACTERISTIC_UUIDS.LIST);
+        console.log('   - DELETE:', PRESET_CHARACTERISTIC_UUIDS.DELETE);
+        console.log('   Error:', e);
       }
 
       // Start notifications if supported
@@ -166,6 +206,40 @@ export class BLEClient {
       await this.characteristic.writeValue(data);
     } catch (error) {
       console.error('Failed to send data:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Send MIDI Control Change message
+   * Sends ASCII "CC_NUMBER,VALUE" to the MIDI characteristic
+   * @param cc Control change number (0-127)
+   * @param value Control change value (0-127)
+   */
+  async sendControlChange(cc: number, value: number): Promise<void> {
+    console.log(`🎹 Sending MIDI CC #${cc} = ${value}`);
+    
+    // Throttle MIDI sends to avoid overwhelming the BLE connection
+    const now = performance.now();
+    if (now - this.lastMidiSendMs < this.midiThrottleMs) {
+      console.log(`⏸️ Throttled (too soon)`);
+      return;
+    }
+    this.lastMidiSendMs = now;
+
+    if (!this.characteristic) {
+      console.error('❌ Not connected to device');
+      throw new Error('Not connected to device');
+    }
+
+    try {
+      const encoder = new TextEncoder();
+      const message = `${cc},${value}`;
+      console.log(`📤 Writing to MIDI characteristic: "${message}"`);
+      await this.characteristic.writeValueWithoutResponse(encoder.encode(message));
+      console.log(`✅ MIDI CC sent successfully`);
+    } catch (error) {
+      console.error('Failed to send MIDI CC:', error);
       throw error;
     }
   }
@@ -380,6 +454,287 @@ export class BLEClient {
   }
 
   /**
+   * Encode lever settings to binary format for writing to device
+   */
+  private encodeLeverData(settings: LeverSettings): ArrayBuffer {
+    const buffer = new ArrayBuffer(40); // 10 int32 values = 40 bytes
+    const view = new DataView(buffer);
+    view.setInt32(0, settings.ccNumber, true);
+    view.setInt32(4, settings.minCCValue, true);
+    view.setInt32(8, settings.maxCCValue, true);
+    view.setInt32(12, settings.stepSize, true);
+    view.setInt32(16, settings.functionMode, true);
+    view.setInt32(20, settings.valueMode, true);
+    view.setInt32(24, settings.onsetTime, true);
+    view.setInt32(28, settings.offsetTime, true);
+    view.setInt32(32, settings.onsetType, true);
+    view.setInt32(36, settings.offsetType, true);
+    return buffer;
+  }
+
+  /**
+   * Encode lever push settings to binary format for writing to device
+   */
+  private encodeLeverPushData(settings: LeverPushSettings): ArrayBuffer {
+    const buffer = new ArrayBuffer(32); // 8 int32 values = 32 bytes
+    const view = new DataView(buffer);
+    view.setInt32(0, settings.ccNumber, true);
+    view.setInt32(4, settings.minCCValue, true);
+    view.setInt32(8, settings.maxCCValue, true);
+    view.setInt32(12, settings.functionMode, true);
+    view.setInt32(16, settings.onsetTime, true);
+    view.setInt32(20, settings.offsetTime, true);
+    view.setInt32(24, settings.onsetType, true);
+    view.setInt32(28, settings.offsetType, true);
+    return buffer;
+  }
+
+  /**
+   * Encode touch settings to binary format for writing to device
+   */
+  private encodeTouchData(settings: TouchSettings): ArrayBuffer {
+    const buffer = new ArrayBuffer(20); // 5 int32 values = 20 bytes
+    const view = new DataView(buffer);
+    view.setInt32(0, settings.ccNumber, true);
+    view.setInt32(4, settings.minCCValue, true);
+    view.setInt32(8, settings.maxCCValue, true);
+    view.setInt32(12, settings.functionMode, true);
+    view.setInt32(16, settings.threshold || 24000, true); // Default threshold if not set
+    return buffer;
+  }
+
+  /**
+   * Encode scale settings to binary format for writing to device
+   */
+  private encodeScaleData(settings: ScaleSettings): ArrayBuffer {
+    const buffer = new ArrayBuffer(12); // 3 int32 values = 12 bytes
+    const view = new DataView(buffer);
+    view.setInt32(0, settings.scaleType, true);
+    view.setInt32(4, settings.rootNote, true);
+    view.setInt32(8, settings.keyMapping, true);
+    return buffer;
+  }
+
+  /**
+   * Write lever 1 settings to device
+   */
+  async writeLever1Settings(settings: LeverSettings): Promise<void> {
+    if (!this.lever1Characteristic) {
+      throw new Error('Lever 1 settings characteristic not available');
+    }
+
+    try {
+      const data = this.encodeLeverData(settings);
+      await this.lever1Characteristic.writeValue(data);
+      console.log('Lever 1 settings written to device:', settings);
+    } catch (error) {
+      console.error('Failed to write lever 1 settings:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Write lever push 1 settings to device
+   */
+  async writeLeverPush1Settings(settings: LeverPushSettings): Promise<void> {
+    if (!this.leverPush1Characteristic) {
+      throw new Error('Lever Push 1 settings characteristic not available');
+    }
+
+    try {
+      const data = this.encodeLeverPushData(settings);
+      await this.leverPush1Characteristic.writeValue(data);
+      console.log('Lever Push 1 settings written to device:', settings);
+    } catch (error) {
+      console.error('Failed to write lever push 1 settings:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Write lever 2 settings to device
+   */
+  async writeLever2Settings(settings: LeverSettings): Promise<void> {
+    if (!this.lever2Characteristic) {
+      throw new Error('Lever 2 settings characteristic not available');
+    }
+
+    try {
+      const data = this.encodeLeverData(settings);
+      await this.lever2Characteristic.writeValue(data);
+      console.log('Lever 2 settings written to device:', settings);
+    } catch (error) {
+      console.error('Failed to write lever 2 settings:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Write lever push 2 settings to device
+   */
+  async writeLeverPush2Settings(settings: LeverPushSettings): Promise<void> {
+    if (!this.leverPush2Characteristic) {
+      throw new Error('Lever Push 2 settings characteristic not available');
+    }
+
+    try {
+      const data = this.encodeLeverPushData(settings);
+      await this.leverPush2Characteristic.writeValue(data);
+      console.log('Lever Push 2 settings written to device:', settings);
+    } catch (error) {
+      console.error('Failed to write lever push 2 settings:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Write touch settings to device
+   */
+  async writeTouchSettings(settings: TouchSettings): Promise<void> {
+    if (!this.touchCharacteristic) {
+      throw new Error('Touch settings characteristic not available');
+    }
+
+    try {
+      const data = this.encodeTouchData(settings);
+      await this.touchCharacteristic.writeValue(data);
+      console.log('Touch settings written to device:', settings);
+    } catch (error) {
+      console.error('Failed to write touch settings:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Write scale settings to device
+   */
+  async writeScaleSettings(settings: ScaleSettings): Promise<void> {
+    if (!this.scaleCharacteristic) {
+      throw new Error('Scale settings characteristic not available');
+    }
+
+    try {
+      const data = this.encodeScaleData(settings);
+      await this.scaleCharacteristic.writeValue(data);
+      console.log('Scale settings written to device:', settings);
+    } catch (error) {
+      console.error('Failed to write scale settings:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Write all settings to device
+   */
+  async writeAllSettings(settings: DeviceSettings): Promise<void> {
+    if (!this.server?.connected) {
+      throw new Error('Not connected to device');
+    }
+
+    try {
+      // Write all settings to their respective characteristics
+      await this.writeLever1Settings(settings.lever1);
+      await this.writeLeverPush1Settings(settings.leverPush1);
+      await this.writeLever2Settings(settings.lever2);
+      await this.writeLeverPush2Settings(settings.leverPush2);
+      await this.writeTouchSettings(settings.touch);
+      await this.writeScaleSettings(settings.scale);
+      await this.writeSystemSettings(settings.system);
+      console.log('✅ All settings written to device');
+    } catch (error) {
+      console.error('Failed to write all settings:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Check if device supports preset management
+   */
+  hasDevicePresetSupport(): boolean {
+    return this.presetSaveCharacteristic !== null &&
+           this.presetLoadCharacteristic !== null &&
+           this.presetListCharacteristic !== null &&
+           this.presetDeleteCharacteristic !== null;
+  }
+
+  /**
+   * List all device preset slots
+   */
+  async listDevicePresets(): Promise<DevicePresetMetadata[]> {
+    if (!this.presetListCharacteristic) {
+      throw new Error('Device presets not supported');
+    }
+
+    try {
+      const dataView = await this.presetListCharacteristic.readValue();
+      const presets = decodePresetList(dataView);
+      console.log('📋 Device presets:', presets);
+      return presets;
+    } catch (error) {
+      console.error('Failed to list device presets:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Save current settings to device preset slot
+   */
+  async saveDevicePreset(slot: number, name: string): Promise<void> {
+    if (!this.presetSaveCharacteristic) {
+      throw new Error('Device presets not supported');
+    }
+
+    try {
+      const data = encodePresetSave(slot, name);
+      console.log(`📤 Sending save command - Slot: ${slot}, Name: "${name}", Data bytes:`, Array.from(data));
+      await this.presetSaveCharacteristic.writeValue(data as BufferSource);
+      console.log(`✅ Write completed for slot ${slot}: ${name}`);
+    } catch (error) {
+      console.error('Failed to save device preset:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Load settings from device preset slot
+   */
+  async loadDevicePreset(slot: number): Promise<void> {
+    if (!this.presetLoadCharacteristic) {
+      throw new Error('Device presets not supported');
+    }
+
+    try {
+      const data = encodePresetLoad(slot);
+      await this.presetLoadCharacteristic.writeValue(data as BufferSource);
+      console.log(`📥 Loaded from device preset slot ${slot}`);
+      
+      // After loading, settings will be automatically updated via notifications
+      // or the app should refresh settings from device
+    } catch (error) {
+      console.error('Failed to load device preset:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Delete device preset slot
+   */
+  async deleteDevicePreset(slot: number): Promise<void> {
+    if (!this.presetDeleteCharacteristic) {
+      throw new Error('Device presets not supported');
+    }
+
+    try {
+      const data = encodePresetDelete(slot);
+      await this.presetDeleteCharacteristic.writeValue(data as BufferSource);
+      console.log(`🗑️ Deleted device preset slot ${slot}`);
+    } catch (error) {
+      console.error('Failed to delete device preset:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Get current connection status
    */
   getStatus(): BLEConnectionStatus {
@@ -436,7 +791,9 @@ export class BLEClient {
           // Write a single byte to the keep-alive characteristic
           // The firmware doesn't care about the content, just that a write occurred
           const pingData = new Uint8Array([1]);
-          this.keepAliveCharacteristic.writeValueWithoutResponse(pingData).catch((error) => {
+          this.keepAliveCharacteristic.writeValueWithoutResponse(pingData).then(() => {
+            console.log('💓 Keep-alive ping sent');
+          }).catch((error) => {
             console.warn('Keep-alive ping failed:', error);
           });
         } catch (error) {
@@ -494,6 +851,10 @@ export class BLEClient {
     this.scaleCharacteristic = null;
     this.systemCharacteristic = null;
     this.keepAliveCharacteristic = null;
+    this.presetSaveCharacteristic = null;
+    this.presetLoadCharacteristic = null;
+    this.presetListCharacteristic = null;
+    this.presetDeleteCharacteristic = null;
     this.server = null;
     // Note: We don't set device to null to preserve device info
   }

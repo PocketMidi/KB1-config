@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue';
-import { midiBle } from '../services/midiBle';
+import { bleClient } from '../ble/bleClient';
 import { SliderPresetStore, type SliderPreset } from '../state/sliderPresets';
 
 // Slider configuration
@@ -403,7 +403,7 @@ async function handleSliderChange(index: number, newValue: number, skipSave = fa
   // Send MIDI CC
   try {
     const ccValue = valueToCC(slider);
-    await midiBle.sendControlChange(slider.cc, ccValue);
+    await bleClient.sendControlChange(slider.cc, ccValue);
   } catch (e) {
     console.error('Failed to send CC', e);
   }
@@ -417,7 +417,7 @@ async function handleSliderChange(index: number, newValue: number, skipSave = fa
     linkedSlider.value = newValue;
     try {
       const ccValue = valueToCC(linkedSlider);
-      await midiBle.sendControlChange(linkedSlider.cc, ccValue);
+      await bleClient.sendControlChange(linkedSlider.cc, ccValue);
     } catch (e) {
       console.error('Failed to send linked CC', e);
     }

@@ -529,3 +529,96 @@ export class KB1Protocol {
 
 // Export singleton instance
 export const kb1Protocol = new KB1Protocol();
+
+/**
+ * BLE Characteristic UUIDs for presets
+ */
+export const PRESET_CHARACTERISTIC_UUIDS = {
+  SAVE: 'd3a7b321-0001-4000-8000-000000000009',
+  LOAD: 'd3a7b321-0001-4000-8000-00000000000a',
+  LIST: 'd3a7b321-0001-4000-8000-00000000000b',
+  DELETE: 'd3a7b321-0001-4000-8000-00000000000c',
+} as const;
+
+/**
+ * Encode preset save command
+ * Format: [slot#(1 byte)][name(32 bytes)]
+ */
+export function encodePresetSave(slot: number, name: string): Uint8Array {
+  if (slot < 0 || slot >= DEVICE_PRESET.MAX_SLOTS) {
+    throw new Error(`Invalid slot: ${slot}`);
+  }
+  
+  const buffer = new Uint8Array(33);
+  buffer[0] = slot;
+  
+  // Encode name (truncate/pad to 32 bytes)
+  const nameBytes = new TextEncoder().encode(name.slice(0, DEVICE_PRESET.NAME_MAX_LENGTH));
+  buffer.set(nameBytes, 1);
+  
+  return buffer;
+}
+
+/**
+ * Encode preset load command
+ * Format: [slot#(1 byte)]
+ */
+export function encodePresetLoad(slot: number): Uint8Array {
+  if (slot < 0 || slot >= DEVICE_PRESET.MAX_SLOTS) {
+    throw new Error(`Invalid slot: ${slot}`);
+  }
+  
+  return new Uint8Array([slot]);
+}
+
+/**
+ * Encode preset delete command
+ * Format: [slot#(1 byte)]
+ */
+export function encodePresetDelete(slot: number): Uint8Array {
+  if (slot < 0 || slot >= DEVICE_PRESET.MAX_SLOTS) {
+    throw new Error(`Invalid slot: ${slot}`);
+  }
+  
+  return new Uint8Array([slot]);
+}
+
+/**
+ * Decode preset list response
+ * Format: [meta0][meta1]...[meta7] (40 bytes each)
+ * Each metadata: [name(32)][timestamp(4)][isValid(1)][padding(3)]
+ */
+export function decodePresetList(data: DataView): DevicePresetMetadata[] {
+  const METADATA_SIZE = 40; // 32 (name) + 4 (timestamp) + 1 (isValid) + 3 (padding)
+  const presets: DevicePresetMetadata[] = [];
+  
+  console.log(`📥 Decoding preset list - Total bytes: ${data.byteLength}, Expected: ${DEVICE_PRESET.MAX_SLOTS * METADATA_SIZE}`);
+  
+  for (let slot = 0; slot < DEVICE_PRESET.MAX_SLOTS; slot++) {
+    const offset = slot * METADATA_SIZE;
+    
+    // Extract name (32 bytes, null-terminated)
+    const nameBytes = new Uint8Array(data.buffer, data.byteOffset + offset, 32);
+    const nullIndex = nameBytes.indexOf(0);
+    const name = new TextDecoder().decode(
+      nullIndex >= 0 ? nameBytes.slice(0, nullIndex) : nameBytes
+    );
+    
+    // Extract timestamp (4 bytes, little-endian)
+    const timestamp = data.getUint32(offset + 32, true);
+    
+    // Extract isValid (1 byte)
+    const isValid = data.getUint8(offset + 36) === 1;
+    
+    console.log(`  Slot ${slot}: name="${name}", timestamp=${timestamp}, isValid=${isValid}`);
+    
+    presets.push({
+      slot,
+      name: name || DEVICE_PRESET.EMPTY_SLOT_NAME,
+      timestamp,
+      isValid,
+    });
+  }
+  
+  return presets;
+}

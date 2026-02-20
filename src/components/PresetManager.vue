@@ -2,53 +2,80 @@
   <div class="preset-manager">
     <!-- Device Presets Section (if supported) -->
     <div v-if="hasDevicePresetSupport && isConnected" class="preset-section">
-      <h4 class="section-title">Device Presets (On KB1)</h4>
-      <p class="section-subtitle">Stored in KB1 flash memory • 8 slots</p>
+      <!-- Create New Embedded Flash Preset Button -->
+      <button class="btn-create-preset" @click="createNewFlashPreset">
+        + Create New Embedded Flash Preset
+      </button>
       
-      <div class="device-presets-grid">
+      <div class="presets-list">
         <div
           v-for="slot in 8"
           :key="`device-${slot - 1}`"
-          class="device-preset-slot"
+          class="preset-item device-slot"
           :class="{ 
             empty: !getDevicePreset(slot - 1).isValid,
-            active: activeDeviceSlot === (slot - 1)
+            active: activeDeviceSlot === (slot - 1),
+            selected: selectedDeviceSlots.has(slot - 1)
           }"
         >
-          <div class="slot-number">Slot {{ slot }}</div>
+          <!-- Checkbox for selection (shy - only shows when in selection mode) -->
+          <div v-if="showCheckboxes" class="preset-checkbox" @click.stop="toggleDeviceSlotSelection(slot - 1)">
+            <input 
+              type="checkbox" 
+              :checked="selectedDeviceSlots.has(slot - 1)"
+              @change="toggleDeviceSlotSelection(slot - 1)"
+            />
+          </div>
           
-          <div v-if="getDevicePreset(slot - 1).isValid" class="slot-content">
-            <div class="slot-name">{{ getDevicePreset(slot - 1).name }}</div>
-            <div class="slot-actions">
-              <button class="btn-small" @click="loadFromDevice(slot - 1)" title="Load preset from device">
-                Load
-              </button>
-              <button class="btn-small" @click="saveToDevice(slot - 1)" title="Overwrite with current settings">
-                Save
-              </button>
-              <button class="btn-small btn-danger" @click="deleteFromDevice(slot - 1)" title="Delete from device">
-                Del
-              </button>
+          <div class="preset-info" @click="toggleDeviceSlotSelection(slot - 1)" style="cursor: pointer;">
+            <div class="preset-name">
+              <span class="active-indicator" v-if="activeDeviceSlot === (slot - 1)">●</span>
+              <span v-if="getDevicePreset(slot - 1).isValid">{{ getDevicePreset(slot - 1).name }}</span>
+              <span v-else class="empty-slot-label">Slot {{ slot }} (Empty)</span>
+            </div>
+            <div class="preset-meta" v-if="getDevicePreset(slot - 1).isValid">
+              Slot {{ slot }}
             </div>
           </div>
           
-          <div v-else class="slot-empty">
-            <button class="btn-small btn-create" @click="saveToDevice(slot - 1)" title="Save current settings to this slot">
-              + Save Here
+          <div class="preset-actions">
+            <button 
+              class="btn-small" 
+              @click="loadFromDevice(slot - 1)" 
+              :disabled="!getDevicePreset(slot - 1).isValid"
+              title="Load preset from device">
+              Load
             </button>
+            <button 
+              class="btn-small" 
+              @click="saveToDevice(slot - 1)" 
+              :title="getDevicePreset(slot - 1).isValid ? 'Overwrite with current settings' : 'Save current settings to this slot'">
+              Save
+            </button>
+            <button 
+              class="btn-small btn-menu" 
+              @click="toggleMenu(`device-${slot - 1}`)" 
+              title="More options">
+              ⋯
+            </button>
+            
+            <!-- Dropdown Menu -->
+            <div v-if="openMenuId === `device-${slot - 1}`" class="preset-menu">
+              <button @click="renameDeviceSlot(slot - 1)" :disabled="!getDevicePreset(slot - 1).isValid">Rename</button>
+              <div class="menu-divider"></div>
+              <button @click="deleteFromDevice(slot - 1)" :disabled="!getDevicePreset(slot - 1).isValid" class="btn-danger">Delete</button>
+            </div>
           </div>
         </div>
       </div>
     </div>
     
-    <!-- Divider between device and browser presets -->
-    <div v-if="hasDevicePresetSupport && isConnected" class="section-divider">
-      <span>Browser Presets (Local Storage)</span>
-    </div>
+    <!-- Simple divider bar -->
+    <div class="simple-divider"></div>
     
     <!-- Create New Preset Button -->
     <button class="btn-create-preset" @click="showCreateDialog = true">
-      + Create New Preset
+      + Create New Browser Cache Preset
     </button>
 
     <!-- Presets List -->
@@ -135,9 +162,20 @@
     </div>
 
     <!-- Create Preset Dialog -->
-    <div v-if="showCreateDialog" class="modal-overlay" @click.self="showCreateDialog = false">
+    <div v-if="showCreateDialog" class="modal-overlay" @click.self="cancelCreate">
       <div class="modal-dialog">
-        <h3>Create New Preset</h3>
+        <h3>{{ getDialogHeading() }}</h3>
+        
+        <!-- Slot selector (only for device presets when opened from create button) -->
+        <div v-if="savingDeviceSlot === -1" class="form-group">
+          <label>Select Slot</label>
+          <select v-model.number="selectedSlotNumber" class="input-select">
+            <option v-for="slot in 8" :key="slot - 1" :value="slot - 1">
+              Slot {{ slot }}{{ getDevicePreset(slot - 1).isValid ? ` - ${getDevicePreset(slot - 1).name}` : ' (Empty)' }}
+            </option>
+          </select>
+        </div>
+        
         <div class="form-group">
           <label>Preset Name</label>
           <input
@@ -155,9 +193,9 @@
           </button>
         </div>
         <div class="modal-buttons">
-          <button class="btn-secondary" @click="showCreateDialog = false">Cancel</button>
+          <button class="btn-secondary" @click="cancelCreate">Cancel</button>
           <button class="btn-primary" @click="confirmCreate" :disabled="!newPresetName.trim()">
-            Create
+            {{ savingDeviceSlot !== null ? 'Save' : 'Create' }}
           </button>
         </div>
       </div>
@@ -228,17 +266,21 @@ const openMenuId = ref<string | null>(null);
 
 // Selection state for export
 const selectedPresets = ref<Set<string>>(new Set());
+const selectedDeviceSlots = ref<Set<number>>(new Set());
 const showCheckboxes = ref(false);
 
 // Create dialog
 const showCreateDialog = ref(false);
 const newPresetName = ref('');
 const nameInput = ref<HTMLInputElement | null>(null);
+const savingDeviceSlot = ref<number | null>(null);
+const selectedSlotNumber = ref<number>(0);
 
 // Rename dialog
 const showRenameDialog = ref(false);
 const renameValue = ref('');
 const renamingId = ref<string | null>(null);
+const renamingDeviceSlot = ref<number | null>(null);
 const renameInput = ref<HTMLInputElement | null>(null);
 
 // File input
@@ -265,17 +307,17 @@ function getDevicePreset(slot: number) {
 
 // Device preset operations
 async function saveToDevice(slot: number) {
-  const name = prompt('Enter preset name (max 32 characters):', `Preset ${slot + 1}`);
-  if (!name) return;
+  const preset = getDevicePreset(slot);
   
-  try {
-    await saveDevicePreset(slot, name.slice(0, 32));
-    activeDeviceSlot.value = slot;
-    alert(`Saved to device slot ${slot + 1}`);
-  } catch (error) {
-    console.error('Failed to save device preset:', error);
-    alert('Failed to save to device');
+  // Pre-fill with existing name or generate default
+  if (preset.isValid) {
+    newPresetName.value = preset.name;
+  } else {
+    newPresetName.value = generateRandomName();
   }
+  
+  savingDeviceSlot.value = slot;
+  showCreateDialog.value = true;
 }
 
 async function loadFromDevice(slot: number) {
@@ -349,16 +391,67 @@ function generateName() {
   newPresetName.value = generateRandomName();
 }
 
-function confirmCreate() {
+function getDialogHeading(): string {
+  if (savingDeviceSlot.value === -1) {
+    return 'Create New Embedded Flash Preset';
+  } else if (savingDeviceSlot.value !== null) {
+    return `Save to Device Slot ${savingDeviceSlot.value + 1}`;
+  } else {
+    return 'Create New Browser Cache Preset';
+  }
+}
+
+function createNewFlashPreset() {
+  // Use -1 to indicate device preset creation with slot selection
+  savingDeviceSlot.value = -1;
+  selectedSlotNumber.value = 0; // Default to first slot
+  newPresetName.value = generateRandomName();
+  showCreateDialog.value = true;
+}
+
+function cancelCreate() {
+  showCreateDialog.value = false;
+  savingDeviceSlot.value = null;
+  newPresetName.value = '';
+}
+
+async function confirmCreate() {
   const name = newPresetName.value.trim();
   if (!name) return;
 
-  const preset = PresetStore.createPreset(name, props.currentSettings);
-  activePresetId.value = preset.id;
-  PresetStore.setActivePresetId(preset.id);
-  emit('presetActivated', preset.id);
+  if (savingDeviceSlot.value === -1) {
+    // Creating device preset with slot selection
+    const slot = selectedSlotNumber.value;
+    try {
+      await saveDevicePreset(slot, name.slice(0, 32));
+      activeDeviceSlot.value = slot;
+      alert(`Saved to device slot ${slot + 1}`);
+    } catch (error) {
+      console.error('Failed to save device preset:', error);
+      alert('Failed to save to device');
+    }
+    savingDeviceSlot.value = null;
+  } else if (savingDeviceSlot.value !== null) {
+    // Saving to device slot
+    const slot = savingDeviceSlot.value;
+    try {
+      await saveDevicePreset(slot, name.slice(0, 32));
+      activeDeviceSlot.value = slot;
+      alert(`Saved to device slot ${slot + 1}`);
+    } catch (error) {
+      console.error('Failed to save device preset:', error);
+      alert('Failed to save to device');
+    }
+    savingDeviceSlot.value = null;
+  } else {
+    // Creating browser cache preset
+    const preset = PresetStore.createPreset(name, props.currentSettings);
+    activePresetId.value = preset.id;
+    PresetStore.setActivePresetId(preset.id);
+    emit('presetActivated', preset.id);
+    refreshPresets();
+  }
   
-  refreshPresets();
   showCreateDialog.value = false;
   newPresetName.value = '';
 }
@@ -397,6 +490,18 @@ function renamePreset(id: string) {
   if (!preset) return;
 
   renamingId.value = id;
+  renamingDeviceSlot.value = null;
+  renameValue.value = preset.name;
+  showRenameDialog.value = true;
+  openMenuId.value = null;
+}
+
+function renameDeviceSlot(slot: number) {
+  const preset = getDevicePreset(slot);
+  if (!preset.isValid) return;
+
+  renamingDeviceSlot.value = slot;
+  renamingId.value = null;
   renameValue.value = preset.name;
   showRenameDialog.value = true;
   openMenuId.value = null;
@@ -404,12 +509,21 @@ function renamePreset(id: string) {
 
 function confirmRename() {
   const name = renameValue.value.trim();
-  if (!name || !renamingId.value) return;
+  if (!name) return;
 
-  PresetStore.updatePreset(renamingId.value, { name });
-  refreshPresets();
+  if (renamingId.value) {
+    // Renaming cache preset
+    PresetStore.updatePreset(renamingId.value, { name });
+    refreshPresets();
+  } else if (renamingDeviceSlot.value !== null) {
+    // Renaming device slot
+    // TODO: Call BLE function to rename device preset
+    console.log(`Rename device slot ${renamingDeviceSlot.value} to "${name}"`);
+  }
+
   showRenameDialog.value = false;
   renamingId.value = null;
+  renamingDeviceSlot.value = null;
   renameValue.value = '';
 }
 
@@ -473,13 +587,36 @@ function togglePresetSelection(id: string) {
   selectedPresets.value = new Set(selectedPresets.value);
   
   // Hide checkboxes if all deselected
-  if (selectedPresets.value.size === 0) {
+  if (selectedPresets.value.size === 0 && selectedDeviceSlots.value.size === 0) {
+    showCheckboxes.value = false;
+  }
+}
+
+function toggleDeviceSlotSelection(slot: number) {
+  // Show checkboxes on first selection
+  if (!showCheckboxes.value) {
+    showCheckboxes.value = true;
+  }
+  
+  // Toggle selection
+  if (selectedDeviceSlots.value.has(slot)) {
+    selectedDeviceSlots.value.delete(slot);
+  } else {
+    selectedDeviceSlots.value.add(slot);
+  }
+  
+  // Force reactivity
+  selectedDeviceSlots.value = new Set(selectedDeviceSlots.value);
+  
+  // Hide checkboxes if all deselected
+  if (selectedPresets.value.size === 0 && selectedDeviceSlots.value.size === 0) {
     showCheckboxes.value = false;
   }
 }
 
 function clearSelection() {
   selectedPresets.value.clear();
+  selectedDeviceSlots.value.clear();
   showCheckboxes.value = false;
 }
 
@@ -866,6 +1003,24 @@ function formatDate(timestamp: number): string {
   background: rgba(234, 234, 234, 0.08);
 }
 
+.input-select {
+  width: 100%;
+  padding: 0.25rem 1rem;
+  background: rgba(234, 234, 234, 0.05);
+  border: none;
+  border-radius: 4px;
+  color: #EAEAEA;
+  font-size: 0.8125rem;
+  font-family: 'Roboto Mono', monospace;
+  box-sizing: border-box;
+  cursor: pointer;
+}
+
+.input-select:focus {
+  outline: none;
+  background: rgba(234, 234, 234, 0.08);
+}
+
 .form-actions {
   margin-bottom: 1rem;
 }
@@ -1034,6 +1189,12 @@ function formatDate(timestamp: number): string {
   color: var(--color-text-muted);
   text-transform: uppercase;
   font-weight: 500;
+}
+
+.simple-divider {
+  margin: 2rem 0;
+  height: 1px;
+  background: var(--color-divider);
 }
 
 @media (max-width: 768px) {

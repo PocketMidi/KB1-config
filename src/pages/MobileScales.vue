@@ -226,6 +226,8 @@ const {
   saveToFlash,
   handleLoad,
   resetToDefaults,
+  devicePresets,
+  hasDevicePresetSupport,
 } = useDeviceState();
 
 const localSettings = ref<DeviceSettings>({ ...deviceSettings.value });
@@ -377,14 +379,23 @@ const scalesSubtitle = computed(() => {
 });
 
 const presetsSubtitle = computed(() => {
-  const presets = PresetStore.getAllPresets();
-  const count = presets.length;
+  const browserPresets = PresetStore.getAllPresets();
+  const cacheCount = browserPresets.length;
   
-  if (activePresetName.value) {
-    return `Active: ${activePresetName.value}`;
+  // Count valid device presets
+  const embeddedCount = devicePresets.value.filter(p => p.isValid).length;
+  
+  const parts = [];
+  
+  // Show embedded count if device is connected and supports presets
+  if (isConnected.value && hasDevicePresetSupport.value) {
+    parts.push(`Embedded: ${embeddedCount}`);
   }
   
-  return count === 0 ? 'No presets saved' : `${count} saved`;
+  // Always show cache count
+  parts.push(`Cache: ${cacheCount}`);
+  
+  return parts.join(' | ');
 });
 
 // Helper functions to generate subtitles for lever accordion headers

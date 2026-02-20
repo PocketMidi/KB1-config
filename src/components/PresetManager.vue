@@ -7,6 +7,30 @@
         + Create New Embedded Flash Preset
       </button>
       
+      <!-- Slot Indicator -->
+      <div class="slot-indicator">
+        <button class="btn-refresh" @click="refreshSlots" title="Refresh device slots">
+          ↻
+        </button>
+        <div class="slot-boxes">
+          <template v-for="slot in 8" :key="`indicator-${slot - 1}`">
+            <div
+              class="slot-box"
+              :class="{
+                filled: getDevicePreset(slot - 1).isValid,
+                active: activeDeviceSlot === (slot - 1),
+                empty: !getDevicePreset(slot - 1).isValid
+              }"
+              :title="getDevicePreset(slot - 1).isValid ? getDevicePreset(slot - 1).name : `Slot ${slot} (Empty)`"
+              @click="handleSlotIndicatorClick(slot - 1)"
+            >
+              <span class="slot-number">{{ slot }}</span>
+            </div>
+            <div class="slot-divider" v-if="slot < 8"></div>
+          </template>
+        </div>
+      </div>
+      
       <div class="presets-list">
         <div
           v-for="slot in 8"
@@ -258,6 +282,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: 'load', settings: DeviceSettings): void;
   (e: 'presetActivated', presetId: string | null): void;
+  (e: 'slotNameDisplay', name: string): void;
 }>();
 
 const presets = ref<Preset[]>([]);
@@ -407,6 +432,23 @@ function createNewFlashPreset() {
   selectedSlotNumber.value = 0; // Default to first slot
   newPresetName.value = generateRandomName();
   showCreateDialog.value = true;
+}
+
+function handleSlotIndicatorClick(slot: number) {
+  const preset = getDevicePreset(slot);
+  if (!preset.isValid) return;
+  
+  // Emit event to parent to show in accordion header
+  emit('slotNameDisplay', preset.name);
+}
+
+async function refreshSlots() {
+  try {
+    await refreshDevicePresets();
+  } catch (error) {
+    console.error('Failed to refresh device presets:', error);
+    alert('Failed to refresh device slots');
+  }
 }
 
 function cancelCreate() {
@@ -744,6 +786,117 @@ function formatDate(timestamp: number): string {
 
 .btn-create-preset:hover {
   background: rgba(106, 104, 83, 0.3);
+}
+
+/* Slot Indicator */
+.slot-indicator {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  padding: 0.75rem;
+  background: rgba(29, 29, 29, 0.3);
+  border-radius: 4px;
+}
+
+.slot-fade-label {
+  position: absolute;
+  top: -1.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #F9AC20;
+  font-size: 0.75rem;
+  font-weight: 500;
+  white-space: nowrap;
+  opacity: 1;
+  transition: opacity 2s ease-out;
+  pointer-events: none;
+}
+
+.slot-fade-label.fading {
+  opacity: 0;
+}
+
+.slot-boxes {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  flex: 1;
+}
+
+.slot-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 21px;
+  height: 22px;
+  background: rgba(234, 234, 234, 0.05);
+  border-radius: 4px;
+  cursor: default;
+  transition: all 0.2s;
+}
+
+.slot-box.filled {
+  background: rgba(234, 234, 234, 0.15);
+  cursor: pointer;
+}
+
+.slot-box.filled:hover {
+  background: rgba(234, 234, 234, 0.25);
+}
+
+.slot-box.active {
+  background: rgba(249, 172, 32, 0.3);
+  border: 1px solid #F9AC20;
+}
+
+.slot-box.active:hover {
+  background: rgba(249, 172, 32, 0.4);
+}
+
+.slot-box.empty {
+  opacity: 0.3;
+}
+
+.slot-box:hover .slot-number {
+  color: #F9AC20;
+}
+
+.slot-number {
+  font-size: 0.6875rem;
+  font-weight: 500;
+  color: rgba(249, 172, 32, 0.5);
+  font-family: 'Roboto Mono', monospace;
+  transition: color 0.2s ease;
+}
+
+.slot-divider {
+  width: 1px;
+  height: 16px;
+  background: rgba(234, 234, 234, 0.2);
+  margin: 0 0.5rem;
+}
+
+.btn-refresh {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  background: rgba(106, 104, 83, 0.2);
+  border: none;
+  border-radius: 4px;
+  color: #EAEAEA;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.btn-refresh:hover {
+  background: rgba(106, 104, 83, 0.3);
+  transform: rotate(90deg);
 }
 
 .presets-list {
@@ -1113,13 +1266,6 @@ function formatDate(timestamp: number): string {
 
 .device-preset-slot:hover:not(.empty) {
   border-color: rgba(234, 234, 234, 0.3);
-}
-
-.slot-number {
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: var(--color-text-muted);
-  text-transform: uppercase;
 }
 
 .slot-content {

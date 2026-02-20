@@ -15,6 +15,8 @@
       <AccordionSection
         ref="presetsAccordion"
         title="PRESETS"
+        :title-suffix="presetsSuffix"
+        :title-suffix-fading="presetsSuffixFading"
         :subtitle="presetsSubtitle"
         :id="'presets'"
         :default-open="false"
@@ -24,6 +26,7 @@
           :has-unsaved-changes="hasChanges"
           @load="handlePresetLoad"
           @preset-activated="handlePresetActivated"
+          @slot-name-display="handleSlotNameDisplay"
         />
       </AccordionSection>
       
@@ -243,6 +246,11 @@ const scalesSuffixFading = ref<boolean>(false);
 let scalesFadeTimeoutId: number | null = null;
 let scalesClearTimeoutId: number | null = null;
 
+const presetsSuffix = ref<string>('');
+const presetsSuffixFading = ref<boolean>(false);
+let presetsFadeTimeoutId: ReturnType<typeof setTimeout> | null = null;
+let presetsClearTimeoutId: ReturnType<typeof setTimeout> | null = null;
+
 // Title suffix state for lever controls
 const lever1Suffix = ref<string>('');
 const lever1SuffixFading = ref<boolean>(false);
@@ -276,6 +284,8 @@ onMounted(async () => {
 onBeforeUnmount(() => {
   if (scalesFadeTimeoutId) clearTimeout(scalesFadeTimeoutId);
   if (scalesClearTimeoutId) clearTimeout(scalesClearTimeoutId);
+  if (presetsFadeTimeoutId) clearTimeout(presetsFadeTimeoutId);
+  if (presetsClearTimeoutId) clearTimeout(presetsClearTimeoutId);
   if (lever1FadeTimeoutId) clearTimeout(lever1FadeTimeoutId);
   if (lever1ClearTimeoutId) clearTimeout(lever1ClearTimeoutId);
   if (leverPush1FadeTimeoutId) clearTimeout(leverPush1FadeTimeoutId);
@@ -506,8 +516,20 @@ function handleLeverPush2ProfileChange(profileName: string) {
   }, 2500);
 }
 
-function handleLeverPush2BehaviourChange(behaviourName: string) {
-  handleLeverPush2ProfileChange(behaviourName);
+function handleSlotNameDisplay(name: string) {
+  if (presetsFadeTimeoutId) clearTimeout(presetsFadeTimeoutId);
+  if (presetsClearTimeoutId) clearTimeout(presetsClearTimeoutId);
+  presetsSuffix.value = ` ${name}`;
+  presetsSuffixFading.value = false;
+  presetsFadeTimeoutId = setTimeout(() => {
+    presetsSuffixFading.value = true;
+    presetsFadeTimeoutId = null;
+  }, 500);
+  presetsClearTimeoutId = setTimeout(() => {
+    presetsSuffix.value = '';
+    presetsSuffixFading.value = false;
+    presetsClearTimeoutId = null;
+  }, 2500);
 }
 
 // Watch for device settings changes

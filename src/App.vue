@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
-import MobileControls from './pages/MobileControls.vue';
 import MobileScales from './pages/MobileScales.vue';
 import MobileSliders from './pages/MobileSliders.vue';
 import FirstTimeOverlay from './components/FirstTimeOverlay.vue';
@@ -17,12 +16,11 @@ const {
 } = useDeviceState();
 
 // Single unified tab state
-type Tab = 'settings' | 'controls' | 'sliders';
+type Tab = 'settings' | 'sliders';
 const activeTab = ref<Tab>('settings');
 
 const tabs = [
   { id: 'settings' as Tab, label: 'SETTINGS' },
-  { id: 'controls' as Tab, label: 'CONTROLS' },
   { id: 'sliders' as Tab, label: 'SLIDERS' }
 ];
 
@@ -154,7 +152,6 @@ function handleMainClick(event: MouseEvent) {
 }
 
 // Refs for page components
-const mobileControlsRef = ref<InstanceType<typeof MobileControls> | null>(null);
 const mobileScalesRef = ref<InstanceType<typeof MobileScales> | null>(null);
 const mobileSlidersRef = ref<InstanceType<typeof MobileSliders> | null>(null);
 
@@ -169,9 +166,7 @@ function handleTabClick(tabId: Tab) {
   
   // If clicking on already active tab, close all accordions
   if (activeTab.value === tabId) {
-    if (tabId === 'controls') {
-      mobileControlsRef.value?.closeAllAccordions();
-    } else if (tabId === 'settings') {
+    if (tabId === 'settings') {
       mobileScalesRef.value?.closeAllAccordions();
     }
   } else {
@@ -215,6 +210,18 @@ function handleTabClick(tabId: Tab) {
     <!-- Unified Tab Navigation with Bluetooth Controls -->
     <div v-if="!hideUI" class="tab-nav-wrapper">
       <nav class="app-nav">
+        <!-- Theme toggle button (far left) -->
+        <button 
+          class="theme-toggle"
+          @click="toggleTheme"
+          :title="isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'"
+        >
+          <img :src="themeIcon" :alt="isDarkMode ? 'Light Mode' : 'Dark Mode'" class="theme-icon" />
+        </button>
+        
+        <!-- Vertical divider after theme -->
+        <div class="separator"></div>
+        
         <div class="nav-tabs">
           <button 
             v-for="tab in tabs"
@@ -225,19 +232,10 @@ function handleTabClick(tabId: Tab) {
           >
             {{ tab.label }}
           </button>
-          
-          <!-- Theme toggle button -->
-          <button 
-            class="theme-toggle"
-            @click="toggleTheme"
-            :title="isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'"
-          >
-            <img :src="themeIcon" :alt="isDarkMode ? 'Light Mode' : 'Dark Mode'" class="theme-icon" />
-          </button>
-          
-          <!-- Vertical divider after tabs -->
-          <div class="separator"></div>
         </div>
+        
+        <!-- Vertical divider before Bluetooth -->
+        <div class="separator"></div>
         
         <!-- Bluetooth status section -->
         <div 
@@ -261,7 +259,6 @@ function handleTabClick(tabId: Tab) {
     </div>
     
     <main class="app-main" :class="{ 'live-fullscreen': hideUI }" @click="handleMainClick">
-      <MobileControls v-if="activeTab === 'controls'" ref="mobileControlsRef" />
       <MobileScales v-if="activeTab === 'settings'" ref="mobileScalesRef" />
       <MobileSliders v-if="activeTab === 'sliders'" ref="mobileSlidersRef" />
     </main>
@@ -459,11 +456,11 @@ body {
 .nav-tabs {
   display: flex;
   align-items: stretch;
-  gap: 0;
+  gap: 0.5rem;
 }
 
 .nav-tab {
-  padding: 1rem 0.75rem;
+  padding: 1rem 1rem;
   background: transparent;
   border: none;
   border-radius: 0;
@@ -517,7 +514,7 @@ body {
 
 /* Theme toggle button */
 .theme-toggle {
-  padding: 0.5rem 0.75rem;
+  padding: 0.5rem 1rem;
   background: transparent;
   border: none;
   cursor: pointer;
@@ -526,6 +523,7 @@ body {
   justify-content: center;
   transition: opacity 0.2s, transform 0.2s;
   opacity: 0.6;
+  flex-shrink: 0;
 }
 
 .theme-toggle:hover {
@@ -551,14 +549,14 @@ body {
   filter: opacity(1);
 }
 
-/* Vertical separator (divider) after tabs */
+/* Vertical separator (divider) between theme and tabs */
 .separator {
   width: 2px;
-  height: 50%;
+  height: 18px;
   background: var(--color-divider);
   align-self: center;
   flex-shrink: 0;
-  margin: 0 0.5rem;
+  margin: 0 0.25rem;
 }
 
 /* Bluetooth status section in nav */

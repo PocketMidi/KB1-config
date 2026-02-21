@@ -132,7 +132,11 @@
         <div class="duration-container">
           <!-- Duration Meter Visual (unipolar only - pink bar) -->
           <div class="duration-meter">
-            <div class="meter-bar-container">
+            <div 
+              class="meter-bar-container"
+              @mousedown="handleDurationBarMouseDown"
+              @touchstart="handleDurationBarTouchStart"
+            >
               <div class="meter-divider" :class="{ thick: !isMomentary }"></div>
               <div class="meter-bar-wrapper">
                 <div class="meter-bar pink-bar-base"></div>
@@ -544,6 +548,57 @@ const duration = computed({
   }
 })
 
+// Duration bar direct interaction handlers
+const updateDurationFromPosition = (clientX: number, rect: DOMRect) => {
+  const percentage = Math.max(0, Math.min(100, ((clientX - rect.left) / rect.width) * 100))
+  const newValue = Math.round(100 + (percentage / 100) * 1900)
+  duration.value = Math.max(100, Math.min(2000, newValue))
+}
+
+const handleDurationBarMouseDown = (e: MouseEvent) => {
+  e.preventDefault()
+  const target = e.currentTarget as HTMLElement
+  const rect = target.getBoundingClientRect()
+  updateDurationFromPosition(e.clientX, rect)
+  
+  const handleMouseMove = (e: MouseEvent) => {
+    updateDurationFromPosition(e.clientX, rect)
+  }
+  
+  const handleMouseUp = () => {
+    document.removeEventListener('mousemove', handleMouseMove)
+    document.removeEventListener('mouseup', handleMouseUp)
+  }
+  
+  document.addEventListener('mousemove', handleMouseMove)
+  document.addEventListener('mouseup', handleMouseUp)
+}
+
+const handleDurationBarTouchStart = (e: TouchEvent) => {
+  if (e.touches.length !== 1) return
+  const target = e.currentTarget as HTMLElement
+  const rect = target.getBoundingClientRect()
+  const touch = e.touches[0]
+  if (!touch) return
+  updateDurationFromPosition(touch.clientX, rect)
+  
+  const handleTouchMove = (e: TouchEvent) => {
+    if (e.touches.length !== 1) return
+    const touch = e.touches[0]
+    if (!touch) return
+    e.preventDefault()
+    updateDurationFromPosition(touch.clientX, rect)
+  }
+  
+  const handleTouchEnd = () => {
+    document.removeEventListener('touchmove', handleTouchMove)
+    document.removeEventListener('touchend', handleTouchEnd)
+  }
+  
+  document.addEventListener('touchmove', handleTouchMove, { passive: false })
+  document.addEventListener('touchend', handleTouchEnd)
+}
+
 </script>
 
 <style scoped>
@@ -697,14 +752,15 @@ const duration = computed({
   gap: 0;
   height: 9px;
   width: 100%;
+  cursor: pointer;
+  user-select: none;
 }
 
 .meter-bar-wrapper {
   position: relative;
   height: 9px;
   flex: 1;
-  border-radius: 4.5px;
-  overflow: visible;
+  overflow: hidden;
 }
 
 .meter-bar {
@@ -712,7 +768,6 @@ const duration = computed({
   position: absolute;
   top: 0;
   left: 0;
-  border-radius: 4.5px;
 }
 
 /* Base bar at 40% opacity */
@@ -720,6 +775,11 @@ const duration = computed({
   width: 100%;
   background: #1F498E;
   opacity: 0.4;
+  /* Left edge flat (meets divider), right edge rounded */
+  border-top-right-radius: 4.5px;
+  border-bottom-right-radius: 4.5px;
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
 }
 
 /* Active bar at 100% opacity */
@@ -727,25 +787,32 @@ const duration = computed({
   background: #1F498E;
   opacity: 1;
   z-index: 1;
+  /* Left edge flat (meets divider), right edge rounded */
+  border-top-right-radius: 4.5px;
+  border-bottom-right-radius: 4.5px;
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
 }
 
 .meter-divider {
-  width: 2px;
+  width: 5px;
   height: 17px;
   background: var(--accent-highlight);
   flex-shrink: 0;
+  border-radius: 2.5px;
 }
 
 .meter-divider.thick {
-  width: 5px;
+  /* No longer needed - all dividers are now 5px */
 }
 
 .latch-indicator {
-  width: 2px;
+  width: 5px;
   height: 17px;
   background: var(--accent-highlight);
   flex-shrink: 0;
   margin-left: 4px;
+  border-radius: 2.5px;
 }
 
 .latch-indicator-end {
@@ -755,6 +822,7 @@ const duration = computed({
   height: 17px;
   background: var(--accent-highlight);
   z-index: 2;
+  border-radius: 2.5px;
 }
 
 .duration-control-wrapper {

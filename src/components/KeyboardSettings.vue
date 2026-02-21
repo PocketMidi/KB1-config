@@ -762,7 +762,6 @@ function isRootNote(midiNote: number): boolean {
   position: relative;
   width: 100%;
   height: 9px;
-  border-radius: 4.5px;
   overflow: hidden;
 }
 
@@ -771,26 +770,36 @@ function isRootNote(midiNote: number): boolean {
   position: absolute;
   top: 0;
   left: 0;
-  border-radius: 4.5px;
 }
 
 .green-bar-base {
   width: 100%;
   background: #0BA873;
   opacity: 0.4;
+  /* Left edge flat (meets divider), right edge rounded */
+  border-top-right-radius: 4.5px;
+  border-bottom-right-radius: 4.5px;
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
 }
 
 .green-bar-active {
   background: #0BA873;
   opacity: 1;
   z-index: 1;
+  /* Left edge flat (meets divider), right edge rounded */
+  border-top-right-radius: 4.5px;
+  border-bottom-right-radius: 4.5px;
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
 }
 
 .meter-divider {
-  width: 2px;
+  width: 5px;
   height: 17px;
   background: var(--accent-highlight);
   flex-shrink: 0;
+  border-radius: 2.5px;
 }
 
 .duration-control-wrapper {

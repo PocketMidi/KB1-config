@@ -401,6 +401,8 @@ export function useDeviceState() {
       if (settings.leverPush2) deviceSettings.value.leverPush2 = settings.leverPush2;
       if (settings.touch) deviceSettings.value.touch = settings.touch;
       if (settings.scale) deviceSettings.value.scale = settings.scale;
+      if (settings.chord) deviceSettings.value.chord = settings.chord;
+      if (settings.system) deviceSettings.value.system = settings.system;
       
       // Initialize CC mappings if needed
       if (ccMappings.value.length === 0) {

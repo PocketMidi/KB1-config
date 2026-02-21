@@ -243,7 +243,7 @@ const {
 const toast = useToast();
 const { confirm } = useConfirm();
 
-const localSettings = ref<DeviceSettings>({ ...deviceSettings.value });
+const localSettings = ref<DeviceSettings>(JSON.parse(JSON.stringify(deviceSettings.value)));
 const hasChanges = ref(false);
 
 // Active preset tracking
@@ -373,16 +373,18 @@ const scales = [
   { value: 10, label: 'Pentatonic Minor' },
 ];
 
-// Chord Types
+// Chord Types (must match firmware ChordType enum exactly!)
 const chordTypes = [
-  { value: 0, label: 'Off' },
-  { value: 1, label: 'Major' },
-  { value: 2, label: 'Minor' },
-  { value: 3, label: 'Diminished' },
-  { value: 4, label: 'Augmented' },
-  { value: 5, label: 'Sus2' },
-  { value: 6, label: 'Sus4' },
-  { value: 7, label: 'Power' },
+  { value: 0, label: 'Major' },
+  { value: 1, label: 'Minor' },
+  { value: 2, label: 'Diminished' },
+  { value: 3, label: 'Augmented' },
+  { value: 4, label: 'Sus2' },
+  { value: 5, label: 'Sus4' },
+  { value: 6, label: 'Power' },
+  { value: 7, label: 'Major7' },
+  { value: 8, label: 'Minor7' },
+  { value: 9, label: 'Dom7' },
 ];
 
 // Root Notes (MIDI note numbers - firmware uses these as absolute pitches)
@@ -401,32 +403,36 @@ const rootNotes = [
   { value: 71, label: 'B' },
 ];
 
-// Keyboard play mode (reactive state)
-const playMode = ref<'scale' | 'chord'>('scale');
-
-// Chord settings (temporary until firmware supports it)
-const chordSettings = ref({
-  chordType: 1, // Default: Major
-  rootNote: 60, // Default: C
-  velocitySpread: 25, // Default: 25%
-  strumMode: false, // Default: chord (not strum)
-  strumSpeed: 25, // Default: 25ms
+// Keyboard play mode (reactive state computed from chord settings)
+const playMode = computed({
+  get: () => localSettings.value.chord.playMode === 1 ? 'chord' : 'scale',
+  set: (mode: 'scale' | 'chord') => {
+    localSettings.value.chord.playMode = mode === 'chord' ? 1 : 0;
+  }
 });
 
-// Keyboard model that wraps scale data for the component
+// Keyboard model that wraps scale and chord data for the component
 const keyboardModel = computed({
   get: () => ({
     mode: playMode.value,
     scale: localSettings.value.scale,
-    chord: chordSettings.value
+    chord: {
+      chordType: localSettings.value.chord.chordType,
+      velocitySpread: localSettings.value.chord.velocitySpread,
+      strumEnabled: localSettings.value.chord.strumEnabled,
+      strumSpeed: localSettings.value.chord.strumSpeed,
+    }
   }),
   set: (v) => {
     // Update play mode
     playMode.value = v.mode;
     // Update scale data in localSettings
     localSettings.value.scale = v.scale;
-    // Update chord settings (temporary until firmware supports it)
-    chordSettings.value = v.chord;
+    // Update chord settings
+    localSettings.value.chord.chordType = v.chord.chordType;
+    localSettings.value.chord.velocitySpread = v.chord.velocitySpread;
+    localSettings.value.chord.strumEnabled = v.chord.strumEnabled;
+    localSettings.value.chord.strumSpeed = v.chord.strumSpeed;
   }
 });
 
@@ -437,16 +443,13 @@ const currentScaleLabel = computed(() => {
 });
 
 const currentChordLabel = computed(() => {
-  const chord = chordTypes.find(c => c.value === chordSettings.value.chordType);
-  return chord ? chord.label : 'Off';
+  const chord = chordTypes.find(c => c.value === localSettings.value.chord.chordType);
+  return chord ? chord.label : 'Major';
 });
 
 const currentRootNoteLabel = computed(() => {
-  // Use scale root note in scale mode, chord root note in chord mode
-  const rootNoteValue = playMode.value === 'scale' 
-    ? localSettings.value.scale.rootNote 
-    : chordSettings.value.rootNote;
-  const rootNote = rootNotes.find(n => n.value === rootNoteValue);
+  // Always use scale root note (shared for both scales and chords)
+  const rootNote = rootNotes.find(n => n.value === localSettings.value.scale.rootNote);
   return rootNote ? rootNote.label : 'C';
 });
 
@@ -625,7 +628,7 @@ function handleSlotNameDisplay(name: string) {
 // Watch for device settings changes
 watch(deviceSettings, (newSettings) => {
   if (!hasChanges.value) {
-    localSettings.value = { ...newSettings };
+    localSettings.value = JSON.parse(JSON.stringify(newSettings));
   }
 }, { deep: true });
 
@@ -670,7 +673,7 @@ function handleChordStyleChange(styleName: string) {
 }
 
 function handlePresetLoad(settings: DeviceSettings) {
-  localSettings.value = { ...settings };
+  localSettings.value = JSON.parse(JSON.stringify(settings));
   hasChanges.value = true; // Mark as changed so user can save to device
 }
 
@@ -687,7 +690,7 @@ function handlePresetActivated(presetId: string | null) {
 async function handleLoadClick() {
   try {
     await handleLoad();
-    localSettings.value = { ...deviceSettings.value };
+    localSettings.value = JSON.parse(JSON.stringify(deviceSettings.value));
     hasChanges.value = false;
     toast.success('Settings downloaded from device');
   } catch (error) {
@@ -700,7 +703,7 @@ async function handleResetDefaults() {
   if (await confirm('Reset all settings to firmware defaults? This will discard current changes.')) {
     try {
       resetToDefaults();
-      localSettings.value = { ...deviceSettings.value };
+      localSettings.value = JSON.parse(JSON.stringify(deviceSettings.value));
       hasChanges.value = true;
     } catch (error) {
       console.error('Failed to reset to defaults:', error);

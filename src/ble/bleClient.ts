@@ -6,7 +6,7 @@
  * connecting, disconnecting, and sending/receiving data.
  */
 
-import type { LeverSettings, LeverPushSettings, TouchSettings, ScaleSettings, SystemSettings, DeviceSettings, DevicePresetMetadata } from './kb1Protocol';
+import type { LeverSettings, LeverPushSettings, TouchSettings, ScaleSettings, ChordSettings, SystemSettings, DeviceSettings, DevicePresetMetadata } from './kb1Protocol';
 import { PRESET_CHARACTERISTIC_UUIDS, encodePresetSave, encodePresetLoad, encodePresetDelete, decodePresetList } from './kb1Protocol';
 
 // KB1-specific BLE UUIDs (custom, not standard MIDI BLE)
@@ -20,6 +20,7 @@ const LEVER2_SETTINGS_UUID = '13ffbea4-793f-40f5-82da-ac9eca5f0e09';
 const LEVERPUSH2_SETTINGS_UUID = '52629808-3d14-4ae8-a826-40bcec6467d5';
 const TOUCH_SETTINGS_UUID = '5612b54d-8bfe-4217-a079-c9c95ab32c41';
 const SCALE_SETTINGS_UUID = '297bd635-c3e8-4fb4-b5e0-93586da8f14c';
+const CHORD_SETTINGS_UUID = '4a8c9f2e-1b7d-4e3f-a5c6-d7e8f9a0b1c2';
 const SYSTEM_SETTINGS_UUID = '8f7e6d5c-4b3a-2c1d-0e9f-8a7b6c5d4e3f';
 const MIDI_UUID = 'eb58b31b-d963-4c7d-9a11-e8aabec2fe32';
 const KEEPALIVE_UUID = 'a8f3d5e2-9c4b-11ef-8e7a-325096b39f47';
@@ -44,6 +45,7 @@ export class BLEClient {
   private leverPush2Characteristic: BluetoothRemoteGATTCharacteristic | null = null;
   private touchCharacteristic: BluetoothRemoteGATTCharacteristic | null = null;
   private scaleCharacteristic: BluetoothRemoteGATTCharacteristic | null = null;
+  private chordCharacteristic: BluetoothRemoteGATTCharacteristic | null = null;
   private systemCharacteristic: BluetoothRemoteGATTCharacteristic | null = null;
   private keepAliveCharacteristic: BluetoothRemoteGATTCharacteristic | null = null;
   
@@ -128,6 +130,7 @@ export class BLEClient {
         this.leverPush2Characteristic = await service.getCharacteristic(LEVERPUSH2_SETTINGS_UUID);
         this.touchCharacteristic = await service.getCharacteristic(TOUCH_SETTINGS_UUID);
         this.scaleCharacteristic = await service.getCharacteristic(SCALE_SETTINGS_UUID);
+        this.chordCharacteristic = await service.getCharacteristic(CHORD_SETTINGS_UUID);
         this.systemCharacteristic = await service.getCharacteristic(SYSTEM_SETTINGS_UUID);
       } catch (e) {
         console.warn('⚠️ Some settings characteristics not available:', e);
@@ -271,6 +274,7 @@ export class BLEClient {
     leverPush2?: LeverPushSettings;
     touch?: TouchSettings;
     scale?: ScaleSettings;
+    chord?: ChordSettings;
     system?: SystemSettings;
   }> {
     if (!this.server?.connected) {
@@ -285,6 +289,7 @@ export class BLEClient {
         leverPush2?: LeverPushSettings;
         touch?: TouchSettings;
         scale?: ScaleSettings;
+        chord?: ChordSettings;
         system?: SystemSettings;
       } = {};
 
@@ -322,6 +327,12 @@ export class BLEClient {
       if (this.scaleCharacteristic) {
         const data = await this.scaleCharacteristic.readValue();
         settings.scale = this.parseScaleData(data);
+      }
+
+      // Read Chord settings
+      if (this.chordCharacteristic) {
+        const data = await this.chordCharacteristic.readValue();
+        settings.chord = this.parseChordData(data);
       }
 
       // Read System settings
@@ -391,6 +402,20 @@ export class BLEClient {
       scaleType: data.getInt32(0, true),
       rootNote: data.getInt32(4, true),
       keyMapping: data.getInt32(8, true),
+    };
+  }
+
+  /**
+   * Parse chord data from DataView (little-endian int32)
+   * Struct: playMode(4), chordType(4), strumEnabled(4), velocitySpread(4), strumSpeed(4) = 20 bytes
+   */
+  private parseChordData(data: DataView): ChordSettings {
+    return {
+      playMode: data.getInt32(0, true),
+      chordType: data.getInt32(4, true),
+      strumEnabled: data.getInt32(8, true) !== 0,  // Convert int to boolean
+      velocitySpread: data.getInt32(12, true),
+      strumSpeed: data.getInt32(16, true),
     };
   }
 
@@ -516,6 +541,21 @@ export class BLEClient {
   }
 
   /**
+   * Encode chord settings to binary format for writing to device
+   * Struct: playMode(4), chordType(4), strumEnabled(4), velocitySpread(4), strumSpeed(4) = 20 bytes
+   */
+  private encodeChordData(settings: ChordSettings): ArrayBuffer {
+    const buffer = new ArrayBuffer(20); // 5 int32 values = 20 bytes
+    const view = new DataView(buffer);
+    view.setInt32(0, settings.playMode, true);
+    view.setInt32(4, settings.chordType, true);
+    view.setInt32(8, settings.strumEnabled ? 1 : 0, true);  // Convert boolean to int
+    view.setInt32(12, settings.velocitySpread, true);
+    view.setInt32(16, settings.strumSpeed, true);
+    return buffer;
+  }
+
+  /**
    * Write lever 1 settings to device
    */
   async writeLever1Settings(settings: LeverSettings): Promise<void> {
@@ -624,6 +664,24 @@ export class BLEClient {
   }
 
   /**
+   * Write chord settings to device
+   */
+  async writeChordSettings(settings: ChordSettings): Promise<void> {
+    if (!this.chordCharacteristic) {
+      throw new Error('Chord settings characteristic not available');
+    }
+
+    try {
+      const data = this.encodeChordData(settings);
+      await this.chordCharacteristic.writeValue(data);
+      console.log('Chord settings written to device:', settings);
+    } catch (error) {
+      console.error('Failed to write chord settings:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Write all settings to device
    */
   async writeAllSettings(settings: DeviceSettings): Promise<void> {
@@ -694,6 +752,16 @@ export class BLEClient {
     }
 
     try {
+      console.log('Writing chord settings...');
+      await this.writeChordSettings(settings.chord);
+      console.log('✓ Chord settings written');
+    } catch (error) {
+      const msg = `Failed to write chord settings: ${error}`;
+      console.warn(msg);
+      errors.push(msg);
+    }
+
+    try {
       console.log('Writing system settings...');
       await this.writeSystemSettings(settings.system);
       console.log('✓ System settings written');
@@ -706,13 +774,13 @@ export class BLEClient {
     if (errors.length > 0) {
       console.warn(`⚠️ ${errors.length} setting(s) failed to write:`, errors);
       // Only throw if ALL settings failed
-      if (errors.length === 7) {
+      if (errors.length === 8) {
         throw new Error('Failed to write any settings to device');
       }
       // Otherwise just log warnings but don't throw (partial success)
     }
     
-    console.log(`✅ Settings written (${7 - errors.length}/7 successful)`);
+    console.log(`✅ Settings written (${8 - errors.length}/8 successful)`);
   }
 
   /**

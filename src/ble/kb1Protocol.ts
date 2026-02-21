@@ -69,6 +69,17 @@ export interface ScaleSettings {
 }
 
 /**
+ * Chord settings configuration
+ */
+export interface ChordSettings {
+  playMode: number;        // 0 = SCALE, 1 = CHORD
+  chordType: number;       // MAJOR=0, MINOR=1, DIMINISHED=2, AUGMENTED=3, SUS2=4, SUS4=5, POWER=6, MAJOR7=7, MINOR7=8, DOM7=9
+  strumEnabled: boolean;   // false = chord (all notes together), true = strum (cascaded)
+  velocitySpread: number;  // 0-100 (percentage) - velocity variation for chord notes
+  strumSpeed: number;      // 5-100 (milliseconds) - delay between notes in strum mode
+}
+
+/**
  * System/Power settings configuration
  * 
  * Constraints:
@@ -91,6 +102,7 @@ export type LeverModel = LeverSettings;
 export type LeverPushModel = LeverPushSettings;
 export type TouchModel = TouchSettings;
 export type ScaleModel = ScaleSettings;
+export type ChordModel = ChordSettings;
 export type SystemModel = SystemSettings;
 
 /**
@@ -103,6 +115,7 @@ export interface DeviceSettings {
   leverPush2: LeverPushSettings;
   touch: TouchSettings;
   scale: ScaleSettings;
+  chord: ChordSettings;
   system: SystemSettings;
 }
 
@@ -415,6 +428,13 @@ export class KB1Protocol {
         scaleType: ScaleType.CHROMATIC,
         rootNote: 60, // Middle C (MIDI note, not pitch class)
         keyMapping: 0, // Natural
+      },
+      chord: {
+        playMode: 0, // SCALE mode by default
+        chordType: 0, // MAJOR chord
+        strumEnabled: false, // Chord mode (not strum)
+        velocitySpread: 8, // 8% velocity spread
+        strumSpeed: 45, // 45ms strum speed
       },
       system: {
         lightSleepTimeout: 90, // 90 seconds (firmware: LIGHT_SLEEP_MAX_MS)

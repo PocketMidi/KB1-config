@@ -186,9 +186,8 @@ type ScaleModel = {
 
 type ChordModel = {
   chordType: number
-  rootNote: number
   velocitySpread: number
-  strumMode: boolean
+  strumEnabled: boolean
   strumSpeed: number
 }
 
@@ -220,7 +219,8 @@ const model = computed({
 const playMode = computed({
   get: () => model.value.mode,
   set: (v: 'scale' | 'chord') => {
-    model.value = { ...model.value, mode: v }
+    const updated = { ...model.value, mode: v }
+    emit('update:modelValue', updated)
   }
 })
 
@@ -244,22 +244,22 @@ const typeOptions = computed(() => {
 const typeValue = computed({
   get: () => playMode.value === 'scale' ? model.value.scale.scaleType : model.value.chord.chordType,
   set: (v: number) => {
+    const updated = { ...model.value }
     if (playMode.value === 'scale') {
-      model.value.scale.scaleType = v
+      updated.scale = { ...updated.scale, scaleType: v }
     } else {
-      model.value.chord.chordType = v
+      updated.chord = { ...updated.chord, chordType: v }
     }
+    emit('update:modelValue', updated)
   }
 })
 
 const rootNoteValue = computed({
-  get: () => playMode.value === 'scale' ? model.value.scale.rootNote : model.value.chord.rootNote,
+  get: () => model.value.scale.rootNote, // Always use scale.rootNote (shared for both modes)
   set: (v: number) => {
-    if (playMode.value === 'scale') {
-      model.value.scale.rootNote = v
-    } else {
-      model.value.chord.rootNote = v
-    }
+    const updated = { ...model.value }
+    updated.scale = { ...updated.scale, rootNote: v }
+    emit('update:modelValue', updated)
   }
 })
 
@@ -316,7 +316,9 @@ const handleScaleToggleClick = () => {
   emit('mappingChanged', newMappingName)
   
   scaleAnimationTimeoutId.value = window.setTimeout(() => {
-    model.value.scale.keyMapping = isCurrentlyNatural ? 1 : 0
+    const updated = { ...model.value }
+    updated.scale = { ...updated.scale, keyMapping: isCurrentlyNatural ? 1 : 0 }
+    emit('update:modelValue', updated)
     scaleToggleAnimating.value = false
     scaleTransitionDirection.value = null
     scaleAnimationTimeoutId.value = null
@@ -329,7 +331,7 @@ const chordToggleAnimating = ref(false)
 const chordAnimationTimeoutId = ref<number | null>(null)
 const chordTransitionDirection = ref<'left-to-right' | 'right-to-left' | null>(null)
 
-const isChordStyle = computed(() => !model.value.chord.strumMode)
+const isChordStyle = computed(() => !model.value.chord.strumEnabled)
 
 const chordToggleImage = computed(() => {
   const mode = isChordStyle.value ? 'l' : 'r'
@@ -363,7 +365,9 @@ const handleChordToggleClick = () => {
   emit('chordStyleChanged', newStyleName)
   
   chordAnimationTimeoutId.value = window.setTimeout(() => {
-    model.value.chord.strumMode = isCurrentlyChord
+    const updated = { ...model.value }
+    updated.chord = { ...updated.chord, strumEnabled: isCurrentlyChord }
+    emit('update:modelValue', updated)
     chordToggleAnimating.value = false
     chordTransitionDirection.value = null
     chordAnimationTimeoutId.value = null
@@ -374,11 +378,13 @@ const handleChordToggleClick = () => {
 const smartSliderValue = computed({
   get: () => isChordStyle.value ? model.value.chord.velocitySpread : model.value.chord.strumSpeed,
   set: (v: number) => {
+    const updated = { ...model.value }
     if (isChordStyle.value) {
-      model.value.chord.velocitySpread = v
+      updated.chord = { ...updated.chord, velocitySpread: v }
     } else {
-      model.value.chord.strumSpeed = v
+      updated.chord = { ...updated.chord, strumSpeed: v }
     }
+    emit('update:modelValue', updated)
   }
 })
 
@@ -478,16 +484,18 @@ const scaleIntervals: Record<number, number[]> = {
   10: [0, 3, 5, 7, 10], // Pentatonic Minor
 }
 
-// Chord theory - intervals in semitones from root note
+// Chord theory - intervals in semitones from root note (must match firmware!)
 const chordIntervals: Record<number, number[]> = {
-  0: [0], // Off (single note)
-  1: [0, 4, 7], // Major
-  2: [0, 3, 7], // Minor
-  3: [0, 3, 6], // Diminished
-  4: [0, 4, 8], // Augmented
-  5: [0, 2, 7], // Sus2
-  6: [0, 5, 7], // Sus4
-  7: [0, 7, 12], // Power (root, 5th, octave)
+  0: [0, 4, 7],    // Major
+  1: [0, 3, 7],    // Minor
+  2: [0, 3, 6],    // Diminished
+  3: [0, 4, 8],    // Augmented
+  4: [0, 2, 7],    // Sus2
+  5: [0, 5, 7],    // Sus4
+  6: [0, 7, 12],   // Power (root, 5th, octave)
+  7: [0, 4, 7, 11], // Major7
+  8: [0, 3, 7, 10], // Minor7
+  9: [0, 4, 7, 10], // Dom7
 }
 
 // Keyboard layout - starting from B (MIDI 59) for ~2 octaves
@@ -517,17 +525,17 @@ const bottomRowNotes = [
 ]
 
 function isNoteActive(midiNote: number): boolean {
+  const rootNote = model.value.scale.rootNote // Always use scale.rootNote (shared for both modes)
+  
   if (playMode.value === 'scale') {
     // Scale mode: show active scale notes
     const scaleType = model.value.scale.scaleType
-    const rootNote = model.value.scale.rootNote
     const intervals = scaleIntervals[scaleType] || []
     const noteOffset = (midiNote - rootNote + 120) % 12
     return intervals.includes(noteOffset)
   } else {
     // Chord mode: show chord tones
     const chordType = model.value.chord.chordType
-    const rootNote = model.value.chord.rootNote
     const intervals = chordIntervals[chordType] || []
     const noteOffset = (midiNote - rootNote + 120) % 12
     return intervals.includes(noteOffset)
@@ -535,7 +543,7 @@ function isNoteActive(midiNote: number): boolean {
 }
 
 function isRootNote(midiNote: number): boolean {
-  const rootNote = playMode.value === 'scale' ? model.value.scale.rootNote : model.value.chord.rootNote
+  const rootNote = model.value.scale.rootNote // Always use scale.rootNote (shared for both modes)
   return (midiNote % 12) === (rootNote % 12)
 }
 </script>

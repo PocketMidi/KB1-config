@@ -2,6 +2,34 @@
 
 KB1 config is a browser-based configuration tool for the PocketMidi KB1 device. Configure lever behavior, touch sensitivity, scales, system settings, and control 12 customizable performance sliders wirelessly over Bluetooth directly from your browser.
 
+## 🚀 Quick Start Guide
+
+**First Time Connection:**
+1. Click **DISCONNECTED** in the top-right corner
+2. Select "KB1" from your browser's Bluetooth pairing dialog
+3. Once connected, settings automatically load from your device
+
+**Using Performance Sliders (SLIDERS tab):**
+- **Desktop/Portrait**: Tap color swatches, adjust settings, drag sliders vertically
+- **Live Mode (Mobile)**: 
+  - Rotate device to landscape → Sliders go fullscreen automatically
+  - Control sliders with touch, swipe horizontally >100px to exit
+  - Or rotate back to portrait to exit live mode
+- **Linking Sliders**: Press and drag across the "link" icons between sliders to gang them (shared color, settings, and values move together)
+- **Save Presets**: Use dropdown menu to save/load complete slider configurations
+
+**Keyboard Modes (SETTINGS → KEYBOARD):**
+- **Scale Mode**: Keys play quantized notes from selected scale
+- **Chord Mode**: Each key plays a full chord
+  - Toggle Chord/Strum button to switch between simultaneous or cascaded notes
+  - Adjust "Smart Slider" for velocity spread (Chord) or strum speed (Strum)
+
+**Saving Changes:**
+- Modify any setting → Orange dot appears in footer showing unsaved changes
+- Click **Save to Device** → Changes applied to RAM and automatically saved to flash memory
+- Footer actions stick to bottom for quick access: **Load**, **Reset**, **Save**
+- Use **Preset Manager** to save complete configurations with custom names (8 device slots + unlimited browser presets)
+
 ## Configuration Flexibility
 
 The KB1 system offers **~10²⁷ total unique configurations** (approximately 1 octillion possible combinations). When focusing on the most commonly adjusted parameters—CC numbers, min/max values, function modes, and interpolation curves—there are still **~10¹⁰ to 10¹² practical combinations** (10-100 billion distinct configurations).
@@ -15,7 +43,9 @@ The system is extraordinarily flexible for any performance or production workflo
 ## Features
 
 ### ⚙️ SETTINGS Tab
-- **Scale Settings** - Configure scale type, root note, and key mapping (Natural/Compact)
+- **Keyboard Settings** - Switch between Scale and Chord modes
+- **Scale Mode** - Configure scale type, root note, and key mapping (Natural/Compact)
+- **Chord Mode** - Choose chord type (Major, Minor, Diminished, etc.), toggle Chord/Strum, adjust velocity spread and strum speed
 - **Power Management** - Customize light sleep, deep sleep, and Bluetooth timeout intervals
 - **Preset Manager** - Save, load, and organize complete device configurations
 - **Load from Device** - Read current settings from hardware
@@ -178,10 +208,16 @@ npm run preview
 
 The SETTINGS tab manages your device's global configuration:
 
-**Scale Settings:**
-- Choose from multiple scale types (Chromatic, Major, Minor, etc.)
-- Set root note (C, C#, D, etc.)
-- Toggle between Natural and Compact key mapping
+**Keyboard Settings:**
+- **Scale Mode**: Play quantized notes based on selected scale type
+  - Choose from multiple scale types (Chromatic, Major, Minor, Pentatonic, Blues, etc.)
+  - Set root note (C, C#, D, etc.)
+  - Toggle between Natural (spaced) and Compact (dense) key mapping
+- **Chord Mode**: Play full chords with each key press
+  - Choose chord type: Major, Minor, Diminished, Augmented, Sus2, Sus4, Power, Major7, Minor7, Dominant7
+  - Toggle between Chord (all notes together) and Strum (cascaded notes)
+  - Adjust velocity spread (0-100%) for dynamic chord voicing
+  - Set strum speed (5-100ms) for cascading notes
 
 **System Settings (Power Management):**
 - **Light Sleep**: Timeout before entering light sleep (30-300 seconds, default: 90s)

@@ -344,6 +344,7 @@
 /* Apply filter to toggle switches and profile graphs */
 .toggle-image,
 .profile-graph,
+.mode-graph,
 .slider-toggle-image {
   filter: var(--svg-icon-filter);
   transition: filter 0.3s ease;

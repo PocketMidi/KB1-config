@@ -588,6 +588,7 @@ async function handleLoadClick() {
     await handleLoad();
     localSettings.value = { ...deviceSettings.value };
     hasChanges.value = false;
+    toast.success('Settings downloaded from device');
   } catch (error) {
     console.error('Failed to load settings:', error);
     toast.error('Failed to load settings from device');

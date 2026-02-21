@@ -18,11 +18,11 @@
               class="slot-box"
               :class="{
                 filled: getDevicePreset(slot - 1).isValid,
-                active: activeDeviceSlot === (slot - 1) || selectedDeviceSlots.has(slot - 1),
+                active: activeDeviceSlot === (slot - 1),
                 empty: !getDevicePreset(slot - 1).isValid
               }"
               :title="getDevicePreset(slot - 1).isValid ? getDevicePreset(slot - 1).name : `Slot ${slot} (Empty)`"
-              @click="isConnected && handleSlotIndicatorClick(slot - 1)"
+              @click="isConnected && getDevicePreset(slot - 1).isValid && loadFromDevice(slot - 1)"
               :style="{ cursor: isConnected ? (getDevicePreset(slot - 1).isValid ? 'pointer' : 'default') : 'not-allowed' }"
             >
               <span class="slot-number">{{ slot }}</span>
@@ -39,21 +39,10 @@
           class="preset-item device-slot"
           :class="{ 
             empty: !getDevicePreset(slot - 1).isValid,
-            active: activeDeviceSlot === (slot - 1),
-            selected: selectedDeviceSlots.has(slot - 1)
+            active: activeDeviceSlot === (slot - 1)
           }"
         >
-          <!-- Checkbox for selection (shy - only shows when in selection mode) -->
-          <div v-if="showCheckboxes" class="preset-checkbox" @click.stop="isConnected && toggleDeviceSlotSelection(slot - 1)">
-            <input 
-              type="checkbox" 
-              :checked="selectedDeviceSlots.has(slot - 1)"
-              :disabled="!isConnected"
-              @change="toggleDeviceSlotSelection(slot - 1)"
-            />
-          </div>
-          
-          <div class="preset-info" @click="isConnected && toggleDeviceSlotSelection(slot - 1)" :style="{ cursor: isConnected ? 'pointer' : 'not-allowed' }">
+          <div class="preset-info">
             <div class="preset-name">
               <span class="active-indicator" v-if="activeDeviceSlot === (slot - 1)">●</span>
               <span>Slot {{ slot }}</span>
@@ -80,19 +69,12 @@
               Save
             </button>
             <button 
-              class="btn-small btn-menu" 
-              @click="toggleMenu(`device-${slot - 1}`)" 
-              :disabled="!isConnected"
-              title="More options">
-              ⋯
+              class="btn-small btn-delete" 
+              @click="deleteFromDevice(slot - 1)" 
+              :disabled="!isConnected || !getDevicePreset(slot - 1).isValid"
+              title="Delete preset from this slot">
+              Delete
             </button>
-            
-            <!-- Dropdown Menu -->
-            <div v-if="openMenuId === `device-${slot - 1}`" class="preset-menu">
-              <button @click="renameDeviceSlot(slot - 1)" :disabled="!getDevicePreset(slot - 1).isValid">Rename</button>
-              <div class="menu-divider"></div>
-              <button @click="deleteFromDevice(slot - 1)" :disabled="!getDevicePreset(slot - 1).isValid" class="btn-danger">Delete</button>
-            </div>
           </div>
         </div>
       </div>
@@ -292,7 +274,6 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: 'load', settings: DeviceSettings): void;
   (e: 'presetActivated', presetId: string | null): void;
-  (e: 'slotNameDisplay', name: string): void;
 }>();
 
 const presets = ref<Preset[]>([]);
@@ -301,7 +282,6 @@ const openMenuId = ref<string | null>(null);
 
 // Selection state for export
 const selectedPresets = ref<Set<string>>(new Set());
-const selectedDeviceSlots = ref<Set<number>>(new Set());
 const showCheckboxes = ref(false);
 
 // Create dialog
@@ -315,7 +295,6 @@ const selectedSlotNumber = ref<number>(0);
 const showRenameDialog = ref(false);
 const renameValue = ref('');
 const renamingId = ref<string | null>(null);
-const renamingDeviceSlot = ref<number | null>(null);
 const renameInput = ref<HTMLInputElement | null>(null);
 
 // File input
@@ -477,14 +456,6 @@ function createNewFlashPreset() {
   showCreateDialog.value = true;
 }
 
-function handleSlotIndicatorClick(slot: number) {
-  const preset = getDevicePreset(slot);
-  if (!preset.isValid) return;
-  
-  // Emit event to parent to show in accordion header
-  emit('slotNameDisplay', preset.name);
-}
-
 async function refreshSlots() {
   try {
     await refreshDevicePresets();
@@ -597,17 +568,6 @@ function renamePreset(id: string) {
   openMenuId.value = null;
 }
 
-function renameDeviceSlot(slot: number) {
-  const preset = getDevicePreset(slot);
-  if (!preset.isValid) return;
-
-  renamingDeviceSlot.value = slot;
-  renamingId.value = null;
-  renameValue.value = preset.name;
-  showRenameDialog.value = true;
-  openMenuId.value = null;
-}
-
 function confirmRename() {
   const name = renameValue.value.trim();
   if (!name) return;
@@ -616,15 +576,10 @@ function confirmRename() {
     // Renaming cache preset
     PresetStore.updatePreset(renamingId.value, { name });
     refreshPresets();
-  } else if (renamingDeviceSlot.value !== null) {
-    // Renaming device slot
-    // TODO: Call BLE function to rename device preset
-    console.log(`Rename device slot ${renamingDeviceSlot.value} to "${name}"`);
   }
 
   showRenameDialog.value = false;
   renamingId.value = null;
-  renamingDeviceSlot.value = null;
   renameValue.value = '';
 }
 
@@ -688,36 +643,13 @@ function togglePresetSelection(id: string) {
   selectedPresets.value = new Set(selectedPresets.value);
   
   // Hide checkboxes if all deselected
-  if (selectedPresets.value.size === 0 && selectedDeviceSlots.value.size === 0) {
-    showCheckboxes.value = false;
-  }
-}
-
-function toggleDeviceSlotSelection(slot: number) {
-  // Show checkboxes on first selection
-  if (!showCheckboxes.value) {
-    showCheckboxes.value = true;
-  }
-  
-  // Toggle selection
-  if (selectedDeviceSlots.value.has(slot)) {
-    selectedDeviceSlots.value.delete(slot);
-  } else {
-    selectedDeviceSlots.value.add(slot);
-  }
-  
-  // Force reactivity
-  selectedDeviceSlots.value = new Set(selectedDeviceSlots.value);
-  
-  // Hide checkboxes if all deselected
-  if (selectedPresets.value.size === 0 && selectedDeviceSlots.value.size === 0) {
+  if (selectedPresets.value.size === 0) {
     showCheckboxes.value = false;
   }
 }
 
 function clearSelection() {
   selectedPresets.value.clear();
-  selectedDeviceSlots.value.clear();
   showCheckboxes.value = false;
 }
 
@@ -1001,6 +933,10 @@ function formatDate(timestamp: number): string {
   background: rgba(249, 172, 32, 0.2);
 }
 
+.preset-item.device-slot.empty {
+  opacity: 0.5;
+}
+
 .preset-checkbox {
   display: flex;
   align-items: center;
@@ -1073,6 +1009,15 @@ function formatDate(timestamp: number): string {
   padding: 0.375rem 0.5rem;
   font-size: 1rem;
   line-height: 1;
+}
+
+.btn-delete {
+  color: rgba(255, 68, 68, 0.8) !important;
+}
+
+.btn-delete:hover:not(:disabled) {
+  background: rgba(255, 68, 68, 0.15) !important;
+  color: #ff4444 !important;
 }
 
 .preset-menu {

@@ -4,12 +4,10 @@
       class="action-icon-btn"
       title="Load"
       aria-label="Load"
-      @click="handleLoad"
+      @click="$emit('load')"
       :disabled="!isConnected || isLoading"
-      :class="{ 'upload-success': showLoadCheckmark }"
     >
-      <img v-if="!showLoadCheckmark" src="/load.svg" alt="" class="action-icon" />
-      <span v-else class="checkmark">✓</span>
+      <img src="/load.svg" alt="" class="action-icon" />
     </button>
     
     <button
@@ -26,51 +24,26 @@
       class="action-icon-btn"
       title="Upload"
       aria-label="Upload"
-      @click="handleUpload"
+      @click="$emit('save')"
       :disabled="!isConnected || isLoading"
-      :class="{ 'upload-success': showUploadCheckmark }"
     >
-      <img v-if="!showUploadCheckmark" src="/save.svg" alt="" class="action-icon" />
-      <span v-else class="checkmark">✓</span>
+      <img src="/save.svg" alt="" class="action-icon" />
     </button>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
-
 defineProps<{
   isConnected: boolean;
   isLoading: boolean;
   hasChanges: boolean;
 }>();
 
-const emit = defineEmits<{
+defineEmits<{
   load: [];
   'reset-defaults': [];
   save: [];
 }>();
-
-const showLoadCheckmark = ref(false);
-const showUploadCheckmark = ref(false);
-
-function handleLoad() {
-  emit('load');
-  // Show checkmark feedback
-  showLoadCheckmark.value = true;
-  setTimeout(() => {
-    showLoadCheckmark.value = false;
-  }, 2000);
-}
-
-function handleUpload() {
-  emit('save');
-  // Show checkmark feedback
-  showUploadCheckmark.value = true;
-  setTimeout(() => {
-    showUploadCheckmark.value = false;
-  }, 2000);
-}
 </script>
 
 <style scoped>
@@ -122,17 +95,6 @@ function handleUpload() {
   height: 41px;
   display: block;
   pointer-events: none;
-}
-
-.checkmark {
-  font-size: 48px;
-  color: #4CAF50;
-  font-weight: bold;
-  line-height: 1;
-}
-
-.upload-success {
-  opacity: 1.0 !important;
 }
 
 @media (max-width: 640px) {

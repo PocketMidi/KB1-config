@@ -74,26 +74,26 @@ onMounted(() => {
 }
 
 .toast-success {
-  background: rgba(76, 175, 80, 0.95);
-  border: 1px solid rgba(76, 175, 80, 0.3);
+  background: rgba(76, 175, 80, 0.45);
+  border: 1px solid rgba(76, 175, 80, 0.5);
   color: white;
 }
 
 .toast-error {
-  background: rgba(244, 67, 54, 0.95);
-  border: 1px solid rgba(244, 67, 54, 0.3);
+  background: rgba(244, 67, 54, 0.45);
+  border: 1px solid rgba(244, 67, 54, 0.5);
   color: white;
 }
 
 .toast-warning {
-  background: rgba(255, 152, 0, 0.95);
-  border: 1px solid rgba(255, 152, 0, 0.3);
+  background: rgba(255, 152, 0, 0.45);
+  border: 1px solid rgba(255, 152, 0, 0.5);
   color: white;
 }
 
 .toast-info {
-  background: rgba(33, 150, 243, 0.95);
-  border: 1px solid rgba(33, 150, 243, 0.3);
+  background: rgba(33, 150, 243, 0.45);
+  border: 1px solid rgba(33, 150, 243, 0.5);
   color: white;
 }
 

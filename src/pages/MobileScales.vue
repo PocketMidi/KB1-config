@@ -404,7 +404,7 @@ const rootNotes = [
 ];
 
 // Keyboard play mode (reactive state computed from chord settings)
-const playMode = computed({
+const playMode = computed<'scale' | 'chord'>({
   get: () => localSettings.value.chord.playMode === 1 ? 'chord' : 'scale',
   set: (mode: 'scale' | 'chord') => {
     localSettings.value.chord.playMode = mode === 'chord' ? 1 : 0;
@@ -412,7 +412,7 @@ const playMode = computed({
 });
 
 // Keyboard model that wraps scale and chord data for the component
-const keyboardModel = computed({
+const keyboardModel = computed<{ mode: 'scale' | 'chord', scale: ScaleSettings, chord: { chordType: number, velocitySpread: number, strumEnabled: boolean, strumSpeed: number } }>({
   get: () => ({
     mode: playMode.value,
     scale: localSettings.value.scale,

@@ -1,8 +1,8 @@
-# KB1 config
+# KB1 Config
 
-KB1 config is a browser-based configuration tool for the PocketMidi KB1 device. Configure lever behavior, touch sensitivity, scales, system settings, and control 12 customizable performance sliders wirelessly over Bluetooth directly from your browser.
+KB1 Config is the official browser-based configuration and control application for the PocketMidi KB1 MIDI controller. This first release delivers a complete, wireless configuration environment with real-time performance control—configure keyboard modes, lever behavior, touch sensitivity, scales, power management, and control 12 performance sliders directly from your browser over Bluetooth Low Energy. No drivers, no apps to install.
 
-## 🚀 Quick Start Guide
+## Quick Start Guide
 
 **First Time Connection:**
 1. Click **DISCONNECTED** in the top-right corner
@@ -42,7 +42,7 @@ The system is extraordinarily flexible for any performance or production workflo
 
 ## Features
 
-### ⚙️ SETTINGS Tab
+### SETTINGS Tab
 - **Keyboard Settings** - Switch between Scale and Chord modes
 - **Scale Mode** - Configure scale type, root note, and key mapping (Natural/Compact)
 - **Chord Mode** - Choose chord type (Major, Minor, Diminished, etc.), toggle Chord/Strum, adjust velocity spread and strum speed
@@ -52,14 +52,14 @@ The system is extraordinarily flexible for any performance or production workflo
 - **Reset to Defaults** - Restore factory settings
 - **Save to Device** - Apply changes to RAM and persist to flash memory
 
-### 🎛️ CONTROLS Tab
+### CONTROLS Tab
 - **Lever 1 & 2** - Configure CC, range, step size, function mode, value mode, and interpolation curves
 - **Lever Push 1 & 2** - Set up push button behavior with CC mapping and timing settings
 - **Touch Sensor** - Adjust sensitivity threshold and configure CC output
 - **Real-time Preview** - See parameter descriptions from Polyend CC map
 - **Accordion Interface** - Expandable sections with smooth animations
 
-### 🎚️ SLIDERS Tab
+### SLIDERS Tab
 - **12 Performance Sliders** - Real-time MIDI CC control with visual feedback
 - **Color Coding** - Drag vertical color picker or tap to select from 12 rainbow colors
 - **Bipolar/Unipolar** - Toggle between centered (-100 to +100) or bottom-up (0 to 100) modes
@@ -69,13 +69,13 @@ The system is extraordinarily flexible for any performance or production workflo
 - **Mobile Live Mode** - Fullscreen landscape mode with rotation animations
 - **Desktop & Mobile** - Optimized for both touch and mouse input
 
-### 📡 Connectivity
+### Connectivity
 - **Web Bluetooth API** - Wireless BLE connection, no drivers needed
 - **Connection Modals** - First-time intro and contextual prompts for disconnected state
 - **Keep-Alive** - Automatic connection maintenance (60s ping interval)
 - **Dev Mode** - Test UI without hardware (toggle in code)
 
-### 🎨 Design
+### Design
 - **KB1 Theme** - Custom color scheme matching device aesthetics
 - **Roboto Mono Font** - Clean, technical typography
 - **Sticky Navigation** - Tab bar stays visible while scrolling

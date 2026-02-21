@@ -205,6 +205,7 @@ import { ref, watch, computed, onMounted, onBeforeUnmount } from 'vue';
 import { useDeviceState } from '../composables/useDeviceState';
 import type { 
   DeviceSettings,
+  ScaleSettings,
   LeverSettings as LeverSettingsType, 
   LeverPushSettings as LeverPushSettingsType, 
   TouchSettings as TouchSettingsType 

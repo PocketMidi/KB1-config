@@ -1453,6 +1453,18 @@ defineExpose({
           <!-- CC label -->
           <div class="live-cc-label">{{ slider.cc }}</div>
         </div>
+        
+        <!-- Ghost slider spacer to catch touches for rightmost slider (CC62) when offset is negative -->
+        <div 
+          class="live-slider-wrapper ghost-slider"
+          :style="{ pointerEvents: touchOffsetX < 0 ? 'auto' : 'none' }"
+          @touchstart="handleTrackTouchStart($event, sliders.length - 1)"
+          @touchmove="handleTrackTouchMove($event, sliders.length - 1)"
+          @touchend="handleTrackTouchEnd($event)"
+          @touchcancel="handleTrackTouchEnd($event)"
+        >
+          <div class="live-slider-track ghost-track"></div>
+        </div>
       </div>
     </div>
   </div>
@@ -1999,6 +2011,24 @@ defineExpose({
   touch-action: auto; /* Allow default touch behavior for slider */
   border: none;
   outline: none;
+}
+
+/* Ghost slider spacer for catching touches to rightmost slider */
+.ghost-slider {
+  display: none; /* Hidden by default (desktop) */
+}
+
+.live-mode.mobile-landscape .ghost-slider {
+  display: flex; /* Only show in mobile landscape */
+  flex: 0 0 100px; /* Fixed 100px width to catch offset touches */
+  max-width: 100px;
+  opacity: 0; /* Invisible */
+  pointer-events: auto; /* Still catch touches */
+}
+
+.live-mode.mobile-landscape .ghost-track {
+  background: transparent !important;
+  pointer-events: auto;
 }
 
 .live-mode.mobile-landscape .live-slider-track {

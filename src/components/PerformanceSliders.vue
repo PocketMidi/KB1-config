@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue';
+import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue';
 import { bleClient } from '../ble/bleClient';
 import { SliderPresetStore, type SliderPreset } from '../state/sliderPresets';
 
@@ -100,6 +100,11 @@ const links = ref<boolean[]>(new Array(11).fill(false));
 // Link drag selection state
 const isDraggingLinks = ref(false);
 const linkDragState = ref<boolean | null>(null); // The state to apply when dragging (true for link, false for unlink)
+
+// Watch isPortrait for debugging
+watch(isPortrait, (newVal, oldVal) => {
+  console.log('[isPortrait] Changed:', { old: oldVal, new: newVal, viewMode: viewMode.value });
+});
 
 // Initialize sliders
 function initializeSliders() {
@@ -211,6 +216,7 @@ function handleTrackTouchStart(event: TouchEvent, index: number) {
   // Store swipe start position
   swipeStartX.value = touch.clientX;
   swipeStartY.value = touch.clientY;
+  console.log('[Touch] Touch start at:', { x: touch.clientX, y: touch.clientY, slider: index });
   
   // Get the track that was touched directly
   const track = event.currentTarget as HTMLElement;
@@ -272,8 +278,11 @@ function handleTrackTouchEnd(event: TouchEvent) {
       const deltaX = Math.abs(touch.clientX - swipeStartX.value);
       const deltaY = Math.abs(touch.clientY - swipeStartY.value);
       
+      console.log('[Swipe] Touch end:', { deltaX, deltaY, threshold: 100 });
+      
       // If horizontal swipe > 100px and more horizontal than vertical, exit
       if (deltaX > 100 && deltaX > deltaY * 2) {
+        console.log('[Swipe] Horizontal swipe detected - exiting live mode');
         exitLiveMode();
         return;
       }
@@ -848,7 +857,8 @@ async function checkOrientation() {
     height: window.innerHeight,
     width: window.innerWidth,
     isIOS: isIOS.value,
-    viewMode: viewMode.value
+    viewMode: viewMode.value,
+    isFullscreen: !!document.fullscreenElement
   });
   
   isPortrait.value = newIsPortrait;
@@ -870,6 +880,22 @@ async function checkOrientation() {
         if (elem.requestFullscreen && !document.fullscreenElement) {
           await elem.requestFullscreen();
           console.log('[Fullscreen] Fullscreen granted');
+          
+          // Force recheck orientation after fullscreen (browser needs time to update)
+          setTimeout(() => {
+            console.log('[Fullscreen] Rechecking orientation after fullscreen');
+            const finalCheck = window.innerHeight > window.innerWidth;
+            console.log('[Fullscreen] Final orientation check:', {
+              height: window.innerHeight,
+              width: window.innerWidth,
+              isPortrait: finalCheck
+            });
+            // Force landscape if in fullscreen (Android fullscreen should be landscape)
+            if (document.fullscreenElement) {
+              isPortrait.value = false;
+              console.log('[Fullscreen] Forced isPortrait to false');
+            }
+          }, 300);
         } else {
           console.log('[Fullscreen] Already in fullscreen or API not available');
         }
@@ -993,6 +1019,14 @@ async function enterLiveMode() {
         // Show rotation prompt, will request fullscreen after rotation
         console.log('[Android] Starting in portrait - show rotation prompt');
         startToLandAnimation();
+        
+        // Add safety timeout - if still showing prompt after 5 seconds, force hide it
+        setTimeout(() => {
+          if (isPortrait.value && viewMode.value === 'live') {
+            console.log('[Safety] Timeout: forcing portrait prompt to hide');
+            isPortrait.value = false;
+          }
+        }, 5000);
       } else {
         // Already in landscape, request fullscreen immediately
         console.log('[Android] Already in landscape - requesting fullscreen');
@@ -1001,6 +1035,12 @@ async function enterLiveMode() {
           if (elem.requestFullscreen) {
             await elem.requestFullscreen();
             console.log('[Android] Fullscreen granted');
+            
+            // Recheck orientation after entering fullscreen
+            setTimeout(() => {
+              console.log('[Fullscreen] Rechecking orientation after fullscreen grant');
+              checkOrientation();
+            }, 300);
           } else {
             console.log('[Android] Fullscreen API not available');
           }
@@ -1210,10 +1250,12 @@ defineExpose({
       :class="{ 'mobile-landscape': isMobile }"
     >
       <!-- Mobile Portrait Prompt (iOS & Android) -->
-      <div v-if="isMobile && isPortrait" class="portrait-prompt">
+      <div v-if="isMobile && isPortrait" class="portrait-prompt" @click="!isIOS && (isPortrait = false)">
         <div class="prompt-content">
           <img :src="toLandImageSrc" alt="Rotate to landscape" class="rotate-icon-img" />
-          <div class="prompt-subtext" style="margin-top: 1rem; font-size: 0.7rem; opacity: 0.6;">Swipe left or right to exit</div>
+          <div class="prompt-subtext" style="margin-top: 1rem; font-size: 0.7rem; opacity: 0.6;">
+            {{ isIOS ? 'Swipe left or right to exit' : 'Rotate device or tap to skip' }}
+          </div>
         </div>
       </div>
       
@@ -1224,12 +1266,13 @@ defineExpose({
         </div>
       </div>
       
-      <!-- Debug indicator -->
+      <!-- Debug indicator & Emergency override -->
       <div 
         v-if="!isMobile || !isPortrait" 
-        style="position: absolute; top: 10px; left: 10px; color: lime; font-size: 10px; z-index: 999; background: rgba(0,0,0,0.7); padding: 4px;"
+        style="position: absolute; top: 10px; left: 10px; color: lime; font-size: 10px; z-index: 999; background: rgba(0,0,0,0.7); padding: 4px; cursor: pointer;"
+        @click="isPortrait = false"
       >
-        LANDSCAPE: {{ sliders.length }} sliders
+        LANDSCAPE: {{ sliders.length }} sliders (tap if black screen)
       </div>
       
       <!-- Sliders container -->

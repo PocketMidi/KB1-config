@@ -102,13 +102,11 @@ const isDraggingLinks = ref(false);
 const linkDragState = ref<boolean | null>(null); // The state to apply when dragging (true for link, false for unlink)
 
 // Watch isPortrait for debugging
-watch(isPortrait, (newVal, oldVal) => {
-  console.log('[isPortrait] Changed:', { old: oldVal, new: newVal, viewMode: viewMode.value });
+watch(isPortrait, (newVal) => {
+  if (viewMode.value === 'live') {
+    console.log('[LiveMode] isPortrait:', newVal);
+  }
 });
-
-// Debug window dimensions
-const windowWidth = computed(() => window.innerWidth);
-const windowHeight = computed(() => window.innerHeight);
 
 // Initialize sliders
 function initializeSliders() {
@@ -220,7 +218,6 @@ function handleTrackTouchStart(event: TouchEvent, index: number) {
   // Store swipe start position
   swipeStartX.value = touch.clientX;
   swipeStartY.value = touch.clientY;
-  console.log('[Touch] Touch start at:', { x: touch.clientX, y: touch.clientY, slider: index });
   
   // Get the track that was touched directly
   const track = event.currentTarget as HTMLElement;
@@ -282,11 +279,8 @@ function handleTrackTouchEnd(event: TouchEvent) {
       const deltaX = Math.abs(touch.clientX - swipeStartX.value);
       const deltaY = Math.abs(touch.clientY - swipeStartY.value);
       
-      console.log('[Swipe] Touch end:', { deltaX, deltaY, threshold: 100 });
-      
       // If horizontal swipe > 100px and more horizontal than vertical, exit
       if (deltaX > 100 && deltaX > deltaY * 2) {
-        console.log('[Swipe] Horizontal swipe detected - exiting live mode');
         exitLiveMode();
         return;
       }
@@ -855,66 +849,41 @@ async function checkOrientation() {
   const wasPortrait = isPortrait.value;
   const newIsPortrait = window.innerHeight > window.innerWidth;
   
-  console.log('[Orientation] Checking:', {
-    wasPortrait,
-    newIsPortrait,
-    height: window.innerHeight,
-    width: window.innerWidth,
-    isIOS: isIOS.value,
-    viewMode: viewMode.value,
-    isFullscreen: !!document.fullscreenElement
-  });
-  
   isPortrait.value = newIsPortrait;
   
   // Start/stop animations based on orientation
   if (isPortrait.value && !wasPortrait) {
-    console.log('[Orientation] Changed to PORTRAIT - starting to_land animation');
     startToLandAnimation();
     stopToPortAnimation();
   } else if (!isPortrait.value && wasPortrait) {
-    console.log('[Orientation] Changed to LANDSCAPE - stopping animation');
     stopToLandAnimation();
     
     // Android: Request fullscreen when rotated to landscape
     if (!isIOS.value && viewMode.value === 'live') {
-      console.log('[Fullscreen] Requesting fullscreen for Android');
       try {
         const elem = document.documentElement;
         if (elem.requestFullscreen && !document.fullscreenElement) {
           await elem.requestFullscreen();
-          console.log('[Fullscreen] Fullscreen granted');
           
           // Force recheck orientation after fullscreen (browser needs time to update)
           setTimeout(() => {
-            console.log('[Fullscreen] Rechecking orientation after fullscreen');
-            const finalCheck = window.innerHeight > window.innerWidth;
-            console.log('[Fullscreen] Final orientation check:', {
-              height: window.innerHeight,
-              width: window.innerWidth,
-              isPortrait: finalCheck
-            });
             // Force landscape if in fullscreen (Android fullscreen should be landscape)
             if (document.fullscreenElement) {
               isPortrait.value = false;
-              console.log('[Fullscreen] Forced isPortrait to false');
             }
           }, 300);
-        } else {
-          console.log('[Fullscreen] Already in fullscreen or API not available');
         }
         
         // Lock orientation to landscape
         if (screen.orientation && 'lock' in screen.orientation) {
           try {
             await (screen.orientation as any).lock('landscape');
-            console.log('[Orientation] Orientation locked to landscape');
-          } catch (err) {
-            console.log('[Orientation] Orientation lock not supported:', err);
+          } catch {
+            // Orientation lock not supported
           }
         }
       } catch (e) {
-        console.error('[Fullscreen] Fullscreen error:', e);
+        console.error('Fullscreen error:', e);
       }
     }
     
@@ -989,89 +958,71 @@ function preloadRotationFrames() {
 }
 
 async function enterLiveMode() {
-  console.log('[LiveMode] Entering live mode');
   detectMobile();
   viewMode.value = 'live';
   showExitButton.value = false; // Start with X hidden
-  
-  console.log('[LiveMode] Device detection:', {
-    isMobile: isMobile.value,
-    isIOS: isIOS.value,
-    isPortrait: isPortrait.value
-  });
   
   // Platform-specific mobile handling
   if (isMobile.value) {
     if (isIOS.value) {
       // iOS: No fullscreen API support, just use viewport optimization
       // Portrait prompt will show if needed
-      console.log('[iOS] Setting up orientation listeners');
       window.addEventListener('resize', checkOrientation);
       window.addEventListener('orientationchange', checkOrientation);
       // Start animation if in portrait
       if (isPortrait.value) {
-        console.log('[iOS] Starting in portrait - show animation');
         startToLandAnimation();
       }
     } else {
       // Android: Add orientation listeners and show prompt if in portrait
-      console.log('[Android] Setting up orientation listeners');
       window.addEventListener('resize', checkOrientation);
       window.addEventListener('orientationchange', checkOrientation);
       
       if (isPortrait.value) {
         // Show rotation prompt, will request fullscreen after rotation
-        console.log('[Android] Starting in portrait - show rotation prompt');
         startToLandAnimation();
         
         // Add safety timeout - if still showing prompt after 5 seconds, force hide it
         setTimeout(() => {
           if (isPortrait.value && viewMode.value === 'live') {
-            console.log('[Safety] Timeout: forcing portrait prompt to hide');
             isPortrait.value = false;
           }
         }, 5000);
       } else {
         // Already in landscape, request fullscreen immediately
-        console.log('[Android] Already in landscape - requesting fullscreen');
         try {
           const elem = document.documentElement;
           if (elem.requestFullscreen) {
             await elem.requestFullscreen();
-            console.log('[Android] Fullscreen granted');
             
             // Recheck orientation after entering fullscreen
             setTimeout(() => {
-              console.log('[Fullscreen] Rechecking orientation after fullscreen grant');
               checkOrientation();
             }, 300);
-          } else {
-            console.log('[Android] Fullscreen API not available');
           }
           
           // Lock orientation to landscape
           if (screen.orientation && 'lock' in screen.orientation) {
             try {
               await (screen.orientation as any).lock('landscape');
-              console.log('[Android] Orientation locked');
-            } catch (err) {
-              console.log('[Android] Orientation lock failed:', err);
+            } catch {
+              // Orientation lock not supported
             }
           }
         } catch (e) {
-          console.error('[Android] Fullscreen error:', e);
+          console.error('Fullscreen error:', e);
         }
       }
     }
   }
   
   await nextTick();
-  console.log('[LiveMode] Live mode setup complete');
 }
 
 async function exitLiveMode() {
-  // Show rotate-back prompt for iOS mobile users
-  if (isMobile.value && isIOS.value && !isPortrait.value) {
+  // Show rotate-back prompt for mobile users (both iOS and Android)
+  // Layout is designed for portrait, so guide users to rotate back
+  if (isMobile.value && !isPortrait.value) {
     showRotateBackPrompt.value = true;
     startToPortAnimation();
     // Wait until portrait orientation detected (no timeout)
@@ -1253,20 +1204,6 @@ defineExpose({
       class="live-mode" 
       :class="{ 'mobile-landscape': isMobile }"
     >
-      <!-- EMERGENCY OVERRIDE - Always visible above everything -->
-      <div 
-        style="position: fixed; top: 10px; left: 10px; z-index: 99999; background: rgba(255,0,0,0.9); color: white; padding: 10px; font-size: 11px; border: 2px solid yellow; cursor: pointer; font-weight: bold; border-radius: 4px; max-width: 180px;"
-        @click="isPortrait = false"
-      >
-        <div style="font-size: 14px; margin-bottom: 4px;">TAP TO FIX</div>
-        isPortrait: {{ isPortrait }}<br>
-        isMobile: {{ isMobile }}<br>
-        viewMode: {{ viewMode }}<br>
-        Sliders: {{ sliders.length }}<br>
-        Width: {{ windowWidth }}<br>
-        Height: {{ windowHeight }}
-      </div>
-      
       <!-- Mobile Portrait Prompt (iOS & Android) -->
       <div v-if="isMobile && isPortrait" class="portrait-prompt" @click="!isIOS && (isPortrait = false)">
         <div class="prompt-content">
@@ -1312,8 +1249,7 @@ defineExpose({
             @touchend="handleTrackTouchEnd($event)"
             @touchcancel="handleTrackTouchEnd($event)"
             :style="{
-              backgroundColor: hexToRgba(slider.color, 0.6),
-              border: '2px solid ' + slider.color
+              backgroundColor: hexToRgba(slider.color, 0.3)
             }"
           >
             <!-- CC number inside track (top) -->
@@ -1788,7 +1724,8 @@ defineExpose({
   height: 100dvh;
   height: 100vh;
   touch-action: pan-y; /* Allow vertical panning */
-  background: rgba(255, 0, 255, 0.1) !important; /* Debug: visible background */
+  border: none;
+  outline: none;
 }
 
 .live-mode.mobile-landscape .live-slider-wrapper {
@@ -1800,7 +1737,8 @@ defineExpose({
   display: flex;
   flex-direction: column;
   touch-action: auto; /* Allow default touch behavior for slider */
-  outline: 1px solid rgba(0, 255, 255, 0.5); /* Debug: cyan outline */
+  border: none;
+  outline: none;
 }
 
 .live-mode.mobile-landscape .live-slider-track {
@@ -1812,8 +1750,9 @@ defineExpose({
   touch-action: none; /* Prevent default, we handle touch manually */
   -webkit-touch-callout: none;
   cursor: pointer;
-  min-height: 200px !important; /* Debug: ensure minimum height */
-  border: 3px solid rgba(255, 255, 255, 0.5) !important; /* Debug: always visible border */
+  border: none;
+  outline: none;
+  box-shadow: none;
 }
 
 .live-mode.mobile-landscape .live-slider-input {
@@ -1836,6 +1775,8 @@ defineExpose({
   overflow-x: auto;
   overflow-y: hidden;
   min-height: 490px;
+  border: none;
+  outline: none;
 }
 
 .live-slider-wrapper {
@@ -1845,6 +1786,8 @@ defineExpose({
   align-items: center;
   gap: 0.5rem;
   min-width: 42px;
+  border: none;
+  outline: none;
 }
 
 .live-slider-track {
@@ -1854,6 +1797,7 @@ defineExpose({
   border-radius: 12px;
   overflow: hidden;
   cursor: pointer;
+  border: none;
 }
 
 /* Bipolar center markers - positioned outside track */
@@ -1867,6 +1811,8 @@ defineExpose({
   border-radius: 1.5px;
   z-index: 2;
   pointer-events: none;
+  border: none;
+  outline: none;
 }
 
 .center-marker-left {
@@ -1883,6 +1829,8 @@ defineExpose({
   right: 0;
   pointer-events: none;
   z-index: 1;
+  border: none;
+  outline: none;
 }
 
 .live-slider-cc-inside {
@@ -1891,15 +1839,14 @@ defineExpose({
   left: 0;
   right: 0;
   text-align: center;
-  color: rgba(255, 255, 255, 1); /* Debug: full opacity white */
-  font-size: 0.875rem;
+  color: rgba(234, 234, 234, 0.8);
+  font-size: 0.75rem;
   font-family: 'Roboto Mono';
-  font-weight: 700;
+  font-weight: 600;
   pointer-events: none;
   z-index: 2;
-  background: rgba(0, 0, 0, 0.7); /* Debug: dark background for contrast */
-  padding: 2px 4px;
-  border-radius: 3px;
+  border: none;
+  outline: none;
 }
 
 .live-slider-input {
@@ -1919,6 +1866,8 @@ defineExpose({
   -webkit-writing-mode: bt-lr;
   -webkit-appearance: slider-vertical;
   opacity: 0;
+  border: none;
+  outline: none;
 }
 
 .live-slider-input::-webkit-slider-thumb {

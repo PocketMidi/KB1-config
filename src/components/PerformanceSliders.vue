@@ -106,6 +106,10 @@ watch(isPortrait, (newVal, oldVal) => {
   console.log('[isPortrait] Changed:', { old: oldVal, new: newVal, viewMode: viewMode.value });
 });
 
+// Debug window dimensions
+const windowWidth = computed(() => window.innerWidth);
+const windowHeight = computed(() => window.innerHeight);
+
 // Initialize sliders
 function initializeSliders() {
   const savedPreset = SliderPresetStore.loadCurrentState();
@@ -1259,8 +1263,8 @@ defineExpose({
         isMobile: {{ isMobile }}<br>
         viewMode: {{ viewMode }}<br>
         Sliders: {{ sliders.length }}<br>
-        Width: {{ typeof window !== 'undefined' ? window.innerWidth : 0 }}<br>
-        Height: {{ typeof window !== 'undefined' ? window.innerHeight : 0 }}
+        Width: {{ windowWidth }}<br>
+        Height: {{ windowHeight }}
       </div>
       
       <!-- Mobile Portrait Prompt (iOS & Android) -->

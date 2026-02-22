@@ -293,6 +293,24 @@ function getSliderFillBottom(slider: SliderConfig): number {
   }
 }
 
+// Check if a slider is unreachable due to touch offset compensation
+function isSliderUnreachable(sliderIndex: number): boolean {
+  // CC51 (index 0) is unreachable when offset > +50
+  if (sliderIndex === 0 && touchOffsetX.value > 50) {
+    return true;
+  }
+  // CC62 (index 11) is unreachable when offset < -50
+  if (sliderIndex === 11 && touchOffsetX.value < -50) {
+    return true;
+  }
+  return false;
+}
+
+// Get the effective color for a slider (gray if unreachable, normal color otherwise)
+function getSliderColor(slider: SliderConfig, sliderIndex: number): string {
+  return isSliderUnreachable(sliderIndex) ? '#2a2a2a' : slider.color;
+}
+
 // === END UTILITY FUNCTIONS ===
 
 // Handle touch drag on slider track (for mobile)
@@ -1288,7 +1306,7 @@ defineExpose({
               >
                 <div 
                   class="color-swatch"
-                  :style="{ backgroundColor: slider.color }"
+                  :style="{ backgroundColor: getSliderColor(slider, index) }"
                   @click="handleColorSwatchClick(index, $event)"
                 ></div>
                 
@@ -1401,11 +1419,11 @@ defineExpose({
           <template v-if="slider.bipolar">
             <div 
               class="center-marker-left"
-              :style="{ backgroundColor: slider.color }"
+              :style="{ backgroundColor: getSliderColor(slider, index) }"
             ></div>
             <div 
               class="center-marker-right"
-              :style="{ backgroundColor: slider.color }"
+              :style="{ backgroundColor: getSliderColor(slider, index) }"
             ></div>
           </template>
           
@@ -1418,7 +1436,7 @@ defineExpose({
             @touchend="handleTrackTouchEnd($event)"
             @touchcancel="handleTrackTouchEnd($event)"
             :style="{
-              backgroundColor: hexToRgba(slider.color, 0.3)
+              backgroundColor: hexToRgba(getSliderColor(slider, index), 0.3)
             }"
           >
             <!-- CC number inside track (top) -->
@@ -1431,7 +1449,7 @@ defineExpose({
               :style="{
                 height: `${getSliderFillHeight(slider)}%`,
                 bottom: slider.bipolar ? `${getSliderFillBottom(slider)}%` : '0',
-                backgroundColor: slider.color,
+                backgroundColor: getSliderColor(slider, index),
               }"
             ></div>
             
@@ -1454,18 +1472,6 @@ defineExpose({
           <div class="live-cc-label">{{ slider.cc }}</div>
         </div>
         
-      </div>
-      
-      <!-- Ghost slider spacer to catch touches for rightmost slider (CC62) when offset is negative -->
-      <div 
-        v-if="touchOffsetX < 0"
-        class="ghost-slider"
-        @touchstart="handleTrackTouchStart($event, sliders.length - 1)"
-        @touchmove="handleTrackTouchMove($event, sliders.length - 1)"
-        @touchend="handleTrackTouchEnd($event)"
-        @touchcancel="handleTrackTouchEnd($event)"
-      >
-        <div class="ghost-track"></div>
       </div>
     </div>
   </div>
@@ -2012,25 +2018,6 @@ defineExpose({
   touch-action: auto; /* Allow default touch behavior for slider */
   border: none;
   outline: none;
-}
-
-/* Ghost slider spacer for catching touches to rightmost slider */
-.live-mode.mobile-landscape .ghost-slider {
-  position: absolute;
-  right: 0.5rem; /* Match padding-right of .live-sliders-container */
-  top: 0.5rem; /* Match padding-top of .live-sliders-container */
-  bottom: 0.5rem; /* Match padding-bottom */
-  width: 85px;
-  opacity: 0; /* Invisible */
-  pointer-events: auto; /* Still catch touches */
-  z-index: 10;
-}
-
-.live-mode.mobile-landscape .ghost-track {
-  width: 100%;
-  height: 100%;
-  background: transparent !important;
-  pointer-events: auto;
 }
 
 .live-mode.mobile-landscape .live-slider-track {

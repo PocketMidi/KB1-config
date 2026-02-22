@@ -1,93 +1,29 @@
 <template>
   <div class="preset-manager">
-    <!-- Device Presets Section (if supported) -->
-    <div v-if="hasDevicePresetSupport" class="preset-section">
-      <!-- Create New Embedded Flash Preset Button -->
-      <button class="btn-create-preset" @click="createNewFlashPreset" :disabled="!isConnected">
-        + Create New Embedded Flash Preset
+    <!-- Tab Navigation -->
+    <div class="preset-tabs">
+      <button 
+        class="preset-tab" 
+        :class="{ active: activeTab === 'community' }"
+        @click="activeTab = 'community'"
+      >
+        Community
       </button>
-      
-      <!-- Slot Indicator -->
-      <div class="slot-indicator">
-        <button class="btn-refresh" @click="refreshSlots" title="Refresh device slots" :disabled="!isConnected">
-          ↻
-        </button>
-        <div class="slot-boxes">
-          <template v-for="slot in 8" :key="`indicator-${slot - 1}`">
-            <div
-              class="slot-box"
-              :class="{
-                filled: getDevicePreset(slot - 1).isValid,
-                active: activeDeviceSlot === (slot - 1),
-                empty: !getDevicePreset(slot - 1).isValid
-              }"
-              :title="getDevicePreset(slot - 1).isValid ? getDevicePreset(slot - 1).name : `Slot ${slot} (Empty)`"
-              @click="isConnected && getDevicePreset(slot - 1).isValid && loadFromDevice(slot - 1)"
-              :style="{ cursor: isConnected ? (getDevicePreset(slot - 1).isValid ? 'pointer' : 'default') : 'not-allowed' }"
-            >
-              <span class="slot-number">{{ slot }}</span>
-            </div>
-            <div class="slot-divider" v-if="slot < 8"></div>
-          </template>
-        </div>
-      </div>
-      
-      <div class="presets-list">
-        <div
-          v-for="slot in 8"
-          :key="`device-${slot - 1}`"
-          class="preset-item device-slot"
-          :class="{ 
-            empty: !getDevicePreset(slot - 1).isValid,
-            active: activeDeviceSlot === (slot - 1)
-          }"
-        >
-          <div class="preset-info">
-            <div class="preset-name">
-              <span class="active-indicator" v-if="activeDeviceSlot === (slot - 1)">●</span>
-              <span>Slot {{ slot }}</span>
-            </div>
-            <div class="preset-meta">
-              <span v-if="getDevicePreset(slot - 1).isValid">{{ getDevicePreset(slot - 1).name }}</span>
-              <span v-else>(Empty)</span>
-            </div>
-          </div>
-          
-          <div class="preset-actions">
-            <button 
-              class="btn-small" 
-              @click="loadFromDevice(slot - 1)" 
-              :disabled="!isConnected || !getDevicePreset(slot - 1).isValid"
-              title="Load preset from device">
-              Load
-            </button>
-            <button 
-              class="btn-small" 
-              @click="saveToDevice(slot - 1)" 
-              :disabled="!isConnected"
-              :title="getDevicePreset(slot - 1).isValid ? 'Overwrite with current settings' : 'Save current settings to this slot'">
-              Save
-            </button>
-            <button 
-              class="btn-small btn-delete" 
-              @click="deleteFromDevice(slot - 1)" 
-              :disabled="!isConnected || !getDevicePreset(slot - 1).isValid"
-              title="Delete preset from this slot">
-              Delete
-            </button>
-          </div>
-        </div>
-      </div>
+      <button 
+        v-if="hasDevicePresetSupport"
+        class="preset-tab" 
+        :class="{ active: activeTab === 'device-presets' }"
+        @click="activeTab = 'device-presets'"
+      >
+        Archive
+      </button>
     </div>
     
-    <!-- Simple divider bar -->
-    <div class="simple-divider"></div>
-    
-    <!-- Create New Preset Button -->
-    <button class="btn-create-preset" @click="showCreateDialog = true">
-      + Create New Browser Cache Preset
-    </button>
-
+    <!-- Community Tab Content -->
+    <div v-show="activeTab === 'community'" class="tab-content">
+      <!-- Your Working Presets Section -->
+      <div class="preset-section-header">Your Working Presets</div>
+      
     <!-- Presets List -->
     <div v-if="presets.length > 0" class="presets-list">
       <div
@@ -140,13 +76,18 @@
     <!-- Empty State -->
     <div v-else class="empty-state">
       <p>No presets saved yet.</p>
-      <p class="hint">Create your first preset to save all current settings.</p>
+      <button class="btn-secondary" @click="showCreateDialog = true" style="margin-top: 0.5rem;">
+        + Create First Preset
+      </button>
     </div>
 
     <!-- Import/Export Section -->
     <div class="import-export-section">
+      <button class="btn-secondary" @click="showCreateDialog = true">
+        + New
+      </button>
       <button class="btn-secondary" @click="importPresetDialog">
-        Import Preset
+        Import
       </button>
       <button 
         v-if="showCheckboxes && selectedPresets.size < presets.length" 
@@ -234,6 +175,90 @@
       </div>
     </div>
 
+    <!-- Export Dialog -->
+    <div v-if="showExportDialog" class="modal-overlay" @click.self="cancelExport">
+      <div class="modal-dialog export-dialog">
+        <h3>Export Preset{{exportingSelectedCount > 1 ? 's' : ''}}</h3>
+        
+        <!-- Export Type Selection -->
+        <div class="export-type-selection">
+          <label class="export-option">
+            <input 
+              type="radio" 
+              name="exportType" 
+              value="simple" 
+              v-model="exportType"
+            />
+            <div class="option-content">
+              <div class="option-title">Simple (Backup)</div>
+              <div class="option-description">Downloads settings file for personal backup</div>
+            </div>
+          </label>
+          
+          <label class="export-option">
+            <input 
+              type="radio" 
+              name="exportType" 
+              value="community" 
+              v-model="exportType"
+            />
+            <div class="option-content">
+              <div class="option-title">Community (Share)</div>
+              <div class="option-description">Add metadata for sharing with others</div>
+            </div>
+          </label>
+        </div>
+        
+        <!-- Metadata Form (Only for Community) -->
+        <div v-if="exportType === 'community'" class="metadata-form">
+          <div class="form-group">
+            <label>Name (Optional)</label>
+            <input
+              v-model="exportMetadata.name"
+              type="text"
+              class="input-text"
+              placeholder="e.g., Ambient Lead"
+            />
+          </div>
+          
+          <div class="form-group">
+            <label>Author (Optional)</label>
+            <input
+              v-model="exportMetadata.author"
+              type="text"
+              class="input-text"
+              placeholder="Your name or username"
+            />
+          </div>
+          
+          <div class="form-group">
+            <label>Description (Optional)</label>
+            <textarea
+              v-model="exportMetadata.description"
+              class="input-text"
+              rows="2"
+              placeholder="Describe your preset..."
+            ></textarea>
+          </div>
+          
+          <div class="form-group">
+            <label>Tags (Optional)</label>
+            <input
+              v-model="exportMetadata.tags"
+              type="text"
+              class="input-text"
+              placeholder="ambient, lead, synth (comma-separated)"
+            />
+          </div>
+        </div>
+        
+        <div class="modal-buttons">
+          <button class="btn-secondary" @click="cancelExport">Cancel</button>
+          <button class="btn-primary" @click="confirmExport">Export</button>
+        </div>
+      </div>
+    </div>
+
     <!-- Hidden file input for import -->
     <input
       ref="fileInput"
@@ -242,6 +267,91 @@
       style="display: none"
       @change="handleFileImport"
     />
+      
+      <!-- Browse Shared Section -->
+      <div class="preset-section-header" style="margin-top: 2rem;">Browse Shared</div>
+      <CommunityPresets @load="handleCommunityPresetLoad" />
+    </div>
+    
+    <!-- Device Presets Tab Content -->
+    <div v-show="activeTab === 'device-presets'" class="tab-content">
+      <!-- Device Storage Section -->
+      <div class="preset-section-header">Stored on Device</div>
+      <div class="preset-section">
+      
+      <!-- Slot Indicator -->
+      <div class="slot-indicator">
+        <button class="btn-refresh" @click="refreshSlots" title="Refresh device slots" :disabled="!isConnected">
+          ↻
+        </button>
+        <div class="slot-boxes">
+          <template v-for="slot in 8" :key="`indicator-${slot - 1}`">
+            <div
+              class="slot-box"
+              :class="{
+                filled: getDevicePreset(slot - 1).isValid,
+                active: activeDeviceSlot === (slot - 1),
+                empty: !getDevicePreset(slot - 1).isValid
+              }"
+              :title="getDevicePreset(slot - 1).isValid ? getDevicePreset(slot - 1).name : `Slot ${slot} (Empty)`"
+              @click="isConnected && getDevicePreset(slot - 1).isValid && loadFromDevice(slot - 1)"
+              :style="{ cursor: isConnected ? (getDevicePreset(slot - 1).isValid ? 'pointer' : 'default') : 'not-allowed' }"
+            >
+              <span class="slot-number">{{ slot }}</span>
+            </div>
+            <div class="slot-divider" v-if="slot < 8"></div>
+          </template>
+        </div>
+      </div>
+      
+      <div class="presets-list">
+        <div
+          v-for="slot in 8"
+          :key="`device-${slot - 1}`"
+          class="preset-item device-slot"
+          :class="{ 
+            empty: !getDevicePreset(slot - 1).isValid,
+            active: activeDeviceSlot === (slot - 1)
+          }"
+        >
+          <div class="preset-info">
+            <div class="preset-name">
+              <span class="active-indicator" v-if="activeDeviceSlot === (slot - 1)">●</span>
+              <span>Slot {{ slot }}</span>
+            </div>
+            <div class="preset-meta">
+              <span v-if="getDevicePreset(slot - 1).isValid">{{ getDevicePreset(slot - 1).name }}</span>
+              <span v-else>(Empty)</span>
+            </div>
+          </div>
+          
+          <div class="preset-actions">
+            <button 
+              class="btn-small" 
+              @click="loadFromDevice(slot - 1)" 
+              :disabled="!isConnected || !getDevicePreset(slot - 1).isValid"
+              title="Load preset from device">
+              Load
+            </button>
+            <button 
+              class="btn-small" 
+              @click="saveToDevice(slot - 1)" 
+              :disabled="!isConnected"
+              :title="getDevicePreset(slot - 1).isValid ? 'Overwrite with current settings' : 'Save current settings to this slot'">
+              Save
+            </button>
+            <button 
+              class="btn-small btn-delete" 
+              @click="deleteFromDevice(slot - 1)" 
+              :disabled="!isConnected || !getDevicePreset(slot - 1).isValid"
+              title="Delete preset from this slot">
+              Delete
+            </button>
+          </div>
+        </div>
+      </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -252,6 +362,7 @@ import type { DeviceSettings } from '../ble/kb1Protocol';
 import { useDeviceState } from '../composables/useDeviceState';
 import { useToast } from '../composables/useToast';
 import { useConfirm } from '../composables/useConfirm';
+import CommunityPresets from './CommunityPresets.vue';
 
 const {
   isConnected,
@@ -280,6 +391,9 @@ const presets = ref<Preset[]>([]);
 const activePresetId = ref<string | null>(null);
 const openMenuId = ref<string | null>(null);
 
+// Active tab state
+const activeTab = ref<'community' | 'device-presets'>('community');
+
 // Selection state for export
 const selectedPresets = ref<Set<string>>(new Set());
 const showCheckboxes = ref(false);
@@ -296,6 +410,18 @@ const showRenameDialog = ref(false);
 const renameValue = ref('');
 const renamingId = ref<string | null>(null);
 const renameInput = ref<HTMLInputElement | null>(null);
+
+// Export dialog
+const showExportDialog = ref(false);
+const exportType = ref<'simple' | 'community'>('simple');
+const exportMetadata = ref({
+  name: '',
+  author: '',
+  description: '',
+  tags: ''
+});
+const exportingIds = ref<string[]>([]);
+const exportingSelectedCount = ref(0);
 
 // File input
 const fileInput = ref<HTMLInputElement | null>(null);
@@ -435,11 +561,11 @@ function generateName() {
 
 function getDialogHeading(): string {
   if (savingDeviceSlot.value === -1) {
-    return 'Create New Embedded Flash Preset';
+    return 'Create New Device Preset';
   } else if (savingDeviceSlot.value !== null) {
     return `Save to Device Slot ${savingDeviceSlot.value + 1}`;
   } else {
-    return 'Create New Browser Cache Preset';
+    return 'Create New Preset';
   }
 }
 
@@ -516,7 +642,7 @@ async function confirmCreate() {
     }
     savingDeviceSlot.value = null;
   } else {
-    // Creating browser cache preset
+    // Creating new preset
     const preset = PresetStore.createPreset(name, props.currentSettings);
     activePresetId.value = preset.id;
     PresetStore.setActivePresetId(preset.id);
@@ -543,6 +669,21 @@ async function loadPreset(id: string) {
   PresetStore.setActivePresetId(id);
   emit('presetActivated', id);
   openMenuId.value = null;
+}
+
+// Load community preset
+async function handleCommunityPresetLoad(settings: DeviceSettings) {
+  if (props.hasUnsavedChanges) {
+    if (!await confirm('You have unsaved changes. Loading this preset will discard them. Continue?')) {
+      return;
+    }
+  }
+
+  emit('load', settings);
+  activePresetId.value = null; // Clear active preset ID since this is not a saved preset
+  emit('presetActivated', null);
+  activeTab.value = 'my-presets'; // Switch to My Presets tab
+  toast.success('Community preset loaded! Save it to keep it in your collection.');
 }
 
 async function updatePreset(id: string) {
@@ -609,20 +750,99 @@ async function deletePreset(id: string) {
 }
 
 function exportPreset(id: string) {
-  const json = PresetStore.exportPreset(id);
-  if (!json) return;
-
-  const preset = PresetStore.getPreset(id);
-  const filename = `KB1_Preset_${preset?.name.replace(/\s/g, '_')}.json`;
-  
-  downloadJSON(json, filename);
+  // Show export dialog for single preset
+  exportingIds.value = [id];
+  exportingSelectedCount.value = 1;
+  showExportDialog.value = true;
   openMenuId.value = null;
 }
 
 function exportAllPresets() {
-  const json = PresetStore.exportAllPresets();
-  const filename = `KB1_All_Presets_${Date.now()}.json`;
+  // Show export dialog for all presets
+  exportingIds.value = presets.value.map(p => p.id);
+  exportingSelectedCount.value = presets.value.length;
+  showExportDialog.value = true;
+}
+
+function exportSelectedPresets() {
+  if (selectedPresets.value.size === 0) return;
+  
+  // If only one preset selected, export with its name
+  if (selectedPresets.value.size === 1) {
+    const id = Array.from(selectedPresets.value)[0];
+    if (id) {
+      exportPreset(id);
+    }
+    return;
+  }
+  
+  // Show export dialog for selected presets
+  exportingIds.value = Array.from(selectedPresets.value);
+  exportingSelectedCount.value = selectedPresets.value.size;
+  showExportDialog.value = true;
+}
+
+function cancelExport() {
+  showExportDialog.value = false;
+  exportType.value = 'simple';
+  exportMetadata.value = {
+    name: '',
+    author: '',
+    description: '',
+    tags: ''
+  };
+  exportingIds.value = [];
+  exportingSelectedCount.value = 0;
+}
+
+function confirmExport() {
+  if (exportingIds.value.length === 0) return;
+  
+  let json: string;
+  let filename: string;
+  
+  // Single preset export
+  if (exportingIds.value.length === 1) {
+    const id = exportingIds.value[0];
+    const rawJson = PresetStore.exportPreset(id);
+    if (!rawJson) return;
+    
+    const preset = PresetStore.getPreset(id);
+    const presetData = JSON.parse(rawJson);
+    
+    // Add metadata if community export
+    if (exportType.value === 'community') {
+      const metadata: any = {
+        date: new Date().toISOString().split('T')[0]
+      };
+      
+      if (exportMetadata.value.name) metadata.name = exportMetadata.value.name;
+      if (exportMetadata.value.author) metadata.author = exportMetadata.value.author;
+      if (exportMetadata.value.description) metadata.description = exportMetadata.value.description;
+      if (exportMetadata.value.tags) {
+        metadata.tags = exportMetadata.value.tags.split(',').map(t => t.trim()).filter(t => t);
+      }
+      
+      presetData.metadata = metadata;
+    }
+    
+    json = JSON.stringify(presetData, null, 2);
+    filename = `KB1_Preset_${preset?.name.replace(/\s/g, '_')}.json`;
+  } 
+  // Multiple presets export
+  else {
+    json = PresetStore.exportPresets(exportingIds.value);
+    filename = `KB1_Presets_${Date.now()}.json`;
+  }
+  
   downloadJSON(json, filename);
+  
+  // Clear selection after export
+  if (selectedPresets.value.size > 0) {
+    clearSelection();
+  }
+  
+  cancelExport();
 }
 
 function togglePresetSelection(id: string) {
@@ -654,27 +874,6 @@ function clearSelection() {
 
 function selectAll() {
   selectedPresets.value = new Set(presets.value.map(p => p.id));
-}
-
-function exportSelectedPresets() {
-  if (selectedPresets.value.size === 0) return;
-  
-  // If only one preset selected, export with its name
-  if (selectedPresets.value.size === 1) {
-    const id = Array.from(selectedPresets.value)[0];
-    if (id) {
-      exportPreset(id);
-    }
-    return;
-  }
-  
-  // Export multiple presets
-  const selectedIds = Array.from(selectedPresets.value);
-  const selectedPresetsData = selectedIds.map(id => PresetStore.getPreset(id)).filter(p => p !== null);
-  const json = JSON.stringify(selectedPresetsData, null, 2);
-  const filename = `KB1_${selectedPresets.value.size}_Presets_${Date.now()}.json`;
-  downloadJSON(json, filename);
-  clearSelection();
 }
 
 function downloadJSON(json: string, filename: string) {
@@ -759,34 +958,46 @@ function formatDate(timestamp: number): string {
   font-family: 'Roboto Mono', monospace;
 }
 
-.btn-create-preset {
-  width: 100%;
-  padding: 0.25rem 1rem;
-  background: rgba(249, 172, 32, 0.15);
-  border: 1px solid rgba(249, 172, 32, 0.3);
-  color: #EAEAEA;
+/* Tab Navigation */
+.preset-tabs {
+  display: flex;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.preset-tab {
+  background: none;
+  border: none;
+  padding: 0.5rem 0;
   font-size: 0.8125rem;
   font-weight: 500;
-  border-radius: 4px;
+  color: #848484;
   cursor: pointer;
-  transition: all 0.2s ease;
+  position: relative;
+  transition: color 0.2s ease;
   font-family: 'Roboto Mono', monospace;
-  margin-bottom: 1rem;
-  box-shadow: 0 0 0 rgba(249, 172, 32, 0);
 }
 
-.btn-create-preset:hover {
-  background: rgba(249, 172, 32, 0.25);
-  border-color: rgba(249, 172, 32, 0.5);
-  box-shadow: 0 0 8px rgba(249, 172, 32, 0.3);
-  color: #F9AC20;
+.preset-tab:hover {
+  color: #CDCDCD;
 }
 
-.btn-create-preset:active {
-  background: rgba(249, 172, 32, 0.35);
-  border-color: #F9AC20;
-  box-shadow: 0 0 12px rgba(249, 172, 32, 0.4);
-  transform: scale(0.98);
+.preset-tab.active {
+  color: #CDCDCD;
+}
+
+.preset-tab.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background-color: #CDCDCD;
+}
+
+.tab-content {
+  display: block;
 }
 
 /* Slot Indicator */
@@ -1226,6 +1437,66 @@ function formatDate(timestamp: number): string {
   cursor: not-allowed;
 }
 
+/* Export Dialog Specific Styles */
+.export-dialog {
+  max-width: 500px;
+}
+
+.export-type-selection {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.export-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.export-option:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.export-option input[type="radio"] {
+  margin-top: 0.25rem;
+  cursor: pointer;
+}
+
+.option-content {
+  flex: 1;
+}
+
+.option-title {
+  font-size: 0.9375rem;
+  color: #EAEAEA;
+  font-weight: 500;
+  margin-bottom: 0.25rem;
+}
+
+.option-description {
+  font-size: 0.8125rem;
+  color: #848484;
+  line-height: 1.4;
+}
+
+.metadata-form {
+  margin-bottom: 1.5rem;
+}
+
+.metadata-form textarea {
+  resize: vertical;
+  min-height: 60px;
+}
+
 @media (max-width: 768px) {
   .preset-actions {
     flex-wrap: wrap;
@@ -1240,6 +1511,16 @@ function formatDate(timestamp: number): string {
 /* Device Presets Section */
 .preset-section {
   margin-bottom: 2rem;
+}
+
+.preset-section-header {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #848484;
+  margin-bottom: 1rem;
+  font-family: 'Roboto Mono', monospace;
 }
 
 .section-title {
@@ -1368,12 +1649,6 @@ function formatDate(timestamp: number): string {
   color: var(--color-text-muted);
   text-transform: uppercase;
   font-weight: 500;
-}
-
-.simple-divider {
-  margin: 2rem 0;
-  height: 1px;
-  background: var(--color-divider);
 }
 
 @media (max-width: 768px) {

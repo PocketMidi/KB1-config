@@ -11,26 +11,7 @@
     
     <!-- Always show content, but apply disconnected styling -->
     <div v-if="isCCMapLoaded()" class="scales-content" :class="{ 'disconnected-state': !isConnected }">
-      <!-- Presets first -->
-      <AccordionSection
-        ref="presetsAccordion"
-        title="PRESETS"
-        :title-suffix="presetsSuffix"
-        :title-suffix-fading="presetsSuffixFading"
-        :subtitle="presetsSubtitle"
-        :id="'presets'"
-        :default-open="false"
-      >
-        <PresetManager
-          :current-settings="localSettings"
-          :has-unsaved-changes="hasChanges"
-          @load="handlePresetLoad"
-          @preset-activated="handlePresetActivated"
-          @slot-name-display="handleSlotNameDisplay"
-        />
-      </AccordionSection>
-      
-      <!-- Keyboard second -->
+      <!-- Keyboard first -->
       <AccordionSection
         ref="keyboardAccordion"
         title="KEYBOARD"
@@ -180,6 +161,25 @@
           :functionModes="touchFunctionModes"
           @update:modelValue="markChanged"
           @modeChanged="handleTouchModeChange"
+        />
+      </AccordionSection>
+      
+      <!-- Presets -->
+      <AccordionSection
+        ref="presetsAccordion"
+        title="PRESETS"
+        :title-suffix="presetsSuffix"
+        :title-suffix-fading="presetsSuffixFading"
+        :subtitle="presetsSubtitle"
+        :id="'presets'"
+        :default-open="false"
+      >
+        <PresetManager
+          :current-settings="localSettings"
+          :has-unsaved-changes="hasChanges"
+          @load="handlePresetLoad"
+          @preset-activated="handlePresetActivated"
+          @slot-name-display="handleSlotNameDisplay"
         />
       </AccordionSection>
       
@@ -675,7 +675,7 @@ function handleChordStyleChange(styleName: string) {
 
 function handlePresetLoad(settings: DeviceSettings) {
   localSettings.value = JSON.parse(JSON.stringify(settings));
-  hasChanges.value = true; // Mark as changed so user can save to device
+  hasChanges.value = false; // No changes yet - will become true when user modifies settings
 }
 
 function handlePresetActivated(presetId: string | null) {

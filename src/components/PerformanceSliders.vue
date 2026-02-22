@@ -421,6 +421,7 @@ function handleTrackTouchEnd(event: TouchEvent) {
   if (swipeStartX.value !== null && swipeStartY.value !== null) {
     const touch = event.changedTouches[0];
     if (touch) {
+      // Apply same offset logic as touch start
       const deltaX = Math.abs((touch.clientX + touchOffsetX.value) - swipeStartX.value);
       const deltaY = Math.abs(touch.clientY - swipeStartY.value);
       
@@ -1594,7 +1595,7 @@ defineExpose({
   padding: 0.25rem 0.75rem;
   background: rgba(106, 104, 83, 0.2);
   border: 1px solid rgba(106, 104, 83, 0.4);
-  color: #EAEAEA;
+  color: var(--kb1-text-primary);
   font-size: 0.7rem;
   font-weight: 500;
   border-radius: 4px;
@@ -1684,7 +1685,7 @@ defineExpose({
 .offset-label {
   font-size: 0.8125rem;
   font-family: 'Roboto Mono';
-  color: #848484;
+  color: var(--label-gray);
   font-weight: 400;
   flex-shrink: 0;
 }
@@ -1715,12 +1716,12 @@ defineExpose({
 
 .gray-bar-base {
   width: 100%;
-  background: #3A3A3A;
+  background: var(--color-divider);
   left: 0;
 }
 
 .yellow-bar-active {
-  background: #F9AC20;
+  background: var(--accent-highlight);
   z-index: 1;
 }
 
@@ -1728,7 +1729,7 @@ defineExpose({
   position: absolute;
   width: 5px;
   height: 17px;
-  background: #F9AC20;
+  background: var(--accent-highlight);
   border-radius: 2.5px;
   transform: translateX(-50%);
   z-index: 2;
@@ -1745,7 +1746,7 @@ defineExpose({
 .offset-unit {
   font-size: 0.8125rem;
   font-family: 'Roboto Mono';
-  color: #EAEAEA;
+  color: var(--kb1-text-primary);
   font-weight: 400;
   cursor: default;
   user-select: none;
@@ -1753,7 +1754,7 @@ defineExpose({
 
 .calibration-help {
   font-size: 0.7rem;
-  color: #848484;
+  color: var(--label-gray);
   opacity: 0.6;
   text-align: left;
   margin-top: 0.5rem;

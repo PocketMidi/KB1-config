@@ -2,6 +2,7 @@
 import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue';
 import { bleClient } from '../ble/bleClient';
 import { SliderPresetStore, type SliderPreset } from '../state/sliderPresets';
+import ValueControl from './ValueControl.vue';
 
 // Slider configuration
 interface SliderConfig {
@@ -100,6 +101,99 @@ const links = ref<boolean[]>(new Array(11).fill(false));
 // Link drag selection state
 const isDraggingLinks = ref(false);
 const linkDragState = ref<boolean | null>(null); // The state to apply when dragging (true for link, false for unlink)
+
+// Touch offset compensation (for Bluefy and other browsers with touch offset issues)
+const TOUCH_OFFSET_KEY = 'kb1-slider-touch-offset';
+const touchOffsetX = ref<number>(0);
+
+// Load touch offset from localStorage
+function loadTouchOffset() {
+  try {
+    const saved = localStorage.getItem(TOUCH_OFFSET_KEY);
+    if (saved !== null) {
+      const value = parseInt(saved, 10);
+      if (!isNaN(value) && value >= -100 && value <= 100) {
+        touchOffsetX.value = value;
+      }
+    }
+  } catch {
+    // Ignore errors
+  }
+}
+
+// Save touch offset to localStorage
+function saveTouchOffset() {
+  try {
+    localStorage.setItem(TOUCH_OFFSET_KEY, touchOffsetX.value.toString());
+  } catch {
+    // Ignore errors
+  }
+}
+
+// Handle touch offset slider change
+function handleTouchOffsetChange(value: number) {
+  touchOffsetX.value = value;
+  saveTouchOffset();
+}
+
+// Double-tap/double-click detection for offset bar reset
+let lastOffsetTapTime = 0;
+const DOUBLE_TAP_DELAY = 300; // ms
+
+function handleOffsetBarDoubleClick() {
+  // Reset to 0
+  handleTouchOffsetChange(0);
+}
+
+// Handle touch offset bar interaction
+function handleOffsetBarClick(event: MouseEvent | TouchEvent) {
+  const target = event.currentTarget as HTMLElement;
+  const rect = target.getBoundingClientRect();
+  const clientX = 'touches' in event ? event.touches[0]?.clientX : event.clientX;
+  if (clientX === undefined) return;
+  
+  const x = clientX - rect.left;
+  const percentage = (x / rect.width) * 100;
+  // Map 0-100% to -100 to +100
+  const newValue = Math.round((percentage / 50) * 100 - 100);
+  handleTouchOffsetChange(Math.max(-100, Math.min(100, newValue)));
+}
+
+function handleOffsetBarTouchStart(event: TouchEvent) {
+  const now = Date.now();
+  const timeSinceLastTap = now - lastOffsetTapTime;
+  
+  if (timeSinceLastTap < DOUBLE_TAP_DELAY) {
+    // Double-tap detected
+    event.preventDefault();
+    handleOffsetBarDoubleClick();
+  } else {
+    // Single tap - process normally
+    handleOffsetBarClick(event);
+  }
+  
+  lastOffsetTapTime = now;
+}
+
+// Computed: Touch offset percentage for bar fill
+const touchOffsetPercentage = computed(() => {
+  // Map -100 to +100 -> 0 to 100%
+  return ((touchOffsetX.value + 100) / 200) * 100;
+});
+
+// Computed: Touch offset fill width (from center)
+const touchOffsetFillWidth = computed(() => {
+  return Math.abs(touchOffsetX.value) / 2; // 0-50%
+});
+
+// Computed: Touch offset fill position (left or right of center)
+const touchOffsetFillLeft = computed(() => {
+  if (touchOffsetX.value >= 0) {
+    return 50; // Start at center for positive
+  } else {
+    return 50 - touchOffsetFillWidth.value; // Start left of center for negative
+  }
+});
 
 // Watch isPortrait for debugging
 watch(isPortrait, (newVal) => {
@@ -215,8 +309,8 @@ function handleTrackTouchStart(event: TouchEvent, index: number) {
   const touch = event.touches[0];
   if (!touch) return;
   
-  // Store swipe start position
-  swipeStartX.value = touch.clientX;
+  // Store swipe start position (with offset compensation)
+  swipeStartX.value = touch.clientX + touchOffsetX.value;
   swipeStartY.value = touch.clientY;
   
   // Get the track that was touched directly
@@ -276,7 +370,7 @@ function handleTrackTouchEnd(event: TouchEvent) {
   if (swipeStartX.value !== null && swipeStartY.value !== null) {
     const touch = event.changedTouches[0];
     if (touch) {
-      const deltaX = Math.abs(touch.clientX - swipeStartX.value);
+      const deltaX = Math.abs((touch.clientX + touchOffsetX.value) - swipeStartX.value);
       const deltaY = Math.abs(touch.clientY - swipeStartY.value);
       
       // If horizontal swipe > 100px and more horizontal than vertical, exit
@@ -353,6 +447,7 @@ function resetValuesToZero() {
 
 onMounted(() => {
   initializeSliders();
+  loadTouchOffset();
   
   // Preload rotation animation frames
   preloadRotationFrames();
@@ -1126,6 +1221,48 @@ defineExpose({
         </div>
       </div>
       
+      <!-- Touch Offset Compensation -->
+      <div class="touch-offset-section">
+        <!-- Bar -->
+        <div class="offset-meter">
+          <div 
+            class="offset-bar-container"
+            @click="handleOffsetBarClick"
+            @dblclick="handleOffsetBarDoubleClick"
+            @touchstart.prevent="handleOffsetBarTouchStart"
+          >
+            <div class="offset-divider" :style="{ left: '50%' }"></div>
+            <div class="offset-bar-wrapper">
+              <div class="offset-bar gray-bar-base"></div>
+              <div 
+                class="offset-bar yellow-bar-active"
+                :style="{ 
+                  left: `${touchOffsetFillLeft}%`, 
+                  width: `${touchOffsetFillWidth}%` 
+                }"
+              ></div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Label and Controls -->
+        <div class="offset-group">
+          <label class="offset-label">TOUCH OFFSET</label>
+          <div class="offset-controls-wrapper">
+            <ValueControl
+              v-model="touchOffsetX"
+              :min="-100"
+              :max="100"
+              :step="1"
+              :small-step="1"
+              :large-step="10"
+              @update:modelValue="handleTouchOffsetChange"
+            />
+            <span class="offset-unit">px</span>
+          </div>
+        </div>
+      </div>
+      
       <!-- Sliders list -->
       <div class="sliders-list">
         <template v-for="(slider, index) in sliders" :key="slider.cc">
@@ -1330,8 +1467,8 @@ defineExpose({
 .setup-header {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
-  margin-bottom: 0.25rem;
+  gap: 0.5rem;
+  margin-bottom: 0.125rem;
 }
 
 .setup-header h2 {
@@ -1378,12 +1515,103 @@ defineExpose({
   font-weight: 500;
   opacity: 1;
   transition: opacity 2s ease-out;
-  min-height: 1rem;
+  min-height: 0.5rem;
   flex: 1;
 }
 
 .explainer-text.fading {
   opacity: 0;
+}
+
+/* Touch Offset Compensation Section */
+.touch-offset-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--color-divider);
+  margin-bottom: 1rem;
+}
+
+.offset-meter {
+  padding: 0.75rem 0;
+}
+
+.offset-group {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.offset-label {
+  font-size: 0.8125rem;
+  font-family: 'Roboto Mono';
+  color: #848484;
+  font-weight: 400;
+  flex-shrink: 0;
+}
+
+.offset-bar-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: 17px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.offset-bar-wrapper {
+  position: relative;
+  width: 100%;
+  height: 9px;
+  overflow: visible;
+}
+
+.offset-bar {
+  height: 9px;
+  position: absolute;
+  top: 0;
+  border-radius: 4.5px;
+}
+
+.gray-bar-base {
+  width: 100%;
+  background: #3A3A3A;
+  left: 0;
+}
+
+.yellow-bar-active {
+  background: #F9AC20;
+  z-index: 1;
+}
+
+.offset-divider {
+  position: absolute;
+  width: 5px;
+  height: 17px;
+  background: #F9AC20;
+  border-radius: 2.5px;
+  transform: translateX(-50%);
+  z-index: 2;
+  pointer-events: none;
+}
+
+.offset-controls-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  justify-content: flex-end;
+}
+
+.offset-unit {
+  font-size: 0.8125rem;
+  font-family: 'Roboto Mono';
+  color: #EAEAEA;
+  font-weight: 400;
+  cursor: default;
+  user-select: none;
 }
 
 .sliders-list {

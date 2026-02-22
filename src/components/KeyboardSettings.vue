@@ -27,12 +27,14 @@
         <div 
           v-for="note in topRowNotes" 
           :key="note.midi"
-          class="key sharp-key"
+          class="key sharp-key clickable"
           :class="{ 
             active: isNoteActive(note.midi),
             'gap-after': note.gapAfter,
             'root-note': isRootNote(note.midi)
           }"
+          @click="handleKeyClick(note.midi)"
+          :title="`Set root note to ${note.sharp}`"
         >
           <div class="note-label">{{ note.sharp }}</div>
           <div class="note-label-alt">{{ note.flat }}</div>
@@ -44,12 +46,14 @@
         <div 
           v-for="note in bottomRowNotes" 
           :key="note.midi"
-          class="key natural-key"
+          class="key natural-key clickable"
           :class="{ 
             active: isNoteActive(note.midi),
             'gap-after': note.gapAfter,
             'root-note': isRootNote(note.midi)
           }"
+          @click="handleKeyClick(note.midi)"
+          :title="`Set root note to ${note.name}`"
         >
           <div class="note-label">{{ note.name }}</div>
         </div>
@@ -546,6 +550,15 @@ function isRootNote(midiNote: number): boolean {
   const rootNote = model.value.scale.rootNote // Always use scale.rootNote (shared for both modes)
   return (midiNote % 12) === (rootNote % 12)
 }
+
+// Handle keyboard key clicks to set root note
+function handleKeyClick(midiNote: number) {
+  // Convert the clicked key's MIDI note to the root note range (60-71)
+  // We need to map the note class (0-11) to the middle C octave range
+  const noteClass = midiNote % 12
+  const newRootNote = 60 + noteClass // Map to C (60) through B (71)
+  rootNoteValue.value = newRootNote
+}
 </script>
 
 <style scoped>
@@ -644,6 +657,22 @@ function isRootNote(midiNote: number): boolean {
   box-shadow:
     inset 0 0 0 2px #0F0F0F,
     0 0 0 1px var(--accent-highlight);
+}
+
+.key.clickable {
+  cursor: pointer;
+}
+
+.key.clickable:hover {
+  background-color: #2A2A2A;
+  color: rgba(255, 255, 255, 0.6);
+  transform: scale(1.05);
+  transition: all 0.15s ease;
+}
+
+.key.clickable.active:hover {
+  background-color: #0DC988;
+  color: #0F0F0F;
 }
 
 .key.gap-after {

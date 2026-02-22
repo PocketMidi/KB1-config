@@ -104,21 +104,40 @@ const linkDragState = ref<boolean | null>(null); // The state to apply when drag
 
 // Touch offset compensation (for Bluefy and other browsers with touch offset issues)
 const TOUCH_OFFSET_KEY = 'kb1-slider-touch-offset';
+const TOUCH_OFFSET_INITIALIZED_KEY = 'kb1-touch-offset-initialized';
 const touchOffsetX = ref<number>(0);
+const isCalibrationExpanded = ref<boolean>(false);
+
+// Detect if running in Bluefy browser
+function isBluefy(): boolean {
+  return /bluefy/i.test(navigator.userAgent);
+}
 
 // Load touch offset from localStorage
 function loadTouchOffset() {
   try {
     const saved = localStorage.getItem(TOUCH_OFFSET_KEY);
+    const initialized = localStorage.getItem(TOUCH_OFFSET_INITIALIZED_KEY);
+    
     if (saved !== null) {
       const value = parseInt(saved, 10);
       if (!isNaN(value) && value >= -100 && value <= 100) {
         touchOffsetX.value = value;
       }
+    } else if (!initialized && isBluefy()) {
+      // First time on Bluefy, set default offset
+      touchOffsetX.value = -65;
+      saveTouchOffset();
+      localStorage.setItem(TOUCH_OFFSET_INITIALIZED_KEY, 'true');
     }
   } catch {
     // Ignore errors
   }
+}
+
+// Toggle calibration panel
+function toggleCalibration() {
+  isCalibrationExpanded.value = !isCalibrationExpanded.value;
 }
 
 // Save touch offset to localStorage
@@ -1247,53 +1266,69 @@ defineExpose({
     <div v-if="viewMode === 'setup'" class="setup-mode" @click="closeColorPicker">
       <!-- Header -->
       <div class="setup-header">
-        <button class="btn-live" @click="enterLiveMode">+ Enter Live Mode</button>
+        <div class="header-buttons-row">
+          <button class="btn-live" @click="enterLiveMode">+ Enter Live Mode</button>
+          <button 
+            class="btn-calibration"
+            :class="{ expanded: isCalibrationExpanded }"
+            @click="toggleCalibration"
+          >
+            Calibration: {{ touchOffsetX }}px
+          </button>
+        </div>
         <div class="explainer-text" :class="{ fading: explainerFading }">
           {{ explainerText }}
         </div>
       </div>
       
-      <!-- Touch Offset Compensation -->
-      <div class="touch-offset-section">
-        <!-- Bar -->
-        <div class="offset-meter">
-          <div 
-            class="offset-bar-container"
-            @click="handleOffsetBarClick"
-            @dblclick="handleOffsetBarDoubleClick"
-            @touchstart.prevent="handleOffsetBarTouchStart"
-          >
-            <div class="offset-divider" :style="{ left: '50%' }"></div>
-            <div class="offset-bar-wrapper">
-              <div class="offset-bar gray-bar-base"></div>
-              <div 
-                class="offset-bar yellow-bar-active"
-                :style="{ 
-                  left: `${touchOffsetFillLeft}%`, 
-                  width: `${touchOffsetFillWidth}%` 
-                }"
-              ></div>
+      <!-- Touch Offset Compensation (Collapsible) -->
+      <Transition name="calibration-slide">
+        <div v-if="isCalibrationExpanded" class="touch-offset-section">
+          <!-- Bar -->
+          <div class="offset-meter">
+            <div 
+              class="offset-bar-container"
+              @click="handleOffsetBarClick"
+              @dblclick="handleOffsetBarDoubleClick"
+              @touchstart.prevent="handleOffsetBarTouchStart"
+            >
+              <div class="offset-divider" :style="{ left: '50%' }"></div>
+              <div class="offset-bar-wrapper">
+                <div class="offset-bar gray-bar-base"></div>
+                <div 
+                  class="offset-bar yellow-bar-active"
+                  :style="{ 
+                    left: `${touchOffsetFillLeft}%`, 
+                    width: `${touchOffsetFillWidth}%` 
+                  }"
+                ></div>
+              </div>
             </div>
           </div>
-        </div>
-        
-        <!-- Label and Controls -->
-        <div class="offset-group">
-          <label class="offset-label">TOUCH OFFSET</label>
-          <div class="offset-controls-wrapper">
-            <ValueControl
-              v-model="touchOffsetX"
-              :min="-100"
-              :max="100"
-              :step="1"
-              :small-step="1"
-              :large-step="10"
-              @update:modelValue="handleTouchOffsetChange"
-            />
-            <span class="offset-unit">px</span>
+          
+          <!-- Label and Controls -->
+          <div class="offset-group">
+            <label class="offset-label">SLIDER CALIBRATION</label>
+            <div class="offset-controls-wrapper">
+              <ValueControl
+                v-model="touchOffsetX"
+                :min="-100"
+                :max="100"
+                :step="1"
+                :small-step="1"
+                :large-step="10"
+                @update:modelValue="handleTouchOffsetChange"
+              />
+              <span class="offset-unit">px</span>
+            </div>
+          </div>
+          
+          <!-- Helper text -->
+          <div class="calibration-help">
+            Adjusts touch position in Live Mode
           </div>
         </div>
-      </div>
+      </Transition>
       
       <!-- Sliders list -->
       <div class="sliders-list">
@@ -1541,6 +1576,75 @@ defineExpose({
   transform: scale(0.98);
 }
 
+/* Header buttons row */
+.header-buttons-row {
+  display: flex;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.header-buttons-row .btn-live {
+  flex: 1;
+  width: auto;
+}
+
+/* Calibration toggle button */
+.btn-calibration {
+  flex: 0 0 auto;
+  padding: 0.25rem 0.75rem;
+  background: rgba(106, 104, 83, 0.2);
+  border: 1px solid rgba(106, 104, 83, 0.4);
+  color: #EAEAEA;
+  font-size: 0.7rem;
+  font-weight: 500;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: 'Roboto Mono', monospace;
+  white-space: nowrap;
+}
+
+.btn-calibration:hover {
+  background: rgba(106, 104, 83, 0.3);
+  border-color: rgba(106, 104, 83, 0.6);
+}
+
+.btn-calibration.expanded {
+  background: rgba(106, 104, 83, 0.35);
+  border-color: rgba(106, 104, 83, 0.7);
+}
+
+/* Calibration slide transition */
+.calibration-slide-enter-active,
+.calibration-slide-leave-active {
+  transition: all 0.3s ease;
+  overflow: hidden;
+}
+
+.calibration-slide-enter-from {
+  max-height: 0;
+  opacity: 0;
+  margin-bottom: 0;
+}
+
+.calibration-slide-enter-to {
+  max-height: 200px;
+  opacity: 1;
+  margin-bottom: 0.75rem;
+}
+
+.calibration-slide-leave-from {
+  max-height: 200px;
+  opacity: 1;
+  margin-bottom: 0.75rem;
+}
+
+.calibration-slide-leave-to {
+  max-height: 0;
+  opacity: 0;
+  margin-bottom: 0;
+}
+
 .explainer-text {
   color: var(--accent-highlight);
   font-size: 0.8125rem;
@@ -1563,7 +1667,7 @@ defineExpose({
   gap: 0;
   padding-bottom: 1rem;
   border-bottom: 1px solid var(--color-divider);
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem;
 }
 
 .offset-meter {
@@ -1645,6 +1749,15 @@ defineExpose({
   font-weight: 400;
   cursor: default;
   user-select: none;
+}
+
+.calibration-help {
+  font-size: 0.7rem;
+  color: #848484;
+  opacity: 0.6;
+  text-align: left;
+  margin-top: 0.5rem;
+  font-family: 'Roboto Mono';
 }
 
 .sliders-list {

@@ -174,7 +174,7 @@ const handleToggleClick = () => {
   isAnimating.value = true
   
   // Emit the mapping change immediately for UI feedback
-  const newMappingName = isCurrentlyNatural ? 'Dense (all keys used)' : 'Spaced (keys repeat)'
+  const newMappingName = isCurrentlyNatural ? 'Efficient Mode' : 'Mapped Mode'
   emit('mappingChanged', newMappingName)
   
   animationTimeoutId.value = window.setTimeout(() => {

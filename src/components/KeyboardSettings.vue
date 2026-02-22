@@ -316,7 +316,7 @@ const handleScaleToggleClick = () => {
   
   scaleToggleAnimating.value = true
   
-  const newMappingName = isCurrentlyNatural ? 'Dense (all keys used)' : 'Spaced (keys repeat)'
+  const newMappingName = isCurrentlyNatural ? 'Efficient Mode' : 'Mapped Mode'
   emit('mappingChanged', newMappingName)
   
   scaleAnimationTimeoutId.value = window.setTimeout(() => {
@@ -365,7 +365,7 @@ const handleChordToggleClick = () => {
   
   chordToggleAnimating.value = true
   
-  const newStyleName = isCurrentlyChord ? 'Strum' : 'Chord'
+  const newStyleName = isCurrentlyChord ? 'Strum Mode' : 'Chord Mode'
   emit('chordStyleChanged', newStyleName)
   
   chordAnimationTimeoutId.value = window.setTimeout(() => {

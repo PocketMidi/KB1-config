@@ -838,16 +838,58 @@ function detectMobile() {
   checkOrientation();
 }
 
-function checkOrientation() {
+async function checkOrientation() {
   const wasPortrait = isPortrait.value;
-  isPortrait.value = window.innerHeight > window.innerWidth;
+  const newIsPortrait = window.innerHeight > window.innerWidth;
+  
+  console.log('[Orientation] Checking:', {
+    wasPortrait,
+    newIsPortrait,
+    height: window.innerHeight,
+    width: window.innerWidth,
+    isIOS: isIOS.value,
+    viewMode: viewMode.value
+  });
+  
+  isPortrait.value = newIsPortrait;
   
   // Start/stop animations based on orientation
   if (isPortrait.value && !wasPortrait) {
+    console.log('[Orientation] Changed to PORTRAIT - starting to_land animation');
     startToLandAnimation();
     stopToPortAnimation();
   } else if (!isPortrait.value && wasPortrait) {
+    console.log('[Orientation] Changed to LANDSCAPE - stopping animation');
     stopToLandAnimation();
+    
+    // Android: Request fullscreen when rotated to landscape
+    if (!isIOS.value && viewMode.value === 'live') {
+      console.log('[Fullscreen] Requesting fullscreen for Android');
+      try {
+        const elem = document.documentElement;
+        if (elem.requestFullscreen && !document.fullscreenElement) {
+          await elem.requestFullscreen();
+          console.log('[Fullscreen] Fullscreen granted');
+        } else {
+          console.log('[Fullscreen] Already in fullscreen or API not available');
+        }
+        
+        // Lock orientation to landscape
+        if (screen.orientation && 'lock' in screen.orientation) {
+          try {
+            await (screen.orientation as any).lock('landscape');
+            console.log('[Orientation] Orientation locked to landscape');
+          } catch (err) {
+            console.log('[Orientation] Orientation lock not supported:', err);
+          }
+        }
+      } catch (e) {
+        console.error('[Fullscreen] Fullscreen error:', e);
+      }
+    }
+    
+    // Force re-render
+    await nextTick();
   }
   
   // If waiting to exit and user rotated to portrait, complete the exit
@@ -917,43 +959,70 @@ function preloadRotationFrames() {
 }
 
 async function enterLiveMode() {
+  console.log('[LiveMode] Entering live mode');
   detectMobile();
   viewMode.value = 'live';
   showExitButton.value = false; // Start with X hidden
+  
+  console.log('[LiveMode] Device detection:', {
+    isMobile: isMobile.value,
+    isIOS: isIOS.value,
+    isPortrait: isPortrait.value
+  });
   
   // Platform-specific mobile handling
   if (isMobile.value) {
     if (isIOS.value) {
       // iOS: No fullscreen API support, just use viewport optimization
       // Portrait prompt will show if needed
+      console.log('[iOS] Setting up orientation listeners');
       window.addEventListener('resize', checkOrientation);
       window.addEventListener('orientationchange', checkOrientation);
       // Start animation if in portrait
       if (isPortrait.value) {
+        console.log('[iOS] Starting in portrait - show animation');
         startToLandAnimation();
       }
     } else {
-      // Android: Full fullscreen + orientation lock support
-      try {
-        // Request fullscreen (removes ALL browser UI)
-        const elem = document.documentElement;
-        if (elem.requestFullscreen) {
-          await elem.requestFullscreen();
-        }
-        
-        // Lock orientation to landscape
-        if (screen.orientation && 'lock' in screen.orientation) {
-          try {
-            await (screen.orientation as any).lock('landscape');
-          } catch {
-            // Orientation lock not supported on this device
+      // Android: Add orientation listeners and show prompt if in portrait
+      console.log('[Android] Setting up orientation listeners');
+      window.addEventListener('resize', checkOrientation);
+      window.addEventListener('orientationchange', checkOrientation);
+      
+      if (isPortrait.value) {
+        // Show rotation prompt, will request fullscreen after rotation
+        console.log('[Android] Starting in portrait - show rotation prompt');
+        startToLandAnimation();
+      } else {
+        // Already in landscape, request fullscreen immediately
+        console.log('[Android] Already in landscape - requesting fullscreen');
+        try {
+          const elem = document.documentElement;
+          if (elem.requestFullscreen) {
+            await elem.requestFullscreen();
+            console.log('[Android] Fullscreen granted');
+          } else {
+            console.log('[Android] Fullscreen API not available');
           }
+          
+          // Lock orientation to landscape
+          if (screen.orientation && 'lock' in screen.orientation) {
+            try {
+              await (screen.orientation as any).lock('landscape');
+              console.log('[Android] Orientation locked');
+            } catch (err) {
+              console.log('[Android] Orientation lock failed:', err);
+            }
+          }
+        } catch (e) {
+          console.error('[Android] Fullscreen error:', e);
         }
-      } catch (e) {
-        console.error('Fullscreen error:', e);
       }
     }
   }
+  
+  await nextTick();
+  console.log('[LiveMode] Live mode setup complete');
 }
 
 async function exitLiveMode() {
@@ -979,11 +1048,11 @@ async function completeExit() {
   
   // Platform-specific cleanup
   if (isMobile.value) {
-    if (isIOS.value) {
-      // iOS: Remove orientation listeners
-      window.removeEventListener('resize', checkOrientation);
-      window.removeEventListener('orientationchange', checkOrientation);
-    } else {
+    // Remove orientation listeners (both iOS and Android)
+    window.removeEventListener('resize', checkOrientation);
+    window.removeEventListener('orientationchange', checkOrientation);
+    
+    if (!isIOS.value) {
       // Android: Exit fullscreen and unlock orientation
       try {
         // Exit fullscreen
@@ -1140,8 +1209,8 @@ defineExpose({
       class="live-mode" 
       :class="{ 'mobile-landscape': isMobile }"
     >
-      <!-- iOS Portrait Prompt -->
-      <div v-if="isMobile && isIOS && isPortrait" class="portrait-prompt">
+      <!-- Mobile Portrait Prompt (iOS & Android) -->
+      <div v-if="isMobile && isPortrait" class="portrait-prompt">
         <div class="prompt-content">
           <img :src="toLandImageSrc" alt="Rotate to landscape" class="rotate-icon-img" />
           <div class="prompt-subtext" style="margin-top: 1rem; font-size: 0.7rem; opacity: 0.6;">Swipe left or right to exit</div>
@@ -1153,6 +1222,14 @@ defineExpose({
         <div class="prompt-content">
           <img :src="toPortImageSrc" alt="Rotate to portrait" class="rotate-icon-img" />
         </div>
+      </div>
+      
+      <!-- Debug indicator -->
+      <div 
+        v-if="!isMobile || !isPortrait" 
+        style="position: absolute; top: 10px; left: 10px; color: lime; font-size: 10px; z-index: 999; background: rgba(0,0,0,0.7); padding: 4px;"
+      >
+        LANDSCAPE: {{ sliders.length }} sliders
       </div>
       
       <!-- Sliders container -->

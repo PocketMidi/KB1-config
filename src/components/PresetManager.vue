@@ -569,19 +569,6 @@ function getDialogHeading(): string {
   }
 }
 
-function createNewFlashPreset() {
-  console.log('➕ Create new flash preset');
-  
-  // Find first empty slot
-  const emptySlot = devicePresets.value.findIndex(p => !p.isValid);
-  
-  // Use -1 to indicate device preset creation with slot selection
-  savingDeviceSlot.value = -1;
-  selectedSlotNumber.value = emptySlot >= 0 ? emptySlot : 0; // Default to first empty slot or slot 0
-  newPresetName.value = generateRandomName();
-  showCreateDialog.value = true;
-}
-
 async function refreshSlots() {
   try {
     await refreshDevicePresets();
@@ -682,7 +669,7 @@ async function handleCommunityPresetLoad(settings: DeviceSettings) {
   emit('load', settings);
   activePresetId.value = null; // Clear active preset ID since this is not a saved preset
   emit('presetActivated', null);
-  activeTab.value = 'my-presets'; // Switch to My Presets tab
+  activeTab.value = 'community'; // Stay in Community tab
   toast.success('Community preset loaded! Save it to keep it in your collection.');
 }
 
@@ -804,6 +791,7 @@ function confirmExport() {
   // Single preset export
   if (exportingIds.value.length === 1) {
     const id = exportingIds.value[0];
+    if (!id) return;
     const rawJson = PresetStore.exportPreset(id);
     if (!rawJson) return;
     
@@ -827,11 +815,14 @@ function confirmExport() {
     }
     
     json = JSON.stringify(presetData, null, 2);
-    filename = `KB1_Preset_${preset?.name.replace(/\s/g, '_')}.json`;
+    filename = `KB1_Preset_${preset?.name?.replace(/\s/g, '_') || 'Untitled'}.json`;
   } 
   // Multiple presets export
   else {
-    json = PresetStore.exportPresets(exportingIds.value);
+    const selectedPresetData = exportingIds.value
+      .map(id => id ? PresetStore.getPreset(id) : null)
+      .filter(p => p !== null);
+    json = JSON.stringify(selectedPresetData, null, 2);
     filename = `KB1_Presets_${Date.now()}.json`;
   }
   

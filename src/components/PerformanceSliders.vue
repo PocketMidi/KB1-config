@@ -337,7 +337,7 @@ function handleTrackTouchStart(event: TouchEvent, index: number) {
   handleTrackTouchMove(event, actualIndex);
 }
 
-function handleTrackTouchMove(event: TouchEvent, index: number) {
+function handleTrackTouchMove(event: TouchEvent, _index: number) {
   if (!isMobile.value || viewMode.value !== 'live') return;
   
   // Always use the active slider, not the index from the event

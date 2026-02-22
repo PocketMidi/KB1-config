@@ -1249,12 +1249,22 @@ defineExpose({
       class="live-mode" 
       :class="{ 'mobile-landscape': isMobile }"
     >
+      <!-- EMERGENCY OVERRIDE - Always visible above everything -->
+      <div 
+        style="position: fixed; top: 10px; left: 10px; z-index: 99999; background: rgba(255,0,0,0.9); color: white; padding: 10px; font-size: 14px; border: 2px solid yellow; cursor: pointer; font-weight: bold; border-radius: 4px;"
+        @click="isPortrait = false"
+      >
+        TAP HERE<br>
+        isPortrait: {{ isPortrait }}<br>
+        Sliders: {{ sliders.length }}
+      </div>
+      
       <!-- Mobile Portrait Prompt (iOS & Android) -->
       <div v-if="isMobile && isPortrait" class="portrait-prompt" @click="!isIOS && (isPortrait = false)">
         <div class="prompt-content">
           <img :src="toLandImageSrc" alt="Rotate to landscape" class="rotate-icon-img" />
           <div class="prompt-subtext" style="margin-top: 1rem; font-size: 0.7rem; opacity: 0.6;">
-            {{ isIOS ? 'Swipe left or right to exit' : 'Rotate device or tap to skip' }}
+            {{ isIOS ? 'Swipe left or right to exit' : 'Rotate device or tap anywhere to skip' }}
           </div>
         </div>
       </div>
@@ -1264,15 +1274,6 @@ defineExpose({
         <div class="prompt-content">
           <img :src="toPortImageSrc" alt="Rotate to portrait" class="rotate-icon-img" />
         </div>
-      </div>
-      
-      <!-- Debug indicator & Emergency override -->
-      <div 
-        v-if="!isMobile || !isPortrait" 
-        style="position: absolute; top: 10px; left: 10px; color: lime; font-size: 10px; z-index: 999; background: rgba(0,0,0,0.7); padding: 4px; cursor: pointer;"
-        @click="isPortrait = false"
-      >
-        LANDSCAPE: {{ sliders.length }} sliders (tap if black screen)
       </div>
       
       <!-- Sliders container -->

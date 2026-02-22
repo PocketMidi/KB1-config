@@ -340,8 +340,10 @@ function handleTrackTouchStart(event: TouchEvent, index: number) {
 function handleTrackTouchMove(event: TouchEvent, index: number) {
   if (!isMobile.value || viewMode.value !== 'live') return;
   
-  // Only process if this is the active slider
-  if (activeTouchSlider.value !== index || !activeTouchTrack.value) return;
+  // Always use the active slider, not the index from the event
+  // (the event's target may be wrong due to touch offset issues)
+  const activeIndex = activeTouchSlider.value;
+  if (activeIndex === null || !activeTouchTrack.value) return;
   
   event.preventDefault();
   event.stopPropagation();
@@ -359,7 +361,7 @@ function handleTrackTouchMove(event: TouchEvent, index: number) {
   const positionFromTop = Math.max(0, Math.min(1, y / height));
   const positionFromBottom = 1 - positionFromTop;
   
-  const slider = sliders.value[index];
+  const slider = sliders.value[activeIndex];
   if (!slider) return;
   
   let newValue;
@@ -371,7 +373,7 @@ function handleTrackTouchMove(event: TouchEvent, index: number) {
     newValue = Math.round(positionFromBottom * 100);
   }
   
-  handleSliderChange(index, newValue, false);
+  handleSliderChange(activeIndex, newValue, false);
 }
 
 function handleTrackTouchEnd(event: TouchEvent) {

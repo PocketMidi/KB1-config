@@ -1023,9 +1023,27 @@ async function exitLiveMode() {
   // Show rotate-back prompt for mobile users (both iOS and Android)
   // Layout is designed for portrait, so guide users to rotate back
   if (isMobile.value && !isPortrait.value) {
+    // Android: Exit fullscreen immediately so device can detect orientation changes
+    if (!isIOS.value) {
+      try {
+        // Exit fullscreen
+        if (document.fullscreenElement && document.exitFullscreen) {
+          await document.exitFullscreen();
+        }
+        
+        // Unlock orientation
+        if (screen.orientation && 'unlock' in screen.orientation) {
+          (screen.orientation as any).unlock();
+        }
+      } catch (e) {
+        console.error('Exit fullscreen error:', e);
+      }
+    }
+    
     showRotateBackPrompt.value = true;
     startToPortAnimation();
-    // Wait until portrait orientation detected (no timeout)
+    // Orientation listeners remain active to detect rotation to portrait
+    // When portrait is detected, checkOrientation() will call completeExit()
   } else {
     completeExit();
   }

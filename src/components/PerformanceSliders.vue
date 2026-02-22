@@ -2020,7 +2020,7 @@ defineExpose({
   right: 0.5rem; /* Match padding-right of .live-sliders-container */
   top: 0.5rem; /* Match padding-top of .live-sliders-container */
   bottom: 0.5rem; /* Match padding-bottom */
-  width: 110px;
+  width: 85px;
   opacity: 0; /* Invisible */
   pointer-events: auto; /* Still catch touches */
   z-index: 10;

@@ -464,20 +464,20 @@ const keyboardSubtitle = computed(() => {
 
 const presetsSubtitle = computed(() => {
   const browserPresets = PresetStore.getAllPresets();
-  const cacheCount = browserPresets.length;
+  const workingCount = browserPresets.length;
   
   // Count valid device presets
-  const embeddedCount = devicePresets.value.filter(p => p.isValid).length;
+  const archiveCount = devicePresets.value.filter(p => p.isValid).length;
   
   const parts = [];
   
-  // Show embedded count if device is connected and supports presets
-  if (isConnected.value && hasDevicePresetSupport.value) {
-    parts.push(`Embedded: ${embeddedCount}`);
-  }
+  // Always show working count first
+  parts.push(`Working: ${workingCount}`);
   
-  // Always show cache count
-  parts.push(`Cache: ${cacheCount}`);
+  // Show archive count if device is connected and supports presets
+  if (isConnected.value && hasDevicePresetSupport.value) {
+    parts.push(`Archive: ${archiveCount}`);
+  }
   
   return parts.join(' | ');
 });

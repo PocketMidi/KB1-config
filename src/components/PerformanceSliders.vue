@@ -1251,12 +1251,16 @@ defineExpose({
     >
       <!-- EMERGENCY OVERRIDE - Always visible above everything -->
       <div 
-        style="position: fixed; top: 10px; left: 10px; z-index: 99999; background: rgba(255,0,0,0.9); color: white; padding: 10px; font-size: 14px; border: 2px solid yellow; cursor: pointer; font-weight: bold; border-radius: 4px;"
+        style="position: fixed; top: 10px; left: 10px; z-index: 99999; background: rgba(255,0,0,0.9); color: white; padding: 10px; font-size: 11px; border: 2px solid yellow; cursor: pointer; font-weight: bold; border-radius: 4px; max-width: 180px;"
         @click="isPortrait = false"
       >
-        TAP HERE<br>
+        <div style="font-size: 14px; margin-bottom: 4px;">TAP TO FIX</div>
         isPortrait: {{ isPortrait }}<br>
-        Sliders: {{ sliders.length }}
+        isMobile: {{ isMobile }}<br>
+        viewMode: {{ viewMode }}<br>
+        Sliders: {{ sliders.length }}<br>
+        Width: {{ typeof window !== 'undefined' ? window.innerWidth : 0 }}<br>
+        Height: {{ typeof window !== 'undefined' ? window.innerHeight : 0 }}
       </div>
       
       <!-- Mobile Portrait Prompt (iOS & Android) -->
@@ -1304,7 +1308,8 @@ defineExpose({
             @touchend="handleTrackTouchEnd($event)"
             @touchcancel="handleTrackTouchEnd($event)"
             :style="{
-              backgroundColor: hexToRgba(slider.color, 0.2)
+              backgroundColor: hexToRgba(slider.color, 0.6),
+              border: '2px solid ' + slider.color
             }"
           >
             <!-- CC number inside track (top) -->
@@ -1643,6 +1648,13 @@ defineExpose({
   position: relative;
 }
 
+/* Force full viewport height on mobile */
+.live-mode.mobile-landscape {
+  height: 100vh !important;
+  height: 100dvh !important;
+  min-height: 100vh;
+}
+
 .exit-hint {
   position: absolute;
   top: 0;
@@ -1772,6 +1784,7 @@ defineExpose({
   height: 100dvh;
   height: 100vh;
   touch-action: pan-y; /* Allow vertical panning */
+  background: rgba(255, 0, 255, 0.1) !important; /* Debug: visible background */
 }
 
 .live-mode.mobile-landscape .live-slider-wrapper {
@@ -1783,6 +1796,7 @@ defineExpose({
   display: flex;
   flex-direction: column;
   touch-action: auto; /* Allow default touch behavior for slider */
+  outline: 1px solid rgba(0, 255, 255, 0.5); /* Debug: cyan outline */
 }
 
 .live-mode.mobile-landscape .live-slider-track {
@@ -1794,6 +1808,8 @@ defineExpose({
   touch-action: none; /* Prevent default, we handle touch manually */
   -webkit-touch-callout: none;
   cursor: pointer;
+  min-height: 200px !important; /* Debug: ensure minimum height */
+  border: 3px solid rgba(255, 255, 255, 0.5) !important; /* Debug: always visible border */
 }
 
 .live-mode.mobile-landscape .live-slider-input {
@@ -1871,12 +1887,15 @@ defineExpose({
   left: 0;
   right: 0;
   text-align: center;
-  color: rgba(234, 234, 234, 0.5); /* Changed from 0.8 to 0.5 */
-  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 1); /* Debug: full opacity white */
+  font-size: 0.875rem;
   font-family: 'Roboto Mono';
-  font-weight: 600;
+  font-weight: 700;
   pointer-events: none;
   z-index: 2;
+  background: rgba(0, 0, 0, 0.7); /* Debug: dark background for contrast */
+  padding: 2px 4px;
+  border-radius: 3px;
 }
 
 .live-slider-input {

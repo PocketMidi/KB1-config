@@ -4,6 +4,16 @@ KB1 Config is the official browser-based configuration and control application f
 
 ## Getting Started
 
+### Evaluation Mode (Optional)
+
+Want to explore the interface without hardware? Enable **Evaluation Mode** to interact with all settings using simulated device data—perfect for learning the interface, testing configurations, or exploring community presets before purchasing.
+
+**To Enable**: Click the KB1 logo (top-left) 5 times rapidly. A modal will appear to toggle the mode on/off.
+
+**What Works**: All interface features, settings adjustments, preset management, and community preset browsing work normally with mock data.
+
+**What Doesn't**: No Bluetooth hardware communication (requires real KB1 hardware).
+
 ### Connecting to Your KB1 Device
 
 1. Click the **CONNECTED / DISCONNECTED** status in the top-right navigation bar
@@ -210,7 +220,7 @@ The system is extraordinarily flexible for any performance or production workflo
 - **Web Bluetooth API** - Wireless BLE connection, no drivers needed
 - **Connection Modals** - First-time intro and contextual prompts for disconnected state
 - **Keep-Alive** - Automatic connection maintenance (60s ping interval)
-- **Dev Mode** - Test UI without hardware (toggle in code)
+- **Evaluation Mode** - Test UI without hardware (click logo 5 times)
 
 ### Design
 - **KB1 Theme** - Custom color scheme matching device aesthetics
@@ -286,7 +296,7 @@ The system is extraordinarily flexible for any performance or production workflo
 - Node.js 18+ and npm
 - A browser with Web Bluetooth support (Chrome, Edge, Opera)
 - HTTPS connection (required for Web Bluetooth API)
-- KB1 hardware device (or enable Dev Mode for UI testing)
+- KB1 hardware device (or enable Evaluation Mode for UI testing)
 
 ### Installation
 
@@ -301,18 +311,12 @@ cd KB1-config
 npm install
 ```
 
-3. **Configure Dev Mode** (optional - for testing without hardware):
-
-   Edit `src/composables/useDeviceState.ts` line 17:
-   ```typescript
-   const DEV_MODE = true;   // Dev mode ON - simulates connection with mock data
-   const DEV_MODE = false;  // Production mode - requires KB1 hardware
-   ```
-
-4. Run development server:
+3. Run development server:
 ```bash
 npm run dev
 ```
+
+4. **Optional - Evaluation Mode**: To test the UI without hardware, open the app and click the KB1 logo (top-left) 5 times rapidly.
 
 5. Open your browser to `http://localhost:5173` (or the URL shown in terminal)
 
@@ -343,20 +347,21 @@ The app includes a **DEV_MODE** flag for testing the UI without a physical KB1 d
 
 **To toggle:**
 - Edit `src/composables/useDeviceState.ts` line 17:
-  ```typescript
-  const DEV_MODE = true;   // Dev mode ON - simulates connection with mock data
-  const DEV_MODE = false;  // Production mode - requires KB1 hardware
-  ```
+### Evaluation Mode
 
-**When DEV_MODE is enabled:**
-- App auto-connects on load with simulated device "KB1 (Dev Mode)"
+To test the interface without KB1 hardware:
+
+1. Open the app in your browser
+2. Click the KB1 logo (top-left corner) 5 times rapidly
+3. A modal will appear - toggle Evaluation Mode on
+
+**When Evaluation Mode is enabled:**
+- App auto-connects with simulated device "KB1 (Evaluation Mode)"
 - All settings and controls are populated with default mock data
 - Changes are logged to console but not sent to hardware
-- Useful for UI development, layout testing, and demos
+- Perfect for exploring the UI, testing configurations, and browsing community presets
 
-**Before production deployment:**
-- Set `DEV_MODE = false` to require real hardware connection
-- Test with actual KB1 device to verify BLE communication
+**Note**: Evaluation Mode state persists in browser localStorage and can be toggled on/off anytime via the logo clicks.
 
 ### KB1 Protocol Implementation
 

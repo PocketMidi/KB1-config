@@ -10,23 +10,23 @@ import { bleClient, type BLEConnectionStatus } from '../ble/bleClient';
 import { kb1Protocol, type CCMapping, type DeviceSettings, type DevicePresetMetadata, DEVICE_PRESET } from '../ble/kb1Protocol';
 
 // ============================================
-// DEV MODE - Reactive state with localStorage persistence
+// EVALUATION MODE - Reactive state with localStorage persistence
 // ============================================
-// WARNING: Dev mode simulates device connection with mock data for development
+// WARNING: Evaluation mode simulates device connection with mock data for UI testing
 const DEV_MODE_KEY = 'kb1-dev-mode';
 const devMode = ref(localStorage.getItem(DEV_MODE_KEY) === 'true');
 
-// Function to toggle dev mode
+// Function to toggle evaluation mode
 function setDevMode(enabled: boolean) {
   devMode.value = enabled;
   localStorage.setItem(DEV_MODE_KEY, enabled ? 'true' : 'false');
   
   if (enabled) {
-    console.log('🔧 DEV MODE ENABLED: Simulating device with mock data');
-    // Auto-connect when enabling dev mode
+    console.log('📋 EVALUATION MODE ENABLED: Simulating device with mock data');
+    // Auto-connect when enabling evaluation mode
     connectionStatus.value = {
       connected: true,
-      device: { name: 'KB1 (Dev Mode)' } as BluetoothDevice,
+      device: { name: 'KB1 (Evaluation Mode)' } as BluetoothDevice,
       error: null,
     };
     // Initialize with mock data
@@ -35,14 +35,14 @@ function setDevMode(enabled: boolean) {
       kb1Protocol.createDefaultCCMapping(i)
     );
   } else {
-    console.log('✅ DEV MODE DISABLED: Hardware connection required');
+    console.log('✅ EVALUATION MODE DISABLED: Hardware connection required');
   }
 }
 
 // Global reactive state
 const connectionStatus = ref<BLEConnectionStatus>({
-  connected: devMode.value, // Auto-connect in dev mode
-  device: devMode.value ? { name: 'KB1 (Dev Mode)' } as BluetoothDevice : null,
+  connected: devMode.value, // Auto-connect in evaluation mode
+  device: devMode.value ? { name: 'KB1 (Evaluation Mode)' } as BluetoothDevice : null,
   error: null,
 });
 
@@ -50,9 +50,9 @@ const ccMappings = ref<CCMapping[]>([]);
 const deviceSettings = ref<DeviceSettings>(kb1Protocol.createDefaultSettings());
 const isLoading = ref(false);
 
-// Initialize mock data in dev mode
+// Initialize mock data in evaluation mode
 if (devMode.value) {
-  console.log('🔧 DEV MODE: Simulating connected device with mock data');
+  console.log('📋 EVALUATION MODE: Simulating connected device with mock data');
   deviceSettings.value = kb1Protocol.createDefaultSettings();
   ccMappings.value = Array.from({ length: 8 }, (_, i) => 
     kb1Protocol.createDefaultCCMapping(i)
@@ -91,16 +91,16 @@ export function useDeviceState() {
    * Connect to a KB1 device
    */
   const connect = async () => {
-    // In dev mode, simulate instant connection
+    // In evaluation mode, simulate instant connection
     if (devMode.value) {
-      console.log('🔧 DEV MODE: Simulating connection...');
+      console.log('📋 EVALUATION MODE: Simulating connection...');
       isLoading.value = true;
       
       return new Promise<void>((resolve) => {
         setTimeout(() => {
           connectionStatus.value = {
             connected: true,
-            device: { name: 'KB1 (Dev Mode)' } as BluetoothDevice,
+            device: { name: 'KB1 (Evaluation Mode)' } as BluetoothDevice,
             error: null,
           };
           
@@ -111,7 +111,7 @@ export function useDeviceState() {
           );
           
           isLoading.value = false;
-          console.log('🔧 DEV MODE: Connected with mock data');
+          console.log('� EVALUATION MODE: Connected with mock data');
           resolve();
         }, 500); // Simulate brief connection delay
       });
@@ -143,7 +143,7 @@ export function useDeviceState() {
    */
   const disconnect = async () => {
     if (devMode.value) {
-      console.log('🔧 DEV MODE: Simulating disconnect');
+      console.log('� EVALUATION MODE: Simulating disconnect');
       connectionStatus.value = {
         connected: false,
         device: null,
@@ -250,9 +250,9 @@ export function useDeviceState() {
    * Send settings to the device
    */
   const sendSettings = async (settings: DeviceSettings) => {
-    // In dev mode, just update locally
+    // In evaluation mode, just update locally
     if (devMode.value) {
-      console.log('🔧 DEV MODE: Simulating send settings');
+      console.log('📋 EVALUATION MODE: Simulating send settings');
       await new Promise(resolve => setTimeout(resolve, 200));
       updateSettings(settings);
       return;
@@ -278,11 +278,11 @@ export function useDeviceState() {
    * This function exists for API compatibility but doesn't need to do anything.
    */
   const saveToFlash = async () => {
-    // In dev mode, simulate save
+    // In evaluation mode, simulate save
     if (devMode.value) {
-      console.log('🔧 DEV MODE: Simulating save to flash');
+      console.log('📋 EVALUATION MODE: Simulating save to flash');
       await new Promise(resolve => setTimeout(resolve, 500));
-      console.log('🔧 DEV MODE: Save complete');
+      console.log('� EVALUATION MODE: Save complete');
       return;
     }
 
@@ -374,9 +374,9 @@ export function useDeviceState() {
     isLoading.value = true;
     
     try {
-      // In dev mode, simulate loading
+      // In evaluation mode, simulate loading
       if (devMode.value) {
-        console.log('🔧 DEV MODE: Simulating load from device');
+        console.log('📋 EVALUATION MODE: Simulating load from device');
         await new Promise(resolve => setTimeout(resolve, 500));
         
         // Ensure we have fresh default data
@@ -386,7 +386,7 @@ export function useDeviceState() {
         );
         
         captureBaseline();
-        console.log('🔧 DEV MODE: Load complete with mock data');
+        console.log('� EVALUATION MODE: Load complete with mock data');
         isLoading.value = false;
         return;
       }
@@ -460,7 +460,7 @@ export function useDeviceState() {
       { slot: 7, name: DEVICE_PRESET.EMPTY_SLOT_NAME, timestamp: 0, isValid: false },
     ];
   } else {
-    // Initialize with 8 empty slots when not in dev mode
+    // Initialize with 8 empty slots when not in evaluation mode
     devicePresets.value = Array.from({ length: 8 }, (_, i) => ({
       slot: i,
       name: DEVICE_PRESET.EMPTY_SLOT_NAME,
@@ -496,7 +496,7 @@ export function useDeviceState() {
   
   const refreshDevicePresets = async () => {
     if (devMode.value) {
-      console.log('🔧 DEV MODE: Refreshing device presets (mock)');
+      console.log('� EVALUATION MODE: Refreshing device presets (mock)');
       return;
     }
     
@@ -521,7 +521,7 @@ export function useDeviceState() {
     }
     
     if (devMode.value) {
-      console.log(`🔧 DEV MODE: Saving to device slot ${slot}: "${name}"`);
+      console.log(`� EVALUATION MODE: Saving to device slot ${slot}: "${name}"`);
       console.log('📊 Device presets BEFORE save:', JSON.parse(JSON.stringify(devicePresets.value)));
       
       // Update mock data
@@ -549,7 +549,7 @@ export function useDeviceState() {
     }
     
     if (devMode.value) {
-      console.log(`🔧 DEV MODE: Loading from device slot ${slot}`);
+      console.log(`� EVALUATION MODE: Loading from device slot ${slot}`);
       const preset = devicePresets.value[slot];
       if (preset && preset.isValid) {
         console.log(`Loaded preset: "${preset.name}"`);
@@ -572,7 +572,7 @@ export function useDeviceState() {
     }
     
     if (devMode.value) {
-      console.log(`🔧 DEV MODE: Deleting device slot ${slot}`);
+      console.log(`� EVALUATION MODE: Deleting device slot ${slot}`);
       console.log('📊 Device presets BEFORE delete:', JSON.parse(JSON.stringify(devicePresets.value)));
       
       // Update mock data
@@ -629,7 +629,7 @@ export function useDeviceState() {
     loadDevicePreset,
     deleteDevicePreset,
     
-    // Dev Mode
+    // Evaluation Mode
     devMode: readonly(devMode),
     setDevMode,
   };

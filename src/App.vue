@@ -44,7 +44,7 @@ const showContextualModal = ref(false);
 const THEME_KEY = 'kb1-theme-preference';
 const isDarkMode = ref(localStorage.getItem(THEME_KEY) !== 'light');
 
-// Secret dev mode toggle (tap logo 5 times)
+// Secret evaluation mode toggle (tap logo 5 times)
 const logoClickCount = ref(0);
 const logoClickTimer = ref<ReturnType<typeof setTimeout> | null>(null);
 const showDevModeModal = ref(false);
@@ -65,7 +65,7 @@ function handleLogoClick(event?: Event) {
   // Reset timer
   if (logoClickTimer.value) clearTimeout(logoClickTimer.value);
   
-  // If 5 clicks reached, toggle dev mode and show modal
+  // If 5 clicks reached, toggle evaluation mode and show modal
   if (logoClickCount.value >= 5) {
     showDevModeModal.value = true;
     logoClickCount.value = 0;
@@ -324,19 +324,20 @@ function handleTabClick(tabId: Tab) {
       <MobileSliders v-if="activeTab === 'sliders'" ref="mobileSlidersRef" />
     </main>
     
-    <!-- Pulsing Red Dot - Dev Mode Indicator -->
-    <div v-if="devMode" class="dev-mode-indicator" title="Developer Mode Active">
+    <!-- Pulsing Red Dot - Evaluation Mode Indicator -->
+    <div v-if="devMode" class="dev-mode-indicator" title="Evaluation Mode Active">
       <div class="pulse-dot"></div>
     </div>
     
-    <!-- Secret Dev Mode Modal -->
+    <!-- Secret Evaluation Mode Modal -->
     <div v-if="showDevModeModal" class="dev-mode-modal-overlay" @click.self="closeDevModeModal">
       <div class="dev-mode-modal">
-        <h2>🔧 Developer Mode</h2>
+        <h2>Evaluation Mode</h2>
         <div class="modal-content">
           <div class="dev-mode-warning">
-            <p><strong>⚠️ Warning:</strong> Developer mode simulates device connection with mock data.</p>
-            <p>This is intended for development and testing purposes only.</p>
+            <p>Explore the interface without KB1 hardware using simulated device data.</p>
+            <p><strong>What Works:</strong> All settings, presets, and community browsing with mock data.</p>
+            <p><strong>What Doesn't:</strong> No Bluetooth hardware communication.</p>
             <p class="status-line"><strong>Current Status:</strong> <span :class="{ 'status-enabled': devMode, 'status-disabled': !devMode }">{{ devMode ? 'ENABLED' : 'DISABLED' }}</span></p>
           </div>
           
@@ -345,7 +346,7 @@ function handleTabClick(tabId: Tab) {
               <input type="checkbox" :checked="devMode" @change="toggleDevMode" />
               <span class="toggle-slider"></span>
             </label>
-            <span class="toggle-label">{{ devMode ? 'Disable' : 'Enable' }} Developer Mode</span>
+            <span class="toggle-label">{{ devMode ? 'Disable' : 'Enable' }} Evaluation Mode</span>
           </div>
           
           <div class="modal-note">
@@ -869,7 +870,7 @@ body {
   }
 }
 
-/* ===== Dev Mode Components ===== */
+/* ===== Evaluation Mode Components ===== */
 
 /* Tap Counter */
 .tap-counter {
@@ -927,7 +928,7 @@ body {
   }
 }
 
-/* Dev Mode Modal */
+/* Evaluation Mode Modal */
 .dev-mode-modal-overlay {
   position: fixed;
   top: 0;

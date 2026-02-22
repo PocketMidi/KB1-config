@@ -303,20 +303,38 @@ function handleTrackTouchStart(event: TouchEvent, index: number) {
   const touch = event.touches[0];
   if (!touch) return;
   
+  // Apply offset compensation to touch X position
+  const compensatedX = touch.clientX + touchOffsetX.value;
+  
+  // Find which slider track was actually touched (with compensation)
+  let actualIndex = index; // Default to the reported index
+  
+  // Get all slider tracks and check which one contains the compensated touch point
+  const sliderTracks = document.querySelectorAll('.live-slider-track');
+  for (let i = 0; i < sliderTracks.length; i++) {
+    const track = sliderTracks[i] as HTMLElement;
+    const rect = track.getBoundingClientRect();
+    if (compensatedX >= rect.left && compensatedX <= rect.right &&
+        touch.clientY >= rect.top && touch.clientY <= rect.bottom) {
+      actualIndex = i;
+      break;
+    }
+  }
+  
   // Store swipe start position (with offset compensation)
-  swipeStartX.value = touch.clientX + touchOffsetX.value;
+  swipeStartX.value = compensatedX;
   swipeStartY.value = touch.clientY;
   
-  // Get the track that was touched directly
-  const track = event.currentTarget as HTMLElement;
+  // Get the actual track that was touched
+  const track = sliderTracks[actualIndex] as HTMLElement;
   if (!track) return;
   
   // Lock to this slider and track
-  activeTouchSlider.value = index;
+  activeTouchSlider.value = actualIndex;
   activeTouchTrack.value = track;
   
   // Process the initial touch position
-  handleTrackTouchMove(event, index);
+  handleTrackTouchMove(event, actualIndex);
 }
 
 function handleTrackTouchMove(event: TouchEvent, index: number) {

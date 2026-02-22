@@ -175,12 +175,6 @@ function handleOffsetBarTouchStart(event: TouchEvent) {
   lastOffsetTapTime = now;
 }
 
-// Computed: Touch offset percentage for bar fill
-const touchOffsetPercentage = computed(() => {
-  // Map -100 to +100 -> 0 to 100%
-  return ((touchOffsetX.value + 100) / 200) * 100;
-});
-
 // Computed: Touch offset fill width (from center)
 const touchOffsetFillWidth = computed(() => {
   return Math.abs(touchOffsetX.value) / 2; // 0-50%

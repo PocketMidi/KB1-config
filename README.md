@@ -28,15 +28,142 @@ KB1 Config is the official browser-based configuration and control application f
 - Modify any setting → Orange dot appears in footer showing unsaved changes
 - Click **Save to Device** → Changes applied to RAM and automatically saved to flash memory
 - Footer actions stick to bottom for quick access: **Load**, **Reset**, **Save**
-- Use **Preset Manager** to save complete configurations with custom names (8 device slots + unlimited browser presets)
+
+**Preset System:**
+- **Community Tab**: Save working presets to browser (unlimited), browse and load shared presets from others
+- **Archive Tab**: Store up to 8 presets on device flash memory (survives browser resets)
+
+## Usage
+
+### Connecting to Your KB1 Device
+
+1. Click the **CONNECTED / DISCONNECTED** status in the top-right navigation bar
+2. Select your KB1 device from the browser's Bluetooth pairing dialog
+3. Once connected, the status will turn blue and display "CONNECTED"
+4. The app will automatically load current settings from the device
+
+**First Time Users**: A helpful overlay will explain the connection process on your first visit.
+
+**Disconnected State**: When disconnected, all controls are shown but grayed out. Click any control to see a prompt to connect.
+
+### SETTINGS Tab
+
+The SETTINGS tab manages your device's global configuration:
+
+**Keyboard Settings:**
+- **Scale Mode**: Play quantized notes based on selected scale type
+  - Choose from multiple scale types (Chromatic, Major, Minor, Pentatonic, Blues, etc.)
+  - Set root note (C, C#, D, etc.)
+  - Toggle between Natural (spaced) and Compact (dense) key mapping
+- **Chord Mode**: Play full chords with each key press
+  - Choose chord type: Major, Minor, Diminished, Augmented, Sus2, Sus4, Power, Major7, Minor7, Dominant7
+  - Toggle between Chord (all notes together) and Strum (cascaded notes)
+  - Adjust velocity spread (0-100%) for dynamic chord voicing
+  - Set strum speed (5-100ms) for cascading notes
+
+**System Settings (Power Management):**
+- **Light Sleep**: Timeout before entering light sleep (30-300 seconds, default: 90s)
+- **Deep Sleep**: Timeout before entering deep sleep (120-1800s, must be >lightSleep+30s, default: 330s)
+- **BLE Timeout**: Bluetooth keep-alive timeout (30-600s, must be >=deepSleep+30s, default: 600s)
+
+**Actions:**
+- **Load from Device**: Fetch current settings from KB1 hardware
+- **Reset to Defaults**: Restore factory default settings
+- **Save to Device**: Apply changes to RAM and automatically save to flash memory
+
+**Preset Manager:**
+
+The Preset Manager offers two storage systems for different use cases:
+
+**Community Tab (Work + Share):**
+- **Your Working Presets**: Save unlimited presets to browser localStorage
+  - Perfect for experimenting and iterating on configurations
+  - Persists between sessions (until browser cache cleared)
+  - Create, rename, export, import, and delete presets
+  - Quick actions: + New, Import, Export
+- **Browse Shared**: Load community presets shared by other users
+  - Discover configurations from the community
+  - Load to try instantly, save to your working presets to keep
+
+**Archive Tab (Cold Storage):**
+- **Stored on Device**: 8 preset slots in device flash memory
+  - Survive browser resets and cache clears
+  - Permanently stored on device hardware
+  - Perfect for your final, go-to configurations
+  - Load, Save, and Delete for each slot
+
+**Workflow:** Experiment in Working Presets → Refine → Archive your favorites to device → Share exceptional ones with the community
+
+### CONTROLS Tab
+
+The CONTROLS tab configures your KB1's physical controls:
+
+**Lever 1 & Lever 2:**
+- **CC Number**: Choose MIDI CC from Polyend map with descriptions
+- **CC Range**: Set min/max values (0-127)
+- **Step Size**: Quantize movement to steps
+- **Function Mode**: Uni/Bi-directional, Momentary, Toggle
+- **Value Mode**: Jump, Hook, Pickup, Latch
+- **Interpolation**: Onset/offset timing (0-5000ms) and curve type (Linear, S-Curve, Logarithmic)
+
+**Lever Push 1 & 2:**
+- **CC Number**: Choose MIDI CC with descriptions  
+- **CC Range**: Set min/max values
+- **Function Mode**: Trigger, Momentary, Toggle
+- **Interpolation**: Onset/offset timing and curves
+
+**Touch Sensor:**
+- **CC Number**: Choose MIDI CC
+- **CC Range**: Set output range
+- **Function Mode**: Trigger, Momentary
+- **Threshold**: Adjust touch sensitivity (0-65535, default: 24000, lower = more sensitive)
+
+**Actions:**
+- **Load from Device**: Read current control settings
+- **Reset to Defaults**: Restore factory control settings
+- **Reset Changes**: Undo unsaved local changes
+- **Save to Device**: Apply and persist all control settings
+
+### SLIDERS Tab
+
+The SLIDERS tab provides 12 customizable performance sliders for real-time MIDI CC control:
+
+**Setup Mode** (Portrait or Desktop):
+- **Color Selection**: Tap color swatch or drag vertical picker to choose from 12 colors
+- **Bipolar/Unipolar Toggle**: Tap "BI" or "UNI" button to switch modes
+- **Momentary/Latched Toggle**: Tap "M" or "L" button for spring-back or hold behavior
+- **Link Sliders**: Drag across "link" icons between sliders to gang them (shared color, settings, values)
+- **CC Assignment**: Each slider has its own CC number (51-62 by default)
+- **Preset Management**: Save/load complete slider configurations via dropdown menu
+
+**Live Mode** (Mobile - Landscape Fullscreen):
+- **Enter**: Rotate device to landscape (iOS shows rotation animation)
+- **Fullscreen**: Sliders fill the entire screen for performance
+- **Control**: Drag sliders vertically to send MIDI CC in real-time
+- **Swipe Exit**: Swipe horizontally >100px to exit
+- **Rotate Exit**: Rotate back to portrait (iOS prompts with rotation animation)
+- **Momentary**: Release touch on momentary sliders springs back to 0 with smooth animation
+
+**Slider Features:**
+- **Color Coded**: 12 rainbow colors for visual organization
+- **Gang Control**: Linked sliders move together and share settings
+- **Visual Feedback**: Colored fill shows current value with minimum visible height
+- **Bipolar Mode**: Center line divider, both positive/negative fill from center
+- **Unipolar Mode**: Bottom-up fill, 0-100% range
+
+**Desktop Use:**
+- All features work with mouse on desktop
+- Setup and live modes available simultaneously
+- Click and drag sliders for control
 
 ## Configuration Flexibility
 
 The KB1 system offers **~10²⁷ total unique configurations** (approximately 1 octillion possible combinations). When focusing on the most commonly adjusted parameters—CC numbers, min/max values, function modes, and interpolation curves—there are still **~10¹⁰ to 10¹² practical combinations** (10-100 billion distinct configurations).
 
 **Storage & Sharing:**
-- 8 preset slots on device for storing favorite configurations
-- Unlimited browser-based presets for sharing and experimenting
+- Unlimited working presets in browser for experimentation
+- 8 archive slots on device for permanent storage
+- Community sharing for discovering and contributing configurations
 
 The system is extraordinarily flexible for any performance or production workflow.
 
@@ -47,7 +174,10 @@ The system is extraordinarily flexible for any performance or production workflo
 - **Scale Mode** - Configure scale type, root note, and key mapping (Natural/Compact)
 - **Chord Mode** - Choose chord type (Major, Minor, Diminished, etc.), toggle Chord/Strum, adjust velocity spread and strum speed
 - **Power Management** - Customize light sleep, deep sleep, and Bluetooth timeout intervals
-- **Preset Manager** - Save, load, and organize complete device configurations
+- **Preset Manager** - Two-tier system: Community tab (working presets + shared browsing) and Archive tab (device storage)
+  - Working presets: unlimited browser storage for experimentation
+  - Device archive: 8 slots in flash for permanent configurations
+  - Browse community shared presets
 - **Load from Device** - Read current settings from hardware
 - **Reset to Defaults** - Restore factory settings
 - **Save to Device** - Apply changes to RAM and persist to flash memory
@@ -135,9 +265,16 @@ src/
         └── kb1.css           # KB1 theme variables & global styles
 ```
 
-## Getting Started
+## Configuration Flexibility (Expanded)
 
-### Prerequisites
+The KB1 system offers **~10²⁷ total unique configurations** (approximately 1 octillion possible combinations). When focusing on the most commonly adjusted parameters—CC numbers, min/max values, function modes, and interpolation curves—there are still **~10¹⁰ to 10¹² practical combinations** (10-100 billion distinct configurations).
+
+**Storage & Sharing:**
+- Unlimited working presets in browser for experimentation and refinement
+- 8 archive slots on device flash for permanent, reliable storage
+- Community preset sharing via GitHub for discovering and contributing configurations
+
+The system is extraordinarily flexible for any performance or production workflow, from live electronic music to studio production.
 
 - Node.js 18+ and npm
 - A browser with Web Bluetooth support (Chrome, Edge, Opera)
@@ -190,112 +327,6 @@ The built files will be in the `dist/` directory, ready for deployment.
 ```bash
 npm run preview
 ```
-
-## Usage
-
-### Connecting to Your KB1 Device
-
-1. Click the **CONNECTED / DISCONNECTED** status in the top-right navigation bar
-2. Select your KB1 device from the browser's Bluetooth pairing dialog
-3. Once connected, the status will turn blue and display "CONNECTED"
-4. The app will automatically load current settings from the device
-
-**First Time Users**: A helpful overlay will explain the connection process on your first visit.
-
-**Disconnected State**: When disconnected, all controls are shown but grayed out. Click any control to see a prompt to connect.
-
-### SETTINGS Tab
-
-The SETTINGS tab manages your device's global configuration:
-
-**Keyboard Settings:**
-- **Scale Mode**: Play quantized notes based on selected scale type
-  - Choose from multiple scale types (Chromatic, Major, Minor, Pentatonic, Blues, etc.)
-  - Set root note (C, C#, D, etc.)
-  - Toggle between Natural (spaced) and Compact (dense) key mapping
-- **Chord Mode**: Play full chords with each key press
-  - Choose chord type: Major, Minor, Diminished, Augmented, Sus2, Sus4, Power, Major7, Minor7, Dominant7
-  - Toggle between Chord (all notes together) and Strum (cascaded notes)
-  - Adjust velocity spread (0-100%) for dynamic chord voicing
-  - Set strum speed (5-100ms) for cascading notes
-
-**System Settings (Power Management):**
-- **Light Sleep**: Timeout before entering light sleep (30-300 seconds, default: 90s)
-- **Deep Sleep**: Timeout before entering deep sleep (120-1800s, must be >lightSleep+30s, default: 330s)
-- **BLE Timeout**: Bluetooth keep-alive timeout (30-600s, must be >=deepSleep+30s, default: 600s)
-
-**Actions:**
-- **Load from Device**: Fetch current settings from KB1 hardware
-- **Reset to Defaults**: Restore factory default settings
-- **Save to Device**: Apply changes to RAM and automatically save to flash memory
-
-**Preset Manager:**
-- Save complete device configurations with custom names
-- Quick-load saved presets
-- Delete presets you no longer need
-- Presets stored in browser localStorage (persists between sessions)
-
-### CONTROLS Tab
-
-The CONTROLS tab configures your KB1's physical controls:
-
-**Lever 1 & Lever 2:**
-- **CC Number**: Choose MIDI CC from Polyend map with descriptions
-- **CC Range**: Set min/max values (0-127)
-- **Step Size**: Quantize movement to steps
-- **Function Mode**: Uni/Bi-directional, Momentary, Toggle
-- **Value Mode**: Jump, Hook, Pickup, Latch
-- **Interpolation**: Onset/offset timing (0-5000ms) and curve type (Linear, S-Curve, Logarithmic)
-
-**Lever Push 1 & 2:**
-- **CC Number**: Choose MIDI CC with descriptions  
-- **CC Range**: Set min/max values
-- **Function Mode**: Trigger, Momentary, Toggle
-- **Interpolation**: Onset/offset timing and curves
-
-**Touch Sensor:**
-- **CC Number**: Choose MIDI CC
-- **CC Range**: Set output range
-- **Function Mode**: Trigger, Momentary
-- **Threshold**: Adjust touch sensitivity (0-65535, default: 24000, lower = more sensitive)
-
-**Actions:**
-- **Load from Device**: Read current control settings
-- **Reset to Defaults**: Restore factory control settings
-- **Reset Changes**: Undo unsaved local changes
-- **Save to Device**: Apply and persist all control settings
-
-### SLIDERS Tab
-
-The SLIDERS tab provides 12 customizable performance sliders for real-time MIDI CC control:
-
-**Setup Mode** (Portrait or Desktop):
-- **Color Selection**: Tap color swatch or drag vertical picker to choose from 12 colors
-- **Bipolar/Unipolar Toggle**: Tap "BI" or "UNI" button to switch modes
-- **Momentary/Latched Toggle**: Tap "M" or "L" button for spring-back or hold behavior
-- **Link Sliders**: Drag across "link" icons between sliders to gang them (shared color, settings, values)
-- **CC Assignment**: Each slider has its own CC number (51-62 by default)
-- **Preset Management**: Save/load complete slider configurations via dropdown menu
-
-**Live Mode** (Mobile - Landscape Fullscreen):
-- **Enter**: Rotate device to landscape (iOS shows rotation animation)
-- **Fullscreen**: Sliders fill the entire screen for performance
-- **Control**: Drag sliders vertically to send MIDI CC in real-time
-- **Swipe Exit**: Swipe horizontally >100px to exit
-- **Rotate Exit**: Rotate back to portrait (iOS prompts with rotation animation)
-- **Momentary**: Release touch on momentary sliders springs back to 0 with smooth animation
-
-**Slider Features:**
-- **Color Coded**: 12 rainbow colors for visual organization
-- **Gang Control**: Linked sliders move together and share settings
-- **Visual Feedback**: Colored fill shows current value with minimum visible height
-- **Bipolar Mode**: Center line divider, both positive/negative fill from center
-- **Unipolar Mode**: Bottom-up fill, 0-100% range
-
-**Desktop Use:**
-- All features work with mouse on desktop
-- Setup and live modes available simultaneously
-- Click and drag sliders for control
 
 ## Development Notes
 

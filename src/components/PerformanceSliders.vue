@@ -1454,17 +1454,18 @@ defineExpose({
           <div class="live-cc-label">{{ slider.cc }}</div>
         </div>
         
-        <!-- Ghost slider spacer to catch touches for rightmost slider (CC62) when offset is negative -->
-        <div 
-          class="live-slider-wrapper ghost-slider"
-          :style="{ pointerEvents: touchOffsetX < 0 ? 'auto' : 'none' }"
-          @touchstart="handleTrackTouchStart($event, sliders.length - 1)"
-          @touchmove="handleTrackTouchMove($event, sliders.length - 1)"
-          @touchend="handleTrackTouchEnd($event)"
-          @touchcancel="handleTrackTouchEnd($event)"
-        >
-          <div class="live-slider-track ghost-track"></div>
-        </div>
+      </div>
+      
+      <!-- Ghost slider spacer to catch touches for rightmost slider (CC62) when offset is negative -->
+      <div 
+        v-if="touchOffsetX < 0"
+        class="ghost-slider"
+        @touchstart="handleTrackTouchStart($event, sliders.length - 1)"
+        @touchmove="handleTrackTouchMove($event, sliders.length - 1)"
+        @touchend="handleTrackTouchEnd($event)"
+        @touchcancel="handleTrackTouchEnd($event)"
+      >
+        <div class="ghost-track"></div>
       </div>
     </div>
   </div>
@@ -2014,19 +2015,20 @@ defineExpose({
 }
 
 /* Ghost slider spacer for catching touches to rightmost slider */
-.ghost-slider {
-  display: none; /* Hidden by default (desktop) */
-}
-
 .live-mode.mobile-landscape .ghost-slider {
-  display: flex; /* Only show in mobile landscape */
-  flex: 0 0 100px; /* Fixed 100px width to catch offset touches */
-  max-width: 100px;
+  position: absolute;
+  right: 0.5rem; /* Match padding-right of .live-sliders-container */
+  top: 0.5rem; /* Match padding-top of .live-sliders-container */
+  bottom: 0.5rem; /* Match padding-bottom */
+  width: 100px;
   opacity: 0; /* Invisible */
   pointer-events: auto; /* Still catch touches */
+  z-index: 10;
 }
 
 .live-mode.mobile-landscape .ghost-track {
+  width: 100%;
+  height: 100%;
   background: transparent !important;
   pointer-events: auto;
 }

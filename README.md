@@ -2,49 +2,44 @@
 
 KB1 Config is the official browser-based configuration and control application for the PocketMidi KB1 MIDI controller. This first release delivers a complete, wireless configuration environment with real-time performance control—configure keyboard modes, lever behavior, touch sensitivity, scales, power management, and control 12 performance sliders directly from your browser over Bluetooth Low Energy. No drivers, no apps to install.
 
-## Quick Start Guide
-
-**First Time Connection:**
-1. Click **DISCONNECTED** in the top-right corner
-2. Select "KB1" from your browser's Bluetooth pairing dialog
-3. Once connected, settings automatically load from your device
-
-**Using Performance Sliders (SLIDERS tab):**
-- **Desktop/Portrait**: Tap color swatches, adjust settings, drag sliders vertically
-- **Live Mode (Mobile)**: 
-  - Rotate device to landscape → Sliders go fullscreen automatically
-  - Control sliders with touch, swipe horizontally >100px to exit
-  - Or rotate back to portrait to exit live mode
-- **Linking Sliders**: Press and drag across the "link" icons between sliders to gang them (shared color, settings, and values move together)
-- **Save Presets**: Use dropdown menu to save/load complete slider configurations
-
-**Keyboard Modes (SETTINGS → KEYBOARD):**
-- **Scale Mode**: Keys play quantized notes from selected scale
-- **Chord Mode**: Each key plays a full chord
-  - Toggle Chord/Strum button to switch between simultaneous or cascaded notes
-  - Adjust "Smart Slider" for velocity spread (Chord) or strum speed (Strum)
-
-**Saving Changes:**
-- Modify any setting → Orange dot appears in footer showing unsaved changes
-- Click **Save to Device** → Changes applied to RAM and automatically saved to flash memory
-- Footer actions stick to bottom for quick access: **Load**, **Reset**, **Save**
-
-**Preset System:**
-- **Community Tab**: Save working presets to browser (unlimited), browse and load shared presets from others
-- **Archive Tab**: Store up to 8 presets on device flash memory (survives browser resets)
-
-## Usage
+## Getting Started
 
 ### Connecting to Your KB1 Device
 
 1. Click the **CONNECTED / DISCONNECTED** status in the top-right navigation bar
 2. Select your KB1 device from the browser's Bluetooth pairing dialog
 3. Once connected, the status will turn blue and display "CONNECTED"
-4. The app will automatically load current settings from the device
+4. Click **Load from Device** to fetch current settings from your hardware
 
 **First Time Users**: A helpful overlay will explain the connection process on your first visit.
 
 **Disconnected State**: When disconnected, all controls are shown but grayed out. Click any control to see a prompt to connect.
+
+### Using Performance Sliders (SLIDERS Tab)
+
+- **Desktop/Portrait**: Tap color swatches, adjust settings, drag sliders vertically
+- **Live Mode (Mobile)**: 
+  - Rotate device to landscape → Sliders go fullscreen automatically
+  - Control sliders with touch, swipe horizontally >100px to exit
+- **Linking Sliders**: Press and drag across the "link" icons between sliders to gang them (shared color, settings, and values move together)
+
+### Keyboard Modes (SETTINGS → KEYBOARD)
+
+- **Scale Mode**: Keys play quantized notes from selected scale
+- **Chord Mode**: Each key plays a full chord
+  - Toggle Chord/Strum button to switch between simultaneous or cascaded notes
+  - Adjust "Smart Slider" for velocity spread (Chord) or strum speed (Strum)
+
+### Saving Changes
+
+- Modify any setting → Orange dot appears in footer showing unsaved changes
+- Click **Save to Device** → Changes applied to RAM and automatically saved to flash memory
+- Footer actions stick to bottom for quick access: **Load**, **Reset**, **Save**
+
+### Preset System
+
+- **Community Tab**: Save working presets to browser (unlimited), browse and load shared presets from others
+- **Archive Tab**: Store up to 8 presets on device flash memory (survives browser resets)
 
 ### SETTINGS Tab
 
@@ -98,7 +93,7 @@ The Preset Manager offers two storage systems for different use cases:
 
 The CONTROLS tab configures your KB1's physical controls:
 
-**Lever 1 & Lever 2:**
+**Lever 1:**
 - **CC Number**: Choose MIDI CC from Polyend map with descriptions
 - **CC Range**: Set min/max values (0-127)
 - **Step Size**: Quantize movement to steps
@@ -106,7 +101,21 @@ The CONTROLS tab configures your KB1's physical controls:
 - **Value Mode**: Jump, Hook, Pickup, Latch
 - **Interpolation**: Onset/offset timing (0-5000ms) and curve type (Linear, S-Curve, Logarithmic)
 
-**Lever Push 1 & 2:**
+**Press 1:**
+- **CC Number**: Choose MIDI CC with descriptions  
+- **CC Range**: Set min/max values
+- **Function Mode**: Trigger, Momentary, Toggle
+- **Interpolation**: Onset/offset timing and curves
+
+**Lever 2:**
+- **CC Number**: Choose MIDI CC from Polyend map with descriptions
+- **CC Range**: Set min/max values (0-127)
+- **Step Size**: Quantize movement to steps
+- **Function Mode**: Uni/Bi-directional, Momentary, Toggle
+- **Value Mode**: Jump, Hook, Pickup, Latch
+- **Interpolation**: Onset/offset timing (0-5000ms) and curve type (Linear, S-Curve, Logarithmic)
+
+**Press 2:**
 - **CC Number**: Choose MIDI CC with descriptions  
 - **CC Range**: Set min/max values
 - **Function Mode**: Trigger, Momentary, Toggle
@@ -121,7 +130,6 @@ The CONTROLS tab configures your KB1's physical controls:
 **Actions:**
 - **Load from Device**: Read current control settings
 - **Reset to Defaults**: Restore factory control settings
-- **Reset Changes**: Undo unsaved local changes
 - **Save to Device**: Apply and persist all control settings
 
 ### SLIDERS Tab
@@ -134,14 +142,12 @@ The SLIDERS tab provides 12 customizable performance sliders for real-time MIDI 
 - **Momentary/Latched Toggle**: Tap "M" or "L" button for spring-back or hold behavior
 - **Link Sliders**: Drag across "link" icons between sliders to gang them (shared color, settings, values)
 - **CC Assignment**: Each slider has its own CC number (51-62 by default)
-- **Preset Management**: Save/load complete slider configurations via dropdown menu
 
 **Live Mode** (Mobile - Landscape Fullscreen):
 - **Enter**: Rotate device to landscape (iOS shows rotation animation)
 - **Fullscreen**: Sliders fill the entire screen for performance
 - **Control**: Drag sliders vertically to send MIDI CC in real-time
-- **Swipe Exit**: Swipe horizontally >100px to exit
-- **Rotate Exit**: Rotate back to portrait (iOS prompts with rotation animation)
+- **Exit**: Swipe horizontally >100px, then rotate back to portrait (iOS prompts with rotation animation)
 - **Momentary**: Release touch on momentary sliders springs back to 0 with smooth animation
 
 **Slider Features:**
@@ -183,8 +189,10 @@ The system is extraordinarily flexible for any performance or production workflo
 - **Save to Device** - Apply changes to RAM and persist to flash memory
 
 ### CONTROLS Tab
-- **Lever 1 & 2** - Configure CC, range, step size, function mode, value mode, and interpolation curves
-- **Lever Push 1 & 2** - Set up push button behavior with CC mapping and timing settings
+- **Lever 1** - Configure CC, range, step size, function mode, value mode, and interpolation curves
+- **Press 1** - Set up push button behavior with CC mapping and timing settings
+- **Lever 2** - Configure CC, range, step size, function mode, value mode, and interpolation curves
+- **Press 2** - Set up push button behavior with CC mapping and timing settings
 - **Touch Sensor** - Adjust sensitivity threshold and configure CC output
 - **Real-time Preview** - See parameter descriptions from Polyend CC map
 - **Accordion Interface** - Expandable sections with smooth animations
@@ -195,7 +203,6 @@ The system is extraordinarily flexible for any performance or production workflo
 - **Bipolar/Unipolar** - Toggle between centered (-100 to +100) or bottom-up (0 to 100) modes
 - **Momentary/Latched** - Spring-back or hold-value behavior
 - **Link Sliders** - Drag across link icons to group sliders (same color, settings, and gang control)
-- **Preset Management** - Save and recall complete slider configurations
 - **Mobile Live Mode** - Fullscreen landscape mode with rotation animations
 - **Desktop & Mobile** - Optimized for both touch and mouse input
 

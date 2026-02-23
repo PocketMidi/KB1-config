@@ -8,7 +8,7 @@ KB1 Config is the official browser-based configuration and control application f
 
 Want to explore the interface without hardware? Enable **Evaluation Mode** to interact with all settings using simulated device data—perfect for learning the interface, testing configurations, or exploring community presets before purchasing.
 
-**To Enable**: Click the KB1 logo (top-left) 5 times rapidly. A modal will appear to toggle the mode on/off.
+**To Enable**: Click the KB1 logo (top-center) 5 times rapidly. A modal will appear to toggle the mode on/off.
 
 **What Works**: All interface features, settings adjustments, preset management, and community preset browsing work normally with mock data.
 

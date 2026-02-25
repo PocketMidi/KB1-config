@@ -4,6 +4,19 @@ KB1 Config is the official browser-based configuration and control application f
 
 ## Getting Started
 
+### Enable Bluetooth on Your KB1 Hardware
+
+**IMPORTANT**: Before connecting to the web app, you must enable Bluetooth on your KB1 device.
+
+**How to Enable Bluetooth:**
+1. **Hold both octave buttons** (up + down) simultaneously for **3 seconds**
+2. **Watch for LED confirmation:**
+   - Fast blinking (pink + blue LEDs) = **Bluetooth enabled** ✓
+   - Slow blinking = Bluetooth disabled
+3. Repeat the same process anytime to toggle Bluetooth on/off
+
+**Note:** The web app cannot detect your device unless Bluetooth is enabled on the hardware.
+
 ### Evaluation Mode (Optional)
 
 Want to explore the interface without hardware? Enable **Evaluation Mode** to interact with all settings using simulated device data—perfect for learning the interface, testing configurations, or exploring community presets before purchasing.
@@ -16,10 +29,12 @@ Want to explore the interface without hardware? Enable **Evaluation Mode** to in
 
 ### Connecting to Your KB1 Device
 
-1. Click the **CONNECTED / DISCONNECTED** status in the top-right navigation bar
-2. Select your KB1 device from the browser's Bluetooth pairing dialog
-3. Once connected, the status will turn blue and display "CONNECTED"
-4. Click **Load from Device** to fetch current settings from your hardware
+**Browser Connection:**
+1. Ensure Bluetooth is enabled on your KB1 hardware (see above)
+2. Click the **CONNECTED / DISCONNECTED** status in the top-right navigation bar
+3. Select your KB1 device from the browser's Bluetooth pairing dialog
+4. Once connected, the status will turn blue and display "CONNECTED"
+5. Click **Load from Device** to fetch current settings from your hardware
 
 **First Time Users**: A helpful overlay will explain the connection process on your first visit.
 
@@ -152,6 +167,17 @@ The SLIDERS tab provides 12 customizable performance sliders for real-time MIDI 
 - All features work with mouse on desktop
 - Setup and live modes available simultaneously
 - Click and drag sliders for control
+
+**iOS Bluefy App Compatibility:**
+
+When using the Bluefy app on iOS devices, touch offset calibration is automatically applied to ensure accurate slider control. Due to browser-specific touch handling differences, you may notice one slider appears grayed out in live mode—this is normal and expected behavior:
+
+- **11 active sliders**: Depending on your calibration, either the first (CC51) or last (CC62) slider may be grayed out
+- **Grayed slider is unreachable**: The grayed slider cannot be controlled but this ensures the remaining 11 sliders respond accurately
+- **Automatic compensation**: The app detects Bluefy and adjusts touch input to match your finger position
+- **Calibration available**: Expand the calibration section in live mode to fine-tune touch offset if needed
+
+This limitation only affects Bluefy on iOS. Other browsers (Chrome, Edge on desktop/Android) display all 12 sliders as fully active.
 
 ## Configuration Flexibility
 
@@ -342,10 +368,15 @@ Web Bluetooth API is supported in:
 - ✅ Chrome/Chromium 56+
 - ✅ Edge 79+
 - ✅ Opera 43+
+- ✅ Bluefy (iOS) - Web Bluetooth wrapper for iOS devices
 - ❌ Firefox (requires flag)
 - ❌ Safari (not supported)
 
-For the best experience, use Chrome, Edge, or Opera.
+**iOS Users:** Safari does not support Web Bluetooth. Use the [Bluefy app](https://apps.apple.com/app/bluefy-web-ble-browser/id1492822055) (available on the App Store) for Web Bluetooth access on iOS devices.
+
+**Note:** When using Bluefy on iOS, the live mode sliders include automatic touch offset compensation. You may see one slider grayed out (either CC51 or CC62) - this is normal behavior to ensure accurate touch control for the remaining 11 sliders. See the SLIDERS section above for details.
+
+For the best experience, use Chrome, Edge, or Opera on desktop/Android.
 
 ### HTTPS Requirement
 

@@ -123,43 +123,7 @@ const links = ref<boolean[]>(new Array(11).fill(false));
 const isDraggingLinks = ref(false);
 const linkDragState = ref<boolean | null>(null); // The state to apply when dragging (true for link, false for unlink)
 
-// Touch offset compensation (for Bluefy and other browsers with touch offset issues)
-const TOUCH_OFFSET_KEY = 'kb1-slider-touch-offset';
-const TOUCH_OFFSET_INITIALIZED_KEY = 'kb1-touch-offset-initialized';
-const touchOffsetX = ref<number>(0);
-const isCalibrationExpanded = ref<boolean>(false);
 
-// Detect if running in Bluefy browser
-function isBluefy(): boolean {
-  return /bluefy/i.test(navigator.userAgent);
-}
-
-// Load touch offset from localStorage
-function loadTouchOffset() {
-  try {
-    const saved = localStorage.getItem(TOUCH_OFFSET_KEY);
-    const initialized = localStorage.getItem(TOUCH_OFFSET_INITIALIZED_KEY);
-    
-    if (saved !== null) {
-      const value = parseInt(saved, 10);
-      if (!isNaN(value) && value >= -100 && value <= 100) {
-        touchOffsetX.value = value;
-      }
-    } else if (!initialized && isBluefy()) {
-      // First time on Bluefy, set default offset
-      touchOffsetX.value = -65;
-      saveTouchOffset();
-      localStorage.setItem(TOUCH_OFFSET_INITIALIZED_KEY, 'true');
-    }
-  } catch {
-    // Ignore errors
-  }
-}
-
-// Toggle calibration panel
-function toggleCalibration() {
-  isCalibrationExpanded.value = !isCalibrationExpanded.value;
-}
 
 // Toggle control mode between FX and MIX
 function toggleControlMode() {
@@ -196,74 +160,7 @@ function toggleControlMode() {
   showExplainerText(config.description);
 }
 
-// Save touch offset to localStorage
-function saveTouchOffset() {
-  try {
-    localStorage.setItem(TOUCH_OFFSET_KEY, touchOffsetX.value.toString());
-  } catch {
-    // Ignore errors
-  }
-}
-
-// Handle touch offset slider change
-function handleTouchOffsetChange(value: number) {
-  touchOffsetX.value = value;
-  saveTouchOffset();
-}
-
-// Double-tap/double-click detection for offset bar reset
-let lastOffsetTapTime = 0;
-const DOUBLE_TAP_DELAY = 300; // ms
-
-function handleOffsetBarDoubleClick() {
-  // Reset to 0
-  handleTouchOffsetChange(0);
-}
-
-// Handle touch offset bar interaction
-function handleOffsetBarClick(event: MouseEvent | TouchEvent) {
-  const target = event.currentTarget as HTMLElement;
-  const rect = target.getBoundingClientRect();
-  const clientX = 'touches' in event ? event.touches[0]?.clientX : event.clientX;
-  if (clientX === undefined) return;
-  
-  const x = clientX - rect.left;
-  const percentage = (x / rect.width) * 100;
-  // Map 0-100% to -100 to +100
-  const newValue = Math.round((percentage / 50) * 100 - 100);
-  handleTouchOffsetChange(Math.max(-100, Math.min(100, newValue)));
-}
-
-function handleOffsetBarTouchStart(event: TouchEvent) {
-  const now = Date.now();
-  const timeSinceLastTap = now - lastOffsetTapTime;
-  
-  if (timeSinceLastTap < DOUBLE_TAP_DELAY) {
-    // Double-tap detected
-    event.preventDefault();
-    handleOffsetBarDoubleClick();
-  } else {
-    // Single tap - process normally
-    handleOffsetBarClick(event);
-  }
-  
-  lastOffsetTapTime = now;
-}
-
-// Computed: Touch offset fill width (from center)
-const touchOffsetFillWidth = computed(() => {
-  return Math.abs(touchOffsetX.value) / 2; // 0-50%
-});
-
-// Computed: Touch offset fill position (left or right of center)
-const touchOffsetFillLeft = computed(() => {
-  if (touchOffsetX.value >= 0) {
-    return 50; // Start at center for positive
-  } else {
-    return 50 - touchOffsetFillWidth.value; // Start left of center for negative
-  }
-});
-
+// Double-tap/double-click detection for slider reset
 // Watch isPortrait for debugging
 watch(isPortrait, (newVal) => {
   if (viewMode.value === 'live') {
@@ -390,19 +287,6 @@ function getSliderFillBottom(slider: SliderConfig): number {
   }
 }
 
-// Check if a slider is unreachable due to touch offset compensation
-function isSliderUnreachable(sliderIndex: number): boolean {
-  // CC51 (index 0) is unreachable when offset > +50
-  if (sliderIndex === 0 && touchOffsetX.value > 50) {
-    return true;
-  }
-  // CC62 (index 11) is unreachable when offset < -50
-  if (sliderIndex === 11 && touchOffsetX.value < -50) {
-    return true;
-  }
-  return false;
-}
-
 // Check if a link should be visible based on mode
 function isLinkVisible(linkIndex: number): boolean {
   // In mixer mode, only show links between track volumes (sliders 5-11, which are links 4-10)
@@ -414,9 +298,9 @@ function isLinkVisible(linkIndex: number): boolean {
   return true;
 }
 
-// Get the effective color for a slider (gray if unreachable, normal color otherwise)
-function getSliderColor(slider: SliderConfig, sliderIndex: number): string {
-  return isSliderUnreachable(sliderIndex) ? '#2a2a2a' : slider.color;
+// Get the color for a slider
+function getSliderColor(slider: SliderConfig, _sliderIndex: number): string {
+  return slider.color;
 }
 
 // === END UTILITY FUNCTIONS ===
@@ -429,26 +313,23 @@ function handleTrackTouchStart(event: TouchEvent, index: number) {
   const touch = event.touches[0];
   if (!touch) return;
   
-  // Apply offset compensation to touch X position
-  const compensatedX = touch.clientX + touchOffsetX.value;
-  
-  // Find which slider track was actually touched (with compensation)
+  // Find which slider track was actually touched
   let actualIndex = index; // Default to the reported index
   
-  // Get all slider tracks and check which one contains the compensated touch point
+  // Get all slider tracks and check which one contains the touch point
   const sliderTracks = document.querySelectorAll('.live-slider-track');
   for (let i = 0; i < sliderTracks.length; i++) {
     const track = sliderTracks[i] as HTMLElement;
     const rect = track.getBoundingClientRect();
-    if (compensatedX >= rect.left && compensatedX <= rect.right &&
+    if (touch.clientX >= rect.left && touch.clientX <= rect.right &&
         touch.clientY >= rect.top && touch.clientY <= rect.bottom) {
       actualIndex = i;
       break;
     }
   }
   
-  // Store swipe start position (with offset compensation)
-  swipeStartX.value = compensatedX;
+  // Store swipe start position
+  swipeStartX.value = touch.clientX;
   swipeStartY.value = touch.clientY;
   
   // Get the actual track that was touched
@@ -510,8 +391,7 @@ function handleTrackTouchEnd(event: TouchEvent) {
   if (swipeStartX.value !== null && swipeStartY.value !== null) {
     const touch = event.changedTouches[0];
     if (touch) {
-      // Apply same offset logic as touch start
-      const deltaX = Math.abs((touch.clientX + touchOffsetX.value) - swipeStartX.value);
+      const deltaX = Math.abs(touch.clientX - swipeStartX.value);
       const deltaY = Math.abs(touch.clientY - swipeStartY.value);
       
       // If horizontal swipe > 100px and more horizontal than vertical, exit
@@ -588,7 +468,6 @@ function resetValuesToZero() {
 
 onMounted(() => {
   initializeSliders();
-  loadTouchOffset();
   
   // Preload rotation animation frames
   preloadRotationFrames();
@@ -1366,67 +1245,11 @@ defineExpose({
             <span class="mode-divider">|</span>
             <span :class="{ active: controlMode === 'mix' }">MIX</span>
           </button>
-          <button 
-            class="btn-calibration"
-            :class="{ expanded: isCalibrationExpanded }"
-            @click="toggleCalibration"
-          >
-            Cal
-          </button>
         </div>
         <div class="explainer-text" :class="{ fading: explainerFading }">
           {{ explainerText }}
         </div>
       </div>
-      
-      <!-- Touch Offset Compensation (Collapsible) -->
-      <Transition name="calibration-slide">
-        <div v-if="isCalibrationExpanded" class="touch-offset-section">
-          <!-- Bar -->
-          <div class="offset-meter">
-            <div 
-              class="offset-bar-container"
-              @click="handleOffsetBarClick"
-              @dblclick="handleOffsetBarDoubleClick"
-              @touchstart.prevent="handleOffsetBarTouchStart"
-            >
-              <div class="offset-divider" :style="{ left: '50%' }"></div>
-              <div class="offset-bar-wrapper">
-                <div class="offset-bar gray-bar-base"></div>
-                <div 
-                  class="offset-bar yellow-bar-active"
-                  :style="{ 
-                    left: `${touchOffsetFillLeft}%`, 
-                    width: `${touchOffsetFillWidth}%` 
-                  }"
-                ></div>
-              </div>
-            </div>
-          </div>
-          
-          <!-- Label and Controls -->
-          <div class="offset-group">
-            <label class="offset-label">SLIDER CALIBRATION</label>
-            <div class="offset-controls-wrapper">
-              <ValueControl
-                v-model="touchOffsetX"
-                :min="-100"
-                :max="100"
-                :step="1"
-                :small-step="1"
-                :large-step="10"
-                @update:modelValue="handleTouchOffsetChange"
-              />
-              <span class="offset-unit">px</span>
-            </div>
-          </div>
-          
-          <!-- Helper text -->
-          <div class="calibration-help">
-            Adjusts touch position in Live Mode
-          </div>
-        </div>
-      </Transition>
       
       <!-- Sliders list -->
       <div class="sliders-list">
@@ -1750,66 +1573,6 @@ defineExpose({
   font-weight: 300;
 }
 
-/* Calibration toggle button */
-.btn-calibration {
-  flex: 0 0 auto;
-  padding: 0.25rem 0.5rem;
-  background: rgba(106, 104, 83, 0.2);
-  border: 1px solid rgba(106, 104, 83, 0.4);
-  color: var(--kb1-text-primary);
-  opacity: 0.5;
-  font-size: 0.7rem;
-  font-weight: 500;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  font-family: 'Roboto Mono', monospace;
-  white-space: nowrap;
-}
-
-.btn-calibration:hover {
-  background: rgba(106, 104, 83, 0.3);
-  border-color: rgba(106, 104, 83, 0.6);
-  opacity: 1;
-}
-
-.btn-calibration.expanded {
-  background: rgba(106, 104, 83, 0.35);
-  border-color: rgba(106, 104, 83, 0.7);
-  opacity: 1;
-}
-
-/* Calibration slide transition */
-.calibration-slide-enter-active,
-.calibration-slide-leave-active {
-  transition: all 0.3s ease;
-  overflow: hidden;
-}
-
-.calibration-slide-enter-from {
-  max-height: 0;
-  opacity: 0;
-  margin-bottom: 0;
-}
-
-.calibration-slide-enter-to {
-  max-height: 200px;
-  opacity: 1;
-  margin-bottom: 0.75rem;
-}
-
-.calibration-slide-leave-from {
-  max-height: 200px;
-  opacity: 1;
-  margin-bottom: 0.75rem;
-}
-
-.calibration-slide-leave-to {
-  max-height: 0;
-  opacity: 0;
-  margin-bottom: 0;
-}
-
 .explainer-text {
   color: var(--accent-highlight);
   font-size: 0.8125rem;
@@ -1823,106 +1586,6 @@ defineExpose({
 
 .explainer-text.fading {
   opacity: 0;
-}
-
-/* Touch Offset Compensation Section */
-.touch-offset-section {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid var(--color-divider);
-  margin-bottom: 0.75rem;
-}
-
-.offset-meter {
-  padding: 0.75rem 0;
-}
-
-.offset-group {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-}
-
-.offset-label {
-  font-size: 0.8125rem;
-  font-family: 'Roboto Mono';
-  color: var(--label-gray);
-  font-weight: 400;
-  flex-shrink: 0;
-}
-
-.offset-bar-container {
-  position: relative;
-  display: flex;
-  align-items: center;
-  width: 100%;
-  height: 17px;
-  cursor: pointer;
-  user-select: none;
-}
-
-.offset-bar-wrapper {
-  position: relative;
-  width: 100%;
-  height: 9px;
-  overflow: visible;
-}
-
-.offset-bar {
-  height: 9px;
-  position: absolute;
-  top: 0;
-  border-radius: 4.5px;
-}
-
-.gray-bar-base {
-  width: 100%;
-  background: var(--color-divider);
-  left: 0;
-}
-
-.yellow-bar-active {
-  background: var(--accent-highlight);
-  z-index: 1;
-}
-
-.offset-divider {
-  position: absolute;
-  width: 5px;
-  height: 17px;
-  background: var(--accent-highlight);
-  border-radius: 2.5px;
-  transform: translateX(-50%);
-  z-index: 2;
-  pointer-events: none;
-}
-
-.offset-controls-wrapper {
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-  justify-content: flex-end;
-}
-
-.offset-unit {
-  font-size: 0.8125rem;
-  font-family: 'Roboto Mono';
-  color: var(--kb1-text-primary);
-  font-weight: 400;
-  cursor: default;
-  user-select: none;
-}
-
-.calibration-help {
-  font-size: 0.7rem;
-  color: var(--label-gray);
-  opacity: 0.6;
-  text-align: left;
-  margin-top: 0.5rem;
-  font-family: 'Roboto Mono';
 }
 
 .sliders-list {

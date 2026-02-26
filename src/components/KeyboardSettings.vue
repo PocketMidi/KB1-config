@@ -272,8 +272,9 @@ const rootNoteValue = computed({
 })
 
 // Watch for Chromatic scale on mount/change - enforce C root and Natural mapping
-watch(() => model.value.scale.scaleType, (newScaleType) => {
-  if (newScaleType === 0) {
+// Only apply these restrictions in SCALE mode, not in CHORD mode
+watch(() => [model.value.scale.scaleType, model.value.mode] as const, ([newScaleType, mode]) => {
+  if (newScaleType === 0 && mode === 'scale') {
     const updated = { ...model.value }
     let needsUpdate = false
     
@@ -305,10 +306,11 @@ const selectedTypeLabel = computed(() => {
 
 // ===== SCALE MODE TOGGLE =====
 const isNatural = computed(() => model.value.scale.keyMapping === 0)
-const isChromatic = computed(() => model.value.scale.scaleType === 0)
+// Only lock chromatic when in scale mode, not chord mode
+const isChromatic = computed(() => model.value.scale.scaleType === 0 && model.value.mode === 'scale')
 
 const scaleToggleTooltip = computed(() => {
-  if (isChromatic.value) {
+  if (model.value.scale.scaleType === 0) {
     return 'Mapping mode disabled in Chromatic scale'
   }
   return isNatural.value ? 'Switch to Compact' : 'Switch to Natural'
@@ -513,8 +515,8 @@ function isNoteActive(midiNote: number): boolean {
 }
 
 function isRootNote(midiNote: number): boolean {
-  // Force C (60) as root when Chromatic scale is selected
-  const rootNote = model.value.scale.scaleType === 0 ? 60 : model.value.scale.rootNote
+  // Force C (60) as root when Chromatic scale is selected in SCALE mode only
+  const rootNote = (model.value.scale.scaleType === 0 && model.value.mode === 'scale') ? 60 : model.value.scale.rootNote
   return (midiNote % 12) === (rootNote % 12)
 }
 

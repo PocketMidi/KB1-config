@@ -62,18 +62,17 @@
 
     <!-- Scale Mode: Mapping Toggle and Visualization -->
     <div v-if="playMode === 'scale'" class="mapping-toggle-row">
-      <div class="toggle-container" :class="{ disabled: isChromatic }">
-        <img 
-          :src="scaleToggleImage" 
-          alt="Mapping Toggle"
-          :title="scaleToggleTooltip"
-          class="toggle-image"
-          :class="{ disabled: isChromatic }"
-          @click="handleScaleToggleClick"
-          @mouseenter="scaleToggleHovered = true"
-          @mouseleave="scaleToggleHovered = false"
-        />
-      </div>
+      <button 
+        class="toggle-btn" 
+        :class="{ disabled: isChromatic }"
+        @click="handleScaleToggleClick"
+        :title="scaleToggleTooltip"
+        :disabled="isChromatic"
+      >
+        <span :class="{ active: isNatural }">NATURAL</span>
+        <span class="toggle-divider">|</span>
+        <span :class="{ active: !isNatural }">COMPACT</span>
+      </button>
       
       <div class="dots-visualization" :class="{ 'wide-spacing': isNatural }">
         <div v-for="i in 12" :key="i" class="dot"></div>
@@ -84,17 +83,15 @@
     <div v-else-if="playMode === 'chord'" class="chord-controls">
       <!-- Chord/Strum Toggle -->
       <div class="mapping-toggle-row">
-        <div class="toggle-container">
-          <img 
-            :src="chordToggleImage" 
-            alt="Chord/Strum Toggle"
-            :title="chordToggleTooltip"
-            class="toggle-image"
-            @click="handleChordToggleClick"
-            @mouseenter="chordToggleHovered = true"
-            @mouseleave="chordToggleHovered = false"
-          />
-        </div>
+        <button 
+          class="toggle-btn" 
+          @click="handleChordToggleClick"
+          :title="chordToggleTooltip"
+        >
+          <span :class="{ active: isChordStyle }">CHORD</span>
+          <span class="toggle-divider">|</span>
+          <span :class="{ active: !isChordStyle }">STRUM</span>
+        </button>
         
         <!-- Visual indicator: line for chord, dots for strum -->
         <div class="chord-visualization">
@@ -178,7 +175,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, onBeforeUnmount, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import NotePickerControl from './NotePickerControl.vue'
 import OptionWheelPicker from './OptionWheelPicker.vue'
 import ValueControl from './ValueControl.vue'
@@ -306,34 +303,9 @@ const selectedTypeLabel = computed(() => {
   return option?.label || 'Unknown'
 })
 
-// Constants
-const BASE_PATH = '/KB1-config'
-const TOGGLE_ANIMATION_DURATION = 60 // milliseconds for toggle transition
-
 // ===== SCALE MODE TOGGLE =====
-const scaleToggleHovered = ref(false)
-const scaleToggleAnimating = ref(false)
-const scaleAnimationTimeoutId = ref<number | null>(null)
-const scaleTransitionDirection = ref<'left-to-right' | 'right-to-left' | null>(null)
-
 const isNatural = computed(() => model.value.scale.keyMapping === 0)
 const isChromatic = computed(() => model.value.scale.scaleType === 0)
-
-const scaleToggleImage = computed(() => {
-  const mode = isNatural.value ? 'l' : 'r'
-  
-  if (scaleToggleAnimating.value && scaleTransitionDirection.value) {
-    return scaleTransitionDirection.value === 'left-to-right'
-      ? `${BASE_PATH}/keys_toggle/l-r.svg`
-      : `${BASE_PATH}/keys_toggle/r-l.svg`
-  }
-  
-  if (scaleToggleHovered.value && !isChromatic.value) {
-    return `${BASE_PATH}/keys_toggle/${mode}_flot.svg`
-  }
-  
-  return `${BASE_PATH}/keys_toggle/${mode}_activ.svg`
-})
 
 const scaleToggleTooltip = computed(() => {
   if (isChromatic.value) {
@@ -343,73 +315,32 @@ const scaleToggleTooltip = computed(() => {
 })
 
 const handleScaleToggleClick = () => {
-  if (scaleToggleAnimating.value || isChromatic.value) return
+  if (isChromatic.value) return
   
   const isCurrentlyNatural = isNatural.value
-  scaleTransitionDirection.value = isCurrentlyNatural ? 'left-to-right' : 'right-to-left'
-  
-  scaleToggleAnimating.value = true
-  
   const newMappingName = isCurrentlyNatural ? 'Efficient Mode' : 'Mapped Mode'
   emit('mappingChanged', newMappingName)
   
-  scaleAnimationTimeoutId.value = window.setTimeout(() => {
-    const updated = { ...model.value }
-    updated.scale = { ...updated.scale, keyMapping: isCurrentlyNatural ? 1 : 0 }
-    emit('update:modelValue', updated)
-    scaleToggleAnimating.value = false
-    scaleTransitionDirection.value = null
-    scaleAnimationTimeoutId.value = null
-  }, TOGGLE_ANIMATION_DURATION)
+  const updated = { ...model.value }
+  updated.scale = { ...updated.scale, keyMapping: isCurrentlyNatural ? 1 : 0 }
+  emit('update:modelValue', updated)
 }
 
 // ===== CHORD MODE TOGGLE =====
-const chordToggleHovered = ref(false)
-const chordToggleAnimating = ref(false)
-const chordAnimationTimeoutId = ref<number | null>(null)
-const chordTransitionDirection = ref<'left-to-right' | 'right-to-left' | null>(null)
-
 const isChordStyle = computed(() => !model.value.chord.strumEnabled)
-
-const chordToggleImage = computed(() => {
-  const mode = isChordStyle.value ? 'l' : 'r'
-  
-  if (chordToggleAnimating.value && chordTransitionDirection.value) {
-    return chordTransitionDirection.value === 'left-to-right'
-      ? `${BASE_PATH}/chord_strum_toggle/l-r.svg`
-      : `${BASE_PATH}/chord_strum_toggle/r-l.svg`
-  }
-  
-  if (chordToggleHovered.value) {
-    return `${BASE_PATH}/chord_strum_toggle/${mode}_flot.svg`
-  }
-  
-  return `${BASE_PATH}/chord_strum_toggle/${mode}_activ.svg`
-})
 
 const chordToggleTooltip = computed(() => {
   return isChordStyle.value ? 'Switch to Strum' : 'Switch to Chord'
 })
 
 const handleChordToggleClick = () => {
-  if (chordToggleAnimating.value) return
-  
   const isCurrentlyChord = isChordStyle.value
-  chordTransitionDirection.value = isCurrentlyChord ? 'left-to-right' : 'right-to-left'
-  
-  chordToggleAnimating.value = true
-  
   const newStyleName = isCurrentlyChord ? 'Strum Mode' : 'Chord Mode'
   emit('chordStyleChanged', newStyleName)
   
-  chordAnimationTimeoutId.value = window.setTimeout(() => {
-    const updated = { ...model.value }
-    updated.chord = { ...updated.chord, strumEnabled: isCurrentlyChord }
-    emit('update:modelValue', updated)
-    chordToggleAnimating.value = false
-    chordTransitionDirection.value = null
-    chordAnimationTimeoutId.value = null
-  }, TOGGLE_ANIMATION_DURATION)
+  const updated = { ...model.value }
+  updated.chord = { ...updated.chord, strumEnabled: isCurrentlyChord }
+  emit('update:modelValue', updated)
 }
 
 // ===== SMART SLIDER =====
@@ -494,16 +425,6 @@ const handleBarTouchStart = (e: TouchEvent) => {
   document.addEventListener('touchmove', handleTouchMove, { passive: false })
   document.addEventListener('touchend', handleTouchEnd)
 }
-
-// Cleanup timeouts on unmount
-onBeforeUnmount(() => {
-  if (scaleAnimationTimeoutId.value !== null) {
-    clearTimeout(scaleAnimationTimeoutId.value)
-  }
-  if (chordAnimationTimeoutId.value !== null) {
-    clearTimeout(chordAnimationTimeoutId.value)
-  }
-})
 
 // ===== KEYBOARD VISUALIZATION =====
 
@@ -751,32 +672,51 @@ function handleKeyClick(midiNote: number) {
   border-top: 1px solid var(--color-divider);
 }
 
-.toggle-container {
-  display: flex;
-  align-items: center;
-  flex-shrink: 0;
-}
-
-.toggle-container.disabled {
-  opacity: 0.3;
-  pointer-events: none;
-}
-
-.toggle-image {
-  display: block;
-  height: 22px;
-  width: auto;
+.toggle-btn {
+  flex: 0 0 auto;
+  padding: 0.15rem 0.375rem;
+  background: rgba(106, 104, 83, 0.2);
+  border: 1px solid rgba(106, 104, 83, 0.4);
+  color: var(--kb1-text-primary, #EAEAEA);
+  font-size: 0.65rem;
+  font-weight: 500;
+  border-radius: 4px;
   cursor: pointer;
-  transition: opacity 0.3s ease-in-out;
+  transition: all 0.2s ease;
+  font-family: 'Roboto Mono', monospace;
+  white-space: nowrap;
+  display: flex;
+  gap: 0.2rem;
+  align-items: center;
+  justify-content: center;
 }
 
-.toggle-image:hover:not(.disabled) {
-  opacity: 0.85;
+.toggle-btn:hover:not(:disabled) {
+  background: rgba(106, 104, 83, 0.3);
+  border-color: rgba(106, 104, 83, 0.6);
 }
 
-.toggle-image.disabled {
+.toggle-btn:disabled {
+  opacity: 0.3;
   cursor: not-allowed;
+  background: rgba(106, 104, 83, 0.1);
+  border-color: rgba(106, 104, 83, 0.2);
+}
+
+.toggle-btn span {
   opacity: 0.5;
+  transition: opacity 0.2s ease, color 0.2s ease;
+}
+
+.toggle-btn span.active {
+  opacity: 1;
+  color: #EAEAEA;
+  font-weight: 600;
+}
+
+.toggle-btn .toggle-divider {
+  opacity: 0.3;
+  font-weight: 300;
 }
 
 /* Dots Visualization (Scale mode) */

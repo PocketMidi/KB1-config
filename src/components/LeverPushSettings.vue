@@ -3,17 +3,15 @@
     <!-- Toggle and Profile Selection -->
     <div class="controls-row">
       <!-- Momentary/Latch Toggle -->
-      <div class="toggle-container">
-        <img 
-          :src="toggleImage" 
-          alt="Mode Toggle"
-          :title="toggleTooltip"
-          class="toggle-image"
-          @click="handleToggleClick"
-          @mouseenter="toggleHovered = true"
-          @mouseleave="toggleHovered = false"
-        />
-      </div>
+      <button 
+        class="toggle-btn" 
+        @click="handleToggleClick"
+        :title="toggleTooltip"
+      >
+        <span :class="{ active: isMomentary }">MOM</span>
+        <span class="toggle-divider">|</span>
+        <span :class="{ active: !isMomentary }">LAT</span>
+      </button>
 
       <!-- Profile Text Selection -->
       <div class="profile-selector">
@@ -379,23 +377,12 @@ watch(() => model.value.functionMode, (mode) => {
 
 // Momentary/Latch Toggle (using offset time: 0 = momentary, >0 = latched)
 const isMomentary = computed(() => model.value.offsetTime === 0)
-const toggleHovered = ref(false)
-
-const toggleImage = computed(() => {
-  const mode = isMomentary.value ? 'l' : 'r'
-  
-  if (toggleHovered.value) {
-    return `${BASE_PATH}mom_lat_toggle/${mode}_flot.svg`
-  }
-  return `${BASE_PATH}mom_lat_toggle/${mode}_activ.svg`
-})
 
 const toggleTooltip = computed(() => 
-  isMomentary.value ? 'Momentary (Click for Latched)' : 'Latched (Click for Momentary)'
+  isMomentary.value ? 'Switch to Latched' : 'Switch to Momentary'
 )
 
 function handleToggleClick() {
-  // Toggle between momentary (offsetTime=0) and latched (offsetTime=same as onsetTime)
   if (isMomentary.value) {
     // Switch to latched - set offsetTime to match onsetTime
     // If onsetTime is 0, use a sensible default (100ms)
@@ -634,23 +621,45 @@ const handleDurationBarTouchStart = (e: TouchEvent) => {
   flex-wrap: nowrap;
 }
 
-.toggle-container {
+.toggle-btn {
+  flex: 0 0 auto;
+  padding: 0.15rem 0.375rem;
+  background: rgba(106, 104, 83, 0.2);
+  border: 1px solid rgba(106, 104, 83, 0.4);
+  color: var(--kb1-text-primary, #EAEAEA);
+  font-size: 0.65rem;
+  font-weight: 500;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: 'Roboto Mono', monospace;
+  white-space: nowrap;
   display: flex;
+  gap: 0.2rem;
   align-items: center;
-  flex-shrink: 0;
+  justify-content: center;
   margin-right: 1rem;
 }
 
-.toggle-image {
-  display: block;
-  height: 22px;
-  width: auto;
-  cursor: pointer;
-  transition: opacity 0.3s ease-in-out;
+.toggle-btn:hover {
+  background: rgba(106, 104, 83, 0.3);
+  border-color: rgba(106, 104, 83, 0.6);
 }
 
-.toggle-image:hover {
-  opacity: 0.85;
+.toggle-btn span {
+  opacity: 0.5;
+  transition: opacity 0.2s ease, color 0.2s ease;
+}
+
+.toggle-btn span.active {
+  opacity: 1;
+  color: #EAEAEA;
+  font-weight: 600;
+}
+
+.toggle-btn .toggle-divider {
+  opacity: 0.3;
+  font-weight: 300;
 }
 
 .profile-selector {

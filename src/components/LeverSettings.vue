@@ -3,17 +3,15 @@
     <!-- Toggle and Profile Selection -->
     <div class="controls-row">
       <!-- Unipolar/Bipolar Toggle -->
-      <div class="toggle-container">
-        <img 
-          :src="toggleImage" 
-          alt="Polarity Toggle"
-          :title="toggleTooltip"
-          class="toggle-image"
-          @click="handleToggleClick"
-          @mouseenter="toggleHovered = true"
-          @mouseleave="toggleHovered = false"
-        />
-      </div>
+      <button 
+        class="toggle-btn" 
+        @click="handleToggleClick"
+        :title="toggleTooltip"
+      >
+        <span :class="{ active: model.valueMode === 0 }">UNI</span>
+        <span class="toggle-divider">|</span>
+        <span :class="{ active: model.valueMode === 1 }">BI</span>
+      </button>
 
       <!-- Profile Text Selection -->
       <div class="profile-selector">
@@ -285,71 +283,22 @@ const model = computed({
 
 // Constants
 const BASE_PATH = '/KB1-config'
-const TOGGLE_ANIMATION_DURATION = 60 // milliseconds for toggle transition
 
-// Toggle state and animation
-// toggleHovered: tracks hover state for visual feedback (shows float state)
-// isAnimating: prevents rapid toggle clicks during transition animation
-// transitionDirection: tracks the direction of transition ('left-to-right' or 'right-to-left')
-const toggleHovered = ref(false)
-const isAnimating = ref(false)
-const animationTimeoutId = ref<number | null>(null)
-const transitionDirection = ref<'left-to-right' | 'right-to-left' | null>(null)
-
-const toggleImage = computed(() => {
-  const isUnipolar = model.value.valueMode === 0
-  
-  if (isAnimating.value && transitionDirection.value) {
-    // During animation, show transition frames based on direction
-    return transitionDirection.value === 'left-to-right'
-      ? `${BASE_PATH}/uni_bi_toggle/l-r_trans.svg`
-      : `${BASE_PATH}/uni_bi_toggle/r-l_trans.svg`
-  }
-  
-  if (toggleHovered.value) {
-    return isUnipolar 
-      ? `${BASE_PATH}/uni_bi_toggle/l_float.svg`
-      : `${BASE_PATH}/uni_bi_toggle/r_float.svg`
-  }
-  
-  return isUnipolar 
-    ? `${BASE_PATH}/uni_bi_toggle/l_active.svg`
-    : `${BASE_PATH}/uni_bi_toggle/r_active.svg`
-})
-
+// Toggle tooltip
 const toggleTooltip = computed(() => {
-  // Show the mode you're about to switch TO, not the current mode
-  return model.value.valueMode === 0 ? 'Bipolar' : 'Unipolar'
+  return model.value.valueMode === 0 ? 'Switch to Bipolar' : 'Switch to Unipolar'
 })
 
 const handleToggleClick = () => {
-  if (isAnimating.value) return
+  model.value.valueMode = model.value.valueMode === 0 ? 1 : 0
   
-  // Determine transition direction based on current state
-  const isCurrentlyUnipolar = model.value.valueMode === 0
-  transitionDirection.value = isCurrentlyUnipolar ? 'left-to-right' : 'right-to-left'
-  
-  isAnimating.value = true
-  
-  // Animate for specified duration then switch
-  animationTimeoutId.value = window.setTimeout(() => {
-    model.value.valueMode = model.value.valueMode === 0 ? 1 : 0
-    isAnimating.value = false
-    transitionDirection.value = null
-    animationTimeoutId.value = null
-    
-    // Emit the new mode name for parent to display
-    const newModeName = model.value.valueMode === 0 ? 'Unipolar' : 'Bipolar'
-    emit('valueModeChanged', newModeName)
-  }, TOGGLE_ANIMATION_DURATION)
+  // Emit the new mode name for parent to display
+  const newModeName = model.value.valueMode === 0 ? 'Unipolar' : 'Bipolar'
+  emit('valueModeChanged', newModeName)
 }
 
-// Cleanup timeout on unmount to prevent memory leaks
+// Cleanup event listeners on unmount
 onBeforeUnmount(() => {
-  if (animationTimeoutId.value !== null) {
-    clearTimeout(animationTimeoutId.value)
-  }
-  // Cleanup steps drag event listeners
   document.removeEventListener('mousemove', handleStepsMouseMove)
   document.removeEventListener('mouseup', handleStepsMouseUp)
 })
@@ -808,23 +757,45 @@ function increaseSteps() {
   flex-wrap: nowrap; /* Keep in one row but allow shrinking */
 }
 
-.toggle-container {
-  display: flex;
-  align-items: center;
-  flex-shrink: 0; /* Don't let it shrink too much */
-  margin-right: 1rem; /* Add spacing after toggle to separate from profile buttons */
-}
-
-.toggle-image {
-  display: block;
-  height: 22px;
-  width: auto;
+.toggle-btn {
+  flex: 0 0 auto;
+  padding: 0.15rem 0.375rem;
+  background: rgba(106, 104, 83, 0.2);
+  border: 1px solid rgba(106, 104, 83, 0.4);
+  color: var(--kb1-text-primary, #EAEAEA);
+  font-size: 0.65rem;
+  font-weight: 500;
+  border-radius: 4px;
   cursor: pointer;
-  transition: opacity 0.3s ease-in-out;
+  transition: all 0.2s ease;
+  font-family: 'Roboto Mono', monospace;
+  white-space: nowrap;
+  display: flex;
+  gap: 0.2rem;
+  align-items: center;
+  justify-content: center;
+  margin-right: 1rem;
 }
 
-.toggle-image:hover {
-  opacity: 0.85;
+.toggle-btn:hover {
+  background: rgba(106, 104, 83, 0.3);
+  border-color: rgba(106, 104, 83, 0.6);
+}
+
+.toggle-btn span {
+  opacity: 0.5;
+  transition: opacity 0.2s ease, color 0.2s ease;
+}
+
+.toggle-btn span.active {
+  opacity: 1;
+  color: #EAEAEA;
+  font-weight: 600;
+}
+
+.toggle-btn .toggle-divider {
+  opacity: 0.3;
+  font-weight: 300;
 }
 
 .profile-selector {

@@ -2,7 +2,6 @@
 import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue';
 import { bleClient } from '../ble/bleClient';
 import { SliderPresetStore, type SliderPreset } from '../state/sliderPresets';
-import ValueControl from './ValueControl.vue';
 
 // Slider configuration
 interface SliderConfig {

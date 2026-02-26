@@ -70,7 +70,7 @@ const MODE_CONFIG = {
   },
   mix: {
     ccs: [79, 80, 81, 82, 71, 72, 73, 74, 75, 76, 77, 78],
-    labels: ['Delay', 'Reverb', 'Dry', 'Line', 'Track 1', 'Track 2', 'Track 3', 'Track 4', 'Track 5', 'Track 6', 'Track 7', 'Track 8'],
+    labels: ['Delay', 'Reverb', 'Dry', 'Line', 'Trk 1', 'Trk 2', 'Trk 3', 'Trk 4', 'Trk 5', 'Trk 6', 'Trk 7', 'Trk 8'],
     liveLabels: ['Del', 'Rev', 'Dry', 'Ln', '1', '2', '3', '4', '5', '6', '7', '8'],
     colors: ['#FF7F00', '#FF7F00', '#FF7F00', '#FF7F00', '#FF0000', '#FF0000', '#00FF00', '#00FF00', '#00FFFF', '#00FFFF', '#7F00FF', '#7F00FF'], // Orange for global (4), then red (2), green (2), cyan (2), violet (2)
     description: 'Master Mixer'
@@ -1479,7 +1479,7 @@ defineExpose({
                   <span class="cc-label-text">{{ MODE_CONFIG.mix.labels[index] }}</span>
                 </template>
                 <template v-else>
-                  <span class="cc-label-text">Track </span><span class="cc-label">{{ index - 3 }}</span>
+                  <span class="cc-label-text">Trk </span><span class="cc-label">{{ index - 3 }}</span>
                 </template>
               </template>
               <template v-else>
@@ -2074,8 +2074,8 @@ defineExpose({
 .slider-toggle-inline {
   display: flex;
   flex-direction: row;
-  gap: 0.5rem;
-  margin-left: -0.5rem;
+  gap: 0.25rem;
+  margin-left: -1rem;
 }
 
 .slider-toggle-image {

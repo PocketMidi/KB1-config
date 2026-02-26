@@ -1,6 +1,8 @@
 # KB1 Config
 
-KB1 Config is the official browser-based configuration and control application for the PocketMidi KB1 MIDI controller. This first release delivers a complete, wireless configuration environment with real-time performance control—configure keyboard modes, lever behavior, touch sensitivity, scales, power management, and control 12 performance sliders directly from your browser over Bluetooth Low Energy. No drivers, no apps to install.
+KB1 Config is the official browser-based configuration and control application for the PocketMidi KB1 MIDI controller. This release delivers a complete, wireless configuration environment with real-time performance control—configure keyboard modes, lever behavior, touch sensitivity, scales, power management, and control 12 performance sliders (with FX/MIX mode for Polyend Tracker integration) directly from your browser over Bluetooth Low Energy. No drivers, no apps to install.
+
+**Latest Features:** Dual-mode performance sliders (Performance FX + Polyend Master Mixer) — requires firmware v1.1.2+
 
 ## Getting Started
 
@@ -140,14 +142,39 @@ The Preset Manager offers two storage systems for different use cases:
 
 ## SLIDERS Tab
 
-The SLIDERS tab provides 12 customizable performance sliders for real-time MIDI CC control:
+The SLIDERS tab provides 12 customizable performance sliders for real-time MIDI CC control with dual mode support:
+
+**Control Modes:**
+
+The slider interface now supports two distinct control modes, selectable via the **FX|MIX** toggle button in the header:
+
+- **FX Mode** (Performance Effects):
+  - CC 51-62: Traditional performance effects control
+  - Full bipolar/unipolar support
+  - All linking and ganging features enabled
+  - 4 groups of 3 sliders with color coding
+
+- **MIX Mode** (Master Mixer — requires firmware v1.1.2+):
+  - **Global Mixer** (Sliders 1-4):
+    - Delay Send (CC 79) — Orange
+    - Reverb Send (CC 80) — Orange
+    - Dry Level (CC 81) — Orange
+    - Line Level (CC 82) — Orange
+    - Independent operation (no ganging)
+  - **Track Mixer** (Sliders 5-12):
+    - Track 1-8 Volumes (CC 71-78)
+    - Color coded: Red (1-2), Green (3-4), Cyan (5-6), Violet (7-8)
+    - Link buttons available for grouping tracks
+  - Unipolar mode enforced (0-127 range matches Polyend Tracker specs)
+  - Mode persists across sessions
 
 **Setup Mode** (Portrait or Desktop):
-- **Color Selection**: Tap color swatch or drag vertical picker to choose from 12 colors
-- **Bipolar/Unipolar Toggle**: Tap "BI" or "UNI" button to switch modes
+- **Mode Toggle**: Tap **FX|MIX** button to switch between control modes
+- **Color Selection**: Tap color swatch or drag vertical picker to choose from 12 colors (FX mode only — MIX mode uses fixed colors)
 - **Momentary/Latched Toggle**: Tap "M" or "L" button for spring-back or hold behavior
-- **Link Sliders**: Drag across "link" icons between sliders to gang them (shared color, settings, values)
-- **CC Assignment**: Each slider has its own CC number (51-62 by default)
+- **Bipolar/Unipolar Toggle**: Tap "BI" or "UNI" button to switch modes (disabled in MIX mode)
+- **Link Sliders**: Drag across "link" icons between sliders to gang them (conditional visibility in MIX mode)
+- **CC Assignment**: Each slider mapped per mode (51-62 in FX, 71-82 in MIX)
 
 **Live Mode** (Mobile - Landscape Fullscreen):
 - **Enter**: Rotate device to landscape (iOS shows rotation animation)

@@ -1490,7 +1490,7 @@ defineExpose({
             <!-- Inline toggles -->
             <div class="slider-toggle-inline">
               <!-- Mom/Lat toggle -->
-              <button class="slider-toggle-btn slider-toggle-btn-wide" @click="toggleMomentary(index)">
+              <button class="slider-toggle-btn" @click="toggleMomentary(index)">
                 <span :class="{ active: slider.momentary }">MOM</span>
                 <span class="toggle-divider">|</span>
                 <span :class="{ active: !slider.momentary }">LAT</span>
@@ -2075,14 +2075,14 @@ defineExpose({
 .slider-toggle-inline {
   display: flex;
   flex-direction: row;
-  gap: 0.375rem;
-  margin-left: -1rem;
+  gap: 1rem;
+  flex: 1; /* Allow container to grow proportionally */
+  justify-content: flex-start;
 }
 
 .slider-toggle-btn {
   flex: 0 0 auto;
-  width: 65px; /* Fixed width for consistency */
-  padding: 0.25rem 0.75rem;
+  padding: 0.25rem 0.375rem;
   background: rgba(106, 104, 83, 0.2);
   border: 1px solid rgba(106, 104, 83, 0.4);
   color: var(--kb1-text-primary);
@@ -2130,10 +2130,6 @@ defineExpose({
 .slider-toggle-btn.disabled:hover {
   background: rgba(106, 104, 83, 0.1);
   border-color: rgba(106, 104, 83, 0.2);
-}
-
-.slider-toggle-btn-wide {
-  width: 75px; /* Wider for MOM|LAT */
 }
 
 .link-icon-container {

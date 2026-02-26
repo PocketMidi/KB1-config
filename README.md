@@ -2,7 +2,7 @@
 
 KB1 Config is the official browser-based configuration and control application for the PocketMidi KB1 MIDI controller. This release delivers a complete, wireless configuration environment with real-time performance control—configure keyboard modes, lever behavior, touch sensitivity, scales, power management, and control 12 performance sliders (with FX/MIX mode for Polyend Tracker integration) directly from your browser over Bluetooth Low Energy. No drivers, no apps to install.
 
-**Latest Features:** Dual-mode performance sliders (Performance FX + Polyend Master Mixer) — requires firmware v1.1.2+
+**Latest Features:** Dual-mode performance sliders (Performance FX + Polyend Master Mixer), Plus 8 new Keyboard Scales(requires firmware v1.1.2+)
 
 ## Getting Started
 

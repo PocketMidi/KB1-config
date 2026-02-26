@@ -70,8 +70,8 @@ const MODE_CONFIG = {
   },
   mix: {
     ccs: [79, 80, 81, 82, 71, 72, 73, 74, 75, 76, 77, 78],
-    labels: ['Delay', 'Reverb', 'Dry', 'Line', 'Trk 1', 'Trk 2', 'Trk 3', 'Trk 4', 'Trk 5', 'Trk 6', 'Trk 7', 'Trk 8'],
-    liveLabels: ['Del', 'Rev', 'Dry', 'Ln', '1', '2', '3', '4', '5', '6', '7', '8'],
+    labels: ['Delay', 'Reverb', 'Dry Mix', 'Line In', 'Trk 1', 'Trk 2', 'Trk 3', 'Trk 4', 'Trk 5', 'Trk 6', 'Trk 7', 'Trk 8'],
+    liveLabels: ['Del', 'Rev', 'Dry', 'LnIn', '1', '2', '3', '4', '5', '6', '7', '8'],
     colors: ['#FF7F00', '#FF7F00', '#FF7F00', '#FF7F00', '#FF0000', '#FF0000', '#00FF00', '#00FF00', '#00FFFF', '#00FFFF', '#7F00FF', '#7F00FF'], // Orange for global (4), then red (2), green (2), cyan (2), violet (2)
     description: 'Master Mixer'
   }
@@ -1433,7 +1433,7 @@ defineExpose({
         <template v-for="(slider, index) in sliders" :key="slider.cc">
           <div class="slider-row">
             <!-- Color swatch (clickable) -->
-            <div class="color-section">
+            <div class="color-section" :class="{ 'compact': controlMode === 'mix' && index < 4 }">
               <div 
                 class="color-swatch-wrapper"
               >
@@ -1473,7 +1473,7 @@ defineExpose({
             </div>
             
             <!-- CC Number -->
-            <div class="cc-section">
+            <div class="cc-section" :class="{ 'expanded': controlMode === 'mix' && index < 4 }">
               <template v-if="controlMode === 'mix'">
                 <template v-if="index < 4">
                   <span class="cc-label-text">{{ MODE_CONFIG.mix.labels[index] }}</span>
@@ -1665,7 +1665,7 @@ defineExpose({
 
 .btn-live {
   width: 100%;
-  padding: 0.25rem 0.5rem;
+  padding: 0.125rem 0.25rem;
   background: rgba(249, 172, 32, 0.15);
   border: 1px solid rgba(249, 172, 32, 0.3);
   color: #EAEAEA;
@@ -1945,6 +1945,10 @@ defineExpose({
   min-width: 60px;
 }
 
+.color-section.compact {
+  min-width: 40px;
+}
+
 .color-swatch-wrapper {
   position: relative;
   display: inline-block;
@@ -2056,6 +2060,10 @@ defineExpose({
   display: flex;
   align-items: center;
   gap: 0;
+}
+
+.cc-section.expanded {
+  min-width: 100px;
 }
 
 .cc-label-text {

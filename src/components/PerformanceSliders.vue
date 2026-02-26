@@ -56,6 +56,27 @@ const DEFAULT_COLORS = [
 type ViewMode = 'setup' | 'live';
 const viewMode = ref<ViewMode>('setup');
 
+// Control mode (Performance FX vs Mixer)
+type ControlMode = 'fx' | 'mix';
+const controlMode = ref<ControlMode>('fx');
+
+// Mode configuration
+const MODE_CONFIG = {
+  fx: {
+    ccs: [51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62],
+    labels: ['CC51', 'CC52', 'CC53', 'CC54', 'CC55', 'CC56', 'CC57', 'CC58', 'CC59', 'CC60', 'CC61', 'CC62'],
+    colors: DEFAULT_COLORS, // 4 groups of 3
+    description: 'Performance FX'
+  },
+  mix: {
+    ccs: [79, 80, 81, 82, 71, 72, 73, 74, 75, 76, 77, 78],
+    labels: ['Delay', 'Reverb', 'Dry', 'Line', 'Track 1', 'Track 2', 'Track 3', 'Track 4', 'Track 5', 'Track 6', 'Track 7', 'Track 8'],
+    liveLabels: ['Del', 'Rev', 'Dry', 'Ln', '1', '2', '3', '4', '5', '6', '7', '8'],
+    colors: ['#FF7F00', '#FF7F00', '#FF7F00', '#FF7F00', '#FF0000', '#FF0000', '#00FF00', '#00FF00', '#00FFFF', '#00FFFF', '#7F00FF', '#7F00FF'], // Orange for global (4), then red (2), green (2), cyan (2), violet (2)
+    description: 'Master Mixer'
+  }
+};
+
 // Mobile detection and fullscreen state
 const isMobile = ref(false);
 const isIOS = ref(false);
@@ -140,6 +161,41 @@ function toggleCalibration() {
   isCalibrationExpanded.value = !isCalibrationExpanded.value;
 }
 
+// Toggle control mode between FX and MIX
+function toggleControlMode() {
+  const newMode = controlMode.value === 'fx' ? 'mix' : 'fx';
+  controlMode.value = newMode;
+  
+  const config = MODE_CONFIG[newMode];
+  
+  // Update all slider CCs and colors based on mode
+  sliders.value.forEach((slider, i) => {
+    slider.cc = config.ccs[i];
+    slider.color = config.colors[i];
+    
+    // Force unipolar in mixer mode (all Polyend mixer CCs are 0-127)
+    if (newMode === 'mix') {
+      slider.bipolar = false;
+      // Reset value to 0 to avoid confusion
+      slider.value = 0;
+      
+      // Ungang first 4 sliders (global mixer controls) - each gets unique gangId
+      if (i < 4) {
+        slider.gangId = i;
+        // Clear links between first 4 sliders
+        if (i < 3) {
+          links.value[i] = false;
+        }
+      }
+    }
+  });
+  
+  // Save mode preference and preset
+  localStorage.setItem('kb1-control-mode', newMode);
+  savePreset();
+  showExplainerText(config.description);
+}
+
 // Save touch offset to localStorage
 function saveTouchOffset() {
   try {
@@ -217,19 +273,41 @@ watch(isPortrait, (newVal) => {
 
 // Initialize sliders
 function initializeSliders() {
+  // Load saved mode preference
+  const savedMode = localStorage.getItem('kb1-control-mode') as ControlMode | null;
+  if (savedMode === 'fx' || savedMode === 'mix') {
+    controlMode.value = savedMode;
+  }
+  
   const savedPreset = SliderPresetStore.loadCurrentState();
   if (savedPreset && savedPreset.sliders && savedPreset.links) {
     sliders.value = savedPreset.sliders;
     links.value = savedPreset.links;
+    // Update CCs and colors based on current mode (in case mode changed)
+    const config = MODE_CONFIG[controlMode.value];
+    sliders.value.forEach((slider, i) => {
+      slider.cc = config.ccs[i];
+      slider.color = config.colors[i];
+      
+      // In mixer mode, ensure first 4 sliders are ungrouped
+      if (controlMode.value === 'mix' && i < 4) {
+        slider.gangId = i;
+        // Clear links between first 4 sliders
+        if (i < 3) {
+          links.value[i] = false;
+        }
+      }
+    });
     return;
   }
   
-  // Default configuration - 12 sliders with 4 sets of 3 colors, each solo
+  // Default configuration based on current mode
+  const config = MODE_CONFIG[controlMode.value];
   sliders.value = [];
   for (let i = 0; i < 12; i++) {
     sliders.value.push({
-      cc: 51 + i,
-      color: DEFAULT_COLORS[i] || '#FF0000',
+      cc: config.ccs[i],
+      color: config.colors[i] || '#FF0000',
       bipolar: false,
       momentary: false,
       gangId: i, // Each starts in its own gang
@@ -323,6 +401,17 @@ function isSliderUnreachable(sliderIndex: number): boolean {
     return true;
   }
   return false;
+}
+
+// Check if a link should be visible based on mode
+function isLinkVisible(linkIndex: number): boolean {
+  // In mixer mode, only show links between track volumes (sliders 5-11, which are links 4-10)
+  // This excludes the link between Line and Track 1
+  if (controlMode.value === 'mix') {
+    return linkIndex >= 4 && linkIndex <= 10;
+  }
+  // In FX mode, show all links
+  return true;
 }
 
 // Get the effective color for a slider (gray if unreachable, normal color otherwise)
@@ -643,6 +732,9 @@ function handleDoubleClick(index: number) {
 
 // Toggle bipolar/unipolar
 function toggleBipolar(index: number) {
+  // Disable bipolar toggle in mixer mode (all mixer CCs are unipolar)
+  if (controlMode.value === 'mix') return;
+  
   const slider = sliders.value[index];
   if (!slider) return;
   
@@ -1268,13 +1360,18 @@ defineExpose({
       <!-- Header -->
       <div class="setup-header">
         <div class="header-buttons-row">
-          <button class="btn-live" @click="enterLiveMode">+ Enter Live Mode</button>
+          <button class="btn-live" @click="enterLiveMode">+ Enter Live</button>
+          <button class="btn-mode-toggle" @click="toggleControlMode">
+            <span :class="{ active: controlMode === 'fx' }">FX</span>
+            <span class="mode-divider">|</span>
+            <span :class="{ active: controlMode === 'mix' }">MIX</span>
+          </button>
           <button 
             class="btn-calibration"
             :class="{ expanded: isCalibrationExpanded }"
             @click="toggleCalibration"
           >
-            Calibration: {{ touchOffsetX }}px
+            Cal
           </button>
         </div>
         <div class="explainer-text" :class="{ fading: explainerFading }">
@@ -1377,16 +1474,27 @@ defineExpose({
             
             <!-- CC Number -->
             <div class="cc-section">
-              <span class="cc-label-text">CC </span><span class="cc-label">{{ slider.cc }}</span>
+              <template v-if="controlMode === 'mix'">
+                <template v-if="index < 4">
+                  <span class="cc-label-text">{{ MODE_CONFIG.mix.labels[index] }}</span>
+                </template>
+                <template v-else>
+                  <span class="cc-label-text">Track </span><span class="cc-label">{{ index - 3 }}</span>
+                </template>
+              </template>
+              <template v-else>
+                <span class="cc-label-text">CC </span><span class="cc-label">{{ slider.cc }}</span>
+              </template>
             </div>
             
             <!-- Inline toggles -->
             <div class="slider-toggle-inline">
-              <!-- Polarity toggle -->
+              <!-- Polarity toggle (disabled in mixer mode) -->
               <img 
                 :src="`/KB1-config/uni_bi_toggle/${slider.bipolar ? 'r' : 'l'}_active.svg`"
                 alt="Polarity Toggle"
                 class="slider-toggle-image"
+                :class="{ disabled: controlMode === 'mix' }"
                 @click="toggleBipolar(index)"
               />
               
@@ -1400,9 +1508,9 @@ defineExpose({
             </div>
           </div>
           
-          <!-- Link icon between sliders (not after last slider) -->
+          <!-- Link icon between sliders (not after last slider, conditional in mixer mode) -->
           <div 
-            v-if="index < sliders.length - 1" 
+            v-if="index < sliders.length - 1 && isLinkVisible(index)" 
             class="link-icon-container"
             :data-link-index="index"
           >
@@ -1476,7 +1584,10 @@ defineExpose({
             }"
           >
             <!-- CC number inside track (top) -->
-            <div class="live-slider-cc-inside">{{ slider.cc }}</div>
+            <div class="live-slider-cc-inside">
+              <template v-if="controlMode === 'mix'">{{ MODE_CONFIG.mix.liveLabels[index] }}</template>
+              <template v-else>{{ slider.cc }}</template>
+            </div>
             
             <!-- Slider fill -->
             <div 
@@ -1505,7 +1616,10 @@ defineExpose({
           </div>
           
           <!-- CC label -->
-          <div class="live-cc-label">{{ slider.cc }}</div>
+          <div class="live-cc-label">
+            <template v-if="controlMode === 'mix'">{{ MODE_CONFIG.mix.liveLabels[index] }}</template>
+            <template v-else>{{ slider.cc }}</template>
+          </div>
         </div>
         
       </div>
@@ -1550,7 +1664,7 @@ defineExpose({
 
 .btn-live {
   width: 100%;
-  padding: 0.25rem 1rem;
+  padding: 0.25rem 0.5rem;
   background: rgba(249, 172, 32, 0.15);
   border: 1px solid rgba(249, 172, 32, 0.3);
   color: #EAEAEA;
@@ -1589,13 +1703,54 @@ defineExpose({
   width: auto;
 }
 
-/* Calibration toggle button */
-.btn-calibration {
+/* Mode toggle button */
+.btn-mode-toggle {
   flex: 0 0 auto;
-  padding: 0.25rem 0.75rem;
+  padding: 0.25rem 0.5rem;
   background: rgba(106, 104, 83, 0.2);
   border: 1px solid rgba(106, 104, 83, 0.4);
   color: var(--kb1-text-primary);
+  font-size: 0.7rem;
+  font-weight: 500;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: 'Roboto Mono', monospace;
+  white-space: nowrap;
+  display: flex;
+  gap: 0.25rem;
+  align-items: center;
+}
+
+.btn-mode-toggle:hover {
+  background: rgba(106, 104, 83, 0.3);
+  border-color: rgba(106, 104, 83, 0.6);
+}
+
+.btn-mode-toggle span {
+  opacity: 0.5;
+  transition: opacity 0.2s ease, color 0.2s ease;
+}
+
+.btn-mode-toggle span.active {
+  opacity: 1;
+  color: #EAEAEA;
+  font-weight: 600;
+}
+
+.btn-mode-toggle .mode-divider {
+  opacity: 0.3;
+  font-weight: 300;
+}
+
+/* Calibration toggle button */
+.btn-calibration {
+  flex: 0 0 auto;
+  padding: 0.25rem 0.5rem;
+  background: rgba(106, 104, 83, 0.2);
+  border: 1px solid rgba(106, 104, 83, 0.4);
+  color: var(--kb1-text-primary);
+  opacity: 0.5;
   font-size: 0.7rem;
   font-weight: 500;
   border-radius: 4px;
@@ -1608,11 +1763,13 @@ defineExpose({
 .btn-calibration:hover {
   background: rgba(106, 104, 83, 0.3);
   border-color: rgba(106, 104, 83, 0.6);
+  opacity: 1;
 }
 
 .btn-calibration.expanded {
   background: rgba(106, 104, 83, 0.35);
   border-color: rgba(106, 104, 83, 0.7);
+  opacity: 1;
 }
 
 /* Calibration slide transition */
@@ -1895,6 +2052,9 @@ defineExpose({
 
 .cc-section {
   min-width: 80px;
+  display: flex;
+  align-items: center;
+  gap: 0;
 }
 
 .cc-label-text {
@@ -1933,6 +2093,16 @@ defineExpose({
 
 .slider-toggle-image:active {
   opacity: 0.6;
+}
+
+.slider-toggle-image.disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.slider-toggle-image.disabled:hover,
+.slider-toggle-image.disabled:active {
+  opacity: 0.3;
 }
 
 .link-icon-container {

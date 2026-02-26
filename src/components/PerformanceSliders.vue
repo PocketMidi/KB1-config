@@ -1489,6 +1489,14 @@ defineExpose({
             
             <!-- Inline toggles -->
             <div class="slider-toggle-inline">
+              <!-- Mom/Lat toggle -->
+              <img 
+                :src="`/KB1-config/mom_lat_toggle/${slider.momentary ? 'l' : 'r'}_activ.svg`"
+                alt="Mode Toggle"
+                class="slider-toggle-image"
+                @click="toggleMomentary(index)"
+              />
+              
               <!-- Polarity toggle (disabled in mixer mode) -->
               <img 
                 :src="`/KB1-config/uni_bi_toggle/${slider.bipolar ? 'r' : 'l'}_active.svg`"
@@ -1496,14 +1504,6 @@ defineExpose({
                 class="slider-toggle-image"
                 :class="{ disabled: controlMode === 'mix' }"
                 @click="toggleBipolar(index)"
-              />
-              
-              <!-- Mom/Lat toggle -->
-              <img 
-                :src="`/KB1-config/mom_lat_toggle/${slider.momentary ? 'l' : 'r'}_activ.svg`"
-                alt="Mode Toggle"
-                class="slider-toggle-image"
-                @click="toggleMomentary(index)"
               />
             </div>
           </div>

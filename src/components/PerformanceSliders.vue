@@ -170,8 +170,8 @@ function toggleControlMode() {
   
   // Update all slider CCs and colors based on mode
   sliders.value.forEach((slider, i) => {
-    slider.cc = config.ccs[i];
-    slider.color = config.colors[i];
+    slider.cc = config.ccs[i] ?? 51;
+    slider.color = config.colors[i] ?? '#FF0000';
     
     // Force unipolar in mixer mode (all Polyend mixer CCs are 0-127)
     if (newMode === 'mix') {
@@ -286,8 +286,8 @@ function initializeSliders() {
     // Update CCs and colors based on current mode (in case mode changed)
     const config = MODE_CONFIG[controlMode.value];
     sliders.value.forEach((slider, i) => {
-      slider.cc = config.ccs[i];
-      slider.color = config.colors[i];
+      slider.cc = config.ccs[i] ?? 51;
+      slider.color = config.colors[i] ?? '#FF0000';
       
       // In mixer mode, ensure first 4 sliders are ungrouped
       if (controlMode.value === 'mix' && i < 4) {
@@ -306,8 +306,8 @@ function initializeSliders() {
   sliders.value = [];
   for (let i = 0; i < 12; i++) {
     sliders.value.push({
-      cc: config.ccs[i],
-      color: config.colors[i] || '#FF0000',
+      cc: config.ccs[i] ?? 51 + i,
+      color: config.colors[i] ?? '#FF0000',
       bipolar: false,
       momentary: false,
       gangId: i, // Each starts in its own gang

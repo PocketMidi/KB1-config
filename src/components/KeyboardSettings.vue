@@ -601,7 +601,7 @@ function isRootNote(midiNote: number): boolean {
 function handleKeyClick(midiNote: number) {
   // Emit warning when trying to change root in Chromatic mode
   if (isChromatic.value) {
-    emit('chromaticWarning', 'Chromatic locked to C')
+    emit('chromaticWarning', 'Chrom locked to C')
     return
   }
   

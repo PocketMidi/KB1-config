@@ -1490,21 +1490,22 @@ defineExpose({
             <!-- Inline toggles -->
             <div class="slider-toggle-inline">
               <!-- Mom/Lat toggle -->
-              <img 
-                :src="`/KB1-config/mom_lat_toggle/${slider.momentary ? 'l' : 'r'}_activ.svg`"
-                alt="Mode Toggle"
-                class="slider-toggle-image"
-                @click="toggleMomentary(index)"
-              />
+              <button class="slider-toggle-btn slider-toggle-btn-wide" @click="toggleMomentary(index)">
+                <span :class="{ active: slider.momentary }">MOM</span>
+                <span class="toggle-divider">|</span>
+                <span :class="{ active: !slider.momentary }">LAT</span>
+              </button>
               
               <!-- Polarity toggle (disabled in mixer mode) -->
-              <img 
-                :src="`/KB1-config/uni_bi_toggle/${slider.bipolar ? 'r' : 'l'}_active.svg`"
-                alt="Polarity Toggle"
-                class="slider-toggle-image"
+              <button 
+                class="slider-toggle-btn"
                 :class="{ disabled: controlMode === 'mix' }"
                 @click="toggleBipolar(index)"
-              />
+              >
+                <span :class="{ active: !slider.bipolar }">UNI</span>
+                <span class="toggle-divider">|</span>
+                <span :class="{ active: slider.bipolar }">BI</span>
+              </button>
             </div>
           </div>
           
@@ -2074,35 +2075,65 @@ defineExpose({
 .slider-toggle-inline {
   display: flex;
   flex-direction: row;
-  gap: 0.25rem;
+  gap: 0.375rem;
   margin-left: -1rem;
 }
 
-.slider-toggle-image {
-  width: auto;
-  height: auto;
+.slider-toggle-btn {
+  flex: 0 0 auto;
+  width: 65px; /* Fixed width for consistency */
+  padding: 0.25rem 0.75rem;
+  background: rgba(106, 104, 83, 0.2);
+  border: 1px solid rgba(106, 104, 83, 0.4);
+  color: var(--kb1-text-primary);
+  font-size: 0.65rem;
+  font-weight: 500;
+  border-radius: 4px;
   cursor: pointer;
-  transition: opacity 0.2s;
-  user-select: none;
-  display: block;
+  transition: all 0.2s ease;
+  font-family: 'Roboto Mono', monospace;
+  white-space: nowrap;
+  display: flex;
+  gap: 0.2rem;
+  align-items: center;
+  justify-content: center;
 }
 
-.slider-toggle-image:hover {
-  opacity: 0.8;
+.slider-toggle-btn:hover:not(.disabled) {
+  background: rgba(106, 104, 83, 0.3);
+  border-color: rgba(106, 104, 83, 0.6);
 }
 
-.slider-toggle-image:active {
-  opacity: 0.6;
+.slider-toggle-btn span {
+  opacity: 0.5;
+  transition: opacity 0.2s ease, color 0.2s ease;
 }
 
-.slider-toggle-image.disabled {
+.slider-toggle-btn span.active {
+  opacity: 1;
+  color: #EAEAEA;
+  font-weight: 600;
+}
+
+.slider-toggle-btn .toggle-divider {
+  opacity: 0.3;
+  font-weight: 300;
+}
+
+.slider-toggle-btn.disabled {
   opacity: 0.3;
   cursor: not-allowed;
+  background: rgba(106, 104, 83, 0.1);
+  border-color: rgba(106, 104, 83, 0.2);
 }
 
-.slider-toggle-image.disabled:hover,
-.slider-toggle-image.disabled:active {
-  opacity: 0.3;
+.slider-toggle-btn.disabled:hover {
+  background: rgba(106, 104, 83, 0.1);
+  border-color: rgba(106, 104, 83, 0.2);
+}
+
+.slider-toggle-btn-wide {
+  width: 75px; /* Wider for MOM|LAT */
 }
 
 .link-icon-container {

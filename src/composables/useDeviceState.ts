@@ -49,6 +49,7 @@ const connectionStatus = ref<BLEConnectionStatus>({
 const ccMappings = ref<CCMapping[]>([]);
 const deviceSettings = ref<DeviceSettings>(kb1Protocol.createDefaultSettings());
 const isLoading = ref(false);
+const firmwareVersionRef = ref<string | null>(devMode.value ? '1.1.2' : null);
 
 // Initialize mock data in evaluation mode
 if (devMode.value) {
@@ -67,10 +68,17 @@ const baselineSnapshot = ref<{ ccMappings: CCMapping[]; settings: DeviceSettings
 bleClient.setStatusChangeCallback((status) => {
   connectionStatus.value = status;
   
+  // Update firmware version when connected
+  if (status.connected) {
+    firmwareVersionRef.value = bleClient.getFirmwareVersion();
+    console.log('📱 Firmware version updated:', firmwareVersionRef.value);
+  }
+  
   // Clear data on disconnect
   if (!status.connected) {
     ccMappings.value = [];
     deviceSettings.value = kb1Protocol.createDefaultSettings();
+    firmwareVersionRef.value = null;
   }
 });
 
@@ -440,6 +448,39 @@ export function useDeviceState() {
     connectionStatus.value.device?.name || 'No device'
   );
 
+  /**
+   * Get firmware version (null if unknown/pre-v1.1.2)
+   */
+  const firmwareVersion = computed(() => firmwareVersionRef.value);
+
+  /**
+   * Get maximum supported scale type value
+   * v1.1.1: 12 (scales 0-12, 13 total)
+   * v1.1.2+: 20 (scales 0-20, 21 total)
+   */
+  const maxScaleType = computed(() => {
+    const version = firmwareVersionRef.value;
+    if (!version) {
+      // Unknown version - assume old firmware (v1.1.1 or earlier)
+      return 12;
+    }
+
+    // Parse version string "major.minor.patch"
+    const parts = version.split('.');
+    if (parts.length < 3) return 12;
+
+    const major = parseInt(parts[0] || '0', 10);
+    const minor = parseInt(parts[1] || '0', 10);
+    const patch = parseInt(parts[2] || '0', 10);
+
+    // v1.1.2 and above support 21 scales
+    if (major > 1) return 20;
+    if (major === 1 && minor > 1) return 20;
+    if (major === 1 && minor === 1 && patch >= 2) return 20;
+
+    return 12;
+  });
+
   // ============================================
   // Device Preset Management (Stub for testing UI)
   // ============================================
@@ -605,6 +646,8 @@ export function useDeviceState() {
     isBluetoothAvailable,
     isConnected,
     deviceName,
+    firmwareVersion,
+    maxScaleType,
     
     // Actions
     connect,

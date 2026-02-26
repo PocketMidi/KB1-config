@@ -152,6 +152,7 @@ const {
   saveToFlash,
   handleLoad,
   resetToDefaults,
+  maxScaleType,
 } = useDeviceState();
 
 const localSettings = ref<DeviceSettings>({ ...deviceSettings.value });
@@ -223,20 +224,36 @@ const interpolations = [
   { value: 2, label: 'Logarithmic' },
 ];
 
-// Scales
-const scales = [
+// All scales (synced with firmware ScaleType enum)
+const allScales = [
   { value: 0, label: 'Chromatic' },
   { value: 1, label: 'Major' },
   { value: 2, label: 'Minor' },
-  { value: 3, label: 'Dorian' },
-  { value: 4, label: 'Phrygian' },
-  { value: 5, label: 'Lydian' },
-  { value: 6, label: 'Mixolydian' },
-  { value: 7, label: 'Aeolian' },
-  { value: 8, label: 'Locrian' },
-  { value: 9, label: 'Pentatonic Major' },
-  { value: 10, label: 'Pentatonic Minor' },
+  { value: 3, label: 'Harmonic Minor' },
+  { value: 4, label: 'Melodic Minor' },
+  { value: 5, label: 'Pentatonic Major' },
+  { value: 6, label: 'Pentatonic Minor' },
+  { value: 7, label: 'Blues Minor' },
+  { value: 8, label: 'Dorian' },
+  { value: 9, label: 'Phrygian' },
+  { value: 10, label: 'Lydian' },
+  { value: 11, label: 'Mixolydian' },
+  { value: 12, label: 'Locrian' },
+  { value: 13, label: 'Phrygian Dominant' }, // v1.1.2+
+  { value: 14, label: 'Whole Tone' },         // v1.1.2+
+  { value: 15, label: 'Diminished' },          // v1.1.2+
+  { value: 16, label: 'Blues Major' },         // v1.1.2+
+  { value: 17, label: 'Hirajoshi' },           // v1.1.2+
+  { value: 18, label: 'In Sen' },              // v1.1.2+
+  { value: 19, label: 'Double Harmonic' },     // v1.1.2+
+  { value: 20, label: 'Super Locrian' },       // v1.1.2+
 ];
+
+// Filter scales based on firmware version to prevent selecting incompatible scales
+const scales = computed(() => {
+  const max = maxScaleType.value;
+  return allScales.filter(scale => scale.value <= max);
+});
 
 // Root Notes (MIDI note numbers - firmware uses these as absolute pitches)
 const rootNotes = [

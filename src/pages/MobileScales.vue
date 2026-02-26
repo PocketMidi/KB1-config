@@ -34,6 +34,7 @@
           @update:modelValue="handleKeyboardChange"
           @mappingChanged="handleMappingChange"
           @chordStyleChanged="handleChordStyleChange"
+          @chromaticWarning="handleChromaticWarning"
         />
       </AccordionSection>
       
@@ -239,6 +240,7 @@ const {
   resetToDefaults,
   devicePresets,
   hasDevicePresetSupport,
+  maxScaleType,
 } = useDeviceState();
 
 const toast = useToast();
@@ -359,20 +361,37 @@ const interpolations = [
   { value: 2, label: 'Logarithmic' },
 ];
 
-// Scales
-const scales = [
+// All scales (synced with firmware ScaleType enum)
+// Filtered based on firmware version - only show scales supported by connected firmware
+const allScales = [
   { value: 0, label: 'Chromatic' },
   { value: 1, label: 'Major' },
   { value: 2, label: 'Minor' },
-  { value: 3, label: 'Dorian' },
-  { value: 4, label: 'Phrygian' },
-  { value: 5, label: 'Lydian' },
-  { value: 6, label: 'Mixolydian' },
-  { value: 7, label: 'Aeolian' },
-  { value: 8, label: 'Locrian' },
-  { value: 9, label: 'Pentatonic Major' },
-  { value: 10, label: 'Pentatonic Minor' },
+  { value: 3, label: 'Harmonic Minor' },
+  { value: 4, label: 'Melodic Minor' },
+  { value: 5, label: 'Pentatonic Major' },
+  { value: 6, label: 'Pentatonic Minor' },
+  { value: 7, label: 'Blues Minor' },
+  { value: 8, label: 'Dorian' },
+  { value: 9, label: 'Phrygian' },
+  { value: 10, label: 'Lydian' },
+  { value: 11, label: 'Mixolydian' },
+  { value: 12, label: 'Locrian' },
+  { value: 13, label: 'Phrygian Dominant' }, // v1.1.2+
+  { value: 14, label: 'Whole Tone' },         // v1.1.2+
+  { value: 15, label: 'Diminished' },          // v1.1.2+
+  { value: 16, label: 'Blues Major' },         // v1.1.2+
+  { value: 17, label: 'Hirajoshi' },           // v1.1.2+
+  { value: 18, label: 'In Sen' },              // v1.1.2+
+  { value: 19, label: 'Double Harmonic' },     // v1.1.2+
+  { value: 20, label: 'Super Locrian' },       // v1.1.2+
 ];
+
+// Filter scales based on firmware version
+const scales = computed(() => {
+  const max = maxScaleType.value;
+  return allScales.filter(scale => scale.value <= max);
+});
 
 // Chord Types (must match firmware ChordType enum exactly!)
 const chordTypes = [
@@ -380,12 +399,12 @@ const chordTypes = [
   { value: 1, label: 'Minor' },
   { value: 2, label: 'Diminished' },
   { value: 3, label: 'Augmented' },
-  { value: 4, label: 'Sus2' },
-  { value: 5, label: 'Sus4' },
-  { value: 6, label: 'Power' },
-  { value: 7, label: 'Major7' },
-  { value: 8, label: 'Minor7' },
-  { value: 9, label: 'Dom7' },
+  { value: 4, label: 'Suspended 2nd' },
+  { value: 5, label: 'Suspended 4th' },
+  { value: 6, label: 'Power Chord' },
+  { value: 7, label: 'Major 7th' },
+  { value: 8, label: 'Minor 7th' },
+  { value: 9, label: 'Dominant 7th' },
 ];
 
 // Root Notes (MIDI note numbers - firmware uses these as absolute pitches)
@@ -439,7 +458,7 @@ const keyboardModel = computed<{ mode: 'scale' | 'chord', scale: ScaleSettings, 
 
 // Computed properties for accordion header display
 const currentScaleLabel = computed(() => {
-  const scale = scales.find(s => s.value === localSettings.value.scale.scaleType);
+  const scale = scales.value.find((s: { value: number; label: string }) => s.value === localSettings.value.scale.scaleType);
   return scale ? scale.label : 'Unknown';
 });
 
@@ -661,6 +680,22 @@ function handleChordStyleChange(styleName: string) {
   if (keyboardFadeTimeoutId) clearTimeout(keyboardFadeTimeoutId);
   if (keyboardClearTimeoutId) clearTimeout(keyboardClearTimeoutId);
   keyboardSuffix.value = ` ${styleName}`;
+  keyboardSuffixFading.value = false;
+  keyboardFadeTimeoutId = window.setTimeout(() => {
+    keyboardSuffixFading.value = true;
+    keyboardFadeTimeoutId = null;
+  }, 500);
+  keyboardClearTimeoutId = window.setTimeout(() => {
+    keyboardSuffix.value = '';
+    keyboardSuffixFading.value = false;
+    keyboardClearTimeoutId = null;
+  }, 2500);
+}
+
+function handleChromaticWarning(message: string) {
+  if (keyboardFadeTimeoutId) clearTimeout(keyboardFadeTimeoutId);
+  if (keyboardClearTimeoutId) clearTimeout(keyboardClearTimeoutId);
+  keyboardSuffix.value = ` ${message}`;
   keyboardSuffixFading.value = false;
   keyboardFadeTimeoutId = window.setTimeout(() => {
     keyboardSuffixFading.value = true;

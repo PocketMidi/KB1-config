@@ -1,8 +1,8 @@
 <template>
-  <div class="note-picker-control">
+  <div class="note-picker-control" :class="{ disabled: disabled }">
     <button 
       class="stepper-btn"
-      :disabled="isAtMin"
+      :disabled="isAtMin || disabled"
       @click="decreaseNote"
       title="Previous note"
     >
@@ -20,7 +20,7 @@
     </div>
     <button 
       class="stepper-btn"
-      :disabled="isAtMax"
+      :disabled="isAtMax || disabled"
       @click="increaseNote"
       title="Next note"
     >
@@ -35,6 +35,7 @@ import { computed, ref, onBeforeUnmount } from 'vue'
 const props = defineProps<{
   modelValue: number
   notes: { value: number, label: string }[]
+  disabled?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -75,22 +76,20 @@ const isAtMin = computed(() => currentIndex.value <= 0)
 const isAtMax = computed(() => currentIndex.value >= props.notes.length - 1)
 
 function decreaseNote() {
-  if (!isAtMin.value) {
-    const newIndex = currentIndex.value - 1
-    const note = props.notes[newIndex]
-    if (note) {
-      emit('update:modelValue', note.value)
-    }
+  if (props.disabled || isAtMin.value) return
+  const newIndex = currentIndex.value - 1
+  const note = props.notes[newIndex]
+  if (note) {
+    emit('update:modelValue', note.value)
   }
 }
 
 function increaseNote() {
-  if (!isAtMax.value) {
-    const newIndex = currentIndex.value + 1
-    const note = props.notes[newIndex]
-    if (note) {
-      emit('update:modelValue', note.value)
-    }
+  if (props.disabled || isAtMax.value) return
+  const newIndex = currentIndex.value + 1
+  const note = props.notes[newIndex]
+  if (note) {
+    emit('update:modelValue', note.value)
   }
 }
 
@@ -99,6 +98,7 @@ function clampIndex(index: number): number {
 }
 
 function setNoteByIndex(index: number) {
+  if (props.disabled) return
   const clampedIndex = clampIndex(index)
   const note = props.notes[clampedIndex]
   if (note) {
@@ -108,6 +108,7 @@ function setNoteByIndex(index: number) {
 
 // Mouse wheel scroll support
 function handleWheel(event: WheelEvent) {
+  if (props.disabled) return
   event.preventDefault()
   const delta = event.deltaY > 0 ? 1 : -1
   const newIndex = currentIndex.value + delta
@@ -116,6 +117,7 @@ function handleWheel(event: WheelEvent) {
 
 // Mouse drag support
 function handleMouseDown(event: MouseEvent) {
+  if (props.disabled) return
   event.preventDefault()
   isDragging.value = true
   dragStartX.value = event.clientX
@@ -143,6 +145,7 @@ function handleMouseUp() {
 
 // Touch gesture support (horizontal drag)
 function handleTouchStart(event: TouchEvent) {
+  if (props.disabled) return
   if (!event.touches[0]) return
   isDragging.value = true
   dragStartX.value = event.touches[0].clientX
@@ -213,7 +216,7 @@ onBeforeUnmount(() => {
   padding: 1px 0.5rem;
   cursor: ew-resize;
   user-select: none;
-  transition: background 0.2s ease;
+  transition: background 0.2s ease, opacity 0.2s, color 0.2s;
   flex-shrink: 0;
 }
 
@@ -223,5 +226,14 @@ onBeforeUnmount(() => {
 
 .note-display:active {
   cursor: ew-resize;
+}
+
+.note-picker-control.disabled .note-display {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.note-picker-control.disabled .note-display:hover {
+  background: transparent;
 }
 </style>

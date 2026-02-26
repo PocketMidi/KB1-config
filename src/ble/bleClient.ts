@@ -24,6 +24,7 @@ const CHORD_SETTINGS_UUID = '4a8c9f2e-1b7d-4e3f-a5c6-d7e8f9a0b1c2';
 const SYSTEM_SETTINGS_UUID = '8f7e6d5c-4b3a-2c1d-0e9f-8a7b6c5d4e3f';
 const MIDI_UUID = 'eb58b31b-d963-4c7d-9a11-e8aabec2fe32';
 const KEEPALIVE_UUID = 'a8f3d5e2-9c4b-11ef-8e7a-325096b39f47';
+const FIRMWARE_VERSION_UUID = 'f3b2c1a0-5e4d-3c2b-1a0f-9e8d7c6b5a4f';
 
 export interface BLEConnectionStatus {
   connected: boolean;
@@ -48,6 +49,10 @@ export class BLEClient {
   private chordCharacteristic: BluetoothRemoteGATTCharacteristic | null = null;
   private systemCharacteristic: BluetoothRemoteGATTCharacteristic | null = null;
   private keepAliveCharacteristic: BluetoothRemoteGATTCharacteristic | null = null;
+  private firmwareVersionCharacteristic: BluetoothRemoteGATTCharacteristic | null = null;
+  
+  // Firmware version string (e.g., "1.1.2")
+  private firmwareVersion: string | null = null;
   
   // Preset management characteristics
   private presetSaveCharacteristic: BluetoothRemoteGATTCharacteristic | null = null;
@@ -164,6 +169,18 @@ export class BLEClient {
         console.log('   - LIST:', PRESET_CHARACTERISTIC_UUIDS.LIST);
         console.log('   - DELETE:', PRESET_CHARACTERISTIC_UUIDS.DELETE);
         console.log('   Error:', e);
+      }
+
+      // Try to get firmware version characteristic (optional, may not be in older firmware)
+      try {
+        this.firmwareVersionCharacteristic = await service.getCharacteristic(FIRMWARE_VERSION_UUID);
+        const versionValue = await this.firmwareVersionCharacteristic.readValue();
+        const decoder = new TextDecoder();
+        this.firmwareVersion = decoder.decode(versionValue);
+        console.log('✅ Firmware version:', this.firmwareVersion);
+      } catch (e) {
+        console.log('ℹ️ Firmware version characteristic not available (assuming v1.1.1 or older)');
+        this.firmwareVersion = null; // Unknown/old version
       }
 
       // Start notifications if supported
@@ -967,6 +984,48 @@ export class BLEClient {
     } else if (!enabled) {
       this.stopKeepAlive();
     }
+  }
+
+  /**
+   * Get firmware version string (e.g., "1.1.2")
+   * Returns null if version is unknown (pre-v1.1.2 firmware)
+   */
+  getFirmwareVersion(): string | null {
+    return this.firmwareVersion;
+  }
+
+  /**
+   * Check if firmware supports extended scales (21 scales instead of 13)
+   * Returns true for v1.1.2+, false for v1.1.1 and older
+   */
+  supportsExtendedScales(): boolean {
+    if (!this.firmwareVersion) {
+      // Unknown version - assume old firmware (v1.1.1 or earlier)
+      return false;
+    }
+
+    // Parse version string "major.minor.patch"
+    const parts = this.firmwareVersion.split('.');
+    if (parts.length < 3) return false;
+
+    const major = parseInt(parts[0]!, 10);
+    const minor = parseInt(parts[1]!, 10);
+    const patch = parseInt(parts[2]!, 10);
+
+    // v1.1.2 and above support 21 scales
+    if (major > 1) return true;
+    if (major === 1 && minor > 1) return true;
+    if (major === 1 && minor === 1 && patch >= 2) return true;
+
+    return false;
+  }
+
+  /**
+   * Get maximum supported scale type value
+   * Returns 12 for v1.1.1 (13 scales: 0-12), 20 for v1.1.2+ (21 scales: 0-20)
+   */
+  getMaxScaleType(): number {
+    return this.supportsExtendedScales() ? 20 : 12;
   }
 
   /**

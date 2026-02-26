@@ -75,6 +75,7 @@
         <NotePickerControl
           v-model.number="model.rootNote"
           :notes="rootNotes"
+          :disabled="isChromatic"
         />
       </div>
     </div>
@@ -90,7 +91,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, onBeforeUnmount } from 'vue'
+import { computed, ref, onBeforeUnmount, watch } from 'vue'
 import NotePickerControl from './NotePickerControl.vue'
 import OptionWheelPicker from './OptionWheelPicker.vue'
 
@@ -115,6 +116,30 @@ const model = computed({
   get: () => props.modelValue,
   set: v => emit('update:modelValue', v)
 })
+
+// Watch for scale type changes - reset to Natural and C root when switching to Chromatic
+watch(() => model.value.scaleType, (newScaleType) => {
+  if (newScaleType === 0) {
+    const updated = { ...model.value }
+    let needsUpdate = false
+    
+    // Reset to Natural key mapping if not already
+    if (model.value.keyMapping !== 0) {
+      updated.keyMapping = 0
+      needsUpdate = true
+    }
+    
+    // Reset root note to C (60) if not already
+    if (model.value.rootNote !== 60) {
+      updated.rootNote = 60
+      needsUpdate = true
+    }
+    
+    if (needsUpdate) {
+      emit('update:modelValue', updated)
+    }
+  }
+}, { immediate: true })
 
 // Wheel picker state
 const scalePickerOpen = ref(false)
@@ -193,18 +218,29 @@ onBeforeUnmount(() => {
 })
 
 // Scale theory - intervals in semitones from root note
+// Must match ScaleType enum order from firmware
 const scaleIntervals: Record<number, number[]> = {
   0: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11], // Chromatic - all notes
   1: [0, 2, 4, 5, 7, 9, 11], // Major
-  2: [0, 2, 3, 5, 7, 8, 10], // Minor (Natural Minor)
-  3: [0, 2, 3, 5, 7, 9, 10], // Dorian
-  4: [0, 1, 3, 5, 7, 8, 10], // Phrygian
-  5: [0, 2, 4, 6, 7, 9, 11], // Lydian
-  6: [0, 2, 4, 5, 7, 9, 10], // Mixolydian
-  7: [0, 2, 3, 5, 7, 8, 10], // Aeolian (same as Natural Minor)
-  8: [0, 1, 3, 5, 6, 8, 10], // Locrian
-  9: [0, 2, 4, 7, 9], // Pentatonic Major
-  10: [0, 3, 5, 7, 10], // Pentatonic Minor
+  2: [0, 2, 3, 5, 7, 8, 10], // Minor
+  3: [0, 2, 3, 5, 7, 8, 11], // Harmonic Minor
+  4: [0, 2, 3, 5, 7, 9, 11], // Melodic Minor Ascending
+  5: [0, 2, 4, 7, 9], // Pentatonic Major
+  6: [0, 3, 5, 7, 10], // Pentatonic Minor
+  7: [0, 3, 5, 6, 7, 10], // Blues Minor
+  8: [0, 2, 3, 5, 7, 9, 10], // Dorian
+  9: [0, 1, 3, 5, 7, 8, 10], // Phrygian
+  10: [0, 2, 4, 6, 7, 9, 11], // Lydian
+  11: [0, 2, 4, 5, 7, 9, 10], // Mixolydian
+  12: [0, 1, 3, 5, 6, 8, 10], // Locrian
+  13: [0, 1, 4, 5, 7, 8, 10], // Phrygian Dominant
+  14: [0, 2, 4, 6, 8, 10], // Whole Tone
+  15: [0, 2, 3, 5, 6, 8, 9, 11], // Diminished
+  16: [0, 2, 3, 4, 7, 9], // Blues Major
+  17: [0, 2, 3, 7, 8], // Hirajoshi
+  18: [0, 1, 5, 7, 10], // In Sen
+  19: [0, 1, 4, 5, 7, 8, 11], // Double Harmonic
+  20: [0, 1, 3, 4, 6, 8, 10], // Super Locrian
 }
 
 // Keyboard layout - starting from B (MIDI 59) for ~2 octaves
@@ -252,7 +288,8 @@ function isNoteActive(midiNote: number): boolean {
 
 // Check if a specific MIDI note is the root note (across octaves)
 function isRootNote(midiNote: number): boolean {
-  const rootNote = props.modelValue.rootNote
+  // Force C (60) as root when Chromatic scale is selected
+  const rootNote = model.value.scaleType === 0 ? 60 : props.modelValue.rootNote
   // Check if the note is the same pitch class as the root (modulo 12)
   return (midiNote % 12) === (rootNote % 12)
 }

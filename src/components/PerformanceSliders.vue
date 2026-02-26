@@ -1929,7 +1929,7 @@ defineExpose({
   display: flex;
   align-items: center;
   gap: 0.01rem;
-  padding: 0.25rem 1rem;
+  padding: 0.125rem 1rem;
   background: rgba(106, 104, 83, 0.2);
   border-radius: 6px;
   transition: background 0.2s;
@@ -2090,7 +2090,7 @@ defineExpose({
 
 .slider-toggle-btn {
   flex: 0 0 auto;
-  padding: 0.25rem 0.375rem;
+  padding: 0.15rem 0.375rem;
   background: rgba(106, 104, 83, 0.2);
   border: 1px solid rgba(106, 104, 83, 0.4);
   color: var(--kb1-text-primary);

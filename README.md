@@ -195,16 +195,9 @@ The slider interface now supports two distinct control modes, selectable via the
 - Setup and live modes available simultaneously
 - Click and drag sliders for control
 
-**iOS Bluefy App Compatibility:**
+**Recommended iOS Browser:**
 
-When using the Bluefy app on iOS devices, touch offset calibration is automatically applied to ensure accurate slider control. Due to browser-specific touch handling differences, you may notice one slider appears grayed out in live mode—this is normal and expected behavior:
-
-- **11 active sliders**: Depending on your calibration, either the first (CC51) or last (CC62) slider may be grayed out
-- **Grayed slider is unreachable**: The grayed slider cannot be controlled but this ensures the remaining 11 sliders respond accurately
-- **Automatic compensation**: The app detects Bluefy and adjusts touch input to match your finger position
-- **Calibration available**: Expand the calibration section in live mode to fine-tune touch offset if needed
-
-This limitation only affects Bluefy on iOS. Other browsers (Chrome, Edge on desktop/Android) display all 12 sliders as fully active.
+For the best experience on iOS devices, we recommend using **[vBrowser](https://vbrowser.co)** to access the KB1 web configurator. vBrowser provides reliable Web Bluetooth support and accurate touch handling for all 12 performance sliders.
 
 ## Configuration Flexibility
 
@@ -395,15 +388,13 @@ Web Bluetooth API is supported in:
 - ✅ Chrome/Chromium 56+
 - ✅ Edge 79+
 - ✅ Opera 43+
-- ✅ Bluefy (iOS) - Web Bluetooth wrapper for iOS devices
+- ✅ vBrowser (iOS) - **Recommended** Web Bluetooth browser for iOS devices
 - ❌ Firefox (requires flag)
 - ❌ Safari (not supported)
 
-**iOS Users:** Safari does not support Web Bluetooth. Use the [Bluefy app](https://apps.apple.com/app/bluefy-web-ble-browser/id1492822055) (available on the App Store) for Web Bluetooth access on iOS devices.
+**iOS Users:** Safari does not support Web Bluetooth. We recommend using **[vBrowser](https://vbrowser.co)** for the best Web Bluetooth experience on iOS devices. vBrowser provides reliable connectivity and accurate touch control for all 12 performance sliders.
 
-**Note:** When using Bluefy on iOS, the live mode sliders include automatic touch offset compensation. You may see one slider grayed out (either CC51 or CC62) - this is normal behavior to ensure accurate touch control for the remaining 11 sliders. See the SLIDERS section above for details.
-
-For the best experience, use Chrome, Edge, or Opera on desktop/Android.
+For the best experience on desktop/Android, use Chrome, Edge, or Opera.
 
 ### HTTPS Requirement
 

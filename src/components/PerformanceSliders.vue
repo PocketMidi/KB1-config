@@ -1526,6 +1526,12 @@ defineExpose({
               @touchend="handleLinkTouchEnd"
             />
           </div>
+          
+          <!-- Spacer for hidden links in MIX mode to maintain consistent spacing -->
+          <div 
+            v-if="index < sliders.length - 1 && !isLinkVisible(index)" 
+            class="link-spacer"
+          ></div>
         </template>
       </div>
     </div>
@@ -2151,6 +2157,12 @@ defineExpose({
   height: 16px;
   user-select: none;
   touch-action: none;
+}
+
+.link-spacer {
+  height: 16px;
+  margin-top: -0.5rem;
+  margin-bottom: -0.5rem;
 }
 
 .link-icon {

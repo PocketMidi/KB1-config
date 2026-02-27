@@ -21,7 +21,7 @@
     </div>
 
     <!-- Keyboard Visualization -->
-    <div class="keyboard-visual">
+    <div class="keyboard-visual" :class="{ 'chromatic-mode': isChromatic }">
       <!-- Top row: Sharps/Flats -->
       <div class="keyboard-row top-row">
         <div 
@@ -31,7 +31,8 @@
           :class="{ 
             active: isNoteActive(note.midi),
             'gap-after': note.gapAfter,
-            'root-note': isRootNote(note.midi)
+            'root-note': isRootNote(note.midi),
+            'chromatic-disabled': isChromatic
           }"
           @click="handleKeyClick(note.midi)"
           :title="`Set root note to ${note.sharp}`"
@@ -50,7 +51,8 @@
           :class="{ 
             active: isNoteActive(note.midi),
             'gap-after': note.gapAfter,
-            'root-note': isRootNote(note.midi)
+            'root-note': isRootNote(note.midi),
+            'chromatic-disabled': isChromatic
           }"
           @click="handleKeyClick(note.midi)"
           :title="`Set root note to ${note.name}`"
@@ -524,7 +526,7 @@ function isRootNote(midiNote: number): boolean {
 function handleKeyClick(midiNote: number) {
   // Emit warning when trying to change root in Chromatic mode
   if (isChromatic.value) {
-    emit('chromaticWarning', 'Chrom locked to C')
+    emit('chromaticWarning', 'Default mapping')
     return
   }
   
@@ -634,8 +636,16 @@ function handleKeyClick(midiNote: number) {
     0 0 0 1px var(--accent-highlight);
 }
 
+.key.root-note.chromatic-disabled {
+  box-shadow: none;
+}
+
 .key.clickable {
   cursor: pointer;
+}
+
+.key.clickable.chromatic-disabled {
+  cursor: default;
 }
 
 .key.clickable:hover {
@@ -645,9 +655,26 @@ function handleKeyClick(midiNote: number) {
   transition: all 0.15s ease;
 }
 
+.key.clickable.chromatic-disabled:hover {
+  background-color: inherit;
+  color: inherit;
+  transform: none;
+}
+
 .key.clickable.active:hover {
   background-color: #0DC988;
   color: #0F0F0F;
+}
+
+.key.clickable.active.chromatic-disabled {
+  background-color: rgba(13, 201, 136, 0.4);
+  color: rgba(15, 15, 15, 0.6);
+}
+
+.key.clickable.active.chromatic-disabled:hover {
+  background-color: rgba(13, 201, 136, 0.4);
+  color: rgba(15, 15, 15, 0.6);
+  transform: none;
 }
 
 .key.gap-after {

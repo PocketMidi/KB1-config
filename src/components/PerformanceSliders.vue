@@ -122,6 +122,14 @@ const links = ref<boolean[]>(new Array(11).fill(false));
 const isDraggingLinks = ref(false);
 const linkDragState = ref<boolean | null>(null); // The state to apply when dragging (true for link, false for unlink)
 
+// Triple-tap reset state (for live mode)
+const tapCount = ref(0);
+let tapTimeout: number | null = null;
+
+// Reset hint state
+const showResetHint = ref(false);
+const RESET_HINT_KEY = 'kb1-reset-hint-shown';
+
 
 
 // Toggle control mode between FX and MIX
@@ -465,6 +473,37 @@ function resetValuesToZero() {
   showExplainerText('Values Reset to Zero');
 }
 
+// Handle triple-tap on blank space in live mode
+function handleLiveContainerTap(event: MouseEvent | TouchEvent) {
+  // Only handle taps on the container itself, not on sliders
+  if (event.target !== event.currentTarget) return;
+  
+  // Hide hint on first interaction
+  if (showResetHint.value) {
+    showResetHint.value = false;
+    localStorage.setItem(RESET_HINT_KEY, 'true');
+  }
+  
+  tapCount.value++;
+  
+  // Clear existing timeout
+  if (tapTimeout) {
+    clearTimeout(tapTimeout);
+  }
+  
+  // Check for triple-tap
+  if (tapCount.value === 3) {
+    resetValuesToZero();
+    tapCount.value = 0;
+    return;
+  }
+  
+  // Reset tap count after 500ms
+  tapTimeout = window.setTimeout(() => {
+    tapCount.value = 0;
+  }, 500);
+}
+
 onMounted(() => {
   initializeSliders();
   
@@ -488,6 +527,11 @@ onUnmounted(() => {
   document.removeEventListener('touchmove', handleColorSwatchMove);
   document.removeEventListener('touchend', handleColorSwatchEnd);
   document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  
+  // Clear tap timeout
+  if (tapTimeout) {
+    clearTimeout(tapTimeout);
+  }
 });
 
 // Handle fullscreen exit via ESC or other means
@@ -1079,6 +1123,18 @@ async function enterLiveMode() {
   viewMode.value = 'live';
   showExitButton.value = false; // Start with X hidden
   
+  // Show reset hint if first time (only for mobile)
+  if (isMobile.value && !localStorage.getItem(RESET_HINT_KEY)) {
+    await nextTick();
+    showResetHint.value = true;
+    
+    // Auto-hide after 4 seconds
+    setTimeout(() => {
+      showResetHint.value = false;
+      localStorage.setItem(RESET_HINT_KEY, 'true');
+    }, 4000);
+  }
+  
   // Platform-specific mobile handling
   if (isMobile.value) {
     if (isIOS.value) {
@@ -1384,7 +1440,18 @@ defineExpose({
       </div>
       
       <!-- Sliders container -->
-      <div class="live-sliders-container">
+      <div 
+        class="live-sliders-container"
+        @click="handleLiveContainerTap"
+        @touchend="handleLiveContainerTap"
+      >
+        <!-- Reset Hint (first time only) -->
+        <Transition name="hint-fade">
+          <div v-if="showResetHint" class="reset-hint">
+            Swipe to exit • Triple-tap to reset
+          </div>
+        </Transition>
+        
         <div 
           v-for="(slider, index) in sliders"
           :key="slider.cc"
@@ -2078,6 +2145,37 @@ defineExpose({
   min-height: 490px;
   border: none;
   outline: none;
+  position: relative;
+}
+
+/* Reset Hint */
+.reset-hint {
+  position: absolute;
+  top: 1rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(116, 196, 255, 0.15);
+  border: 1px solid rgba(116, 196, 255, 0.3);
+  color: #74C4FF;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-family: 'Roboto Mono';
+  font-size: 0.75rem;
+  font-weight: 500;
+  z-index: 50;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+/* Hint fade transition */
+.hint-fade-enter-active,
+.hint-fade-leave-active {
+  transition: opacity 0.5s ease;
+}
+
+.hint-fade-enter-from,
+.hint-fade-leave-to {
+  opacity: 0;
 }
 
 .live-slider-wrapper {

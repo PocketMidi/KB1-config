@@ -320,8 +320,8 @@ function handleTabClick(tabId: Tab) {
     </div>
     
     <main class="app-main" :class="{ 'live-fullscreen': hideUI }" @click="handleMainClick">
-      <MobileScales v-if="activeTab === 'settings'" ref="mobileScalesRef" />
-      <MobileSliders v-if="activeTab === 'sliders'" ref="mobileSlidersRef" />
+      <MobileScales v-show="activeTab === 'settings'" ref="mobileScalesRef" />
+      <MobileSliders v-show="activeTab === 'sliders'" ref="mobileSlidersRef" />
     </main>
     
     <!-- Pulsing Red Dot - Evaluation Mode Indicator -->

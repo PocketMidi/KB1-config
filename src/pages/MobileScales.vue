@@ -11,6 +11,13 @@
     
     <!-- Always show content, but apply disconnected styling -->
     <div v-if="isCCMapLoaded()" class="scales-content" :class="{ 'disconnected-state': !isConnected }">
+      <!-- Collapse All Bar (top - shy, only shows when 2+ open) -->
+      <Transition name="collapse-fade">
+        <button v-if="openAccordionCount >= 2" class="collapse-all-bar" @click="closeAllAccordions">
+          COLLAPSE ALL
+        </button>
+      </Transition>
+      
       <!-- Keyboard first -->
       <AccordionSection
         ref="keyboardAccordion"
@@ -197,12 +204,17 @@
           @update:modelValue="markChanged"
         />
       </AccordionSection>
+      
+      <!-- Collapse All Bar (bottom - always visible) -->
+      <button class="collapse-all-bar" @click="closeAllAccordions">
+        COLLAPSE ALL
+      </button>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, watch, computed, onMounted, onBeforeUnmount } from 'vue';
+import { ref, watch, computed, onMounted, onBeforeUnmount, watchEffect } from 'vue';
 import { useDeviceState } from '../composables/useDeviceState';
 import type { 
   DeviceSettings,
@@ -776,6 +788,22 @@ const leverPush2Accordion = ref<InstanceType<typeof AccordionSection> | null>(nu
 const touchAccordion = ref<InstanceType<typeof AccordionSection> | null>(null);
 const systemAccordion = ref<InstanceType<typeof AccordionSection> | null>(null);
 
+// Track how many accordions are open
+const openAccordionCount = ref(0);
+
+watchEffect(() => {
+  let count = 0;
+  if (presetsAccordion.value?.isOpen) count++;
+  if (keyboardAccordion.value?.isOpen) count++;
+  if (lever1Accordion.value?.isOpen) count++;
+  if (leverPush1Accordion.value?.isOpen) count++;
+  if (lever2Accordion.value?.isOpen) count++;
+  if (leverPush2Accordion.value?.isOpen) count++;
+  if (touchAccordion.value?.isOpen) count++;
+  if (systemAccordion.value?.isOpen) count++;
+  openAccordionCount.value = count;
+});
+
 function closeAllAccordions() {
   presetsAccordion.value?.close();
   keyboardAccordion.value?.close();
@@ -793,6 +821,43 @@ defineExpose({
 </script>
 
 <style scoped>
+/* Collapse All Bar */
+.collapse-all-bar {
+  width: 100%;
+  padding: 0.5rem 1rem;
+  background: rgba(106, 104, 83, 0.2);
+  border: none;
+  border-radius: 4px;
+  color: #848484;
+  font-family: 'Roboto Mono';
+  font-size: 0.875rem;
+  text-align: left;
+  cursor: pointer;
+  margin-bottom: 6px;
+  transition: background 0.2s, color 0.2s;
+}
+
+.collapse-all-bar:hover {
+  background: rgba(106, 104, 83, 0.6);
+  color: rgba(234, 234, 234, 0.8);
+}
+
+.collapse-all-bar:active {
+  background: rgba(106, 104, 83, 0.8);
+}
+
+/* Collapse fade transition */
+.collapse-fade-enter-active,
+.collapse-fade-leave-active {
+  transition: opacity 0.3s, transform 0.3s;
+}
+
+.collapse-fade-enter-from,
+.collapse-fade-leave-to {
+  opacity: 0;
+  transform: translateY(-10px);
+}
+
 .mobile-scales-tab {
   display: flex;
   flex-direction: column;

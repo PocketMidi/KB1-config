@@ -56,7 +56,8 @@ function close() {
 }
 
 defineExpose({
-  close
+  close,
+  isOpen
 });
 </script>
 

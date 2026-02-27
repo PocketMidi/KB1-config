@@ -1301,7 +1301,7 @@ defineExpose({
       <div class="setup-header">
         <div class="header-buttons-row">
           <button class="btn-live" @click="enterLiveMode">
-            <span class="btn-live-label">+ Enter Live</span>
+            <span class="btn-live-label">+ ENTER LIVE</span>
             <span class="explainer-text" :class="{ fading: explainerFading }">
               {{ explainerText }}
             </span>

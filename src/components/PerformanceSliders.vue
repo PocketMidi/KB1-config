@@ -1128,7 +1128,7 @@ async function enterLiveMode() {
     showResetHint.value = true;
     
     const hasSeenBefore = localStorage.getItem(RESET_HINT_SEEN_KEY);
-    const duration = hasSeenBefore ? 3000 : 8000; // 3s if seen before, 8s first time
+    const duration = hasSeenBefore ? 3000 : 7000; // 3s if seen before, 7s first time
     
     // Auto-hide after duration
     setTimeout(() => {
@@ -1449,7 +1449,7 @@ defineExpose({
       <div 
         class="live-sliders-container"
         @click="handleLiveContainerTap"
-        @touchend="handleLiveContainerTap"
+        @touchend.prevent="handleLiveContainerTap"
       >
         <!-- Reset Hint (first time only) -->
         <Transition name="hint-fade">

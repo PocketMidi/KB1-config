@@ -1453,9 +1453,10 @@ defineExpose({
       >
         <!-- Reset Hint (first time only) -->
         <Transition name="hint-fade">
-          <div v-if="showResetHint" class="reset-hint">
+          <div v-if="showResetHint" class="reset-hint" @click="showResetHint = false" @touchend.prevent="showResetHint = false">
             <div class="hint-line">Swipe horizontally to exit</div>
             <div class="hint-line">Triple-tap between bars to reset</div>
+            <div class="hint-dismiss">Tap to dismiss</div>
           </div>
         </Transition>
         
@@ -2170,16 +2171,39 @@ defineExpose({
   font-size: 1rem;
   font-weight: 500;
   z-index: 100;
-  pointer-events: none;
+  pointer-events: auto;
+  cursor: pointer;
   text-align: center;
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  transition: all 0.2s ease;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.reset-hint:hover {
+  background: rgba(15, 15, 15, 0.98);
+  border-color: rgba(116, 196, 255, 0.7);
+  transform: translate(-50%, -50%) scale(1.02);
+}
+
+.reset-hint:active {
+  transform: translate(-50%, -50%) scale(0.98);
+  border-color: rgba(116, 196, 255, 0.9);
 }
 
 .hint-line {
   margin: 0.5rem 0;
   line-height: 1.4;
+}
+
+.hint-dismiss {
+  margin-top: 1rem;
+  font-size: 0.75rem;
+  opacity: 0.6;
+  font-weight: 400;
 }
 
 /* Hint fade transition */

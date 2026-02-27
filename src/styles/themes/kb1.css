@@ -360,7 +360,6 @@
 .theme-kb1-light .tap-indicator,
 .theme-kb1-light .note-display,
 .theme-kb1-light .stepper-btn,
-.theme-kb1-light .profile-btn,
 .theme-kb1-light .modal-dialog,
 .theme-kb1-light .input-text,
 .theme-kb1-light .link-icon,
@@ -370,7 +369,13 @@
 .theme-kb1-light .preset-item,
 .theme-kb1-light .preset-checkbox input[type="checkbox"],
 .theme-kb1-light .btn-secondary,
-.theme-kb1-light .time-display {
+.theme-kb1-light .time-display,
+.theme-kb1-light .toggle-switch,
+.theme-kb1-light .toggle-slider,
+.theme-kb1-light .toggle-slider:before,
+.theme-kb1-light .toggle-btn,
+.theme-kb1-light .slider-toggle-btn,
+.theme-kb1-light .btn-mode-toggle {
   filter: invert(1);
 }
 
@@ -442,12 +447,7 @@
 .theme-kb1-light .picker-item.selected,
 .theme-kb1-light .preset-item.selected,
 .theme-kb1-light .color-picker-item.selected,
-.theme-kb1-light .profile-btn.active,
-.theme-kb1-light .profile-btn.active::after,
-.theme-kb1-light .accordion-section.is-open .accordion-title h3,
-.theme-kb1-light .tab-button.active,
-.theme-kb1-light .tab-button.active::after,
-.theme-kb1-light .tab-button:not(.active)::after {
+.theme-kb1-light .accordion-section.is-open .accordion-title h3 {
   filter: invert(1);
 }
 
@@ -474,4 +474,79 @@
 /* Make preset timestamp darker (will invert inside inverted preset-item) */
 .theme-kb1-light .preset-meta {
   color: #CCCCCC !important; /* Light gray inverts to dark gray for visibility */
+}
+
+/* Increase contrast for toggle button inactive states in light mode */
+.theme-kb1-light .toggle-btn span:not(.active),
+.theme-kb1-light .slider-toggle-btn span:not(.active),
+.theme-kb1-light .btn-mode-toggle span:not(.active) {
+  opacity: 1 !important;
+  color: #B0B0B0 !important; /* Light gray - inverts to dark gray for inactive text */
+}
+
+.theme-kb1-light .toggle-btn .toggle-divider,
+.theme-kb1-light .slider-toggle-btn .toggle-divider,
+.theme-kb1-light .btn-mode-toggle .mode-divider {
+  opacity: 1 !important;
+  color: #A0A0A0 !important; /* Light gray - inverts to darker gray for divider */
+}
+
+.theme-kb1-light .toggle-btn span.active,
+.theme-kb1-light .slider-toggle-btn span.active,
+.theme-kb1-light .btn-mode-toggle span.active {
+  opacity: 1 !important;
+  color: #FFFFFF !important; /* White - inverts to black for active text */
+  font-weight: 700 !important; /* Make active text bolder for more contrast */
+}
+/* Light mode overrides for non-inverted button styles (profile, mode, preset tabs) */
+.theme-kb1-light .profile-btn,
+.theme-kb1-light .mode-btn,
+.theme-kb1-light .preset-tab {
+  color: #707070 !important; /* Medium gray for inactive state */
+}
+
+.theme-kb1-light .profile-btn:hover,
+.theme-kb1-light .mode-btn:hover,
+.theme-kb1-light .preset-tab:hover {
+  color: #404040 !important; /* Darker gray on hover */
+}
+
+.theme-kb1-light .profile-btn.active,
+.theme-kb1-light .mode-btn.active,
+.theme-kb1-light .preset-tab.active {
+  color: #0D0D0D !important; /* Almost black for active state */
+  font-weight: 600 !important;
+}
+
+.theme-kb1-light .profile-btn.active::after,
+.theme-kb1-light .mode-btn.active::after,
+.theme-kb1-light .preset-tab.active::after {
+  background-color: #0D0D0D !important; /* Dark underline for active state */
+}
+
+/* Tab buttons (mobile nav) */
+.theme-kb1-light .tab-button {
+  color: #707070 !important;
+  opacity: 0.6 !important;
+}
+
+.theme-kb1-light .tab-button:hover {
+  color: #404040 !important;
+  opacity: 0.8 !important;
+}
+
+.theme-kb1-light .tab-button.active {
+  color: #0D0D0D !important;
+  opacity: 1 !important;
+  font-weight: 700 !important;
+}
+
+.theme-kb1-light .tab-button.active::after {
+  background: #0D0D0D !important;
+  opacity: 1 !important;
+}
+
+.theme-kb1-light .tab-button:not(.active)::after {
+  background: #707070 !important;
+  opacity: 0.3 !important;
 }

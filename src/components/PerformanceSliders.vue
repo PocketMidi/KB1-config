@@ -1238,15 +1238,17 @@ defineExpose({
       <!-- Header -->
       <div class="setup-header">
         <div class="header-buttons-row">
-          <button class="btn-live" @click="enterLiveMode">+ Enter Live</button>
+          <button class="btn-live" @click="enterLiveMode">
+            <span class="btn-live-label">+ Enter Live</span>
+            <span class="explainer-text" :class="{ fading: explainerFading }">
+              {{ explainerText }}
+            </span>
+          </button>
           <button class="btn-mode-toggle" @click="toggleControlMode">
             <span :class="{ active: controlMode === 'fx' }">FX</span>
             <span class="mode-divider">|</span>
             <span :class="{ active: controlMode === 'mix' }">MIX</span>
           </button>
-        </div>
-        <div class="explainer-text" :class="{ fading: explainerFading }">
-          {{ explainerText }}
         </div>
       </div>
       
@@ -1480,7 +1482,7 @@ defineExpose({
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  margin-bottom: 0.125rem;
+  margin-bottom: 0.75rem;
 }
 
 .setup-header h2 {
@@ -1493,7 +1495,7 @@ defineExpose({
 
 .btn-live {
   width: 100%;
-  padding: 0.125rem 0.25rem;
+  padding: 0.125rem 0.5rem;
   background: rgba(249, 172, 32, 0.15);
   border: 1px solid rgba(249, 172, 32, 0.3);
   color: #EAEAEA;
@@ -1504,6 +1506,11 @@ defineExpose({
   transition: all 0.2s ease;
   font-family: 'Roboto Mono', monospace;
   box-shadow: 0 0 0 rgba(249, 172, 32, 0);
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.5rem;
+  height: 1.75rem;
 }
 
 .btn-live:hover {
@@ -1572,18 +1579,25 @@ defineExpose({
   font-weight: 300;
 }
 
-.explainer-text {
+.btn-live-label {
+  flex-shrink: 0;
+}
+
+.btn-live .explainer-text {
   color: var(--accent-highlight);
   font-size: 0.8125rem;
   font-family: 'Roboto Mono';
   font-weight: 500;
   opacity: 1;
   transition: opacity 2s ease-out;
-  min-height: 0.5rem;
   flex: 1;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.explainer-text.fading {
+.btn-live .explainer-text.fading {
   opacity: 0;
 }
 

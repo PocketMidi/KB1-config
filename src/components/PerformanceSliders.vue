@@ -128,7 +128,7 @@ let tapTimeout: number | null = null;
 
 // Reset hint state
 const showResetHint = ref(false);
-const RESET_HINT_KEY = 'kb1-reset-hint-shown';
+const RESET_HINT_SEEN_KEY = 'kb1-reset-hint-seen';
 
 
 
@@ -478,10 +478,9 @@ function handleLiveContainerTap(event: MouseEvent | TouchEvent) {
   // Only handle taps on the container itself, not on sliders
   if (event.target !== event.currentTarget) return;
   
-  // Hide hint on first interaction
+  // Hide hint on interaction
   if (showResetHint.value) {
     showResetHint.value = false;
-    localStorage.setItem(RESET_HINT_KEY, 'true');
   }
   
   tapCount.value++;
@@ -1123,16 +1122,23 @@ async function enterLiveMode() {
   viewMode.value = 'live';
   showExitButton.value = false; // Start with X hidden
   
-  // Show reset hint if first time (only for mobile)
-  if (isMobile.value && !localStorage.getItem(RESET_HINT_KEY)) {
+  // Show reset hint (first time longer, subsequent times shorter)
+  if (isMobile.value) {
     await nextTick();
     showResetHint.value = true;
     
-    // Auto-hide after 4 seconds
+    const hasSeenBefore = localStorage.getItem(RESET_HINT_SEEN_KEY);
+    const duration = hasSeenBefore ? 3000 : 8000; // 3s if seen before, 8s first time
+    
+    // Auto-hide after duration
     setTimeout(() => {
       showResetHint.value = false;
-      localStorage.setItem(RESET_HINT_KEY, 'true');
-    }, 4000);
+    }, duration);
+    
+    // Mark as seen
+    if (!hasSeenBefore) {
+      localStorage.setItem(RESET_HINT_SEEN_KEY, 'true');
+    }
   }
   
   // Platform-specific mobile handling
@@ -1448,7 +1454,8 @@ defineExpose({
         <!-- Reset Hint (first time only) -->
         <Transition name="hint-fade">
           <div v-if="showResetHint" class="reset-hint">
-            Swipe to exit • Triple-tap to reset
+            <div class="hint-line">Swipe horizontally to exit</div>
+            <div class="hint-line">Triple-tap between bars to reset</div>
           </div>
         </Transition>
         
@@ -2151,20 +2158,28 @@ defineExpose({
 /* Reset Hint */
 .reset-hint {
   position: absolute;
-  top: 1rem;
+  top: 50%;
   left: 50%;
-  transform: translateX(-50%);
-  background: rgba(116, 196, 255, 0.15);
-  border: 1px solid rgba(116, 196, 255, 0.3);
+  transform: translate(-50%, -50%);
+  background: rgba(15, 15, 15, 0.95);
+  border: 2px solid rgba(116, 196, 255, 0.5);
   color: #74C4FF;
-  padding: 0.5rem 1rem;
-  border-radius: 6px;
+  padding: 1.5rem 2rem;
+  border-radius: 12px;
   font-family: 'Roboto Mono';
-  font-size: 0.75rem;
+  font-size: 1rem;
   font-weight: 500;
-  z-index: 50;
+  z-index: 100;
   pointer-events: none;
-  white-space: nowrap;
+  text-align: center;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+.hint-line {
+  margin: 0.5rem 0;
+  line-height: 1.4;
 }
 
 /* Hint fade transition */

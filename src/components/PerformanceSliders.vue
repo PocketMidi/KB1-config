@@ -1496,16 +1496,15 @@ defineExpose({
 .btn-live {
   width: 100%;
   padding: 0.125rem 0.5rem;
-  background: rgba(249, 172, 32, 0.15);
-  border: 1px solid rgba(249, 172, 32, 0.3);
-  color: #EAEAEA;
+  background: rgba(106, 104, 83, 0.35);
+  border: 1px solid rgba(106, 104, 83, 0.4);
+  color: rgba(234, 234, 234, 0.7);
   font-size: 0.8125rem;
   font-weight: 500;
   border-radius: 4px;
   cursor: pointer;
   transition: all 0.2s ease;
   font-family: 'Roboto Mono', monospace;
-  box-shadow: 0 0 0 rgba(249, 172, 32, 0);
   display: flex;
   align-items: center;
   justify-content: flex-start;
@@ -1514,16 +1513,14 @@ defineExpose({
 }
 
 .btn-live:hover {
-  background: rgba(249, 172, 32, 0.25);
-  border-color: rgba(249, 172, 32, 0.5);
-  box-shadow: 0 0 8px rgba(249, 172, 32, 0.3);
-  color: #F9AC20;
+  background: rgba(106, 104, 83, 0.6);
+  border-color: rgba(106, 104, 83, 0.7);
+  color: rgba(234, 234, 234, 1.0);
 }
 
 .btn-live:active {
-  background: rgba(249, 172, 32, 0.35);
-  border-color: #F9AC20;
-  box-shadow: 0 0 12px rgba(249, 172, 32, 0.4);
+  background: rgba(106, 104, 83, 0.8);
+  border-color: rgba(106, 104, 83, 0.9);
   transform: scale(0.98);
 }
 
@@ -1543,7 +1540,7 @@ defineExpose({
 .btn-mode-toggle {
   flex: 0 0 auto;
   padding: 0.25rem 0.5rem;
-  background: rgba(106, 104, 83, 0.2);
+  background: rgba(106, 104, 83, 0.35);
   border: 1px solid rgba(106, 104, 83, 0.4);
   color: var(--kb1-text-primary);
   font-size: 0.7rem;
@@ -1559,13 +1556,22 @@ defineExpose({
 }
 
 .btn-mode-toggle:hover {
-  background: rgba(106, 104, 83, 0.3);
-  border-color: rgba(106, 104, 83, 0.6);
+  background: rgba(106, 104, 83, 0.6);
+  border-color: rgba(106, 104, 83, 0.7);
+}
+
+.btn-mode-toggle:active {
+  background: rgba(106, 104, 83, 0.8);
+  border-color: rgba(106, 104, 83, 0.9);
 }
 
 .btn-mode-toggle span {
   opacity: 0.5;
   transition: opacity 0.2s ease, color 0.2s ease;
+}
+
+.btn-mode-toggle span:not(.active):hover {
+  opacity: 0.8;
 }
 
 .btn-mode-toggle span.active {
@@ -1773,7 +1779,7 @@ defineExpose({
 .slider-toggle-btn {
   flex: 0 0 auto;
   padding: 0.15rem 0.375rem;
-  background: rgba(106, 104, 83, 0.2);
+  background: rgba(106, 104, 83, 0.35);
   border: 1px solid rgba(106, 104, 83, 0.4);
   color: var(--kb1-text-primary);
   font-size: 0.65rem;
@@ -1790,13 +1796,22 @@ defineExpose({
 }
 
 .slider-toggle-btn:hover:not(.disabled) {
-  background: rgba(106, 104, 83, 0.3);
-  border-color: rgba(106, 104, 83, 0.6);
+  background: rgba(106, 104, 83, 0.6);
+  border-color: rgba(106, 104, 83, 0.7);
+}
+
+.slider-toggle-btn:active:not(.disabled) {
+  background: rgba(106, 104, 83, 0.8);
+  border-color: rgba(106, 104, 83, 0.9);
 }
 
 .slider-toggle-btn span {
   opacity: 0.5;
   transition: opacity 0.2s ease, color 0.2s ease;
+}
+
+.slider-toggle-btn:not(.disabled) span:not(.active):hover {
+  opacity: 0.8;
 }
 
 .slider-toggle-btn span.active {

@@ -624,7 +624,7 @@ const handleDurationBarTouchStart = (e: TouchEvent) => {
 .toggle-btn {
   flex: 0 0 auto;
   padding: 0.15rem 0.375rem;
-  background: rgba(106, 104, 83, 0.2);
+  background: rgba(106, 104, 83, 0.35);
   border: 1px solid rgba(106, 104, 83, 0.4);
   color: var(--kb1-text-primary, #EAEAEA);
   font-size: 0.65rem;
@@ -642,13 +642,22 @@ const handleDurationBarTouchStart = (e: TouchEvent) => {
 }
 
 .toggle-btn:hover {
-  background: rgba(106, 104, 83, 0.3);
-  border-color: rgba(106, 104, 83, 0.6);
+  background: rgba(106, 104, 83, 0.6);
+  border-color: rgba(106, 104, 83, 0.7);
+}
+
+.toggle-btn:active {
+  background: rgba(106, 104, 83, 0.8);
+  border-color: rgba(106, 104, 83, 0.9);
 }
 
 .toggle-btn span {
   opacity: 0.5;
   transition: opacity 0.2s ease, color 0.2s ease;
+}
+
+.toggle-btn span:not(.active):hover {
+  opacity: 0.8;
 }
 
 .toggle-btn span.active {

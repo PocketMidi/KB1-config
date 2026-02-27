@@ -93,15 +93,15 @@ defineExpose({
 }
 
 .accordion-section.is-open .accordion-header {
-  background: rgba(106, 104, 83, 0.35); /* Brighter when selected */
+  background: rgba(106, 104, 83, 0.7); /* More visible when open */
 }
 
 .accordion-header:hover {
-  background: rgba(106, 104, 83, 0.3);
+  background: rgba(106, 104, 83, 0.6); /* More visible on hover */
 }
 
 .accordion-header:active {
-  background: rgba(106, 104, 83, 0.45);
+  background: rgba(106, 104, 83, 0.8); /* Brightest when pressed */
 }
 
 .accordion-title {
@@ -115,6 +115,11 @@ defineExpose({
   color: #848484;
   text-transform: uppercase;
   font-family: 'Roboto Mono';
+  transition: color 0.2s;
+}
+
+.accordion-header:hover .accordion-title h3 {
+  color: rgba(234, 234, 234, 0.8);
 }
 
 .title-suffix {

@@ -1128,7 +1128,7 @@ async function enterLiveMode() {
     showResetHint.value = true;
     
     const hasSeenBefore = localStorage.getItem(RESET_HINT_SEEN_KEY);
-    const duration = hasSeenBefore ? 3000 : 7000; // 3s if seen before, 7s first time
+    const duration = hasSeenBefore ? 4000 : 7000; // 4s if seen before, 7s first time
     
     // Auto-hide after duration
     setTimeout(() => {
@@ -2185,7 +2185,7 @@ defineExpose({
 /* Hint fade transition */
 .hint-fade-enter-active,
 .hint-fade-leave-active {
-  transition: opacity 0.5s ease;
+  transition: opacity 2s ease;
 }
 
 .hint-fade-enter-from,

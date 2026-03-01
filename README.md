@@ -129,9 +129,26 @@ The Preset Manager offers two storage systems for different use cases:
 ### SYSTEM
 
 **Power Management** — Customize sleep and timeout intervals:
-- **Light Sleep**: Timeout before entering light sleep (30-300 seconds, default: 90s)
-- **Deep Sleep**: Timeout before entering deep sleep (120-1800s, must be >lightSleep+30s, default: 330s)
-- **BLE Timeout**: Bluetooth keep-alive timeout (30-600s, must be >=deepSleep+30s, default: 600s)
+
+**Sleep Behavior:**
+- **Without Web App Connection:**
+  - After Light Sleep timeout (default: 5 min idle) → device enters light sleep with pulsing LEDs
+  - 90 seconds of LED pulsing (fixed warning period)
+  - Then device enters deep sleep (lowest power)
+  - Only touch sensor can wake from deep sleep
+  
+- **With Web App Connected:**
+  - While web app is actively connected and sending keepalive pings, sleep timers are continuously reset
+  - BLE Timeout setting controls how long since last ping before allowing sleep to proceed
+  - This keeps device awake while you're actively configuring settings
+  - Once sleep is entered, Bluetooth radio turns off and only touch sensor can wake the device
+  - Reopening web app after sleep requires touching the sensor first to wake the device
+
+**Settings:**
+- **Light Sleep**: Time until pulsing LEDs begin (3-10 minutes, default: 5 min)
+- **BLE Timeout**: Keepalive reprieve while web app is connected (5-20 minutes, default: 10 min)
+
+**Note**: Deep sleep automatically occurs 90 seconds after light sleep begins (fixed LED warning period).
 
 **Actions:**
 - **Load from Device**: Fetch current settings from KB1 hardware

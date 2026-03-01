@@ -126,6 +126,25 @@ const isMobile = computed(() => {
   return hasTouch && isSmallScreen;
 });
 
+// Detect platform for appropriate warning message
+const isIOS = computed(() => {
+  return /iPad|iPhone|iPod/.test(navigator.userAgent) || 
+         (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+});
+
+const isMobileDevice = computed(() => {
+  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+});
+
+// Dynamic warning message based on platform
+const bluetoothWarningMessage = computed(() => {
+  if (isIOS.value || isMobileDevice.value) {
+    return '⚠️ Web Bluetooth is not supported. iOS/Safari: download V Browser from the App Store.';
+  } else {
+    return '⚠️ Web Bluetooth is not supported. Desktop: use Chrome, Edge, or Opera.';
+  }
+});
+
 // Only hide header/footer on mobile live mode
 const hideUI = computed(() => {
   return isMobile.value && isInLiveMode.value;
@@ -264,7 +283,7 @@ function handleTabClick(tabId: Tab) {
       </div>
       
       <div v-if="!isBluetoothAvailable" class="warning-banner">
-        ⚠️ Web Bluetooth is not supported in this browser. Please use Chrome, Edge, or Opera.
+        {{ bluetoothWarningMessage }}
       </div>
     </header>
     

@@ -11,11 +11,14 @@ KB1 Config is the official browser-based configuration and control application f
 **IMPORTANT**: Before connecting to the web app, you must enable Bluetooth on your KB1 device.
 
 **How to Enable Bluetooth:**
-1. **Hold both octave buttons** (up + down) simultaneously for **3 seconds**
-2. **Watch for LED confirmation:**
-   - Fast blinking (pink + blue LEDs) = **Bluetooth enabled** ✓
-   - Slow blinking = Bluetooth disabled
-3. Repeat the same process anytime to toggle Bluetooth on/off
+1. **Cross-lever gesture**: Push both levers toward each other (left lever → right, right lever → left) and **hold for 3 seconds**
+2. **Watch for progressive LED feedback:**
+   - Octave arrow LEDs turn ON immediately (gesture detected)
+   - Pink + blue LEDs pulse with increasing speed as you hold
+   - **All LEDs turn OFF** = activation complete, release levers
+3. Repeat the same gesture anytime to toggle Bluetooth on/off
+
+**Note:** The gesture is automatically cancelled if any keyboard key is pressed, preventing accidental triggers during performance.
 
 **Note:** The web app cannot detect your device unless Bluetooth is enabled on the hardware.
 

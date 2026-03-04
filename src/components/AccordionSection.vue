@@ -6,19 +6,21 @@
       :aria-expanded="isOpen"
       :aria-controls="`accordion-content-${id}`"
     >
-      <div class="accordion-title">
-        <h3>
-          {{ title }}
-          <span v-if="titleSuffix" class="title-suffix" :class="{ fading: titleSuffixFading }">{{ titleSuffix }}</span>
-        </h3>
+      <div class="accordion-content-wrapper">
+        <div class="accordion-title-row">
+          <h3 class="accordion-title-text">
+            {{ title }}
+            <span v-if="titleSuffix" class="title-suffix" :class="{ fading: titleSuffixFading }">{{ titleSuffix }}</span>
+          </h3>
+          <slot name="header-right">
+            <div v-if="midiCc !== undefined" class="midi-cc-display">
+              MIDI CC <span class="midi-cc-number">{{ midiCc }}</span>
+            </div>
+          </slot>
+          <span class="accordion-icon">{{ isOpen ? '−' : '+' }}</span>
+        </div>
         <div v-if="subtitle" class="accordion-subtitle">{{ subtitle }}</div>
       </div>
-      <slot name="header-right">
-        <div v-if="midiCc !== undefined" class="midi-cc-display">
-          MIDI CC <span class="midi-cc-number">{{ midiCc }}</span>
-        </div>
-      </slot>
-      <span class="accordion-icon">{{ isOpen ? '−' : '+' }}</span>
     </button>
     <div 
       :id="`accordion-content-${id}`"
@@ -79,9 +81,7 @@ defineExpose({
 
 .accordion-header {
   width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+  display: block;
   padding: 0.25rem 1rem; /* 4px top/bottom, 16px left/right */
   background: rgba(106, 104, 83, 0.2); /* Warm brownish tone for dark mode */
   border: none;
@@ -105,11 +105,18 @@ defineExpose({
   background: rgba(106, 104, 83, 0.8); /* Brightest when pressed */
 }
 
-.accordion-title {
-  flex: 1;
+.accordion-content-wrapper {
+  width: 100%;
 }
 
-.accordion-title h3 {
+.accordion-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.accordion-title-text {
   margin: 0;
   font-size: 0.8125rem; /* 13px */
   font-weight: 500;
@@ -117,9 +124,11 @@ defineExpose({
   text-transform: uppercase;
   font-family: 'Roboto Mono';
   transition: color 0.2s;
+  flex: 1;
+  min-width: 0;
 }
 
-.accordion-header:hover .accordion-title h3 {
+.accordion-header:hover .accordion-title-text {
   color: rgba(234, 234, 234, 0.8);
 }
 
@@ -137,7 +146,7 @@ defineExpose({
   transition: opacity 2s ease-out;
 }
 
-.accordion-section.is-open .accordion-title h3 {
+.accordion-section.is-open .accordion-title-text {
   font-weight: 700;
   color: #EAEAEA;
 }
@@ -148,6 +157,9 @@ defineExpose({
   color: var(--color-text-muted);
   line-height: 1.4;
   font-family: 'Roboto Mono';
+  white-space: nowrap;
+  overflow: visible;
+  width: 100%;
 }
 
 .midi-cc-display {
@@ -155,7 +167,8 @@ defineExpose({
   font-weight: 400;
   color: #848484;
   font-family: 'Roboto Mono';
-  margin-right: 1rem;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .midi-cc-number {
@@ -167,10 +180,10 @@ defineExpose({
   font-size: 0.8125rem; /* 13px */
   font-weight: 300;
   color: var(--color-text-muted);
-  margin-left: 1rem;
   transition: transform 0.2s;
   min-width: 24px;
   text-align: center;
+  flex-shrink: 0;
 }
 
 .accordion-section.is-open .accordion-icon {

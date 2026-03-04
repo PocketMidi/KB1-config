@@ -341,6 +341,8 @@ const interpolations = [
   { value: 2, label: 'Logarithmic' },
 ];
 
+
+
 // Helper functions to generate subtitles for accordion headers
 // These show user-friendly parameter names and user-facing value ranges
 function getLeverSubtitle(lever: LeverSettingsType): string {

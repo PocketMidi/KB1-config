@@ -77,7 +77,12 @@
       </button>
       
       <div class="dots-visualization" :class="{ 'wide-spacing': isNatural }">
-        <div v-for="i in 12" :key="i" class="dot"></div>
+        <div 
+          v-for="i in 12" 
+          :key="i" 
+          class="dot"
+          :style="{ opacity: getDotOpacity(i - 1) }">
+        </div>
       </div>
     </div>
 
@@ -95,35 +100,33 @@
           <span :class="{ active: !isChordStyle }">STRUM</span>
         </button>
         
-        <!-- Visual indicator: line for chord, dots for strum -->
-        <div class="chord-visualization">
-          <div v-if="isChordStyle" class="chord-line"></div>
-          <div v-else class="strum-dots">
-            <div v-for="i in 12" :key="i" class="dot"></div>
+        <!-- Interactive Visual: gradient bar for chord, dynamic dots for strum -->
+        <div 
+          class="chord-visualization-interactive"
+          @mousedown="handleVisualizationMouseDown"
+          @touchstart="handleVisualizationTouchStart"
+        >
+          <!-- Chord: Gradient Split Bar -->
+          <div v-if="isChordStyle" class="chord-gradient-bar">
+            <div class="bar-fade" :style="{ width: `${sliderPercentage}%` }"></div>
+            <div class="bar-solid" :style="{ width: `${100 - sliderPercentage}%` }"></div>
+            <div class="bar-indicator" :style="{ left: `${sliderPercentage}%` }"></div>
+          </div>
+          
+          <!-- Strum: Dynamic Spacing Dots -->
+          <div v-else class="strum-dynamic-dots">
+            <div 
+              v-for="i in 13" 
+              :key="i" 
+              class="dot"
+              :style="{ left: `${(i - 1) * dotSpacing}%` }"
+            ></div>
           </div>
         </div>
       </div>
 
-      <!-- Smart Slider: Velocity Spread or Strum Speed -->
+      <!-- Smart Slider Controls -->
       <div class="smart-slider-section">
-        <!-- Duration Meter Visual -->
-        <div class="duration-meter">
-          <div 
-            class="meter-bar-container"
-            @mousedown="handleBarMouseDown"
-            @touchstart="handleBarTouchStart"
-          >
-            <div class="meter-divider"></div>
-            <div class="meter-bar-wrapper">
-              <div class="meter-bar green-bar-base"></div>
-              <div 
-                class="meter-bar green-bar-active"
-                :style="{ width: `${sliderPercentage}%` }"
-              ></div>
-            </div>
-          </div>
-        </div>
-
         <div class="group">
           <label>{{ smartSliderLabel }}</label>
           <div class="duration-control-wrapper">
@@ -378,7 +381,37 @@ const sliderPercentage = computed(() => {
   return (value / range) * 100
 })
 
-// Direct bar interaction handlers
+// Dynamic dot spacing for strum mode (faster = tighter, slower = wider)
+const dotSpacing = computed(() => {
+  // Speed range: 5ms (fast/tight) to 100ms (slow/wide)
+  // sliderPercentage: 0% at 5ms, 100% at 100ms
+  // Map to spacing: minimum 1.5% (always visible) to 7% (spread out)
+  const minSpacing = 1.5
+  const maxSpacing = 7
+  return minSpacing + (sliderPercentage.value / 100) * (maxSpacing - minSpacing)
+})
+
+// Dot opacity for scale mode visualization
+function getDotOpacity(dotIndex: number): number {
+  // In Compact mode, all dots are full brightness
+  if (!isNatural.value) return 1
+  
+  // In Natural mode, show which physical keyboard keys are active
+  // Dots represent MIDI notes 59-70 (B through A#/Bb)
+  const midiNote = 59 + dotIndex
+  const rootNote = model.value.scale.rootNote
+  const scaleType = model.value.scale.scaleType
+  const intervals = scaleIntervals[scaleType] || []
+  
+  // Check if this MIDI note is in the active scale
+  const noteOffset = (midiNote - rootNote + 120) % 12
+  const isInScale = intervals.includes(noteOffset)
+  
+  // Active notes: full brightness, inactive: dimmed to 40%
+  return isInScale ? 1 : 0.4
+}
+
+// Direct visualization interaction handlers
 const updateValueFromPosition = (clientX: number, rect: DOMRect) => {
   const percentage = Math.max(0, Math.min(100, ((clientX - rect.left) / rect.width) * 100))
   const range = smartSliderMax.value - smartSliderMin.value
@@ -386,7 +419,7 @@ const updateValueFromPosition = (clientX: number, rect: DOMRect) => {
   smartSliderValue.value = Math.max(smartSliderMin.value, Math.min(smartSliderMax.value, newValue))
 }
 
-const handleBarMouseDown = (e: MouseEvent) => {
+const handleVisualizationMouseDown = (e: MouseEvent) => {
   e.preventDefault()
   const target = e.currentTarget as HTMLElement
   const rect = target.getBoundingClientRect()
@@ -405,7 +438,7 @@ const handleBarMouseDown = (e: MouseEvent) => {
   document.addEventListener('mouseup', handleMouseUp)
 }
 
-const handleBarTouchStart = (e: TouchEvent) => {
+const handleVisualizationTouchStart = (e: TouchEvent) => {
   if (e.touches.length !== 1) return
   const target = e.currentTarget as HTMLElement
   const rect = target.getBoundingClientRect()
@@ -540,7 +573,7 @@ function handleKeyClick(midiNote: number) {
 
 <style scoped>
 .settings-keyboard {
-  padding: 1.5rem;
+  padding: 1.25rem;
   background: var(--color-background-soft);
   border: 1px solid var(--color-border);
   border-radius: 8px;
@@ -551,8 +584,8 @@ function handleKeyClick(midiNote: number) {
 .mode-selector {
   display: flex;
   gap: 1.5rem;
-  margin-bottom: 16px;
-  padding-bottom: 12px;
+  margin-bottom: 12px;
+  padding-bottom: 10px;
   border-bottom: 1px solid var(--color-divider);
 }
 
@@ -589,7 +622,7 @@ function handleKeyClick(midiNote: number) {
 
 /* Keyboard Visualization */
 .keyboard-visual {
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
@@ -695,9 +728,9 @@ function handleKeyClick(midiNote: number) {
   display: flex;
   align-items: center;
   gap: 1rem;
-  padding-top: 1rem;
-  margin-bottom: 0.75rem;
-  padding-bottom: 0.5rem;
+  padding-top: 0.75rem;
+  margin-bottom: 0;
+  padding-bottom: 0.75rem;
   border-top: 1px solid var(--color-divider);
 }
 
@@ -770,7 +803,7 @@ function handleKeyClick(midiNote: number) {
   gap: 8px;
 }
 
-.dot {
+.dots-visualization .dot {
   width: 5px;
   height: 5px;
   border-radius: 50%;
@@ -778,95 +811,83 @@ function handleKeyClick(midiNote: number) {
   flex-shrink: 0;
 }
 
-/* Chord/Strum Visualization */
-.chord-visualization {
+/* Chord/Strum Interactive Visualization */
+.chord-visualization-interactive {
   display: flex;
   align-items: center;
   flex: 1;
+  height: 20px;
+  cursor: pointer;
+  user-select: none;
+  position: relative;
 }
 
-.chord-line {
+/* Chord: Gradient Split Bar */
+.chord-gradient-bar {
+  display: flex;
   width: 100%;
-  height: 2px;
-  background-color: var(--accent-highlight);
-  border-radius: 1px;
+  height: 8px;
+  border-radius: 4px;
+  overflow: visible;
+  position: relative;
 }
 
-.strum-dots {
+.bar-fade {
+  background: linear-gradient(to right, transparent, var(--accent-highlight));
+  opacity: 0.8;
+  transition: width 0.15s ease;
+}
+
+.bar-solid {
+  background: var(--accent-highlight);
+  opacity: 1;
+  transition: width 0.15s ease;
+}
+
+.bar-indicator {
+  position: absolute;
+  top: -4px;
+  width: 2px;
+  height: calc(100% + 8px);
+  background: var(--accent-highlight);
+  opacity: 1;
+  transform: translateX(-1px);
+  transition: left 0.15s ease;
+  pointer-events: none;
+  z-index: 10;
+}
+
+/* Strum: Dynamic Spacing Dots */
+.strum-dynamic-dots {
+  position: relative;
+  width: 100%;
+  height: 100%;
   display: flex;
   align-items: center;
-  gap: 8px;
-  width: 100%;
+}
+
+.strum-dynamic-dots .dot {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: var(--accent-highlight);
+  transition: left 0.2s ease;
+  transform: translateX(-50%);
 }
 
 /* Chord Controls Section */
 .chord-controls {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 0.25rem;
 }
 
-/* Smart Slider (Duration style) */
+/* Smart Slider (Controls only) */
 .smart-slider-section {
-  padding-bottom: 1rem;
+  padding-top: 0.5rem;
+  padding-bottom: 0.75rem;
   border-bottom: 1px solid var(--color-divider);
-}
-
-.duration-meter {
-  padding: 0.75rem 0;
-}
-
-.meter-bar-container {
-  display: flex;
-  align-items: center;
-  gap: 0;
-  height: 17px;
-  cursor: pointer;
-  user-select: none;
-}
-
-.meter-bar-wrapper {
-  position: relative;
-  width: 100%;
-  height: 9px;
-  overflow: hidden;
-}
-
-.meter-bar {
-  height: 9px;
-  position: absolute;
-  top: 0;
-  left: 0;
-}
-
-.green-bar-base {
-  width: 100%;
-  background: #0BA873;
-  opacity: 0.4;
-  /* Left edge flat (meets divider), right edge rounded */
-  border-top-right-radius: 4.5px;
-  border-bottom-right-radius: 4.5px;
-  border-top-left-radius: 0;
-  border-bottom-left-radius: 0;
-}
-
-.green-bar-active {
-  background: #0BA873;
-  opacity: 1;
-  z-index: 1;
-  /* Left edge flat (meets divider), right edge rounded */
-  border-top-right-radius: 4.5px;
-  border-bottom-right-radius: 4.5px;
-  border-top-left-radius: 0;
-  border-bottom-left-radius: 0;
-}
-
-.meter-divider {
-  width: 5px;
-  height: 17px;
-  background: var(--accent-highlight);
-  flex-shrink: 0;
-  border-radius: 2.5px;
 }
 
 .duration-control-wrapper {
@@ -905,7 +926,7 @@ function handleKeyClick(midiNote: number) {
   flex-direction: row;
   align-items: center;
   justify-content: space-between;
-  padding: 0.75rem 0;
+  padding: 0.5rem 0;
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;

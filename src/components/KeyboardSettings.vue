@@ -423,7 +423,7 @@ function createVelocityBands(spreadPercent: number): string {
     
     // Opacity increases as we approach center (band closest to indicator is brightest)
     // Mirror the right side: i=0 is darkest (far left), i=4 is brightest (near indicator)
-    const opacity = 0.3 + (i / numDarkBands) * 0.6
+    const opacity = 0.03 + (i / numDarkBands) * 0.87
     
     stops.push(`rgba(${baseColor}, ${opacity}) ${bandStart}%`)
     stops.push(`rgba(${baseColor}, ${opacity}) ${bandEnd}%`)
@@ -440,7 +440,7 @@ function createVelocityBands(spreadPercent: number): string {
     const bandEnd = rightIndicator + ((i + 1) / numDarkBands) * rightSpace
     
     // Opacity decreases as we move away from center (band closest to indicator is brightest)
-    const opacity = 0.9 - (i / numDarkBands) * 0.6
+    const opacity = 0.9 - (i / numDarkBands) * 0.87
     
     stops.push(`rgba(${baseColor}, ${opacity}) ${bandStart}%`)
     stops.push(`rgba(${baseColor}, ${opacity}) ${bandEnd}%`)
@@ -951,7 +951,7 @@ function handleKeyClick(midiNote: number) {
   border-radius: 4px;
   overflow: visible;
   position: relative;
-  animation: chord-shimmer 4s ease-in-out infinite;
+  animation: chord-shimmer 3s ease-in-out infinite;
 }
 
 @keyframes chord-shimmer {
@@ -996,8 +996,8 @@ function handleKeyClick(midiNote: number) {
 
 .strum-dynamic-dots .dot {
   position: absolute;
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
   border-radius: 50%;
   background-color: var(--accent-highlight);
   transition: left 0.2s ease;

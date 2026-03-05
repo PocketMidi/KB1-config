@@ -107,11 +107,13 @@
           @mousedown="handleVisualizationMouseDown"
           @touchstart="handleVisualizationTouchStart"
         >
-          <!-- Chord: Gradient Split Bar -->
+          <!-- Chord: Velocity Gradient Bar (center-out) -->
           <div v-if="isChordStyle" class="chord-gradient-bar">
-            <div class="bar-fade" :style="{ width: `${sliderPercentage}%` }"></div>
-            <div class="bar-solid" :style="{ width: `${100 - sliderPercentage}%` }"></div>
-            <div class="bar-indicator" :style="{ left: `${sliderPercentage}%` }"></div>
+            <div class="velocity-gradient" :style="{ 
+              background: createVelocityBands(visualSpread)
+            }"></div>
+            <div class="velocity-indicator-left" :style="{ left: `${50 - visualSpread / 2}%` }"></div>
+            <div class="velocity-indicator-right" :style="{ left: `${50 + visualSpread / 2}%` }"></div>
           </div>
           
           <!-- Strum: Dynamic Spacing Dots -->
@@ -365,7 +367,7 @@ const smartSliderValue = computed({
   }
 })
 
-const smartSliderMin = computed(() => isChordStyle.value ? 0 : 5)
+const smartSliderMin = computed(() => isChordStyle.value ? 8 : 5)
 const smartSliderMax = computed(() => 100)
 
 const smartSliderLabel = computed(() => {
@@ -382,6 +384,17 @@ const sliderPercentage = computed(() => {
   return (value / range) * 100
 })
 
+// Visual spread percentage with minimum gap for chord mode
+const visualSpread = computed(() => {
+  if (!isChordStyle.value) return sliderPercentage.value
+  
+  // Remap slider percentage (0-100) to visual spread (15-100)
+  // This ensures a minimum 15% visual gap even at 8% slider value
+  const minVisual = 15
+  const maxVisual = 100
+  return minVisual + (sliderPercentage.value / 100) * (maxVisual - minVisual)
+})
+
 // Dynamic dot spacing for strum mode (faster = tighter, slower = wider)
 const dotSpacing = computed(() => {
   // Speed range: 5ms (fast/tight) to 100ms (slow/wide)
@@ -391,6 +404,50 @@ const dotSpacing = computed(() => {
   const maxSpacing = 7
   return minSpacing + (sliderPercentage.value / 100) * (maxSpacing - minSpacing)
 })
+
+// Create banded velocity visualization (center-out)
+function createVelocityBands(spreadPercent: number): string {
+  const baseColor = '249, 172, 32' // --accent-highlight (#F9AC20) RGB
+  
+  // Calculate indicator positions
+  const leftIndicator = 50 - spreadPercent / 2
+  const rightIndicator = 50 + spreadPercent / 2
+  
+  const stops: string[] = []
+  const numDarkBands = 5 // Fixed number of bands on each side
+  
+  // Left side dark bands (compressed into 0 to leftIndicator)
+  for (let i = 0; i < numDarkBands; i++) {
+    const bandStart = (i / numDarkBands) * leftIndicator
+    const bandEnd = ((i + 1) / numDarkBands) * leftIndicator
+    
+    // Opacity increases as we approach center (band closest to indicator is brightest)
+    // Mirror the right side: i=0 is darkest (far left), i=4 is brightest (near indicator)
+    const opacity = 0.3 + (i / numDarkBands) * 0.6
+    
+    stops.push(`rgba(${baseColor}, ${opacity}) ${bandStart}%`)
+    stops.push(`rgba(${baseColor}, ${opacity}) ${bandEnd}%`)
+  }
+  
+  // Center bright zone (leftIndicator to rightIndicator)
+  stops.push(`rgba(${baseColor}, 1.0) ${leftIndicator}%`)
+  stops.push(`rgba(${baseColor}, 1.0) ${rightIndicator}%`)
+  
+  // Right side dark bands (compressed into rightIndicator to 100)
+  const rightSpace = 100 - rightIndicator
+  for (let i = 0; i < numDarkBands; i++) {
+    const bandStart = rightIndicator + (i / numDarkBands) * rightSpace
+    const bandEnd = rightIndicator + ((i + 1) / numDarkBands) * rightSpace
+    
+    // Opacity decreases as we move away from center (band closest to indicator is brightest)
+    const opacity = 0.9 - (i / numDarkBands) * 0.6
+    
+    stops.push(`rgba(${baseColor}, ${opacity}) ${bandStart}%`)
+    stops.push(`rgba(${baseColor}, ${opacity}) ${bandEnd}%`)
+  }
+  
+  return `linear-gradient(to right, ${stops.join(', ')})`
+}
 
 // Dot opacity for scale mode visualization
 function getDotOpacity(dotIndex: number): number {
@@ -415,9 +472,28 @@ function getDotOpacity(dotIndex: number): number {
 // Direct visualization interaction handlers
 const updateValueFromPosition = (clientX: number, rect: DOMRect) => {
   const percentage = Math.max(0, Math.min(100, ((clientX - rect.left) / rect.width) * 100))
-  const range = smartSliderMax.value - smartSliderMin.value
-  const newValue = Math.round(smartSliderMin.value + (percentage / 100) * range)
-  smartSliderValue.value = Math.max(smartSliderMin.value, Math.min(smartSliderMax.value, newValue))
+  
+  if (isChordStyle.value) {
+    // Chord mode: calculate based on distance from center
+    // Lines are positioned at: 50 - visualSpread/2 and 50 + visualSpread/2
+    const distanceFromCenter = Math.abs(percentage - 50)
+    const visualSpreadValue = distanceFromCenter * 2
+    
+    // Reverse map visual spread (15-100) to slider percentage (0-100)
+    const minVisual = 15
+    const maxVisual = 100
+    const sliderPerc = Math.max(0, Math.min(100, ((visualSpreadValue - minVisual) / (maxVisual - minVisual)) * 100))
+    
+    // Convert slider percentage to actual slider value
+    const range = smartSliderMax.value - smartSliderMin.value
+    const newValue = Math.round(smartSliderMin.value + (sliderPerc / 100) * range)
+    smartSliderValue.value = Math.max(smartSliderMin.value, Math.min(smartSliderMax.value, newValue))
+  } else {
+    // Strum mode: linear mapping
+    const range = smartSliderMax.value - smartSliderMin.value
+    const newValue = Math.round(smartSliderMin.value + (percentage / 100) * range)
+    smartSliderValue.value = Math.max(smartSliderMin.value, Math.min(smartSliderMax.value, newValue))
+  }
 }
 
 const handleVisualizationMouseDown = (e: MouseEvent) => {
@@ -867,15 +943,15 @@ function handleKeyClick(midiNote: number) {
   position: relative;
 }
 
-/* Chord: Gradient Split Bar */
+/* Chord: Velocity Gradient Bar */
 .chord-gradient-bar {
   display: flex;
   width: 100%;
-  height: 8px;
+  height: 12px;
   border-radius: 4px;
   overflow: visible;
   position: relative;
-  animation: chord-shimmer 2s ease-in-out infinite;
+  animation: chord-shimmer 4s ease-in-out infinite;
 }
 
 @keyframes chord-shimmer {
@@ -883,23 +959,20 @@ function handleKeyClick(midiNote: number) {
     filter: brightness(1) drop-shadow(0 0 0 transparent);
   }
   50% {
-    filter: brightness(1.3) drop-shadow(0 0 4px rgba(106, 104, 83, 0.6));
+    filter: brightness(1.3) drop-shadow(0 0 4px rgba(249, 172, 32, 0.6));
   }
 }
 
-.bar-fade {
-  background: linear-gradient(to right, transparent, var(--accent-highlight));
-  opacity: 0.5;
-  transition: width 0.15s ease;
+.velocity-gradient {
+  width: 100%;
+  height: 100%;
+  border-radius: 4px;
+  overflow: hidden;
+  opacity: 0.85;
 }
 
-.bar-solid {
-  background: var(--accent-highlight);
-  opacity: 0.7;
-  transition: width 0.15s ease;
-}
-
-.bar-indicator {
+.velocity-indicator-left,
+.velocity-indicator-right {
   position: absolute;
   top: -4px;
   width: 2px;
@@ -907,9 +980,9 @@ function handleKeyClick(midiNote: number) {
   background: var(--accent-highlight);
   opacity: 1;
   transform: translateX(-1px);
-  transition: left 0.15s ease;
   pointer-events: none;
   z-index: 10;
+  filter: brightness(1.5);
 }
 
 /* Strum: Dynamic Spacing Dots */
@@ -948,7 +1021,7 @@ function handleKeyClick(midiNote: number) {
 
 @keyframes strum-cascade {
   0%, 100% { 
-    opacity: 0.3;
+    opacity: 0.5;
     transform: translateX(-50%) scale(1);
   }
   10% { 
@@ -956,11 +1029,11 @@ function handleKeyClick(midiNote: number) {
     transform: translateX(-50%) scale(1.5);
   }
   20% {
-    opacity: 0.6;
+    opacity: 0.7;
     transform: translateX(-50%) scale(1.1);
   }
   30%, 100% {
-    opacity: 0.3;
+    opacity: 0.5;
     transform: translateX(-50%) scale(1);
   }
 }

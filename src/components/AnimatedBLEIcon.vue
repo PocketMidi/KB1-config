@@ -28,7 +28,7 @@ const animationData = ref<any>(null);
 
 // Load Lottie animation data
 onMounted(async () => {
-  const response = await fetch(`${import.meta.env.BASE_URL}ble_3/data.json`);
+  const response = await fetch(`${import.meta.env.BASE_URL}ble/data.json`);
   animationData.value = await response.json();
 });
 </script>

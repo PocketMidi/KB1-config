@@ -662,16 +662,6 @@ function handleKeyClick(midiNote: number) {
 .key.active {
   background-color: #0BA873;
   color: #0F0F0F;
-  animation: active-key-glow 3s ease-in-out infinite;
-}
-
-@keyframes active-key-glow {
-  0%, 100% {
-    box-shadow: 0 0 0 rgba(11, 168, 115, 0);
-  }
-  50% {
-    box-shadow: 0 0 10px 2px rgba(11, 168, 115, 0.4);
-  }
 }
 
 .key.root-note {

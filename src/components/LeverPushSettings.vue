@@ -473,11 +473,12 @@ const profileImage = computed(() => {
   }
   
   // Use animated versions for lin, exp, log, and pd
-  // In latched mode (offsetTime > 0), use back-and-forth animation
-  const isLatched = model.value.offsetTime > 0
+  // In momentary mode (offsetTime === 0), use back-and-forth animation (press/release)
+  // In latched mode (offsetTime > 0), use one-way animation (toggle on/off states)
+  const isMomentary = model.value.offsetTime === 0
   let animated = ''
   if (profile === 'lin' || profile === 'exp' || profile === 'log' || profile === 'pd') {
-    animated = isLatched ? '_latched_animated' : '_animated'
+    animated = isMomentary ? '_latched_animated' : '_animated'
   }
   
   // Push profile SVG files use _p suffix

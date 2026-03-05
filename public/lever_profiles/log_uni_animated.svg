@@ -12,7 +12,7 @@
 
 <!-- Animated dot -->
 <circle cx="0" cy="0" r="3.0" fill="#F9AC20">
-  <animateMotion dur="1.2s" repeatCount="indefinite" keyPoints="0;1" keyTimes="0;1" calcMode="spline" keySplines="0 0 0.6 1">
+  <animateMotion dur="1.75s" repeatCount="indefinite" keyPoints="0;1" keyTimes="0;1" calcMode="spline" keySplines="0 0 0.6 1">
     <mpath href="#log-curve"/>
   </animateMotion>
 </circle>

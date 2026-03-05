@@ -38,26 +38,20 @@
 <line x1="497.875" y1="61" x2="497.875" y2="-1.09278e-08" stroke="#848484" stroke-width="0.5" stroke-dasharray="12 12"/>
 <path d="M567 61L567 -1.37091e-06" stroke="#848484" stroke-width="0.7"/>
 
-<!-- Layered diamonds - same shape, staggered opacity pulse from center outward -->
-<!-- Outermost layer - edge pulse (starts last, dimmest) -->
-<path d="M16 33V28L291.5 10L567 28V33L291.5 53L16 33Z" fill="url(#paint0_radial)" style="animation: pulse-edge 3s ease-in-out infinite; animation-delay: 1.2s;"/>
+<!-- Layered diamonds - progressively narrower from outside to inside with stepped colors -->
+<!-- Outermost diamond - widest, darkest, tallest -->
+<path d="M16 35V26L291.5 5L567 26V35L291.5 56L16 35Z" fill="#1A1916" style="animation: pulse-edge 3s ease-in-out infinite; animation-delay: 1.2s;"/>
 
-<!-- Outer layer -->
-<path d="M16 33V28L291.5 10L567 28V33L291.5 53L16 33Z" fill="url(#paint0_radial)" style="animation: pulse-outer 3s ease-in-out infinite; animation-delay: 0.9s;"/>
+<!-- Layer 2 - 75% width -->
+<path d="M85 34V27L291.5 9L498 27V34L291.5 53L85 34Z" fill="#2E2C26" style="animation: pulse-outer 3s ease-in-out infinite; animation-delay: 0.9s;"/>
 
-<!-- Mid layer -->
-<path d="M16 33V28L291.5 10L567 28V33L291.5 53L16 33Z" fill="url(#paint0_radial)" style="animation: pulse-mid 3s ease-in-out infinite; animation-delay: 0.6s;"/>
+<!-- Layer 3 - 55% width -->
+<path d="M139 33V28L291.5 13L444 28V33L291.5 49L139 33Z" fill="#3F3D34" style="animation: pulse-mid 3s ease-in-out infinite; animation-delay: 0.6s;"/>
 
-<!-- Inner layer -->
-<path d="M16 33V28L291.5 10L567 28V33L291.5 53L16 33Z" fill="url(#paint0_radial)" style="animation: pulse-inner 3s ease-in-out infinite; animation-delay: 0.3s;"/>
+<!-- Layer 4 - 35% width -->
+<path d="M195 32V29L291.5 18L388 29V32L291.5 44L195 32Z" fill="#514E40" style="animation: pulse-inner 3s ease-in-out infinite; animation-delay: 0.3s;"/>
 
-<!-- Center layer - brightest, starts first -->
-<path d="M16 33V28L291.5 10L567 28V33L291.5 53L16 33Z" fill="url(#paint0_radial)" style="animation: pulse-center 3s ease-in-out infinite; animation-delay: 0s;"/>
+<!-- Innermost diamond - 15% width (taller than wide), lightest -->
+<path d="M250 31V30L291.5 23L333 30V31L291.5 39L250 31Z" fill="#615F4C" style="animation: pulse-center 3s ease-in-out infinite; animation-delay: 0s;"/>
 
-<defs>
-  <radialGradient id="paint0_radial" cx="0" cy="0" r="1" gradientTransform="matrix(-321.506 -16.8929 -51.6213 73.5953 291.5 26.8929)" gradientUnits="userSpaceOnUse">
-    <stop offset="0.00164139" stop-color="#615F4C"/>
-    <stop offset="0.966346" stop-color="#171713"/>
-  </radialGradient>
-</defs>
 </svg>

@@ -12,18 +12,18 @@
 
 <!-- Animated dot with back-and-forth motion for latched mode -->
 <circle cx="0" cy="0" r="3.0" fill="#F9AC20">
-  <animateMotion dur="1s" repeatCount="indefinite" keyPoints="0;1" keyTimes="0;1" calcMode="linear">
+  <animateMotion dur="1.75s" repeatCount="indefinite" keyPoints="0;1" keyTimes="0;1" calcMode="linear">
     <mpath href="#lin-curve"/>
   </animateMotion>
-  <animate attributeName="opacity" values="1;1;1" dur="1s" repeatCount="indefinite"/>
+  <animate attributeName="opacity" values="1;1;1" dur="1.75s" repeatCount="indefinite"/>
 </circle>
 
 <!-- Second dot traveling in opposite direction -->
 <circle cx="0" cy="0" r="3.0" fill="#F9AC20">
-  <animateMotion dur="1s" repeatCount="indefinite" keyPoints="1;0" keyTimes="0;1" calcMode="linear">
+  <animateMotion dur="1.75s" repeatCount="indefinite" keyPoints="1;0" keyTimes="0;1" calcMode="linear">
     <mpath href="#lin-curve"/>
   </animateMotion>
-  <animate attributeName="opacity" values="1;1;1" dur="1s" repeatCount="indefinite"/>
+  <animate attributeName="opacity" values="1;1;1" dur="1.75s" repeatCount="indefinite"/>
 </circle>
 
 <defs>

@@ -7,10 +7,11 @@
         class="toggle-btn" 
         @click="handleToggleClick"
         :title="toggleTooltip"
+        :disabled="isResetMode"
       >
-        <span :class="{ active: isMomentary }">MOM</span>
+        <span :class="{ active: isResetMode || isMomentary }">MOM</span>
         <span class="toggle-divider">|</span>
-        <span :class="{ active: !isMomentary }">LAT</span>
+        <span :class="{ active: !isResetMode && !isMomentary }">LAT</span>
       </button>
 
       <!-- Profile Text Selection -->
@@ -458,8 +459,8 @@ const profileImage = computed(() => {
   let profile = 'lin' // default
   
   if (model.value.functionMode === 3) {
-    // Reset mode - show reset.svg
-    return `${BASE_PATH}lever_profiles/reset.svg`
+    // Reset mode - show animated breathing diamond
+    return `${BASE_PATH}lever_profiles/reset_animated.svg`
   } else if (model.value.functionMode === 2) {
     profile = 'inc'
   } else if (model.value.functionMode === 1) {
@@ -471,8 +472,16 @@ const profileImage = computed(() => {
     else profile = 'lin'
   }
   
+  // Use animated versions for lin, exp, log, and pd
+  // In latched mode (offsetTime > 0), use back-and-forth animation
+  const isLatched = model.value.offsetTime > 0
+  let animated = ''
+  if (profile === 'lin' || profile === 'exp' || profile === 'log' || profile === 'pd') {
+    animated = isLatched ? '_latched_animated' : '_animated'
+  }
+  
   // Push profile SVG files use _p suffix
-  return `${BASE_PATH}lever_profiles/${profile}_p.svg`
+  return `${BASE_PATH}lever_profiles/${profile}_p${animated}.svg`
 })
 
 // Computed properties to determine which controls to show
@@ -641,14 +650,21 @@ const handleDurationBarTouchStart = (e: TouchEvent) => {
   margin-right: 1rem;
 }
 
-.toggle-btn:hover {
+.toggle-btn:hover:not(:disabled) {
   background: rgba(106, 104, 83, 0.6);
   border-color: rgba(106, 104, 83, 0.7);
 }
 
-.toggle-btn:active {
+.toggle-btn:active:not(:disabled) {
   background: rgba(106, 104, 83, 0.8);
   border-color: rgba(106, 104, 83, 0.9);
+}
+
+.toggle-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: rgba(106, 104, 83, 0.2);
+  border-color: rgba(106, 104, 83, 0.25);
 }
 
 .toggle-btn span {

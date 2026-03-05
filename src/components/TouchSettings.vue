@@ -183,12 +183,12 @@ function selectMode(mode: number) {
 const modeImage = computed(() => {
   // Function mode 0 = Gate, 1 = Toggle, 2 = Continuous
   if (model.value.functionMode === 1) {
-    return `${BASE_PATH}touch/togg.svg`
+    return `${BASE_PATH}touch/togg_animated.svg`
   } else if (model.value.functionMode === 2) {
-    return `${BASE_PATH}touch/cont.svg`
+    return `${BASE_PATH}touch/cont_animated.svg`
   }
   // Default to Gate (mode 0)
-  return `${BASE_PATH}touch/gate.svg`
+  return `${BASE_PATH}touch/gate_animated.svg`
 })
 
 // Initialize selectedCategory from current ccNumber's category (fallback to first available category)

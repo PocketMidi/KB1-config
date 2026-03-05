@@ -882,7 +882,8 @@ defineExpose({
   font-weight: 400;
   color: #848484;
   font-family: 'Roboto Mono';
-  margin-right: 1rem;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .root-note-value {

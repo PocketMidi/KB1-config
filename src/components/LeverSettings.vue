@@ -60,7 +60,18 @@
 
     <!-- Profile Visualization -->
     <div class="profile-visualization">
-      <img :src="profileImage" alt="Profile Graph" class="profile-graph" />
+      <IncrementalProfile 
+        v-if="isIncrementalMode"
+        :steps="stepsValue"
+        :is-bipolar="model.valueMode === 1"
+        class="profile-graph"
+      />
+      <img 
+        v-else
+        :src="profileImage" 
+        alt="Profile visualization" 
+        class="profile-graph" 
+      />
     </div>
 
     <!-- Level Meter -->
@@ -245,6 +256,7 @@ import { type CCEntry } from '../data/ccMap'
 import ValueControl from './ValueControl.vue'
 import LevelMeter from './LevelMeter.vue'
 import OptionWheelPicker from './OptionWheelPicker.vue'
+import IncrementalProfile from './IncrementalProfile.vue'
 
 type LeverModel = {
   ccNumber: number
@@ -375,8 +387,11 @@ const profileImage = computed(() => {
     else profile = 'lin'
   }
   
+  // Use animated versions for lin, exp, log, and pd profiles
+  const animated = (profile === 'lin' || profile === 'exp' || profile === 'log' || profile === 'pd') ? '_animated' : ''
+  
   // All lever profile SVG files use underscore separator
-  return `${BASE_PATH}/lever_profiles/${profile}_${polarity}.svg`
+  return `${BASE_PATH}/lever_profiles/${profile}_${polarity}${animated}.svg`
 })
 
 // Initialize selectedCategory from current ccNumber's category (fallback to first available category)
@@ -455,33 +470,13 @@ watch(selectedCategory, (cat) => {
 // Computed properties for mode detection
 const isIncrementalMode = computed(() => model.value.functionMode === 2)
 
-// Map between displayed step count and firmware stepSize
-const stepSizeMap: Record<number, number> = {
-  4: 32,   // 4 steps × 32 = 128 MIDI values
-  8: 16,   // 8 steps × 16 = 128 MIDI values
-  16: 8,   // 16 steps × 8 = 128 MIDI values
-  32: 4,   // 32 steps × 4 = 128 MIDI values
-  64: 2    // 64 steps × 2 = 128 MIDI values
-}
-
-// Reverse map from stepSize to step count
-const stepCountMap: Record<number, number> = {
-  32: 4,
-  16: 8,
-  8: 16,
-  4: 32,
-  2: 64
-}
-
-// Computed property for Steps that converts between user-friendly step count and firmware stepSize
+// Direct access to firmware stepSize for display and control
 const stepsValue = computed({
   get: () => {
-    // Convert from stepSize to step count
-    return stepCountMap[model.value.stepSize] || 16
+    return model.value.stepSize
   },
-  set: (stepCount: number) => {
-    // Convert from step count to stepSize
-    model.value.stepSize = stepSizeMap[stepCount] || 8
+  set: (stepSize: number) => {
+    model.value.stepSize = stepSize
   }
 })
 
@@ -635,7 +630,7 @@ const handleDurationBarTouchStart = (e: TouchEvent) => {
 const stepsDragging = ref(false)
 const stepsDragStartX = ref(0)
 const stepsDragStartIndex = ref(0)
-const stepsOptions = [4, 8, 16, 32, 64]
+const stepsOptions = [32, 16, 8, 4, 2] // Firmware stepSize values (larger = fewer steps)
 
 // Mouse wheel for steps
 function handleStepsWheel(event: WheelEvent) {
@@ -861,11 +856,13 @@ function increaseSteps() {
   /* NO min-width - allow it to scale down */
 }
 
-.profile-visualization img {
+.profile-visualization img,
+.profile-visualization object {
   width: 100%;
   height: auto;
   display: block;
   max-width: 100%;
+  pointer-events: none; /* Prevent interaction with SVG */
   /* NO min-width - allow scaling */
 }
 

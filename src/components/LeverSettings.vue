@@ -577,8 +577,40 @@ const duration = computed({
 
 // Duration bar direct interaction handlers
 const updateDurationFromPosition = (clientX: number, rect: DOMRect) => {
-  const percentage = Math.max(0, Math.min(100, ((clientX - rect.left) / rect.width) * 100))
-  const newValue = Math.round(100 + (percentage / 100) * 1900)
+  const dividerWidth = 4
+  let percentage: number
+  
+  if (model.value.valueMode === VALUE_MODE_BIPOLAR) {
+    // Bipolar: [wrapper][divider][wrapper] 
+    // Each wrapper is flex:1, so (width - 4px) / 2
+    const halfWidth = (rect.width - dividerWidth) / 2
+    const relativeX = clientX - rect.left
+    
+    // Determine which half we're in and calculate percentage within that wrapper
+    if (relativeX < halfWidth) {
+      // Left wrapper (blue bar) - reverse direction
+      percentage = (relativeX / halfWidth) * 100
+    } else if (relativeX < halfWidth + dividerWidth) {
+      // On the divider - treat as 100% (max duration)
+      percentage = 100
+    } else {
+      // Right wrapper (pink bar)
+      percentage = ((relativeX - halfWidth - dividerWidth) / halfWidth) * 100
+    }
+  } else {
+    // Unipolar: [divider][wrapper]
+    const wrapperWidth = rect.width - dividerWidth
+    const relativeX = clientX - rect.left - dividerWidth
+    percentage = Math.max(0, (relativeX / wrapperWidth) * 100)
+  }
+  
+  // Clamp percentage to 0-100
+  percentage = Math.max(0, Math.min(100, percentage))
+  
+  // Reverse the visual formula: width = 10 + ((duration - 100) / 1900) * 90
+  // So: percentage = 10 + ((duration - 100) / 1900) * 90
+  // Solve for duration:
+  const newValue = Math.round(100 + ((percentage - 10) / 90) * 1900)
   duration.value = Math.max(100, Math.min(2000, newValue))
 }
 

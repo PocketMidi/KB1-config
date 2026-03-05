@@ -975,14 +975,15 @@ function handleKeyClick(midiNote: number) {
 .velocity-indicator-right {
   position: absolute;
   top: -4px;
-  width: 2px;
+  width: 4px;
   height: calc(100% + 8px);
   background: var(--accent-highlight);
   opacity: 1;
-  transform: translateX(-1px);
+  transform: translateX(-2px);
   pointer-events: none;
   z-index: 10;
   filter: brightness(1.5);
+  border-radius: 2px;
 }
 
 /* Strum: Dynamic Spacing Dots */

@@ -547,8 +547,18 @@ const duration = computed({
 
 // Duration bar direct interaction handlers
 const updateDurationFromPosition = (clientX: number, rect: DOMRect) => {
-  const percentage = Math.max(0, Math.min(100, ((clientX - rect.left) / rect.width) * 100))
-  const newValue = Math.round(100 + (percentage / 100) * 1900)
+  // Subtract the divider width (4px) from the calculation
+  const dividerWidth = 4
+  const wrapperWidth = rect.width - dividerWidth
+  const relativeX = clientX - rect.left - dividerWidth
+  
+  // Get percentage of wrapper (0-100)
+  let percentage = Math.max(0, Math.min(100, (relativeX / wrapperWidth) * 100))
+  
+  // Reverse the visual formula: width = 10 + ((duration - 100) / 1900) * 90
+  // So: percentage = 10 + ((duration - 100) / 1900) * 90
+  // Solve for duration:
+  const newValue = Math.round(100 + ((percentage - 10) / 90) * 1900)
   duration.value = Math.max(100, Math.min(2000, newValue))
 }
 
@@ -795,7 +805,7 @@ const handleDurationBarTouchStart = (e: TouchEvent) => {
   position: relative;
   height: 9px;
   flex: 1;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .meter-bar {
@@ -830,11 +840,11 @@ const handleDurationBarTouchStart = (e: TouchEvent) => {
 }
 
 .meter-divider {
-  width: 5px;
+  width: 4px;
   height: 17px;
   background: var(--accent-highlight);
   flex-shrink: 0;
-  border-radius: 2.5px;
+  border-radius: 2px;
 }
 
 .meter-divider.thick {
@@ -842,22 +852,22 @@ const handleDurationBarTouchStart = (e: TouchEvent) => {
 }
 
 .latch-indicator {
-  width: 5px;
+  width: 4px;
   height: 17px;
   background: var(--accent-highlight);
   flex-shrink: 0;
   margin-left: 4px;
-  border-radius: 2.5px;
+  border-radius: 2px;
 }
 
 .latch-indicator-end {
   position: absolute;
   top: -4px;
-  width: 5px;
+  width: 4px;
   height: 17px;
   background: var(--accent-highlight);
   z-index: 2;
-  border-radius: 2.5px;
+  border-radius: 2px;
 }
 
 .duration-control-wrapper {

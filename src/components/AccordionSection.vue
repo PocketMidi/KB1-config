@@ -67,7 +67,7 @@ defineExpose({
 .accordion-section {
   background: var(--color-background-soft);
   border: none;
-  border-radius: 4px;
+  border-radius: 8px;
   margin-bottom: 6px;
   overflow: visible;
   width: 100%;
@@ -91,10 +91,13 @@ defineExpose({
   transition: background 0.2s;
   min-height: 44px; /* Mobile touch target */
   font-family: 'Roboto Mono';
+  border-radius: 8px;
 }
 
 .accordion-section.is-open .accordion-header {
   background: rgba(106, 104, 83, 0.7); /* More visible when open */
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
 }
 
 .accordion-header:hover {

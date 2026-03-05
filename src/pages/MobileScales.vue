@@ -827,7 +827,7 @@ defineExpose({
   padding: 0.5rem 1rem;
   background: rgba(106, 104, 83, 0.2);
   border: none;
-  border-radius: 4px;
+  border-radius: 8px;
   color: #848484;
   font-family: 'Roboto Mono';
   font-size: 0.875rem;

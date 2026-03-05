@@ -1,6 +1,7 @@
 <template>
   <div class="animated-ble-icon" :style="{ width: `${size}px`, height: `${size}px` }">
     <Vue3Lottie
+      v-if="animationData"
       :animationData="animationData"
       :height="size"
       :width="size"
@@ -28,8 +29,16 @@ const animationData = ref<any>(null);
 
 // Load Lottie animation data
 onMounted(async () => {
-  const response = await fetch(`${import.meta.env.BASE_URL}ble/data.json`);
-  animationData.value = await response.json();
+  try {
+    const response = await fetch(`${import.meta.env.BASE_URL}ble/data.json`);
+    if (!response.ok) {
+      console.error('Failed to load Lottie animation:', response.status);
+      return;
+    }
+    animationData.value = await response.json();
+  } catch (error) {
+    console.error('Error loading Lottie animation:', error);
+  }
 });
 </script>
 

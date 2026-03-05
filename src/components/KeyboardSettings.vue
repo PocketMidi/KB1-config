@@ -81,6 +81,7 @@
           v-for="i in 12" 
           :key="i" 
           class="dot"
+          :class="{ 'active-dot': getDotOpacity(i - 1) === 1 }"
           :style="{ opacity: getDotOpacity(i - 1) }">
         </div>
       </div>
@@ -661,16 +662,42 @@ function handleKeyClick(midiNote: number) {
 .key.active {
   background-color: #0BA873;
   color: #0F0F0F;
+  animation: active-key-glow 3s ease-in-out infinite;
+}
+
+@keyframes active-key-glow {
+  0%, 100% {
+    box-shadow: 0 0 0 rgba(11, 168, 115, 0);
+  }
+  50% {
+    box-shadow: 0 0 10px 2px rgba(11, 168, 115, 0.4);
+  }
 }
 
 .key.root-note {
   box-shadow:
     inset 0 0 0 2px #0F0F0F,
     0 0 0 1px var(--accent-highlight);
+  animation: root-note-pulse 2s ease-in-out infinite;
+}
+
+@keyframes root-note-pulse {
+  0%, 100% {
+    box-shadow:
+      inset 0 0 0 2px #0F0F0F,
+      0 0 0 1px var(--accent-highlight);
+  }
+  50% {
+    box-shadow:
+      inset 0 0 0 2px #0F0F0F,
+      0 0 0 1px var(--accent-highlight),
+      0 0 8px 2px rgba(106, 104, 83, 0.4);
+  }
 }
 
 .key.root-note.chromatic-disabled {
   box-shadow: none;
+  animation: none;
 }
 
 .key.clickable {
@@ -811,6 +838,34 @@ function handleKeyClick(midiNote: number) {
   flex-shrink: 0;
 }
 
+.dots-visualization .dot.active-dot {
+  animation: scale-dot-breathe 2.5s ease-in-out infinite;
+}
+
+.dots-visualization .dot.active-dot:nth-child(1) { animation-delay: 0s; }
+.dots-visualization .dot.active-dot:nth-child(2) { animation-delay: 0.2s; }
+.dots-visualization .dot.active-dot:nth-child(3) { animation-delay: 0.4s; }
+.dots-visualization .dot.active-dot:nth-child(4) { animation-delay: 0.6s; }
+.dots-visualization .dot.active-dot:nth-child(5) { animation-delay: 0.8s; }
+.dots-visualization .dot.active-dot:nth-child(6) { animation-delay: 1s; }
+.dots-visualization .dot.active-dot:nth-child(7) { animation-delay: 1.2s; }
+.dots-visualization .dot.active-dot:nth-child(8) { animation-delay: 1.4s; }
+.dots-visualization .dot.active-dot:nth-child(9) { animation-delay: 1.6s; }
+.dots-visualization .dot.active-dot:nth-child(10) { animation-delay: 1.8s; }
+.dots-visualization .dot.active-dot:nth-child(11) { animation-delay: 2s; }
+.dots-visualization .dot.active-dot:nth-child(12) { animation-delay: 2.2s; }
+
+@keyframes scale-dot-breathe {
+  0%, 100% { 
+    transform: scale(1);
+    filter: brightness(1);
+  }
+  50% { 
+    transform: scale(1.3);
+    filter: brightness(1.4);
+  }
+}
+
 /* Chord/Strum Interactive Visualization */
 .chord-visualization-interactive {
   display: flex;
@@ -830,17 +885,27 @@ function handleKeyClick(midiNote: number) {
   border-radius: 4px;
   overflow: visible;
   position: relative;
+  animation: chord-shimmer 2s ease-in-out infinite;
+}
+
+@keyframes chord-shimmer {
+  0%, 100% {
+    filter: brightness(1) drop-shadow(0 0 0 transparent);
+  }
+  50% {
+    filter: brightness(1.3) drop-shadow(0 0 4px rgba(106, 104, 83, 0.6));
+  }
 }
 
 .bar-fade {
   background: linear-gradient(to right, transparent, var(--accent-highlight));
-  opacity: 0.8;
+  opacity: 0.5;
   transition: width 0.15s ease;
 }
 
 .bar-solid {
   background: var(--accent-highlight);
-  opacity: 1;
+  opacity: 0.7;
   transition: width 0.15s ease;
 }
 
@@ -874,6 +939,40 @@ function handleKeyClick(midiNote: number) {
   background-color: var(--accent-highlight);
   transition: left 0.2s ease;
   transform: translateX(-50%);
+  animation: strum-cascade 1.8s ease-in-out infinite;
+}
+
+.strum-dynamic-dots .dot:nth-child(1) { animation-delay: 0s; }
+.strum-dynamic-dots .dot:nth-child(2) { animation-delay: 0.12s; }
+.strum-dynamic-dots .dot:nth-child(3) { animation-delay: 0.24s; }
+.strum-dynamic-dots .dot:nth-child(4) { animation-delay: 0.36s; }
+.strum-dynamic-dots .dot:nth-child(5) { animation-delay: 0.48s; }
+.strum-dynamic-dots .dot:nth-child(6) { animation-delay: 0.6s; }
+.strum-dynamic-dots .dot:nth-child(7) { animation-delay: 0.72s; }
+.strum-dynamic-dots .dot:nth-child(8) { animation-delay: 0.84s; }
+.strum-dynamic-dots .dot:nth-child(9) { animation-delay: 0.96s; }
+.strum-dynamic-dots .dot:nth-child(10) { animation-delay: 1.08s; }
+.strum-dynamic-dots .dot:nth-child(11) { animation-delay: 1.2s; }
+.strum-dynamic-dots .dot:nth-child(12) { animation-delay: 1.32s; }
+.strum-dynamic-dots .dot:nth-child(13) { animation-delay: 1.44s; }
+
+@keyframes strum-cascade {
+  0%, 100% { 
+    opacity: 0.3;
+    transform: translateX(-50%) scale(1);
+  }
+  10% { 
+    opacity: 1;
+    transform: translateX(-50%) scale(1.5);
+  }
+  20% {
+    opacity: 0.6;
+    transform: translateX(-50%) scale(1.1);
+  }
+  30%, 100% {
+    opacity: 0.3;
+    transform: translateX(-50%) scale(1);
+  }
 }
 
 /* Chord Controls Section */

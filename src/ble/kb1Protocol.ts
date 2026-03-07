@@ -76,7 +76,7 @@ export interface ChordSettings {
   chordType: number;       // MAJOR=0, MINOR=1, DIMINISHED=2, AUGMENTED=3, SUS2=4, SUS4=5, POWER=6, MAJOR7=7, MINOR7=8, DOM7=9, MAJOR_ADD9=10, MINOR_ADD9=11, MAJOR6=12, MINOR6=13, MAJOR9=14
   strumEnabled: boolean;   // false = chord (all notes together), true = strum (cascaded)
   velocitySpread: number;  // 0-100 (percentage) - velocity variation for chord notes
-  strumSpeed: number;      // 5-100 (milliseconds) - delay between notes in strum mode
+  strumSpeed: number;      // 4-120 (milliseconds) - delay between notes in strum mode
   strumPattern: number;    // 0-7 - pattern index (0 = use chord type, 1-7 = interval patterns)
   strumSwing: number;      // 0-100 (percentage) - swing amount for strum timing
   strumIntervals?: number[]; // Custom interval pattern (semitones from root) - UI only
@@ -412,9 +412,9 @@ export class KB1Protocol {
       },
       lever2: {
         ccNumber: 128,
-        minCCValue: 16,
+        minCCValue: 13,
         maxCCValue: 127,
-        stepSize: 8,
+        stepSize: 6,
         functionMode: 2, // Incremental
         valueMode: ValueMode.BIPOLAR,
         onsetTime: 100,
@@ -424,8 +424,8 @@ export class KB1Protocol {
       },
       leverPush2: {
         ccNumber: 128,
-        minCCValue: 89,
-        maxCCValue: 89,
+        minCCValue: 85,
+        maxCCValue: 85,
         functionMode: 3, // Reset
         onsetTime: 100,
         offsetTime: 100,
@@ -449,7 +449,7 @@ export class KB1Protocol {
         chordType: 0, // MAJOR chord
         strumEnabled: false, // Chord mode (not strum)
         velocitySpread: 8, // 8% velocity spread
-        strumSpeed: 45, // 45ms strum speed
+        strumSpeed: 30, // 30ms strum speed (range: 4-120ms)
         strumPattern: 0, // Use chord type (not pattern)
         strumSwing: 0, // No swing by default
       },
@@ -489,8 +489,12 @@ export class KB1Protocol {
   validateSettings(settings: DeviceSettings): boolean {
     // Helper to validate lever settings
     const validateLever = (lever: LeverSettings): boolean => {
+      // ccNumber ranges: -1 (disabled), 0-128 (MIDI CC + Velocity), 200-203 (extended chord parameters)
+      const ccValid = lever.ccNumber === -1 || 
+                      (lever.ccNumber >= 0 && lever.ccNumber <= 128) ||
+                      (lever.ccNumber >= 200 && lever.ccNumber <= 203);
       return (
-        lever.ccNumber >= -1 && lever.ccNumber <= 128 && // Support CC 128 for Velocity
+        ccValid &&
         lever.minCCValue >= 0 && lever.minCCValue <= 127 &&
         lever.maxCCValue >= 0 && lever.maxCCValue <= 127 &&
         lever.minCCValue <= lever.maxCCValue &&
@@ -502,8 +506,12 @@ export class KB1Protocol {
 
     // Helper to validate lever push settings
     const validateLeverPush = (leverPush: LeverPushSettings): boolean => {
+      // ccNumber ranges: -1 (disabled), 0-128 (MIDI CC + Velocity), 200-203 (extended chord parameters)
+      const ccValid = leverPush.ccNumber === -1 || 
+                      (leverPush.ccNumber >= 0 && leverPush.ccNumber <= 128) ||
+                      (leverPush.ccNumber >= 200 && leverPush.ccNumber <= 203);
       return (
-        leverPush.ccNumber >= -1 && leverPush.ccNumber <= 128 && // Support CC 128 for Velocity
+        ccValid &&
         leverPush.minCCValue >= 0 && leverPush.minCCValue <= 127 &&
         leverPush.maxCCValue >= 0 && leverPush.maxCCValue <= 127 &&
         leverPush.minCCValue <= leverPush.maxCCValue &&
@@ -531,6 +539,19 @@ export class KB1Protocol {
       );
     };
 
+    // Helper to validate chord settings
+    const validateChord = (chord: ChordSettings): boolean => {
+      return (
+        (chord.playMode === 0 || chord.playMode === 1) &&
+        chord.chordType >= 0 && chord.chordType <= 14 &&
+        typeof chord.strumEnabled === 'boolean' &&
+        chord.velocitySpread >= 0 && chord.velocitySpread <= 100 &&
+        chord.strumSpeed >= 4 && chord.strumSpeed <= 120 &&
+        chord.strumPattern >= 0 && chord.strumPattern <= 7 &&
+        chord.strumSwing >= 0 && chord.strumSwing <= 100
+      );
+    };
+
     // Helper to validate system settings
     const validateSystem = (system: SystemSettings): boolean => {
       // Individual range checks
@@ -545,15 +566,27 @@ export class KB1Protocol {
       return rangeValid && deepSleepValid;
     };
 
-    return (
-      settings.lever1 !== undefined && validateLever(settings.lever1) &&
-      settings.leverPush1 !== undefined && validateLeverPush(settings.leverPush1) &&
-      settings.lever2 !== undefined && validateLever(settings.lever2) &&
-      settings.leverPush2 !== undefined && validateLeverPush(settings.leverPush2) &&
-      settings.touch !== undefined && validateTouch(settings.touch) &&
-      settings.scale !== undefined && validateScale(settings.scale) &&
-      settings.system !== undefined && validateSystem(settings.system)
-    );
+    // Validate each setting and log failures for debugging
+    const validations = [
+      { name: 'lever1', valid: settings.lever1 !== undefined && validateLever(settings.lever1) },
+      { name: 'leverPush1', valid: settings.leverPush1 !== undefined && validateLeverPush(settings.leverPush1) },
+      { name: 'lever2', valid: settings.lever2 !== undefined && validateLever(settings.lever2) },
+      { name: 'leverPush2', valid: settings.leverPush2 !== undefined && validateLeverPush(settings.leverPush2) },
+      { name: 'touch', valid: settings.touch !== undefined && validateTouch(settings.touch) },
+      { name: 'scale', valid: settings.scale !== undefined && validateScale(settings.scale) },
+      { name: 'chord', valid: settings.chord !== undefined && validateChord(settings.chord) },
+      { name: 'system', valid: settings.system !== undefined && validateSystem(settings.system) }
+    ];
+
+    const failures = validations.filter(v => !v.valid);
+    if (failures.length > 0) {
+      console.error('Settings validation failed for:', failures.map(f => f.name).join(', '));
+      failures.forEach(f => {
+        console.error(`  - ${f.name}:`, (settings as any)[f.name]);
+      });
+    }
+
+    return validations.every(v => v.valid);
   }
 
 

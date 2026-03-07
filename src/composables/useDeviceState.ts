@@ -249,6 +249,8 @@ export function useDeviceState() {
    */
   const updateSettings = (settings: DeviceSettings) => {
     if (!kb1Protocol.validateSettings(settings)) {
+      // Log the settings to help debug which field is invalid
+      console.error('Invalid device settings:', settings);
       throw new Error('Invalid device settings');
     }
     deviceSettings.value = settings;

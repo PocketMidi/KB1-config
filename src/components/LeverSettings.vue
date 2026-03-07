@@ -7,6 +7,7 @@
         class="toggle-btn" 
         @click="handleToggleClick"
         :title="toggleTooltip"
+        :disabled="isKB1Expression"
       >
         <span :class="{ active: model.valueMode === 0 }">UNI</span>
         <span class="toggle-divider">|</span>
@@ -79,6 +80,9 @@
       :min="userMin" 
       :max="userMax" 
       :is-bipolar="model.valueMode === 1"
+      :min-allowed="minRange"
+      :max-allowed="maxRange"
+      :step-size="minMaxStepSize"
       @update:min="userMin = $event"
       @update:max="userMax = $event"
     />
@@ -116,9 +120,9 @@
           v-model="userMin"
           :min="minRange"
           :max="maxRange"
-          :step="1"
-          :small-step="5"
-          :large-step="10"
+          :step="minMaxStepSize"
+          :small-step="minMaxStepSize"
+          :large-step="minMaxStepSize * 2"
         />
       </div>
       <div class="input-divider"></div>
@@ -129,9 +133,9 @@
           v-model="userMax"
           :min="minRange"
           :max="maxRange"
-          :step="1"
-          :small-step="5"
-          :large-step="10"
+          :step="minMaxStepSize"
+          :small-step="minMaxStepSize"
+          :large-step="minMaxStepSize * 2"
         />
       </div>
 
@@ -251,7 +255,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch, onBeforeUnmount } from 'vue'
+import { computed, ref, watch, onBeforeUnmount, nextTick } from 'vue'
 import { type CCEntry } from '../data/ccMap'
 import ValueControl from './ValueControl.vue'
 import LevelMeter from './LevelMeter.vue'
@@ -296,12 +300,23 @@ const model = computed({
 // Constants
 const BASE_PATH = '/KB1-config'
 
+// Check if current parameter is KB1 Expression (unipolar only)
+const isKB1Expression = computed(() => {
+  const cc = model.value.ccNumber
+  return cc === 200 || cc === 201 || cc === 202 || cc === 203
+})
+
 // Toggle tooltip
 const toggleTooltip = computed(() => {
+  if (isKB1Expression.value) {
+    return 'KB1 Expression parameters are unipolar only'
+  }
   return model.value.valueMode === 0 ? 'Switch to Bipolar' : 'Switch to Unipolar'
 })
 
 const handleToggleClick = () => {
+  if (isKB1Expression.value) return // Prevent toggle for KB1 Expression
+  
   model.value.valueMode = model.value.valueMode === 0 ? 1 : 0
   
   // Emit the new mode name for parent to display
@@ -403,10 +418,15 @@ const selectedCategory = ref<string>(initialCategory.value)
 const categoryPickerOpen = ref(false)
 const categoryTriggerRef = ref<HTMLElement | null>(null)
 
-// Convert categories to dropdown options
-const categoryOptions = computed(() => 
-  props.categories.map(cat => ({ label: cat, value: cat }))
-)
+// Convert categories to dropdown options with divider after KB1 Expression
+const categoryOptions = computed(() => {
+  const options = props.categories.map(cat => ({ label: cat, value: cat }))
+  // Add divider after KB1 Expression (index 0)
+  if (options.length > 1 && options[0]?.label === 'KB1 Expression') {
+    options.splice(1, 0, { label: '───', value: '___divider___', isDivider: true })
+  }
+  return options
+})
 
 // Parameter wheel picker state
 const parameterPickerOpen = ref(false)
@@ -415,7 +435,7 @@ const parameterTriggerRef = ref<HTMLElement | null>(null)
 // Get selected parameter label
 const selectedParameterLabel = computed(() => {
   const option = filteredOptions.value.find(opt => opt.value === model.value.ccNumber)
-  return option?.label || 'None'
+  return option?.label || '—'
 })
 
 // Flag to prevent infinite watch loops
@@ -433,18 +453,42 @@ watch(() => props.ccMapByNumber.size, () => {
 }, { immediate: true })
 
 // Filter options by selected category
+// Note: Pattern Selector (201) excluded from levers - discrete values better suited for press controls
 const filteredOptions = computed(() => {
-  const list = props.ccOptions.filter(opt => opt.group === selectedCategory.value)
-  const none = props.ccOptions.find(o => o.value === -1)
-  return none ? [none, ...list] : list
+  return props.ccOptions.filter(opt => 
+    opt.group === selectedCategory.value && opt.value !== 201
+  )
 })
 
-// Watch ccNumber to keep Category in sync
+// Watch ccNumber to keep Category in sync and clamp KB1 Expression parameters
 watch(() => model.value.ccNumber, (cc) => {
   if (isUpdatingInternally.value) return
   isUpdatingInternally.value = true
   const cat = props.ccMapByNumber.get(cc)?.category
   if (cat) selectedCategory.value = cat
+  
+  // KB1 Expression parameters: Force unipolar mode and clamp to valid ranges
+  if (cc === 200) {
+    // Strum Speed: 10-100% displayed (maps to 120ms-4ms)
+    // Store MIDI values in ascending order even though UI presents them inverted
+    model.value.valueMode = VALUE_MODE_UNIPOLAR
+    model.value.minCCValue = 0    // Maps to 100% (fastest) via speedPercentToMidi
+    model.value.maxCCValue = 127  // Maps to 10% (slowest) via speedPercentToMidi
+  } else if (cc === 202) {
+    // Swing: 0-100%
+    model.value.valueMode = VALUE_MODE_UNIPOLAR
+    model.value.minCCValue = 0   // 0%
+    model.value.maxCCValue = 127 // 100%
+  } else if (cc === 203) {
+    // Velocity Spread: 8-100%
+    model.value.valueMode = VALUE_MODE_UNIPOLAR
+    const min = Math.round((8 / 100) * 127)   // 8 -> ~10 MIDI
+    const max = Math.round((100 / 100) * 127) // 100 -> 127 MIDI
+    model.value.minCCValue = min
+    model.value.maxCCValue = max
+  }
+  // Note: Pattern Selector (201) filtered out for levers - handled by press controls only
+  
   isUpdatingInternally.value = false
 })
 
@@ -452,12 +496,6 @@ watch(() => model.value.ccNumber, (cc) => {
 watch(selectedCategory, (cat) => {
   if (isUpdatingInternally.value) return
   isUpdatingInternally.value = true
-  
-  // If "None" is selected, keep it
-  if (model.value.ccNumber === -1) {
-    isUpdatingInternally.value = false
-    return
-  }
   
   const ok = props.ccMapByNumber.get(model.value.ccNumber)?.category === cat
   if (!ok) {
@@ -470,13 +508,27 @@ watch(selectedCategory, (cat) => {
 // Computed properties for mode detection
 const isIncrementalMode = computed(() => model.value.functionMode === 2)
 
-// Direct access to firmware stepSize for display and control
+// Step size mapping: Display % → Firmware stepSize
+const stepsDisplayToFirmware: Record<number, number> = {
+  25: 32,
+  15: 20,
+  10: 12,
+  5: 6
+}
+const stepsFirmwareToDisplay: Record<number, number> = {
+  32: 25,
+  20: 15,
+  12: 10,
+  6: 5
+}
+
+// Direct access to firmware stepSize with % display conversion
 const stepsValue = computed({
   get: () => {
-    return model.value.stepSize
+    return stepsFirmwareToDisplay[model.value.stepSize] ?? 5
   },
-  set: (stepSize: number) => {
-    model.value.stepSize = stepSize
+  set: (displayPercent: number) => {
+    model.value.stepSize = stepsDisplayToFirmware[displayPercent] ?? 6
   }
 })
 
@@ -484,9 +536,64 @@ const stepsValue = computed({
 const VALUE_MODE_UNIPOLAR = 0
 const VALUE_MODE_BIPOLAR = 1
 
-// Determine min/max range based on polarity
-const minRange = computed(() => model.value.valueMode === VALUE_MODE_BIPOLAR ? -100 : 0)
-const maxRange = computed(() => 100)
+// Determine min/max range based on polarity and KB1 Expression parameters
+const minRange = computed(() => {
+  const cc = model.value.ccNumber
+  
+  // Special limits for specific parameters
+  if (cc === 128) {
+    // Velocity: lock minimum at -80% (MIDI 13)
+    return model.value.valueMode === VALUE_MODE_BIPOLAR ? -80 : 13
+  }
+  
+  if (model.value.valueMode === VALUE_MODE_BIPOLAR) {
+    return -100
+  }
+  
+  // KB1 Expression parameters have hardware-enforced minimum values
+  if (cc === 200) return 10  // Strum Speed: 10-100% (perceived range, maps to 4-120ms)
+  if (cc === 201) return 1   // Pattern Selector: 1-6
+  if (cc === 203) return 8   // Velocity Spread: 8-100%
+  
+  return 0  // Default unipolar minimum
+})
+
+const maxRange = computed(() => {
+  const cc = model.value.ccNumber
+  if (cc === 201) return 6   // Pattern Selector: 1-6 (discrete)
+  return 100  // Default maximum
+})
+
+// Step size for MIN/MAX controls in incremental mode
+const minMaxStepSize = computed(() => {
+  // In incremental mode, match the STEPS percentage (5%, 10%, 15%, 25%)
+  return isIncrementalMode.value ? stepsValue.value : 1
+})
+
+// Snap value to step increments in incremental mode
+function snapToStepIncrement(value: number): number {
+  if (!isIncrementalMode.value) return value
+  const step = stepsValue.value
+  return Math.round(value / step) * step
+}
+
+// Watch for changes to incremental mode or step size and snap existing values
+watch([isIncrementalMode, stepsValue], () => {
+  if (isIncrementalMode.value) {
+    nextTick(() => {
+      // Snap current values to the step increments
+      const snappedMin = snapToStepIncrement(userMin.value)
+      const snappedMax = snapToStepIncrement(userMax.value)
+      
+      if (snappedMin !== userMin.value) {
+        userMin.value = snappedMin
+      }
+      if (snappedMax !== userMax.value) {
+        userMax.value = snappedMax
+      }
+    })
+  }
+})
 
 // Conversion functions
 function unipolarToMidi(userValue: number): number {
@@ -505,38 +612,86 @@ function midiToBipolar(midiValue: number): number {
   return Math.round((midiValue / 127) * 200) - 100
 }
 
-// User-facing Min value (0-100 or -100 to +100)
+// Special conversion for Pattern Selector (1-6)
+function patternToMidi(pattern: number): number {
+  // Map pattern 1-6 to MIDI 0-127
+  return Math.round(((pattern - 1) / 5) * 127)
+}
+
+function midiToPattern(midiValue: number): number {
+  // Map MIDI 0-127 to pattern 1-6
+  return Math.round((midiValue / 127) * 5) + 1
+}
+
+// Special conversion for Strum Speed (CC 200): higher % = faster (lower ms)
+// User sees 10-100% range (better UX), maps to 4-120ms: 100%→4ms, 10%→120ms
+// Store MIDI in normal ascending order: low MIDI = slow, high MIDI = fast
+function speedPercentToMidi(percent: number): number {
+  // Map 10-100% to MIDI 0-127 (normal order: higher MIDI = faster)
+  return Math.round(127 * (percent - 10) / 90)
+}
+
+function midiToSpeedPercent(midiValue: number): number {
+  // Map MIDI 0-127 to 10-100%
+  return Math.round(10 + (midiValue / 127) * 90)
+}
+
+// User-facing Min value (0-100 or -100 to +100, or 1-7 for pattern selector)
 const userMin = computed({
   get: () => {
-    if (model.value.valueMode === VALUE_MODE_BIPOLAR) {
-      return midiToBipolar(model.value.minCCValue)
+    let value: number
+    if (model.value.ccNumber === 200) {
+      value = midiToSpeedPercent(model.value.minCCValue)
+    } else if (model.value.ccNumber === 201) {
+      value = midiToPattern(model.value.minCCValue)
+    } else if (model.value.valueMode === VALUE_MODE_BIPOLAR) {
+      value = midiToBipolar(model.value.minCCValue)
     } else {
-      return midiToUnipolar(model.value.minCCValue)
+      value = midiToUnipolar(model.value.minCCValue)
     }
+    // Snap to step increment in incremental mode
+    return snapToStepIncrement(value)
   },
   set: (userValue: number) => {
-    if (model.value.valueMode === VALUE_MODE_BIPOLAR) {
-      model.value.minCCValue = bipolarToMidi(userValue)
+    const snappedValue = snapToStepIncrement(userValue)
+    if (model.value.ccNumber === 200) {
+      model.value.minCCValue = speedPercentToMidi(snappedValue)
+    } else if (model.value.ccNumber === 201) {
+      model.value.minCCValue = patternToMidi(snappedValue)
+    } else if (model.value.valueMode === VALUE_MODE_BIPOLAR) {
+      model.value.minCCValue = bipolarToMidi(snappedValue)
     } else {
-      model.value.minCCValue = unipolarToMidi(userValue)
+      model.value.minCCValue = unipolarToMidi(snappedValue)
     }
   }
 })
 
-// User-facing Max value (0-100 or -100 to +100)
+// User-facing Max value (0-100 or -100 to +100, or 1-7 for pattern selector)
 const userMax = computed({
   get: () => {
-    if (model.value.valueMode === VALUE_MODE_BIPOLAR) {
-      return midiToBipolar(model.value.maxCCValue)
+    let value: number
+    if (model.value.ccNumber === 200) {
+      value = midiToSpeedPercent(model.value.maxCCValue)
+    } else if (model.value.ccNumber === 201) {
+      value = midiToPattern(model.value.maxCCValue)
+    } else if (model.value.valueMode === VALUE_MODE_BIPOLAR) {
+      value = midiToBipolar(model.value.maxCCValue)
     } else {
-      return midiToUnipolar(model.value.maxCCValue)
+      value = midiToUnipolar(model.value.maxCCValue)
     }
+    // Snap to step increment in incremental mode
+    return snapToStepIncrement(value)
   },
   set: (userValue: number) => {
-    if (model.value.valueMode === VALUE_MODE_BIPOLAR) {
-      model.value.maxCCValue = bipolarToMidi(userValue)
+    const snappedValue = snapToStepIncrement(userValue)
+    if (model.value.ccNumber === 200) {
+      model.value.maxCCValue = speedPercentToMidi(snappedValue)
+    } else if (model.value.ccNumber === 201) {
+      model.value.maxCCValue = patternToMidi(snappedValue)
+    } else if (model.value.valueMode === VALUE_MODE_BIPOLAR) {
+      model.value.maxCCValue = bipolarToMidi(snappedValue)
     } else {
-      model.value.maxCCValue = unipolarToMidi(userValue)
+      model.value.maxCCValue = unipolarToMidi(snappedValue)
     }
   }
 })
@@ -662,7 +817,7 @@ const handleDurationBarTouchStart = (e: TouchEvent) => {
 const stepsDragging = ref(false)
 const stepsDragStartX = ref(0)
 const stepsDragStartIndex = ref(0)
-const stepsOptions = [32, 16, 8, 4, 2] // Firmware stepSize values (larger = fewer steps)
+const stepsOptions = [25, 15, 10, 5] // Display percentages: 25%, 15%, 10%, 5%
 
 // Mouse wheel for steps
 function handleStepsWheel(event: WheelEvent) {
@@ -812,6 +967,16 @@ function increaseSteps() {
 .toggle-btn:active {
   background: rgba(106, 104, 83, 0.8);
   border-color: rgba(106, 104, 83, 0.9);
+}
+
+.toggle-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.toggle-btn:disabled span {
+  opacity: 0.3;
 }
 
 .toggle-btn span {

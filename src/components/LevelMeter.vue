@@ -53,9 +53,13 @@ const props = withDefaults(defineProps<{
   isBipolar: boolean
   mode?: 'range' | 'reset'
   value?: number
+  minAllowed?: number  // Dynamic minimum for KB1 Expression parameters
+  maxAllowed?: number  // Dynamic maximum for KB1 Expression parameters (e.g., Pattern 1-7)
+  stepSize?: number    // Step increment for snapping values (e.g., 5, 10, 15, 25)
 }>(), {
   mode: 'range',
-  value: 70
+  value: 70,
+  stepSize: 1
 })
 
 const emit = defineEmits<{
@@ -66,28 +70,31 @@ const emit = defineEmits<{
 
 // Direct marker interaction handlers
 const updateValueFromPosition = (clientX: number, rect: DOMRect) => {
-  const rangeMin = props.isBipolar ? -100 : 0
-  const rangeMax = 100
+  const rangeMin = props.minAllowed ?? (props.isBipolar ? -100 : 0)
+  const rangeMax = props.maxAllowed ?? 100
   const rangeSpan = rangeMax - rangeMin
   
   const percentage = Math.max(0, Math.min(100, ((clientX - rect.left) / rect.width) * 100))
   const clickedValue = rangeMin + (percentage / 100) * rangeSpan
   
+  // Snap to step size
+  const snappedValue = Math.round(clickedValue / props.stepSize) * props.stepSize
+  
   if (props.mode === 'reset') {
     // In reset mode, update the single value
-    emit('update:value', Math.round(clickedValue))
+    emit('update:value', Math.round(snappedValue))
   } else {
     // In range mode, update whichever is closer (min or max)
-    const distToMin = Math.abs(clickedValue - props.min)
-    const distToMax = Math.abs(clickedValue - props.max)
+    const distToMin = Math.abs(snappedValue - props.min)
+    const distToMax = Math.abs(snappedValue - props.max)
     
     if (distToMin < distToMax) {
       // Update min, but don't go above max
-      const newMin = Math.min(Math.round(clickedValue), props.max)
+      const newMin = Math.min(Math.round(snappedValue), props.max)
       emit('update:min', newMin)
     } else {
       // Update max, but don't go below min
-      const newMax = Math.max(Math.round(clickedValue), props.min)
+      const newMax = Math.max(Math.round(snappedValue), props.min)
       emit('update:max', newMax)
     }
   }
@@ -151,37 +158,62 @@ interface Label {
 
 // Generate markers (dots or triangles) based on mode and polarity
 const markers = computed<Marker[]>(() => {
-  const totalMarkers = 41 // Creates markers at every 5% interval (0, 2.5%, 5%, ... 100%)
-  const rangeMin = props.isBipolar ? -100 : 0
-  const rangeMax = 100
+  const rangeMin = props.minAllowed ?? (props.isBipolar ? -100 : 0)
+  const rangeMax = props.maxAllowed ?? 100
   const rangeSpan = rangeMax - rangeMin
   
+  // Special case: Pattern Selector (1-6) shows exactly 6 dots
+  const isPatternSelector = rangeMin === 1 && rangeMax === 6
+  
   const result: Marker[] = []
-  for (let i = 0; i < totalMarkers; i++) {
-    const position = (i / (totalMarkers - 1)) * 100 // Position in percentage (0% to 100%)
-    const value = rangeMin + (position / 100) * rangeSpan // Actual value in user range
-    
-    let highlighted = false
-    
-    if (props.mode === 'reset') {
-      // Reset mode: highlight only the marker closest to the reset value
-      const distanceToValue = Math.abs(value - props.value)
-      const tolerance = 1
-      highlighted = distanceToValue <= tolerance
-    } else {
-      // Range mode: highlight markers near min or max
-      const distanceToMin = Math.abs(value - props.min)
-      const distanceToMax = Math.abs(value - props.max)
-      const tolerance = 6
-      highlighted = distanceToMin <= tolerance || distanceToMax <= tolerance
+  
+  if (isPatternSelector) {
+    // Pattern selector: align with icon grid centers
+    const gridCenters = [8.33, 25, 41.67, 58.33, 75, 91.67]
+    for (let i = 0; i < 6; i++) {
+      const position = gridCenters[i] || 0
+      const value = rangeMin + ((position / 100) * rangeSpan)
+      
+      let highlighted = false
+      if (props.mode === 'reset') {
+        const distanceToValue = Math.abs(value - props.value)
+        highlighted = distanceToValue <= 0.5
+      } else {
+        const distanceToMin = Math.abs(value - props.min)
+        const distanceToMax = Math.abs(value - props.max)
+        highlighted = distanceToMin <= 0.5 || distanceToMax <= 0.5
+      }
+      
+      result.push({ position, value, highlighted })
     }
+  } else {
+    // Standard mode: Show dots at 5% value intervals
+    // For bipolar: -100, -95, -90... 0... 95, 100 (41 dots)
+    // For unipolar: 0, 5, 10... 95, 100 (21 dots)
+    const dotInterval = 5
+    const startValue = Math.ceil(rangeMin / dotInterval) * dotInterval
     
-    result.push({
-      position,
-      value,
-      highlighted
-    })
+    for (let value = startValue; value <= rangeMax; value += dotInterval) {
+      // Calculate position as percentage within the range
+      const position = ((value - rangeMin) / rangeSpan) * 100
+      
+      let highlighted = false
+      
+      if (props.mode === 'reset') {
+        // Reset mode: highlight only the marker closest to the reset value
+        const distanceToValue = Math.abs(value - props.value)
+        highlighted = distanceToValue <= 3
+      } else {
+        // Range mode: highlight markers near min or max
+        const distanceToMin = Math.abs(value - props.min)
+        const distanceToMax = Math.abs(value - props.max)
+        highlighted = distanceToMin <= 6 || distanceToMax <= 6
+      }
+      
+      result.push({ position, value, highlighted })
+    }
   }
+  
   return result
 })
 
@@ -196,12 +228,37 @@ const labels = computed<Label[]>(() => {
       { value: 100, position: 100, text: '100' }
     ]
   } else {
+    const rangeMin = props.minAllowed ?? 0
+    const rangeMax = props.maxAllowed ?? 100
+    const rangeSpan = rangeMax - rangeMin
+    
+    // For small discrete ranges (like Pattern 1-7), show all values
+    if (rangeSpan <= 10) {
+      const labels: Label[] = []
+      for (let i = rangeMin; i <= rangeMax; i++) {
+        let position: number
+        const index = i - rangeMin
+        
+        if (rangeMin === 1 && rangeMax === 6) {
+          // Pattern selector: align with icon grid centers
+          const gridCenters = [8.33, 25, 41.67, 58.33, 75, 91.67]
+          position = gridCenters[index] || 0
+        } else {
+          position = ((i - rangeMin) / rangeSpan) * 100
+        }
+        
+        labels.push({ value: i, position, text: String(i) })
+      }
+      return labels
+    }
+    
+    // For normal ranges, show 0/25/50/75/100 (or custom min/max)
     return [
-      { value: 0, position: 0, text: '0' },
-      { value: 25, position: 25, text: '25' },
-      { value: 50, position: 50, text: '50' },
-      { value: 75, position: 75, text: '75' },
-      { value: 100, position: 100, text: '100' }
+      { value: rangeMin, position: 0, text: String(rangeMin) },
+      { value: Math.round(rangeMin + rangeSpan * 0.25), position: 25, text: String(Math.round(rangeMin + rangeSpan * 0.25)) },
+      { value: Math.round(rangeMin + rangeSpan * 0.5), position: 50, text: String(Math.round(rangeMin + rangeSpan * 0.5)) },
+      { value: Math.round(rangeMin + rangeSpan * 0.75), position: 75, text: String(Math.round(rangeMin + rangeSpan * 0.75)) },
+      { value: rangeMax, position: 100, text: String(rangeMax) }
     ]
   }
 })

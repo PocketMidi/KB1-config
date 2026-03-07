@@ -18,12 +18,15 @@
               <div
                 v-for="(option, index) in options"
                 :key="option.value"
-                class="wheel-item"
+                :class="['wheel-item', { 'divider-item': option.isDivider }]"
                 :data-index="index"
-                @click="selectItem(index)"
+                @click="!option.isDivider && selectItem(index)"
               >
-                <span class="item-main">{{ parseLabel(option.label).main }}</span>
-                <span v-if="parseLabel(option.label).secondary" class="item-secondary">{{ parseLabel(option.label).secondary }}</span>
+                <span v-if="option.isDivider" class="divider-line">{{ option.label }}</span>
+                <template v-else>
+                  <span class="item-main">{{ parseLabel(option.label).main }}</span>
+                  <span v-if="parseLabel(option.label).secondary" class="item-secondary">{{ parseLabel(option.label).secondary }}</span>
+                </template>
               </div>
               <div class="wheel-spacer"></div>
             </div>
@@ -40,6 +43,7 @@ import { ref, watch, nextTick, onBeforeUnmount, computed } from 'vue';
 interface WheelOption {
   label: string;
   value: string | number;
+  isDivider?: boolean;
 }
 
 const props = defineProps<{
@@ -88,7 +92,11 @@ const positionStyle = computed(() => {
 watch(() => props.isOpen, async (open) => {
   if (open) {
     await nextTick();
-    const initialIndex = props.options.findIndex(opt => opt.value === props.modelValue);
+    let initialIndex = props.options.findIndex(opt => opt.value === props.modelValue);
+    // Skip divider if found
+    if (initialIndex >= 0 && props.options[initialIndex]?.isDivider) {
+      initialIndex = props.options.findIndex((opt, idx) => idx > initialIndex && !opt.isDivider);
+    }
     if (initialIndex >= 0) {
       scrollToIndex(initialIndex, false);
     }
@@ -136,7 +144,13 @@ function snapToNearest() {
   if (!scrollContainer.value) return;
   
   const scrollTop = scrollContainer.value.scrollTop;
-  const nearestIndex = Math.round(scrollTop / ITEM_HEIGHT);
+  let nearestIndex = Math.round(scrollTop / ITEM_HEIGHT);
+  
+  // Skip dividers - find nearest non-divider
+  while (nearestIndex >= 0 && nearestIndex < props.options.length && props.options[nearestIndex]?.isDivider) {
+    nearestIndex++;
+  }
+  
   const clampedIndex = Math.max(0, Math.min(nearestIndex, props.options.length - 1));
   
   scrollToIndex(clampedIndex);
@@ -144,7 +158,7 @@ function snapToNearest() {
   // Emit selection after snap
   setTimeout(() => {
     const selectedOption = props.options[clampedIndex];
-    if (selectedOption) {
+    if (selectedOption && !selectedOption.isDivider) {
       emit('update:modelValue', selectedOption.value);
     }
   }, 100);
@@ -191,7 +205,7 @@ function close() {
 function parseLabel(label: string): { main: string; secondary: string } {
   const parts = label.split('—').map(p => p.trim());
   if (parts.length > 1) {
-    return { main: parts[0], secondary: parts.slice(1).join(' — ') };
+    return { main: parts[0] || '', secondary: parts.slice(1).join(' — ') };
   }
   return { main: label, secondary: '' };
 }
@@ -276,6 +290,18 @@ onBeforeUnmount(() => {
   transform-origin: center center;
   gap: 0.5rem;
   white-space: nowrap;
+}
+
+.divider-item {
+  cursor: default;
+  pointer-events: none;
+  opacity: 0.3;
+}
+
+.divider-line {
+  font-weight: 300;
+  letter-spacing: 0.2em;
+  font-size: 0.75rem;
 }
 
 .item-main {

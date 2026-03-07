@@ -589,8 +589,10 @@ export class BLEClient {
 
     try {
       const data = this.encodeLeverData(settings);
+      console.log('📤 Writing Lever 1 settings:', settings);
+      console.log('   stepSize:', settings.stepSize, 'ccNumber:', settings.ccNumber, 'functionMode:', settings.functionMode);
       await this.lever1Characteristic.writeValue(data);
-      console.log('Lever 1 settings written to device:', settings);
+      console.log('✅ Lever 1 settings written to device');
     } catch (error) {
       console.error('Failed to write lever 1 settings:', error);
       throw error;
@@ -742,7 +744,10 @@ export class BLEClient {
       
       // Following bytes are intervals (int8)
       for (let i = 0; i < length; i++) {
-        view.setInt8(1 + i, intervals[i]);
+        const interval = intervals[i];
+        if (interval !== undefined) {
+          view.setInt8(1 + i, interval);
+        }
       }
       
       await this.strumIntervalsCharacteristic.writeValue(buffer);
@@ -1081,6 +1086,114 @@ export class BLEClient {
    */
   getMaxScaleType(): number {
     return this.supportsExtendedScales() ? 20 : 12;
+  }
+
+  // ============================================
+  // KB1 Expression - Real-time parameter control
+  // ============================================
+
+  /**
+   * Update strum speed in real-time
+   * @param speed Strum speed in milliseconds (5-100)
+   */
+  async updateStrumSpeed(speed: number): Promise<void> {
+    if (!this.chordCharacteristic) {
+      throw new Error('Chord characteristic not available');
+    }
+
+    try {
+      // Read current chord settings
+      const currentData = await this.chordCharacteristic.readValue();
+      const currentSettings = this.parseChordData(currentData);
+
+      // Update only the strum speed
+      currentSettings.strumSpeed = Math.max(4, Math.min(120, Math.round(speed)));
+
+      // Write back to device
+      const data = this.encodeChordData(currentSettings);
+      await this.chordCharacteristic.writeValue(data);
+    } catch (error) {
+      console.error('Failed to update strum speed:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Update strum pattern in real-time
+   * @param pattern Pattern index (0-7)
+   */
+  async updateStrumPattern(pattern: number): Promise<void> {
+    if (!this.chordCharacteristic) {
+      throw new Error('Chord characteristic not available');
+    }
+
+    try {
+      // Read current chord settings
+      const currentData = await this.chordCharacteristic.readValue();
+      const currentSettings = this.parseChordData(currentData);
+
+      // Update only the strum pattern
+      currentSettings.strumPattern = Math.max(0, Math.min(7, Math.round(pattern)));
+
+      // Write back to device
+      const data = this.encodeChordData(currentSettings);
+      await this.chordCharacteristic.writeValue(data);
+    } catch (error) {
+      console.error('Failed to update strum pattern:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Update strum swing in real-time
+   * @param swing Swing percentage (0-100)
+   */
+  async updateStrumSwing(swing: number): Promise<void> {
+    if (!this.chordCharacteristic) {
+      throw new Error('Chord characteristic not available');
+    }
+
+    try {
+      // Read current chord settings
+      const currentData = await this.chordCharacteristic.readValue();
+      const currentSettings = this.parseChordData(currentData);
+
+      // Update only the strum swing
+      currentSettings.strumSwing = Math.max(0, Math.min(100, Math.round(swing)));
+
+      // Write back to device
+      const data = this.encodeChordData(currentSettings);
+      await this.chordCharacteristic.writeValue(data);
+    } catch (error) {
+      console.error('Failed to update strum swing:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Update velocity spread in real-time
+   * @param spread Velocity spread percentage (0-100)
+   */
+  async updateVelocitySpread(spread: number): Promise<void> {
+    if (!this.chordCharacteristic) {
+      throw new Error('Chord characteristic not available');
+    }
+
+    try {
+      // Read current chord settings
+      const currentData = await this.chordCharacteristic.readValue();
+      const currentSettings = this.parseChordData(currentData);
+
+      // Update only the velocity spread
+      currentSettings.velocitySpread = Math.max(0, Math.min(100, Math.round(spread)));
+
+      // Write back to device
+      const data = this.encodeChordData(currentSettings);
+      await this.chordCharacteristic.writeValue(data);
+    } catch (error) {
+      console.error('Failed to update velocity spread:', error);
+      throw error;
+    }
   }
 
   /**

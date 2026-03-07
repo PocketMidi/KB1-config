@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue';
+import { Vue3Lottie } from 'vue3-lottie';
 import { bleClient } from '../ble/bleClient';
 import { SliderPresetStore, type SliderPreset } from '../state/sliderPresets';
 
@@ -83,13 +84,9 @@ const isPortrait = ref(false);
 const showExitButton = ref(false); // Control X button visibility
 const showRotateBackPrompt = ref(false); // Show "rotate back" prompt on exit
 
-// Animation frame state
-const toLandFrame = ref(0);
-const toPortFrame = ref(0);
-let toLandInterval: number | null = null;
-let toPortInterval: number | null = null;
-const TOTAL_FRAMES = 73; // 00000 to 00072
-const FRAME_RATE = 24; // 24fps
+// Lottie animation data
+const toLandAnimationData = ref<any>(null);
+const toPortAnimationData = ref<any>(null);
 
 // Touch tracking for slider dragging
 const activeTouchSlider = ref<number | null>(null);
@@ -312,6 +309,45 @@ function getSliderColor(slider: SliderConfig, _sliderIndex: number): string {
 
 // === END UTILITY FUNCTIONS ===
 
+// Load animation data and initialize sliders on mount
+onMounted(() => {
+  initializeSliders();
+  
+  // Load Lottie animation data
+  loadAnimationData();
+  
+  // Add global listeners for color swatch dragging
+  document.addEventListener('mousemove', handleColorSwatchMove);
+  document.addEventListener('mouseup', handleColorSwatchEnd);
+  document.addEventListener('touchmove', handleColorSwatchMove);
+  document.addEventListener('touchend', handleColorSwatchEnd);
+  
+  // Listen for fullscreen changes (handle ESC key, etc.)
+  document.addEventListener('fullscreenchange', handleFullscreenChange);
+});
+
+onUnmounted(() => {
+  // Remove global listeners
+  document.removeEventListener('mousemove', handleColorSwatchMove);
+  document.removeEventListener('mouseup', handleColorSwatchEnd);
+  document.removeEventListener('touchmove', handleColorSwatchMove);
+  document.removeEventListener('touchend', handleColorSwatchEnd);
+  document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  
+  // Clear tap timeout
+  if (tapTimeout) {
+    clearTimeout(tapTimeout);
+  }
+});
+
+// Handle fullscreen exit via ESC or other means
+function handleFullscreenChange() {
+  if (!document.fullscreenElement && viewMode.value === 'live' && isMobile.value) {
+    // User exited fullscreen, so exit live mode
+    exitLiveMode();
+  }
+}
+
 // Handle touch drag on slider track (for mobile)
 function handleTrackTouchStart(event: TouchEvent, index: number) {
   if (!isMobile.value || viewMode.value !== 'live') return;
@@ -501,44 +537,6 @@ function handleLiveContainerTap(event: MouseEvent | TouchEvent) {
   tapTimeout = window.setTimeout(() => {
     tapCount.value = 0;
   }, 500);
-}
-
-onMounted(() => {
-  initializeSliders();
-  
-  // Preload rotation animation frames
-  preloadRotationFrames();
-  
-  // Add global listeners for color swatch dragging
-  document.addEventListener('mousemove', handleColorSwatchMove);
-  document.addEventListener('mouseup', handleColorSwatchEnd);
-  document.addEventListener('touchmove', handleColorSwatchMove);
-  document.addEventListener('touchend', handleColorSwatchEnd);
-  
-  // Listen for fullscreen changes (handle ESC key, etc.)
-  document.addEventListener('fullscreenchange', handleFullscreenChange);
-});
-
-onUnmounted(() => {
-  // Remove global listeners
-  document.removeEventListener('mousemove', handleColorSwatchMove);
-  document.removeEventListener('mouseup', handleColorSwatchEnd);
-  document.removeEventListener('touchmove', handleColorSwatchMove);
-  document.removeEventListener('touchend', handleColorSwatchEnd);
-  document.removeEventListener('fullscreenchange', handleFullscreenChange);
-  
-  // Clear tap timeout
-  if (tapTimeout) {
-    clearTimeout(tapTimeout);
-  }
-});
-
-// Handle fullscreen exit via ESC or other means
-function handleFullscreenChange() {
-  if (!document.fullscreenElement && viewMode.value === 'live' && isMobile.value) {
-    // User exited fullscreen, so exit live mode
-    exitLiveMode();
-  }
 }
 
 // Map slider value to CC value (0-127)
@@ -1057,64 +1055,44 @@ async function checkOrientation() {
   }
 }
 
+// Load Lottie animation data
+async function loadAnimationData() {
+  try {
+    const [toLandResponse, toPortResponse] = await Promise.all([
+      fetch(`${import.meta.env.BASE_URL}to_land.json`),
+      fetch(`${import.meta.env.BASE_URL}to_port.json`)
+    ]);
+    
+    if (toLandResponse.ok) {
+      toLandAnimationData.value = await toLandResponse.json();
+    } else {
+      console.error('Failed to load to_land.json:', toLandResponse.status);
+    }
+    
+    if (toPortResponse.ok) {
+      toPortAnimationData.value = await toPortResponse.json();
+    } else {
+      console.error('Failed to load to_port.json:', toPortResponse.status);
+    }
+  } catch (error) {
+    console.error('Error loading Lottie animations:', error);
+  }
+}
+
 function startToLandAnimation() {
-  if (toLandInterval) return;
-  toLandFrame.value = 0;
-  toLandInterval = window.setInterval(() => {
-    toLandFrame.value = (toLandFrame.value + 1) % TOTAL_FRAMES;
-  }, 1000 / FRAME_RATE);
+  // Lottie animations auto-play and loop
 }
 
 function stopToLandAnimation() {
-  if (toLandInterval) {
-    clearInterval(toLandInterval);
-    toLandInterval = null;
-  }
+  // Lottie animations auto-play and loop
 }
 
 function startToPortAnimation() {
-  if (toPortInterval) return;
-  toPortFrame.value = 0;
-  toPortInterval = window.setInterval(() => {
-    toPortFrame.value = (toPortFrame.value + 1) % TOTAL_FRAMES;
-  }, 1000 / FRAME_RATE);
+  // Lottie animations auto-play and loop
 }
 
 function stopToPortAnimation() {
-  if (toPortInterval) {
-    clearInterval(toPortInterval);
-    toPortInterval = null;
-  }
-}
-
-// Computed properties for reactive image paths
-const toLandImageSrc = computed(() => {
-  const frameStr = toLandFrame.value.toString().padStart(5, '0');
-  return `${import.meta.env.BASE_URL}to_land/to_land_${frameStr}.png`;
-});
-
-const toPortImageSrc = computed(() => {
-  const frameStr = toPortFrame.value.toString().padStart(5, '0');
-  return `${import.meta.env.BASE_URL}to_port/to_port_${frameStr}.png`;
-});
-
-// Preload animation frames for smooth playback
-function preloadRotationFrames() {
-  const baseUrl = import.meta.env.BASE_URL;
-  
-  // Preload to_land frames
-  for (let i = 0; i < TOTAL_FRAMES; i++) {
-    const img = new Image();
-    const frameNum = i.toString().padStart(5, '0');
-    img.src = `${baseUrl}to_land/to_land_${frameNum}.png`;
-  }
-  
-  // Preload to_port frames
-  for (let i = 0; i < TOTAL_FRAMES; i++) {
-    const img = new Image();
-    const frameNum = i.toString().padStart(5, '0');
-    img.src = `${baseUrl}to_port/to_port_${frameNum}.png`;
-  }
+  // Lottie animations auto-play and loop
 }
 
 async function enterLiveMode() {
@@ -1431,7 +1409,15 @@ defineExpose({
       <!-- Mobile Portrait Prompt (iOS & Android) -->
       <div v-if="isMobile && isPortrait" class="portrait-prompt" @click="!isIOS && (isPortrait = false)">
         <div class="prompt-content">
-          <img :src="toLandImageSrc" alt="Rotate to landscape" class="rotate-icon-img" />
+          <Vue3Lottie
+            v-if="toLandAnimationData"
+            :animationData="toLandAnimationData"
+            :height="300"
+            :width="300"
+            :loop="true"
+            :autoPlay="true"
+            class="rotate-icon-img"
+          />
           <div class="prompt-subtext" style="margin-top: 1rem; font-size: 0.7rem; opacity: 0.6;">
             {{ isIOS ? 'Swipe left or right to exit' : 'Rotate device or tap anywhere to skip' }}
           </div>
@@ -1441,7 +1427,15 @@ defineExpose({
       <!-- Rotate Back Prompt (on exit) -->
       <div v-if="showRotateBackPrompt" class="portrait-prompt">
         <div class="prompt-content">
-          <img :src="toPortImageSrc" alt="Rotate to portrait" class="rotate-icon-img" />
+          <Vue3Lottie
+            v-if="toPortAnimationData"
+            :animationData="toPortAnimationData"
+            :height="300"
+            :width="300"
+            :loop="true"
+            :autoPlay="true"
+            class="rotate-icon-img"
+          />
         </div>
       </div>
       

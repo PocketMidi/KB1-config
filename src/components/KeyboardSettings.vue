@@ -502,14 +502,34 @@ const handleChordToggleClick = () => {
 }
 
 // ===== SMART SLIDER =====
+// Strum Speed conversion: UI shows 5-100% (faster), firmware uses 4-120ms (inverted)
+// 5% → 120ms (slowest), 100% → 4ms (fastest)
+function strumSpeedToPercent(ms: number): number {
+  // Map 4-120ms to 100-5%
+  return Math.round(5 + ((120 - ms) / 116) * 95)
+}
+
+function percentToStrumSpeed(percent: number): number {
+  // Map 5-100% to 120-4ms
+  return Math.round(120 - ((percent - 5) / 95) * 116)
+}
+
 const smartSliderValue = computed({
-  get: () => isChordStyle.value ? model.value.chord.velocitySpread : model.value.chord.strumSpeed,
+  get: () => {
+    if (isChordStyle.value) {
+      return model.value.chord.velocitySpread
+    } else {
+      // Convert ms to percentage for display
+      return strumSpeedToPercent(model.value.chord.strumSpeed)
+    }
+  },
   set: (v: number) => {
     const updated = { ...model.value }
     if (isChordStyle.value) {
       updated.chord = { ...updated.chord, velocitySpread: v }
     } else {
-      updated.chord = { ...updated.chord, strumSpeed: v }
+      // Convert percentage back to ms for storage
+      updated.chord = { ...updated.chord, strumSpeed: percentToStrumSpeed(v) }
     }
     emit('update:modelValue', updated)
   }
@@ -523,7 +543,7 @@ const smartSliderLabel = computed(() => {
 })
 
 const smartSliderUnit = computed(() => {
-  return isChordStyle.value ? '%' : 'ms'
+  return ''
 })
 
 const sliderPercentage = computed(() => {
@@ -546,12 +566,12 @@ const visualSpread = computed(() => {
 
 // Dynamic dot spacing for strum mode (faster = tighter, slower = wider)
 const dotSpacing = computed(() => {
-  // Speed range: 5ms (fast/tight) to 100ms (slow/wide)
-  // sliderPercentage: 0% at 5ms, 100% at 100ms
-  // Map to spacing: minimum 1.5% (always visible) to 7% (spread out)
-  const minSpacing = 1.5
-  const maxSpacing = 7
-  return minSpacing + (sliderPercentage.value / 100) * (maxSpacing - minSpacing)
+  // Speed range: 5% (slow/wide) to 100% (fast/tight)
+  // sliderPercentage: 0% at 5%, 100% at 100%
+  // Map to spacing: maximum 7% (spread out at slow) to minimum 1.5% (tight at fast)
+  const minSpacing = 1.5  // tight spacing at high speed (100%)
+  const maxSpacing = 7    // wide spacing at low speed (5%)
+  return maxSpacing - (sliderPercentage.value / 100) * (maxSpacing - minSpacing)
 })
 
 // Create banded velocity visualization (center-out)
@@ -639,9 +659,10 @@ const updateValueFromPosition = (clientX: number, rect: DOMRect) => {
     const newValue = Math.round(smartSliderMin.value + (sliderPerc / 100) * range)
     smartSliderValue.value = Math.max(smartSliderMin.value, Math.min(smartSliderMax.value, newValue))
   } else {
-    // Strum mode: linear mapping
+    // Strum mode: inverted mapping (left = fast/tight, right = slow/wide)
+    // This matches the visual where dots bunch on the left when tight
     const range = smartSliderMax.value - smartSliderMin.value
-    const newValue = Math.round(smartSliderMin.value + (percentage / 100) * range)
+    const newValue = Math.round(smartSliderMax.value - (percentage / 100) * range)
     smartSliderValue.value = Math.max(smartSliderMin.value, Math.min(smartSliderMax.value, newValue))
   }
 }
@@ -1284,12 +1305,6 @@ function handleKeyClick(midiNote: number) {
   padding: 0.25rem 0.75rem;
   background: rgba(234, 234, 234, 0.03);
   border-radius: 4px;
-  transition: background 0.3s ease;
-}
-
-/* Active state - subtle orange tint */
-.advanced-strum-section.active {
-  background: rgba(249, 172, 32, 0.08);
 }
 
 .advanced-strum-header {
@@ -1343,6 +1358,7 @@ function handleKeyClick(midiNote: number) {
   font-size: 1.25rem;
   font-weight: 300;
   line-height: 1;
+  color: var(--accent-highlight);
 }
 
 .advanced-strum-content {

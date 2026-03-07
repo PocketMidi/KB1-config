@@ -6,6 +6,7 @@
         <button 
           class="mode-btn"
           :class="{ active: model.functionMode === 2 }"
+          :disabled="isPatternSelector"
           @click="selectMode(2)"
           title="Continuous"
         >
@@ -14,6 +15,7 @@
         <button 
           class="mode-btn"
           :class="{ active: model.functionMode === 1 }"
+          :disabled="isPatternSelector"
           @click="selectMode(1)"
           title="Toggle"
         >
@@ -22,6 +24,7 @@
         <button 
           class="mode-btn"
           :class="{ active: model.functionMode === 0 }"
+          :disabled="isPatternSelector"
           @click="selectMode(0)"
           title="Gate"
         >
@@ -32,7 +35,17 @@
 
     <!-- Mode Visualization -->
     <div class="mode-visualization">
-      <img :src="modeImage" alt="Touch Mode" class="mode-graph" />
+      <PatternSelector 
+        v-if="isPatternSelector"
+        :min="userMin"
+        :max="userMax"
+      />
+      <img 
+        v-else
+        :src="modeImage" 
+        alt="Touch Mode" 
+        class="mode-graph" 
+      />
     </div>
 
     <!-- Level Meter -->
@@ -41,6 +54,8 @@
       :max="userMax" 
       :is-bipolar="false"
       mode="range"
+      :min-allowed="minRange"
+      :max-allowed="maxRange"
       @update:min="userMin = $event"
       @update:max="userMax = $event"
     />
@@ -76,8 +91,8 @@
         <label for="touch-min">MIN</label>
         <ValueControl
           v-model="userMin"
-          :min="0"
-          :max="100"
+          :min="minRange"
+          :max="maxRange"
           :step="1"
           :small-step="5"
           :large-step="10"
@@ -89,8 +104,8 @@
         <label for="touch-max">MAX</label>
         <ValueControl
           v-model="userMax"
-          :min="0"
-          :max="100"
+          :min="minRange"
+          :max="maxRange"
           :step="1"
           :small-step="5"
           :large-step="10"
@@ -136,6 +151,7 @@ import { type CCEntry } from '../data/ccMap'
 import ValueControl from './ValueControl.vue'
 import LevelMeter from './LevelMeter.vue'
 import OptionWheelPicker from './OptionWheelPicker.vue'
+import PatternSelector from './PatternSelector.vue'
 
 type TouchModel = {
   ccNumber: number
@@ -191,6 +207,9 @@ const modeImage = computed(() => {
   return `${BASE_PATH}touch/gate_animated.svg`
 })
 
+// Check if Pattern Selector is active
+const isPatternSelector = computed(() => model.value.ccNumber === 201)
+
 // Initialize selectedCategory from current ccNumber's category (fallback to first available category)
 const initialCategory = computed(() => {
   const cat = props.ccMapByNumber.get(model.value.ccNumber)?.category
@@ -199,7 +218,12 @@ const initialCategory = computed(() => {
 const selectedCategory = ref<string>(initialCategory.value)
 
 const categoryOptions = computed(() => {
-  return props.categories.map(cat => ({ label: cat, value: cat }))
+  const cats = props.categories.map(cat => ({ label: cat, value: cat }))
+  // Add divider after KB1 Expression (index 0)
+  if (cats.length > 1 && cats[0]?.label === 'KB1 Expression') {
+    cats.splice(1, 0, { label: '───', value: '___divider___', isDivider: true })
+  }
+  return cats
 })
 
 // Wheel picker state
@@ -211,7 +235,7 @@ const parameterTriggerRef = ref<HTMLElement | null>(null)
 // Get selected labels
 const selectedParameterLabel = computed(() => {
   const option = filteredOptions.value.find(opt => opt.value === model.value.ccNumber)
-  return option?.label || 'None'
+  return option?.label || '—'
 })
 
 // Flag to prevent infinite watch loops
@@ -230,17 +254,37 @@ watch(() => props.ccMapByNumber.size, () => {
 
 // Filter options by selected category
 const filteredOptions = computed(() => {
-  const list = props.ccOptions.filter(opt => opt.group === selectedCategory.value)
-  const none = props.ccOptions.find(o => o.value === -1)
-  return none ? [none, ...list] : list
+  return props.ccOptions.filter(opt => opt.group === selectedCategory.value)
 })
 
-// Watch ccNumber to keep Category in sync
+// Watch ccNumber to keep Category in sync and auto-clamp KB1 Expression ranges
 watch(() => model.value.ccNumber, (cc) => {
   if (isUpdatingInternally.value) return
   isUpdatingInternally.value = true
   const cat = props.ccMapByNumber.get(cc)?.category
   if (cat) selectedCategory.value = cat
+  
+  // KB1 Expression parameters: Clamp to valid ranges
+  if (cc === 200) {
+    // Strum Speed: 10-100% displayed (maps to 120ms-4ms)
+    model.value.minCCValue = 127  // Maps to 10% (slowest)
+    model.value.maxCCValue = 0    // Maps to 100% (fastest)
+  } else if (cc === 201) {
+    // Pattern Selector: 1-6 (firmware maps full MIDI range to discrete patterns)
+    model.value.minCCValue = 0     // 0%
+    model.value.maxCCValue = 127   // 100%
+  } else if (cc === 202) {
+    // Swing: 0-100%
+    model.value.minCCValue = 0   // 0%
+    model.value.maxCCValue = 127 // 100%
+  } else if (cc === 203) {
+    // Velocity Spread: 8-100%
+    const min = Math.round((8 / 100) * 127)   // 8 -> ~10 MIDI
+    const max = Math.round((100 / 100) * 127) // 100 -> 127 MIDI
+    model.value.minCCValue = min
+    model.value.maxCCValue = max
+  }
+  
   isUpdatingInternally.value = false
 })
 
@@ -248,12 +292,6 @@ watch(() => model.value.ccNumber, (cc) => {
 watch(selectedCategory, (cat) => {
   if (isUpdatingInternally.value) return
   isUpdatingInternally.value = true
-  
-  // If "None" is selected, keep it
-  if (model.value.ccNumber === -1) {
-    isUpdatingInternally.value = false
-    return
-  }
   
   const ok = props.ccMapByNumber.get(model.value.ccNumber)?.category === cat
   if (!ok) {
@@ -272,19 +310,86 @@ function midiToUnipolar(midiValue: number): number {
   return Math.round((midiValue / 127) * 100)
 }
 
-// User-facing Min value (0-100, always unipolar for Touch)
+// Special conversion for Pattern Selector (1-6)
+function patternToMidi(pattern: number): number {
+  // Map pattern 1-6 to MIDI 0-127
+  return Math.round(((pattern - 1) / 5) * 127)
+}
+
+function midiToPattern(midiValue: number): number {
+  // Map MIDI 0-127 to pattern 1-6
+  return Math.round((midiValue / 127) * 5) + 1
+}
+
+// Special conversion for Strum Speed (CC 200): inverted so higher % = faster
+// User sees 10-100% range (better UX), maps to 4-120ms: 100%→4ms, 10%→120ms
+function speedPercentToMidi(percent: number): number {
+  // Map 10-100% to MIDI 127-0 (inverted)
+  return Math.round(127 * (100 - percent) / 90)
+}
+
+function midiToSpeedPercent(midiValue: number): number {
+  // Map MIDI 127-0 to 10-100%
+  return Math.round(10 + ((127 - midiValue) / 127) * 90)
+}
+
+// Min/max range (always unipolar for Touch)
+// KB1 Expression parameters have hardware-enforced minimum values
+const minRange = computed(() => {
+  const cc = model.value.ccNumber
+  if (cc === 200) return 10  // Strum Speed: 10-100% (perceived range, maps to 4-120ms)
+  if (cc === 201) return 1   // Pattern Selector: 1-6
+  if (cc === 203) return 8   // Velocity Spread: 8-100%
+  return 0  // Default minimum
+})
+
+const maxRange = computed(() => {
+  const cc = model.value.ccNumber
+  if (cc === 201) return 6   // Pattern Selector: 1-6 (discrete)
+  return 100  // Default maximum
+})
+
+// User-facing Min value (0-100 for normal params, 1-7 for pattern selector, always unipolar for Touch)
 const userMin = computed({
-  get: () => midiToUnipolar(model.value.minCCValue),
+  get: () => {
+    if (model.value.ccNumber === 200) {
+      return midiToSpeedPercent(model.value.minCCValue)
+    }
+    if (model.value.ccNumber === 201) {
+      return midiToPattern(model.value.minCCValue)
+    }
+    return midiToUnipolar(model.value.minCCValue)
+  },
   set: (userValue: number) => {
-    model.value.minCCValue = unipolarToMidi(userValue)
+    if (model.value.ccNumber === 200) {
+      model.value.minCCValue = speedPercentToMidi(userValue)
+    } else if (model.value.ccNumber === 201) {
+      model.value.minCCValue = patternToMidi(userValue)
+    } else {
+      model.value.minCCValue = unipolarToMidi(userValue)
+    }
   }
 })
 
-// User-facing Max value (0-100, always unipolar for Touch)
+// User-facing Max value (0-100 for normal params, 1-7 for pattern selector, always unipolar for Touch)
 const userMax = computed({
-  get: () => midiToUnipolar(model.value.maxCCValue),
+  get: () => {
+    if (model.value.ccNumber === 200) {
+      return midiToSpeedPercent(model.value.maxCCValue)
+    }
+    if (model.value.ccNumber === 201) {
+      return midiToPattern(model.value.maxCCValue)
+    }
+    return midiToUnipolar(model.value.maxCCValue)
+  },
   set: (userValue: number) => {
-    model.value.maxCCValue = unipolarToMidi(userValue)
+    if (model.value.ccNumber === 200) {
+      model.value.maxCCValue = speedPercentToMidi(userValue)
+    } else if (model.value.ccNumber === 201) {
+      model.value.maxCCValue = patternToMidi(userValue)
+    } else {
+      model.value.maxCCValue = unipolarToMidi(userValue)
+    }
   }
 })
 

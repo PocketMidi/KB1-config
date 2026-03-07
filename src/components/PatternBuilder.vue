@@ -323,12 +323,6 @@ const baseIntervals = ref<number[]>([0, 4, 7, 12])
 // Current template ID (internal state, not exposed to user)
 const selectedTemplateId = ref(1)
 
-// Get mood description for current template
-const selectedTemplateMood = computed(() => {
-  const template = templates.value.find(t => t.id === selectedTemplateId.value)
-  return template?.mood || ''
-})
-
 // Watch for template selection changes
 watch(selectedTemplateId, (newId) => {
   const template = templates.value.find(t => t.id === newId)
@@ -550,8 +544,8 @@ function getTemplateForChordType(chordType: number): number {
 
 .build-modes-row {
   display: flex;
-  gap: 0.75rem;
-  padding: 0.25rem 1.5rem;
+  gap: 0.5rem;
+  padding: 0.25rem 1rem;
   justify-content: space-evenly;
   align-items: center;
 }
@@ -562,12 +556,16 @@ function getTemplateForChordType(chordType: number): number {
   justify-content: center;
   width: 48px;
   height: 48px;
+  min-width: 32px;
+  min-height: 32px;
+  max-width: 48px;
+  max-height: 48px;
   padding: 0;
   background: transparent;
   border: none;
   cursor: pointer;
   transition: all 0.2s ease;
-  flex-shrink: 0;
+  flex-shrink: 1;
   opacity: 0.3;
 }
 

@@ -194,6 +194,45 @@ async function parsePolyendCSV(csvText: string): Promise<void> {
             }
           }
 
+          // Add KB1 Expression category for direct device control (not MIDI CC)
+          const kb1ExpressionGroup: CCGroup = {
+            category: 'KB1 Expression',
+            entries: [
+              {
+                ccNumber: 203,
+                parameter: 'Velocity Spread',
+                category: 'KB1 Expression',
+                range: { min: 8, max: 100, text: '8 to 100' },
+              },
+              {
+                ccNumber: 200,
+                parameter: 'Strum Speed',
+                category: 'KB1 Expression',
+                range: { min: 5, max: 100, text: '5 to 100' },
+              },
+              {
+                ccNumber: 202,
+                parameter: 'Swing',
+                category: 'KB1 Expression',
+                range: { min: 0, max: 100, text: '0 to 100' },
+              },
+              {
+                ccNumber: 201,
+                parameter: 'Pattern Selector',
+                category: 'KB1 Expression',
+                range: { min: 1, max: 6, text: '1 to 6' },
+              },
+            ],
+          };
+
+          // Add KB1 Expression entries to ccMap
+          for (const entry of kb1ExpressionGroup.entries) {
+            newCCMap.set(entry.ccNumber, entry);
+          }
+
+          // Insert KB1 Expression as first group (before Polyend categories)
+          newGroups.unshift(kb1ExpressionGroup);
+
           state.ccMap = newCCMap;
           state.groups = newGroups;
           state.loaded = true;
@@ -293,9 +332,6 @@ const FACTORY_DEFAULT_CATEGORY_OVERRIDES: Record<number, string> = {
  */
 export function getSortedCCOptions(): Array<{ value: number; label: string; group?: string }> {
   const options: Array<{ value: number; label: string; group?: string }> = [];
-  
-  // Add "None" option first
-  options.push({ value: -1, label: 'None' });
   
   // Add Velocity (CC 128) first if it exists
   const velocityEntry = state.ccMap.get(128);

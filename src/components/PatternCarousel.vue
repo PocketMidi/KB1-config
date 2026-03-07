@@ -38,7 +38,7 @@
             <circle
               v-for="(interval, idx) in (pattern.intervals || [])"
               :key="idx"
-              :cx="10 + (idx / (pattern.intervals.length - 1)) * 100"
+              :cx="10 + (idx / ((pattern.intervals?.length || 1) - 1)) * 100"
               :cy="50 - (interval * 2)"
               :r="interval === 0 ? 4 : 3"
               :class="{ 
@@ -135,13 +135,14 @@ function updatePosition() {
 }
 
 function handleTouchStart(e: TouchEvent) {
+  if (!e.touches[0]) return
   isDragging.value = true
   startX.value = e.touches[0].clientX
   currentX.value = translateX.value
 }
 
 function handleTouchMove(e: TouchEvent) {
-  if (!isDragging.value) return
+  if (!isDragging.value || !e.touches[0]) return
   const delta = e.touches[0].clientX - startX.value
   translateX.value = currentX.value + delta
 }
@@ -161,7 +162,8 @@ function handleTouchEnd() {
   }
   
   updatePosition()
-  selectedPattern.value = props.patterns[currentIndex.value].id
+  const pattern = props.patterns[currentIndex.value]
+  if (pattern) selectedPattern.value = pattern.id
 }
 
 function handleMouseDown(e: MouseEvent) {
@@ -192,7 +194,8 @@ function selectPattern(id: number) {
 function jumpToPattern(index: number) {
   currentIndex.value = index
   updatePosition()
-  selectedPattern.value = props.patterns[index].id
+  const pattern = props.patterns[index]
+  if (pattern) selectedPattern.value = pattern.id
 }
 
 function getPathPoints(intervals: number[]): string {

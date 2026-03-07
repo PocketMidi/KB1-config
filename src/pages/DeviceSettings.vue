@@ -176,7 +176,6 @@ const ccOptions = computed(() => {
   } else {
     // Fallback: basic CC 0-127 labels plus CC 128 for Velocity
     return [
-      { value: -1, label: 'None' },
       { value: 128, label: 'Velocity (CC 128)' },
       ...Array.from({ length: 128 }, (_, i) => ({ value: i, label: `CC ${i}` }))
     ];

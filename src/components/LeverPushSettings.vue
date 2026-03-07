@@ -7,7 +7,7 @@
         class="toggle-btn" 
         @click="handleToggleClick"
         :title="toggleTooltip"
-        :disabled="isResetMode"
+        :disabled="isResetMode || isPatternSelector"
       >
         <span :class="{ active: isResetMode || isMomentary }">MOM</span>
         <span class="toggle-divider">|</span>
@@ -19,7 +19,7 @@
         <button 
           class="profile-btn"
           :class="{ active: isProfileActive('lin') }"
-          :disabled="isResetMode"
+          :disabled="isResetMode || isPatternSelector"
           @click="selectProfile('lin')"
           title="Linear"
         >
@@ -28,7 +28,7 @@
         <button 
           class="profile-btn"
           :class="{ active: isProfileActive('exp') }"
-          :disabled="isResetMode"
+          :disabled="isResetMode || isPatternSelector"
           @click="selectProfile('exp')"
           title="Exponential"
         >
@@ -37,7 +37,7 @@
         <button 
           class="profile-btn"
           :class="{ active: isProfileActive('log') }"
-          :disabled="isResetMode"
+          :disabled="isResetMode || isPatternSelector"
           @click="selectProfile('log')"
           title="Logarithmic"
         >
@@ -46,7 +46,7 @@
         <button 
           class="profile-btn"
           :class="{ active: isProfileActive('pd') }"
-          :disabled="isResetMode"
+          :disabled="isResetMode || isPatternSelector"
           @click="selectProfile('pd')"
           title="Peak & Decay"
         >
@@ -57,7 +57,18 @@
 
     <!-- Profile Visualization -->
     <div class="profile-visualization">
-      <img :src="profileImage" alt="Profile Graph" class="profile-graph" />
+      <PatternSelector 
+        v-if="isPatternSelector"
+        :min="userMin"
+        :max="userMax"
+        :current="currentPattern"
+      />
+      <img 
+        v-else
+        :src="profileImage" 
+        alt="Profile Graph" 
+        class="profile-graph" 
+      />
     </div>
 
     <!-- Level Meter -->
@@ -67,6 +78,9 @@
       :is-bipolar="false"
       :mode="isResetMode ? 'reset' : 'range'"
       :value="resetValue"
+      :min-allowed="minRange"
+      :max-allowed="maxRange"
+      :step-size="5"
       @update:min="userMin = $event"
       @update:max="userMax = $event"
       @update:value="resetValue = $event"
@@ -105,7 +119,7 @@
           v-model="userMin"
           :min="minRange"
           :max="maxRange"
-          :step="1"
+          :step="5"
           :small-step="5"
           :large-step="10"
           :disabled="isResetMode"
@@ -119,7 +133,7 @@
           v-model="userMax"
           :min="minRange"
           :max="maxRange"
-          :step="1"
+          :step="5"
           :small-step="5"
           :large-step="10"
           :disabled="isResetMode"
@@ -210,6 +224,7 @@ import { type CCEntry } from '../data/ccMap'
 import ValueControl from './ValueControl.vue'
 import LevelMeter from './LevelMeter.vue'
 import OptionWheelPicker from './OptionWheelPicker.vue'
+import PatternSelector from './PatternSelector.vue'
 
 const BASE_PATH = import.meta.env.BASE_URL || '/'
 
@@ -251,6 +266,7 @@ const model = computed({
 // Function mode constants
 const FUNCTION_MODE_INTERPOLATED = 0
 const FUNCTION_MODE_PEAK_DECAY = 1
+const FUNCTION_MODE_STATIC = 2
 const FUNCTION_MODE_RESET = 3
 
 // Initialize selectedCategory from current ccNumber's category (fallback to first available category)
@@ -266,9 +282,13 @@ const selectedCategory = ref<string>(initialCategory.value)
 const categoryPickerOpen = ref(false)
 const categoryTriggerRef = ref<HTMLElement | null>(null)
 
-// Convert categories to dropdown options, adding Reset at the end
+// Convert categories to dropdown options, adding divider and Reset at the end
 const categoryOptions = computed(() => {
   const cats = props.categories.map(cat => ({ label: cat, value: cat }))
+  // Add divider after KB1 Expression (index 0)
+  if (cats.length > 1 && cats[0]?.label === 'KB1 Expression') {
+    cats.splice(1, 0, { label: '───', value: '___divider___', isDivider: true })
+  }
   cats.push({ label: 'Reset', value: 'Reset' })
   return cats
 })
@@ -280,7 +300,7 @@ const parameterTriggerRef = ref<HTMLElement | null>(null)
 // Get selected parameter label
 const selectedParameterLabel = computed(() => {
   const option = filteredOptions.value.find(opt => opt.value === model.value.ccNumber)
-  return option?.label || 'None'
+  return option?.label || '—'
 })
 
 // Flag to prevent infinite watch loops
@@ -311,12 +331,10 @@ const filteredOptions = computed(() => {
     return props.ccOptions
   }
   
-  const list = props.ccOptions.filter(opt => opt.group === selectedCategory.value)
-  const none = props.ccOptions.find(o => o.value === -1)
-  return none ? [none, ...list] : list
+  return props.ccOptions.filter(opt => opt.group === selectedCategory.value)
 })
 
-// Watch ccNumber to keep Category in sync
+// Watch ccNumber to keep Category in sync and clamp KB1 Expression parameters
 watch(() => model.value.ccNumber, (cc) => {
   if (isUpdatingInternally.value) return
   // Don't override if we're in Reset mode
@@ -325,6 +343,31 @@ watch(() => model.value.ccNumber, (cc) => {
   isUpdatingInternally.value = true
   const cat = props.ccMapByNumber.get(cc)?.category
   if (cat && cat !== 'Reset') selectedCategory.value = cat
+  
+  // KB1 Expression parameters: Clamp to valid ranges
+  if (cc === 200) {
+    // Strum Speed: 10-100% displayed (maps to 120ms-4ms)
+    // Store MIDI values in ascending order even though UI presents them inverted
+    model.value.minCCValue = 0    // Maps to 100% (fastest) via speedPercentToMidi
+    model.value.maxCCValue = 127  // Maps to 10% (slowest) via speedPercentToMidi
+  } else if (cc === 201) {
+    // Pattern Selector: 1-6 (discrete values)
+    // Force STATIC mode to prevent ramping through all patterns
+    model.value.functionMode = FUNCTION_MODE_STATIC
+    model.value.minCCValue = 0     // Pattern 1
+    model.value.maxCCValue = 127   // Pattern 6
+  } else if (cc === 202) {
+    // Swing: 0-100%
+    model.value.minCCValue = 0   // 0%
+    model.value.maxCCValue = 127 // 100%
+  } else if (cc === 203) {
+    // Velocity Spread: 8-100%
+    const min = Math.round((8 / 100) * 127)   // 8 -> ~10 MIDI
+    const max = Math.round((100 / 100) * 127) // 100 -> 127 MIDI
+    model.value.minCCValue = min
+    model.value.maxCCValue = max
+  }
+  
   isUpdatingInternally.value = false
 })
 
@@ -344,12 +387,6 @@ watch(selectedCategory, (cat) => {
   // If we were in Reset mode, exit it when selecting another category
   if (model.value.functionMode === FUNCTION_MODE_RESET) {
     model.value.functionMode = FUNCTION_MODE_INTERPOLATED
-  }
-  
-  // If "None" is selected, keep it
-  if (model.value.ccNumber === -1) {
-    isUpdatingInternally.value = false
-    return
   }
   
   const ok = props.ccMapByNumber.get(model.value.ccNumber)?.category === cat
@@ -487,13 +524,28 @@ const profileImage = computed(() => {
 
 // Computed properties to determine which controls to show
 const isResetMode = computed(() => model.value.functionMode === FUNCTION_MODE_RESET)
+const isPatternSelector = computed(() => model.value.ccNumber === 201)
 const showTimingControls = computed(() => {
+  // Hide timing controls for Pattern Selector
+  if (isPatternSelector.value) return false
   return model.value.functionMode === FUNCTION_MODE_INTERPOLATED || model.value.functionMode === FUNCTION_MODE_PEAK_DECAY
 })
 
 // Min/max range (always unipolar for Press)
-const minRange = 0
-const maxRange = 100
+// KB1 Expression parameters have hardware-enforced minimum values
+const minRange = computed(() => {
+  const cc = model.value.ccNumber
+  if (cc === 200) return 10  // Strum Speed: 10-100% (perceived range, maps to 4-120ms)
+  if (cc === 201) return 1   // Pattern Selector: 1-6
+  if (cc === 203) return 8   // Velocity Spread: 8-100%
+  return 0  // Default minimum
+})
+
+const maxRange = computed(() => {
+  const cc = model.value.ccNumber
+  if (cc === 201) return 6   // Pattern Selector: 1-6 (discrete)
+  return 100  // Default maximum
+})
 
 // Conversion functions
 function unipolarToMidi(userValue: number): number {
@@ -504,33 +556,145 @@ function midiToUnipolar(midiValue: number): number {
   return Math.round((midiValue / 127) * 100)
 }
 
-// User-facing Min value (0-100, always unipolar for Press)
+// Special conversion for Pattern Selector (1-6)
+function patternToMidi(pattern: number): number {
+  // Map pattern 1-6 to MIDI 0-127
+  return Math.round(((pattern - 1) / 5) * 127)
+}
+
+function midiToPattern(midiValue: number): number {
+  // Map MIDI 0-127 to pattern 1-6
+  return Math.round((midiValue / 127) * 5) + 1
+}
+
+// Special conversion for Strum Speed (CC 200): higher % = faster (lower ms)
+// User sees 10-100% range (better UX), maps to 4-120ms: 100%→4ms, 10%→120ms
+// Store MIDI in normal ascending order: low MIDI = slow, high MIDI = fast
+function speedPercentToMidi(percent: number): number {
+  // Map 10-100% to MIDI 0-127 (normal order: higher MIDI = faster)
+  return Math.round(127 * (percent - 10) / 90)
+}
+
+function midiToSpeedPercent(midiValue: number): number {
+  // Map MIDI 0-127 to 10-100%
+  return Math.round(10 + (midiValue / 127) * 90)
+}
+
+// User-facing Min value (0-100 for normal params, 1-7 for pattern selector)
 const userMin = computed({
-  get: () => midiToUnipolar(model.value.minCCValue),
+  get: () => {
+    let value: number
+    if (model.value.ccNumber === 200) {
+      value = midiToSpeedPercent(model.value.minCCValue)
+    } else if (model.value.ccNumber === 201) {
+      value = midiToPattern(model.value.minCCValue)
+    } else {
+      value = midiToUnipolar(model.value.minCCValue)
+    }
+    // Snap to 5% increments (except for pattern selector)
+    if (model.value.ccNumber !== 201) {
+      value = Math.round(value / 5) * 5
+    }
+    return value
+  },
   set: (userValue: number) => {
-    model.value.minCCValue = unipolarToMidi(userValue)
+    // Snap to 5% increments before converting to MIDI
+    let snappedValue = userValue
+    if (model.value.ccNumber !== 201) {
+      snappedValue = Math.round(userValue / 5) * 5
+    }
+    
+    if (model.value.ccNumber === 200) {
+      model.value.minCCValue = speedPercentToMidi(snappedValue)
+    } else if (model.value.ccNumber === 201) {
+      model.value.minCCValue = patternToMidi(snappedValue)
+    } else {
+      model.value.minCCValue = unipolarToMidi(snappedValue)
+    }
   }
 })
 
-// User-facing Max value (0-100, always unipolar for Press)
+// User-facing Max value (0-100 for normal params, 1-7 for pattern selector)
 const userMax = computed({
-  get: () => midiToUnipolar(model.value.maxCCValue),
+  get: () => {
+    let value: number
+    if (model.value.ccNumber === 200) {
+      value = midiToSpeedPercent(model.value.maxCCValue)
+    } else if (model.value.ccNumber === 201) {
+      value = midiToPattern(model.value.maxCCValue)
+    } else {
+      value = midiToUnipolar(model.value.maxCCValue)
+    }
+    // Snap to 5% increments (except for pattern selector)
+    if (model.value.ccNumber !== 201) {
+      value = Math.round(value / 5) * 5
+    }
+    return value
+  },
   set: (userValue: number) => {
-    model.value.maxCCValue = unipolarToMidi(userValue)
+    // Snap to 5% increments before converting to MIDI
+    let snappedValue = userValue
+    if (model.value.ccNumber !== 201) {
+      snappedValue = Math.round(userValue / 5) * 5
+    }
+    
+    if (model.value.ccNumber === 200) {
+      model.value.maxCCValue = speedPercentToMidi(snappedValue)
+    } else if (model.value.ccNumber === 201) {
+      model.value.maxCCValue = patternToMidi(snappedValue)
+    } else {
+      model.value.maxCCValue = unipolarToMidi(snappedValue)
+    }
   }
 })
 
-// Reset Value (5-100 in increments of 5, default 70)
+// Reset Value (5-100 in increments of 5, default 70, or 1-7 for pattern selector)
 // In Reset mode, minCCValue stores the reset value, maxCCValue is set to the same
 const resetValue = computed({
   get: () => {
-    return midiToUnipolar(model.value.minCCValue)
+    let value: number
+    if (model.value.ccNumber === 200) {
+      value = midiToSpeedPercent(model.value.minCCValue)
+    } else if (model.value.ccNumber === 201) {
+      value = midiToPattern(model.value.minCCValue)
+    } else {
+      value = midiToUnipolar(model.value.minCCValue)
+    }
+    // Snap to 5% increments (except for pattern selector)
+    if (model.value.ccNumber !== 201) {
+      value = Math.round(value / 5) * 5
+    }
+    return value
   },
   set: (userValue: number) => {
-    const midiValue = unipolarToMidi(userValue)
-    model.value.minCCValue = midiValue
-    model.value.maxCCValue = midiValue
+    // Snap to 5% increments before converting to MIDI
+    let snappedValue = userValue
+    if (model.value.ccNumber !== 201) {
+      snappedValue = Math.round(userValue / 5) * 5
+    }
+    
+    if (model.value.ccNumber === 200) {
+      const midiValue = speedPercentToMidi(snappedValue)
+      model.value.minCCValue = midiValue
+      model.value.maxCCValue = midiValue
+    } else if (model.value.ccNumber === 201) {
+      const midiValue = patternToMidi(snappedValue)
+      model.value.minCCValue = midiValue
+      model.value.maxCCValue = midiValue
+    } else {
+      const midiValue = unipolarToMidi(snappedValue)
+      model.value.minCCValue = midiValue
+      model.value.maxCCValue = midiValue
+    }
   }
+})
+
+// Current pattern for cycling display (pattern selector in STATIC mode)
+// Shows which pattern is currently set (defaults to min on first load)
+const currentPattern = computed(() => {
+  if (model.value.ccNumber !== 201) return undefined
+  // For pattern selector, show min as the starting pattern
+  return userMin.value
 })
 
 // Computed property to gang both onset and offset times as "Duration"

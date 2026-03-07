@@ -419,7 +419,7 @@ const categoryPickerOpen = ref(false)
 const categoryTriggerRef = ref<HTMLElement | null>(null)
 
 // Convert categories to dropdown options with divider after KB1 Expression
-const categoryOptions = computed(() => {
+const categoryOptions = computed<Array<{ label: string; value: string; isDivider?: boolean }>>(() => {
   const options = props.categories.map(cat => ({ label: cat, value: cat }))
   // Add divider after KB1 Expression (index 0)
   if (options.length > 1 && options[0]?.label === 'KB1 Expression') {

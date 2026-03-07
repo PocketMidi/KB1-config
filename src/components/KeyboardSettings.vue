@@ -145,10 +145,87 @@
           </div>
         </div>
       </div>
+
+      <!-- Strum Builder (only for STRUM mode) -->
+      <div v-if="!isChordStyle" class="strum-builder-section">
+        <!-- Type/Root Note Selectors (for STRUM mode, shown before builder) -->
+        <div class="inputs">
+          <div class="group">
+            <label>ROOT NOTE</label>
+            <NotePickerControl
+              v-model.number="rootNoteValue"
+              :notes="rootNotes"
+              :disabled="isChromatic"
+            />
+          </div>
+          <div class="input-divider"></div>
+
+          <div class="group">
+            <label>CHORD TYPE</label>
+            <button 
+              ref="typeTriggerRef"
+              class="picker-trigger"
+              :class="{ 'picker-open': typePickerOpen }"
+              @click="typePickerOpen = true"
+            >
+              {{ selectedTypeLabel }}
+            </button>
+          </div>
+        </div>
+
+        <!-- Advanced Strum Collapsible Section (only in chord mode) -->
+        <div v-if="playMode === 'chord'" class="advanced-strum-section" :class="{ 'active': advancedStrumOpen }">
+          <button 
+            class="advanced-strum-header"
+            @click="advancedStrumOpen = !advancedStrumOpen"
+          >
+            <span class="mood-text">{{ currentMood }}</span>
+            <div class="right-controls">
+              <span class="adv-label">ADVANCED</span>
+              <span class="icon">{{ advancedStrumOpen ? '−' : '+' }}</span>
+            </div>
+          </button>
+
+          <div v-if="advancedStrumOpen" class="advanced-strum-content">
+            <PatternBuilder 
+              v-model="strumIntervals"
+              v-model:mode="buildMode"
+              :chord-type="typeValue"
+              :swing-value="swingValue"
+            />
+
+            <!-- Swing Control -->
+            <div class="swing-control">
+              <label>SWING</label>
+              <div class="duration-control-wrapper">
+                <ValueControl
+                  v-model="swingValue"
+                  :min="0"
+                  :max="100"
+                  :step="5"
+                  :small-step="5"
+                  :large-step="10"
+                />
+                <span class="unit-label">%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <!-- Type/Root Note Selectors -->
-    <div class="inputs">
+    <!-- Type/Root Note Selectors (for SCALE mode or CHORD style) -->
+    <div v-if="playMode === 'scale' || isChordStyle" class="inputs">
+      <div class="group">
+        <label>ROOT NOTE</label>
+        <NotePickerControl
+          v-model.number="rootNoteValue"
+          :notes="rootNotes"
+          :disabled="isChromatic"
+        />
+      </div>
+      <div class="input-divider"></div>
+
       <div class="group">
         <label>{{ leftLabel }}</label>
         <button 
@@ -160,15 +237,10 @@
           {{ selectedTypeLabel }}
         </button>
       </div>
-      <div class="input-divider"></div>
 
-      <div class="group">
-        <label>ROOT NOTE</label>
-        <NotePickerControl
-          v-model.number="rootNoteValue"
-          :notes="rootNotes"
-          :disabled="isChromatic"
-        />
+      <!-- Static Mood Description Bar (for all modes) -->
+      <div class="static-mood-bar" v-if="currentMood">
+        <span class="mood-text">{{ currentMood }}</span>
       </div>
     </div>
 
@@ -187,6 +259,7 @@ import { computed, ref, watch } from 'vue'
 import NotePickerControl from './NotePickerControl.vue'
 import OptionWheelPicker from './OptionWheelPicker.vue'
 import ValueControl from './ValueControl.vue'
+import PatternBuilder from './PatternBuilder.vue'
 
 type ScaleModel = {
   scaleType: number
@@ -199,6 +272,10 @@ type ChordModel = {
   velocitySpread: number
   strumEnabled: boolean
   strumSpeed: number
+  strumPattern: number  // Kept for backward compatibility
+  strumSwing: number
+  strumIntervals?: number[]  // Array of semitone intervals
+  buildMode?: string    // 'up', 'down', 'updown', 'custom', etc.
 }
 
 type KeyboardModel = {
@@ -242,6 +319,68 @@ function selectMode(mode: 'scale' | 'chord') {
 // Wheel picker state
 const typePickerOpen = ref(false)
 const typeTriggerRef = ref<HTMLElement | null>(null)
+
+// Advanced strum section state
+const advancedStrumOpen = ref(false)
+
+// Watch advanced strum panel state to control pattern mode
+watch(advancedStrumOpen, (isOpen) => {
+  // When closing the panel, reset strumPattern to 0 (use chord type intervals)
+  // When opening, set to 7 (use custom pattern)
+  const newPattern = isOpen ? 7 : 0
+  if (latestChord.value.strumPattern !== newPattern) {
+    latestChord.value.strumPattern = newPattern
+    const updated = { ...model.value }
+    updated.chord = { ...latestChord.value }
+    emit('update:modelValue', updated)
+  }
+})
+
+// Local state to track latest chord values (prevents stale prop spreading)
+const latestChord = ref({ ...props.modelValue.chord })
+
+// Sync latestChord when prop changes from parent
+watch(() => props.modelValue.chord, (newChord) => {
+  latestChord.value = { ...newChord }
+}, { deep: true })
+
+// Strum builder state
+const strumIntervals = computed({
+  get: () => {
+    const intervals = model.value.chord.strumIntervals || [0, 4, 7, 12]
+    return intervals
+  },
+  set: (v: number[]) => {
+    latestChord.value.strumIntervals = v
+    const updated = { ...model.value }
+    updated.chord = { ...latestChord.value }
+    emit('update:modelValue', updated)
+  }
+})
+
+const buildMode = computed({
+  get: () => {
+    const mode = model.value.chord.buildMode || 'up'
+    return mode
+  },
+  set: (v: string) => {
+    latestChord.value.buildMode = v
+    const updated = { ...model.value }
+    updated.chord = { ...latestChord.value }
+    emit('update:modelValue', updated)
+  }
+})
+
+// Swing control
+const swingValue = computed({
+  get: () => model.value.chord.strumSwing || 0,
+  set: (v: number) => {
+    latestChord.value.strumSwing = v
+    const updated = { ...model.value }
+    updated.chord = { ...latestChord.value }
+    emit('update:modelValue', updated)
+  }
+})
 
 // Dynamic labels and values based on mode
 const leftLabel = computed(() => {
@@ -310,6 +449,15 @@ watch(() => [model.value.scale.scaleType, model.value.mode] as const, ([newScale
 const selectedTypeLabel = computed(() => {
   const option = typeOptions.value.find(o => o.value === typeValue.value)
   return option?.label || 'Unknown'
+})
+
+// Current mood description (scale or chord)
+const currentMood = computed(() => {
+  if (playMode.value === 'scale') {
+    return scaleMoods[model.value.scale.scaleType] || ''
+  } else {
+    return chordMoods[model.value.chord.chordType] || ''
+  }
 })
 
 // ===== SCALE MODE TOGGLE =====
@@ -388,11 +536,12 @@ const sliderPercentage = computed(() => {
 const visualSpread = computed(() => {
   if (!isChordStyle.value) return sliderPercentage.value
   
-  // Remap slider percentage (0-100) to visual spread (15-100)
-  // This ensures a minimum 15% visual gap even at 8% slider value
-  const minVisual = 15
-  const maxVisual = 100
-  return minVisual + (sliderPercentage.value / 100) * (maxVisual - minVisual)
+  // REVERSED: Remap slider percentage (0-100) to visual spread (82-8)
+  // Lower velocitySpread values (like 8) = wider visual gap (~82%)
+  // Higher velocitySpread values (like 100) = narrower visual gap (~8%)
+  const minVisual = 8   // Minimum 8% visual spread at 100% velocity
+  const maxVisual = 82  // Maximum 82% visual spread at 8% velocity
+  return maxVisual - (sliderPercentage.value / 100) * (maxVisual - minVisual)
 })
 
 // Dynamic dot spacing for strum mode (faster = tighter, slower = wider)
@@ -479,10 +628,11 @@ const updateValueFromPosition = (clientX: number, rect: DOMRect) => {
     const distanceFromCenter = Math.abs(percentage - 50)
     const visualSpreadValue = distanceFromCenter * 2
     
-    // Reverse map visual spread (15-100) to slider percentage (0-100)
-    const minVisual = 15
-    const maxVisual = 100
-    const sliderPerc = Math.max(0, Math.min(100, ((visualSpreadValue - minVisual) / (maxVisual - minVisual)) * 100))
+    // REVERSED mapping: visual spread (82-8) to slider percentage (0-100)
+    // Wider visual = lower slider value, narrower visual = higher slider value
+    const minVisual = 8
+    const maxVisual = 82
+    const sliderPerc = Math.max(0, Math.min(100, 100 - ((visualSpreadValue - minVisual) / (maxVisual - minVisual)) * 100))
     
     // Convert slider percentage to actual slider value
     const range = smartSliderMax.value - smartSliderMin.value
@@ -580,6 +730,55 @@ const chordIntervals: Record<number, number[]> = {
   7: [0, 4, 7, 11], // Major7
   8: [0, 3, 7, 10], // Minor7
   9: [0, 4, 7, 10], // Dom7
+  10: [0, 4, 7, 14], // Major add9
+  11: [0, 3, 7, 14], // Minor add9
+  12: [0, 4, 7, 9],  // Major 6th
+  13: [0, 3, 7, 9],  // Minor 6th
+  14: [0, 4, 7, 11, 14], // Major 9th
+}
+
+// Scale mood descriptions - production-focused
+const scaleMoods: Record<number, string> = {
+  0: 'all notes • no filtering • full range',
+  1: 'bright • pop hooks • uplifting',
+  2: 'sad • emotional • introspective',
+  3: 'dark drama • cinematic • tension',
+  4: 'jazz smooth • sophisticated • lush',
+  5: 'simple melodies • catchy • universal',
+  6: 'blues riffs • minor grooves • soulful',
+  7: 'classic blues • gritty • expressive',
+  8: 'modal jazz • funky • sophisticated',
+  9: 'Spanish vibes • flamenco • exotic',
+  10: 'dreamy • floating • major bright',
+  11: 'funk grooves • classic rock • bold',
+  12: 'dark jazz • unstable • dissonant',
+  13: 'middle eastern • powerful • exotic',
+  14: 'ambient pads • spacey • floating',
+  15: 'glitchy • jazz tension • symmetrical',
+  16: 'bluesy major • swing • vintage',
+  17: 'Japanese • meditative • pentatonic',
+  18: 'Japanese • ethereal • minimal',
+  19: 'Indian classical • dramatic • intense',
+  20: 'altered jazz • super dark • dissonant'
+}
+
+// Chord mood descriptions - production-focused
+const chordMoods: Record<number, string> = {
+  0: 'bright • clean pop • uplifting vibes',
+  1: 'dark • emotional • trap feels',
+  2: 'tension • horror vibes • glitchy',
+  3: 'weird • glitchy • experimental',
+  4: 'airy • modern pop • bright shimmer',
+  5: 'build-up • tension • anticipation',
+  6: '808 bass • heavy • EDM drop',
+  7: 'neo-soul • smooth jazz • lush pads',
+  8: 'R&B grooves • chill beats • moody',
+  9: 'bluesy • tension • resolving',
+  10: 'shimmer • modern pop • bright color',
+  11: 'emotional depth • trap soul • moody',
+  12: 'lo-fi gold • retro • nostalgia',
+  13: 'boom-bap • vintage • melancholic',
+  14: 'lush pads • neo-soul • rich texture'
 }
 
 // Keyboard layout - starting from B (MIDI 59) for ~2 octaves
@@ -1069,6 +1268,116 @@ function handleKeyClick(midiNote: number) {
   user-select: none;
 }
 
+/* Strum Builder Section */
+.strum-builder-section {
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Advanced Strum Section */
+.advanced-strum-section {
+  margin-top: 0.5rem;
+  padding: 0.25rem 0.75rem;
+  background: rgba(234, 234, 234, 0.03);
+  border-radius: 4px;
+  transition: background 0.3s ease;
+}
+
+/* Active state - subtle orange tint */
+.advanced-strum-section.active {
+  background: rgba(249, 172, 32, 0.08);
+}
+
+.advanced-strum-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0.25rem 0;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-family: 'Roboto Mono';
+  color: var(--label-gray);
+  transition: color 0.2s ease;
+}
+
+.advanced-strum-header:hover {
+  color: #EAEAEA;
+}
+
+.advanced-strum-header .mood-text {
+  font-family: 'Roboto Mono';
+  font-size: 0.75rem;
+  color: #EAEAEA;
+  opacity: 0.4;
+  text-align: left;
+  letter-spacing: 0.02em;
+  line-height: 1.4;
+  flex: 1;
+}
+
+.advanced-strum-header .right-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.advanced-strum-header .adv-label {
+  font-size: 0.8125rem;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--label-gray);
+}
+
+.advanced-strum-header:hover .adv-label {
+  color: #EAEAEA;
+}
+
+.advanced-strum-header .icon {
+  font-size: 1.25rem;
+  font-weight: 300;
+  line-height: 1;
+}
+
+.advanced-strum-content {
+  animation: fadeIn 0.3s ease;
+}
+
+/* Height compensation spacer for non-strum modes */
+.height-spacer {
+  flex: 1;
+  min-height: 1rem;
+}
+
+.swing-control {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 1rem;
+  padding-bottom: 0.25rem;
+  margin-top: 1rem;
+  border-top: 1px solid var(--color-divider);
+}
+
+.swing-control label {
+  font-weight: 400;
+  font-size: 0.8125rem;
+  color: var(--label-gray);
+  font-family: 'Roboto Mono';
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.swing-control .duration-control-wrapper {
+  flex-shrink: 0;
+}
+
 /* Inputs Section */
 .inputs {
   display: flex;
@@ -1128,5 +1437,24 @@ function handleKeyClick(midiNote: number) {
 
 .picker-trigger.picker-open {
   color: transparent;
+}
+
+/* Static Mood Bar (for scale/chord modes) */
+.static-mood-bar {
+  margin-top: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background: rgba(234, 234, 234, 0.03);
+  border-radius: 4px;
+}
+
+.static-mood-bar .mood-text {
+  font-family: 'Roboto Mono';
+  font-size: 0.75rem;
+  color: #EAEAEA;
+  opacity: 0.4;
+  text-align: left;
+  letter-spacing: 0.02em;
+  line-height: 1.4;
+  display: block;
 }
 </style>

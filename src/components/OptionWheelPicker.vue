@@ -22,7 +22,8 @@
                 :data-index="index"
                 @click="selectItem(index)"
               >
-                {{ option.label }}
+                <span class="item-main">{{ parseLabel(option.label).main }}</span>
+                <span v-if="parseLabel(option.label).secondary" class="item-secondary">{{ parseLabel(option.label).secondary }}</span>
               </div>
               <div class="wheel-spacer"></div>
             </div>
@@ -187,6 +188,14 @@ function close() {
   emit('update:isOpen', false);
 }
 
+function parseLabel(label: string): { main: string; secondary: string } {
+  const parts = label.split('—').map(p => p.trim());
+  if (parts.length > 1) {
+    return { main: parts[0], secondary: parts.slice(1).join(' — ') };
+  }
+  return { main: label, secondary: '' };
+}
+
 onBeforeUnmount(() => {
   if (scrollTimeout) clearTimeout(scrollTimeout);
 });
@@ -265,6 +274,17 @@ onBeforeUnmount(() => {
   transition: transform 0.1s ease, opacity 0.1s ease;
   user-select: none;
   transform-origin: center center;
+  gap: 0.5rem;
+  white-space: nowrap;
+}
+
+.item-main {
+  font-weight: 500;
+}
+
+.item-secondary {
+  opacity: 0.4;
+  font-size: 0.8125rem;
 }
 
 /* Transition animations */

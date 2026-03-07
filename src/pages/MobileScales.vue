@@ -417,6 +417,11 @@ const chordTypes = [
   { value: 7, label: 'Major 7th' },
   { value: 8, label: 'Minor 7th' },
   { value: 9, label: 'Dominant 7th' },
+  { value: 10, label: 'Major add9' },
+  { value: 11, label: 'Minor add9' },
+  { value: 12, label: 'Major 6th' },
+  { value: 13, label: 'Minor 6th' },
+  { value: 14, label: 'Major 9th' },
 ];
 
 // Root Notes (MIDI note numbers - firmware uses these as absolute pitches)
@@ -444,7 +449,20 @@ const playMode = computed<'scale' | 'chord'>({
 });
 
 // Keyboard model that wraps scale and chord data for the component
-const keyboardModel = computed<{ mode: 'scale' | 'chord', scale: ScaleSettings, chord: { chordType: number, velocitySpread: number, strumEnabled: boolean, strumSpeed: number } }>({
+const keyboardModel = computed<{ 
+  mode: 'scale' | 'chord', 
+  scale: ScaleSettings, 
+  chord: { 
+    chordType: number, 
+    velocitySpread: number, 
+    strumEnabled: boolean, 
+    strumSpeed: number,
+    strumIntervals: number[],
+    buildMode: string,
+    strumSwing: number,
+    strumPattern: number
+  } 
+}>({
   get: () => ({
     mode: playMode.value,
     scale: localSettings.value.scale,
@@ -453,6 +471,10 @@ const keyboardModel = computed<{ mode: 'scale' | 'chord', scale: ScaleSettings, 
       velocitySpread: localSettings.value.chord.velocitySpread,
       strumEnabled: localSettings.value.chord.strumEnabled,
       strumSpeed: localSettings.value.chord.strumSpeed,
+      strumIntervals: localSettings.value.chord.strumIntervals || [0, 4, 7, 12],
+      buildMode: localSettings.value.chord.buildMode || 'up',
+      strumSwing: localSettings.value.chord.strumSwing || 0,
+      strumPattern: localSettings.value.chord.strumPattern || 0,
     }
   }),
   set: (v) => {
@@ -465,6 +487,11 @@ const keyboardModel = computed<{ mode: 'scale' | 'chord', scale: ScaleSettings, 
     localSettings.value.chord.velocitySpread = v.chord.velocitySpread;
     localSettings.value.chord.strumEnabled = v.chord.strumEnabled;
     localSettings.value.chord.strumSpeed = v.chord.strumSpeed;
+    localSettings.value.chord.strumIntervals = v.chord.strumIntervals;
+    localSettings.value.chord.buildMode = v.chord.buildMode;
+    localSettings.value.chord.strumSwing = v.chord.strumSwing;
+    localSettings.value.chord.strumPattern = v.chord.strumPattern;
+    markChanged();
   }
 });
 

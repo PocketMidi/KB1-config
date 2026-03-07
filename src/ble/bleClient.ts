@@ -21,6 +21,7 @@ const LEVERPUSH2_SETTINGS_UUID = '52629808-3d14-4ae8-a826-40bcec6467d5';
 const TOUCH_SETTINGS_UUID = '5612b54d-8bfe-4217-a079-c9c95ab32c41';
 const SCALE_SETTINGS_UUID = '297bd635-c3e8-4fb4-b5e0-93586da8f14c';
 const CHORD_SETTINGS_UUID = '4a8c9f2e-1b7d-4e3f-a5c6-d7e8f9a0b1c2';
+const STRUM_INTERVALS_UUID = '7f3e2d1c-0a9b-8c7d-6e5f-4a3b2c1d0e9f';
 const SYSTEM_SETTINGS_UUID = '8f7e6d5c-4b3a-2c1d-0e9f-8a7b6c5d4e3f';
 const MIDI_UUID = 'eb58b31b-d963-4c7d-9a11-e8aabec2fe32';
 const KEEPALIVE_UUID = 'a8f3d5e2-9c4b-11ef-8e7a-325096b39f47';
@@ -47,6 +48,7 @@ export class BLEClient {
   private touchCharacteristic: BluetoothRemoteGATTCharacteristic | null = null;
   private scaleCharacteristic: BluetoothRemoteGATTCharacteristic | null = null;
   private chordCharacteristic: BluetoothRemoteGATTCharacteristic | null = null;
+  private strumIntervalsCharacteristic: BluetoothRemoteGATTCharacteristic | null = null;
   private systemCharacteristic: BluetoothRemoteGATTCharacteristic | null = null;
   private keepAliveCharacteristic: BluetoothRemoteGATTCharacteristic | null = null;
   private firmwareVersionCharacteristic: BluetoothRemoteGATTCharacteristic | null = null;
@@ -136,6 +138,7 @@ export class BLEClient {
         this.touchCharacteristic = await service.getCharacteristic(TOUCH_SETTINGS_UUID);
         this.scaleCharacteristic = await service.getCharacteristic(SCALE_SETTINGS_UUID);
         this.chordCharacteristic = await service.getCharacteristic(CHORD_SETTINGS_UUID);
+        this.strumIntervalsCharacteristic = await service.getCharacteristic(STRUM_INTERVALS_UUID);
         this.systemCharacteristic = await service.getCharacteristic(SYSTEM_SETTINGS_UUID);
       } catch (e) {
         console.warn('⚠️ Some settings characteristics not available:', e);
@@ -424,7 +427,7 @@ export class BLEClient {
 
   /**
    * Parse chord data from DataView (little-endian int32)
-   * Struct: playMode(4), chordType(4), strumEnabled(4), velocitySpread(4), strumSpeed(4) = 20 bytes
+   * Struct: playMode(4), chordType(4), strumEnabled(4), velocitySpread(4), strumSpeed(4), strumPattern(4), strumSwing(4) = 28 bytes
    */
   private parseChordData(data: DataView): ChordSettings {
     return {
@@ -433,6 +436,8 @@ export class BLEClient {
       strumEnabled: data.getInt32(8, true) !== 0,  // Convert int to boolean
       velocitySpread: data.getInt32(12, true),
       strumSpeed: data.getInt32(16, true),
+      strumPattern: data.getInt32(20, true),
+      strumSwing: data.getInt32(24, true),
     };
   }
 
@@ -559,16 +564,18 @@ export class BLEClient {
 
   /**
    * Encode chord settings to binary format for writing to device
-   * Struct: playMode(4), chordType(4), strumEnabled(4), velocitySpread(4), strumSpeed(4) = 20 bytes
+   * Struct: playMode(4), chordType(4), strumEnabled(4), velocitySpread(4), strumSpeed(4), strumPattern(4), strumSwing(4) = 28 bytes
    */
   private encodeChordData(settings: ChordSettings): ArrayBuffer {
-    const buffer = new ArrayBuffer(20); // 5 int32 values = 20 bytes
+    const buffer = new ArrayBuffer(28); // 7 int32 values = 28 bytes
     const view = new DataView(buffer);
     view.setInt32(0, settings.playMode, true);
     view.setInt32(4, settings.chordType, true);
     view.setInt32(8, settings.strumEnabled ? 1 : 0, true);  // Convert boolean to int
     view.setInt32(12, settings.velocitySpread, true);
     view.setInt32(16, settings.strumSpeed, true);
+    view.setInt32(20, settings.strumPattern, true);
+    view.setInt32(24, settings.strumSwing, true);
     return buffer;
   }
 
@@ -689,11 +696,59 @@ export class BLEClient {
     }
 
     try {
-      const data = this.encodeChordData(settings);
-      await this.chordCharacteristic.writeValue(data);
-      console.log('Chord settings written to device:', settings);
+      // If custom strum intervals are provided AND pattern is not explicitly 0,
+      // set strumPattern to 7 (custom pattern) and write them to the strum intervals characteristic
+      // Pattern 0 = always use chord type intervals (advanced panel closed)
+      if (settings.strumIntervals && settings.strumIntervals.length > 0 && settings.strumPattern !== 0) {
+        // Auto-set pattern to 7 (custom) when intervals are provided
+        const modifiedSettings = { ...settings, strumPattern: 7 };
+        
+        // Write custom intervals first
+        await this.writeStrumIntervals(settings.strumIntervals);
+        
+        // Then write chord settings with pattern 7
+        const data = this.encodeChordData(modifiedSettings);
+        await this.chordCharacteristic.writeValue(data);
+        console.log('Chord settings with custom intervals written to device:', modifiedSettings);
+      } else {
+        // No custom intervals OR pattern explicitly 0, write settings as-is
+        const data = this.encodeChordData(settings);
+        await this.chordCharacteristic.writeValue(data);
+        console.log('Chord settings written to device:', settings);
+      }
     } catch (error) {
       console.error('Failed to write chord settings:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Write custom strum intervals to device
+   */
+  async writeStrumIntervals(intervals: number[]): Promise<void> {
+    if (!this.strumIntervalsCharacteristic) {
+      console.warn('Strum intervals characteristic not available, skipping...');
+      return;
+    }
+
+    try {
+      // Encode intervals as: length byte + interval bytes
+      const length = Math.min(intervals.length, 16); // Max 16 intervals
+      const buffer = new ArrayBuffer(1 + length);
+      const view = new DataView(buffer);
+      
+      // First byte is length
+      view.setUint8(0, length);
+      
+      // Following bytes are intervals (int8)
+      for (let i = 0; i < length; i++) {
+        view.setInt8(1 + i, intervals[i]);
+      }
+      
+      await this.strumIntervalsCharacteristic.writeValue(buffer);
+      console.log('Custom strum intervals written to device:', intervals);
+    } catch (error) {
+      console.error('Failed to write strum intervals:', error);
       throw error;
     }
   }

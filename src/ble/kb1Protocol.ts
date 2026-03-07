@@ -73,10 +73,14 @@ export interface ScaleSettings {
  */
 export interface ChordSettings {
   playMode: number;        // 0 = SCALE, 1 = CHORD
-  chordType: number;       // MAJOR=0, MINOR=1, DIMINISHED=2, AUGMENTED=3, SUS2=4, SUS4=5, POWER=6, MAJOR7=7, MINOR7=8, DOM7=9
+  chordType: number;       // MAJOR=0, MINOR=1, DIMINISHED=2, AUGMENTED=3, SUS2=4, SUS4=5, POWER=6, MAJOR7=7, MINOR7=8, DOM7=9, MAJOR_ADD9=10, MINOR_ADD9=11, MAJOR6=12, MINOR6=13, MAJOR9=14
   strumEnabled: boolean;   // false = chord (all notes together), true = strum (cascaded)
   velocitySpread: number;  // 0-100 (percentage) - velocity variation for chord notes
   strumSpeed: number;      // 5-100 (milliseconds) - delay between notes in strum mode
+  strumPattern: number;    // 0-7 - pattern index (0 = use chord type, 1-7 = interval patterns)
+  strumSwing: number;      // 0-100 (percentage) - swing amount for strum timing
+  strumIntervals?: number[]; // Custom interval pattern (semitones from root) - UI only
+  buildMode?: string;      // Build mode: 'up', 'down', 'updown', 'inclusive', 'exclusive', 'random' - UI only
 }
 
 /**
@@ -446,6 +450,8 @@ export class KB1Protocol {
         strumEnabled: false, // Chord mode (not strum)
         velocitySpread: 8, // 8% velocity spread
         strumSpeed: 45, // 45ms strum speed
+        strumPattern: 0, // Use chord type (not pattern)
+        strumSwing: 0, // No swing by default
       },
       system: {
         lightSleepTimeout: 300, // 300 seconds (5 minutes)

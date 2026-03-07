@@ -36,6 +36,7 @@ import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue';
 interface DropdownOption {
   label: string;
   value: string | number;
+  isDivider?: boolean;
 }
 
 const props = defineProps<{

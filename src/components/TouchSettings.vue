@@ -217,8 +217,8 @@ const initialCategory = computed(() => {
 })
 const selectedCategory = ref<string>(initialCategory.value)
 
-const categoryOptions = computed<Array<{ label: string; value: string; isDivider?: boolean }>>(() => {
-  const cats = props.categories.map(cat => ({ label: cat, value: cat }))
+const categoryOptions = computed(() => {
+  const cats: Array<{ label: string; value: string; isDivider?: boolean }> = props.categories.map(cat => ({ label: cat, value: cat }))
   // Add divider after KB1 Expression (index 0)
   if (cats.length > 1 && cats[0]?.label === 'KB1 Expression') {
     cats.splice(1, 0, { label: '───', value: '___divider___', isDivider: true })

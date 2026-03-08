@@ -68,7 +68,7 @@ const dragStartX = ref(0)
 const dragStartValue = ref(0)
 const lastHapticValue = ref(0)
 
-const { light } = useHaptics()
+const { light, isSupported } = useHaptics()
 
 const isAtMin = computed(() => props.modelValue <= props.min)
 const isAtMax = computed(() => props.modelValue >= props.max)
@@ -82,13 +82,13 @@ function snapToStep(value: number): number {
 }
 
 function decreaseSmall() {
-  light()
+  if (isSupported.value) light()
   const newValue = snapToStep(props.modelValue - props.smallStep)
   emit('update:modelValue', clamp(newValue))
 }
 
 function increaseSmall() {
-  light()
+  if (isSupported.value) light()
   const newValue = snapToStep(props.modelValue + props.smallStep)
   emit('update:modelValue', clamp(newValue))
 }
@@ -122,8 +122,8 @@ function handleWheel(event: WheelEvent) {
   const change = delta * props.smallStep
   const newValue = snapToStep(props.modelValue + change)
   
-  // Haptic only when value actually changes
-  if (newValue !== props.modelValue) {
+  // Haptic only when value actually changes (skip on iOS)
+  if (isSupported.value && newValue !== props.modelValue) {
     light()
   }
   
@@ -151,8 +151,8 @@ function handleMouseMove(event: MouseEvent) {
   const change = steps * props.step
   const newValue = snapToStep(dragStartValue.value + change)
   
-  // Haptic on every step change during drag
-  if (newValue !== lastHapticValue.value) {
+  // Haptic on every step change during drag (skip on iOS)
+  if (isSupported.value && newValue !== lastHapticValue.value) {
     light()
     lastHapticValue.value = newValue
   }
@@ -185,8 +185,8 @@ function handleTouchMove(event: TouchEvent) {
   const change = steps * props.step
   const newValue = snapToStep(dragStartValue.value + change)
   
-  // Haptic on every step change during touch drag
-  if (newValue !== lastHapticValue.value) {
+  // Haptic on every step change during touch drag (skip on iOS)
+  if (isSupported.value && newValue !== lastHapticValue.value) {
     light()
     lastHapticValue.value = newValue
   }

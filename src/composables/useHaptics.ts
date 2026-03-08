@@ -12,6 +12,9 @@ const hapticsEnabled = ref(false)
 const isIOSDevice = isIOS()
 let initialized = false
 
+// Export iOS detection for components to skip haptic setup entirely
+export { isIOSDevice }
+
 // Auto-initialize from localStorage on first import
 function autoInit() {
   if (initialized) return
@@ -55,7 +58,11 @@ export function useHaptics() {
   // Check if haptics should be triggered
   const shouldTrigger = computed(() => hapticsEnabled.value && isSupported)
 
-  // Helper function to conditionally trigger haptics (no time throttling for scroll detents)
+  // Timestamp for throttling rapid scroll haptics
+  let lastDetentTime = 0
+  const DETENT_THROTTLE_MS = 60 // Minimum time between scroll haptics
+
+  // Helper function to conditionally trigger haptics
   const conditionalTrigger = (pattern: any) => {
     if (!shouldTrigger.value) return
     
@@ -66,9 +73,17 @@ export function useHaptics() {
     }
   }
 
+  // Throttled detent for scroll - prevents haptics from firing too rapidly
+  const throttledDetent = () => {
+    const now = Date.now()
+    if (now - lastDetentTime < DETENT_THROTTLE_MS) return
+    lastDetentTime = now
+    conditionalTrigger(30) // Stronger 30ms pulse
+  }
+
   return {
-    // Detent bump for wheel scrolling (fires on each item during scroll)
-    detent: () => conditionalTrigger(10), // Simple 10ms vibration for iOS compatibility
+    // Detent bump for wheel scrolling (throttled to prevent rapid-fire)
+    detent: throttledDetent,
     
     // Light tap for value increment/decrement
     light: () => conditionalTrigger(15),

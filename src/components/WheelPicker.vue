@@ -70,7 +70,7 @@ const lastTouchTime = ref(0)
 const lastTouchY = ref(0)
 const lastHapticIndex = ref(-1)
 
-const { detent } = useHaptics()
+const { detent, isSupported } = useHaptics()
 
 // Generate array of values
 const values = ref<number[]>([])
@@ -207,8 +207,8 @@ function updateSelectedFromScroll() {
     if (value !== undefined) {
       selectedValue.value = value
       
-      // Trigger detent haptic when crossing into a new item
-      if (index !== lastHapticIndex.value) {
+      // Trigger detent haptic when crossing into a new item (skip on iOS)
+      if (isSupported.value && index !== lastHapticIndex.value) {
         detent()
         lastHapticIndex.value = index
       }

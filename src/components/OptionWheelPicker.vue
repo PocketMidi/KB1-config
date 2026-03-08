@@ -65,7 +65,7 @@ const VISIBLE_ITEMS = 5; // Number of visible items
 const lastHapticIndex = ref(-1);
 let scrollTimeout: ReturnType<typeof setTimeout> | null = null;
 
-const { detent } = useHaptics();
+const { detent, isSupported } = useHaptics();
 
 // Calculate position relative to trigger element
 const positionStyle = computed(() => {
@@ -136,14 +136,16 @@ function selectItem(index: number) {
 function handleScroll() {
   updateItemStyles();
   
-  // Trigger detent haptic when scrolling past items
-  const scrollTop = scrollContainer.value?.scrollTop || 0;
-  const currentIndex = Math.round(scrollTop / ITEM_HEIGHT);
-  if (currentIndex !== lastHapticIndex.value && currentIndex >= 0 && currentIndex < props.options.length) {
-    // Only haptic for non-dividers
-    if (!props.options[currentIndex]?.isDivider) {
-      detent();
-      lastHapticIndex.value = currentIndex;
+  // Trigger detent haptic when scrolling past items (skip completely on iOS)
+  if (isSupported.value) {
+    const scrollTop = scrollContainer.value?.scrollTop || 0;
+    const currentIndex = Math.round(scrollTop / ITEM_HEIGHT);
+    if (currentIndex !== lastHapticIndex.value && currentIndex >= 0 && currentIndex < props.options.length) {
+      // Only haptic for non-dividers
+      if (!props.options[currentIndex]?.isDivider) {
+        detent();
+        lastHapticIndex.value = currentIndex;
+      }
     }
   }
   

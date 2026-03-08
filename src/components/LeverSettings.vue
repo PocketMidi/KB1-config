@@ -679,7 +679,9 @@ const userMin = computed({
     } else {
       value = midiToUnipolar(model.value.minCCValue)
     }
-    return value
+    // Snap displayed value to current step size for consistency
+    const step = minMaxStepSize.value
+    return Math.round(value / step) * step
   },
   set: (userValue: number) => {
     const snappedValue = snapToStepIncrement(userValue)
@@ -708,7 +710,9 @@ const userMax = computed({
     } else {
       value = midiToUnipolar(model.value.maxCCValue)
     }
-    return value
+    // Snap displayed value to current step size for consistency
+    const step = minMaxStepSize.value
+    return Math.round(value / step) * step
   },
   set: (userValue: number) => {
     const snappedValue = snapToStepIncrement(userValue)

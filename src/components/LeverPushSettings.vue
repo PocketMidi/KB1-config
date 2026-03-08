@@ -613,6 +613,10 @@ const userMin = computed({
     } else {
       value = midiToUnipolar(model.value.minCCValue)
     }
+    // Snap displayed value to 5-unit increments (except pattern selector)
+    if (model.value.ccNumber !== 201) {
+      return Math.round(value / 5) * 5
+    }
     return value
   },
   set: (userValue: number) => {
@@ -642,6 +646,10 @@ const userMax = computed({
       value = midiToPattern(model.value.maxCCValue)
     } else {
       value = midiToUnipolar(model.value.maxCCValue)
+    }
+    // Snap displayed value to 5-unit increments (except pattern selector)
+    if (model.value.ccNumber !== 201) {
+      return Math.round(value / 5) * 5
     }
     return value
   },
@@ -673,6 +681,10 @@ const resetValue = computed({
       value = midiToPattern(model.value.minCCValue)
     } else {
       value = midiToUnipolar(model.value.minCCValue)
+    }
+    // Snap displayed value to 5-unit increments (except pattern selector)
+    if (model.value.ccNumber !== 201) {
+      return Math.round(value / 5) * 5
     }
     return value
   },

@@ -214,10 +214,11 @@ const markers = computed<Marker[]>(() => {
       result.push({ position, value, highlighted })
     }
   } else {
-    // Standard mode: Show dots at 5% value intervals
-    // For bipolar: -100, -95, -90... 0... 95, 100 (41 dots)
-    // For unipolar: 0, 5, 10... 95, 100 (21 dots)
-    const dotInterval = 5
+    // Standard mode: Show dots at regular intervals
+    // For bipolar: -100, -95, -90... 0... 95, 100 (41 dots, interval=5)
+    // For unipolar: 0, 2.5, 5, 7.5... 97.5, 100 (41 dots, interval=2.5)
+    // This gives both modes the same visual density
+    const dotInterval = props.isBipolar ? 5 : 2.5
     const startValue = Math.ceil(rangeMin / dotInterval) * dotInterval
     
     for (let value = startValue; value <= rangeMax; value += dotInterval) {

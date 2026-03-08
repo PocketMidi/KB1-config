@@ -367,13 +367,19 @@ const constrainedMinForMax = computed(() => {
 // User-facing Min value (0-100 for normal params, 1-7 for pattern selector, always unipolar for Touch)
 const userMin = computed({
   get: () => {
+    let value: number
     if (model.value.ccNumber === 200) {
-      return midiToSpeedPercent(model.value.minCCValue)
+      value = midiToSpeedPercent(model.value.minCCValue)
+    } else if (model.value.ccNumber === 201) {
+      value = midiToPattern(model.value.minCCValue)
+    } else {
+      value = midiToUnipolar(model.value.minCCValue)
     }
-    if (model.value.ccNumber === 201) {
-      return midiToPattern(model.value.minCCValue)
+    // Snap displayed value to 5-unit increments (except pattern selector)
+    if (model.value.ccNumber !== 201) {
+      return Math.round(value / 5) * 5
     }
-    return midiToUnipolar(model.value.minCCValue)
+    return value
   },
   set: (userValue: number) => {
     if (model.value.ccNumber === 200) {
@@ -389,13 +395,19 @@ const userMin = computed({
 // User-facing Max value (0-100 for normal params, 1-7 for pattern selector, always unipolar for Touch)
 const userMax = computed({
   get: () => {
+    let value: number
     if (model.value.ccNumber === 200) {
-      return midiToSpeedPercent(model.value.maxCCValue)
+      value = midiToSpeedPercent(model.value.maxCCValue)
+    } else if (model.value.ccNumber === 201) {
+      value = midiToPattern(model.value.maxCCValue)
+    } else {
+      value = midiToUnipolar(model.value.maxCCValue)
     }
-    if (model.value.ccNumber === 201) {
-      return midiToPattern(model.value.maxCCValue)
+    // Snap displayed value to 5-unit increments (except pattern selector)
+    if (model.value.ccNumber !== 201) {
+      return Math.round(value / 5) * 5
     }
-    return midiToUnipolar(model.value.maxCCValue)
+    return value
   },
   set: (userValue: number) => {
     if (model.value.ccNumber === 200) {

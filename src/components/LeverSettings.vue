@@ -575,7 +575,14 @@ const maxRange = computed(() => {
 // Step size for MIN/MAX controls in incremental mode
 const minMaxStepSize = computed(() => {
   // In incremental mode, match the STEPS percentage (5%, 10%, 15%, 25%)
-  return isIncrementalMode.value ? stepsValue.value : 1
+  if (isIncrementalMode.value) {
+    return stepsValue.value
+  }
+  
+  // In non-incremental mode, use step size that respects MIDI precision
+  // Bipolar: -100 to +100 (200 range) → 0-127 MIDI (200/127 ≈ 1.57, so use step=2)
+  // Unipolar: 0 to 100 (100 range) → 0-127 MIDI (100/127 ≈ 0.79, so step=1 works)
+  return model.value.valueMode === VALUE_MODE_BIPOLAR ? 2 : 1
 })
 
 // Snap value to step increments in incremental mode
@@ -657,8 +664,7 @@ const userMin = computed({
     } else {
       value = midiToUnipolar(model.value.minCCValue)
     }
-    // Snap to step increment in incremental mode
-    return snapToStepIncrement(value)
+    return value
   },
   set: (userValue: number) => {
     const snappedValue = snapToStepIncrement(userValue)
@@ -687,8 +693,7 @@ const userMax = computed({
     } else {
       value = midiToUnipolar(model.value.maxCCValue)
     }
-    // Snap to step increment in incremental mode
-    return snapToStepIncrement(value)
+    return value
   },
   set: (userValue: number) => {
     const snappedValue = snapToStepIncrement(userValue)

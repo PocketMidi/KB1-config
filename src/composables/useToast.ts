@@ -1,4 +1,5 @@
 import { ref } from 'vue';
+import { useHaptics } from './useHaptics';
 
 export interface Toast {
   id: number;
@@ -9,6 +10,8 @@ export interface Toast {
 
 const toasts = ref<Toast[]>([]);
 let nextId = 0;
+
+const haptics = useHaptics();
 
 export function useToast() {
   function show(
@@ -22,10 +25,12 @@ export function useToast() {
   }
 
   function success(message: string, duration = 3000) {
+    haptics.success();
     show(message, 'success', duration);
   }
 
   function error(message: string, duration = 4000) {
+    haptics.error();
     show(message, 'error', duration);
   }
 

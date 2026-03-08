@@ -31,6 +31,7 @@
 
 <script setup lang="ts">
 import { computed, ref, onBeforeUnmount } from 'vue'
+import { useHaptics } from '../composables/useHaptics'
 
 const props = defineProps<{
   modelValue: number
@@ -46,9 +47,12 @@ const emit = defineEmits<{
 const isDragging = ref(false)
 const dragStartX = ref(0)
 const dragStartIndex = ref(0)
+const lastHapticIndex = ref(-1)
 const currentIndex = computed(() => {
   return props.notes.findIndex(note => note.value === props.modelValue)
 })
+
+const { light } = useHaptics()
 
 // Enharmonic equivalents for sharp/flat notes
 const enharmonicMap: Record<string, string> = {
@@ -77,6 +81,7 @@ const isAtMax = computed(() => currentIndex.value >= props.notes.length - 1)
 
 function decreaseNote() {
   if (props.disabled || isAtMin.value) return
+  light()
   const newIndex = currentIndex.value - 1
   const note = props.notes[newIndex]
   if (note) {
@@ -86,6 +91,7 @@ function decreaseNote() {
 
 function increaseNote() {
   if (props.disabled || isAtMax.value) return
+  light()
   const newIndex = currentIndex.value + 1
   const note = props.notes[newIndex]
   if (note) {
@@ -100,6 +106,13 @@ function clampIndex(index: number): number {
 function setNoteByIndex(index: number) {
   if (props.disabled) return
   const clampedIndex = clampIndex(index)
+  
+  // Haptic only when index actually changes
+  if (clampedIndex !== lastHapticIndex.value) {
+    light()
+    lastHapticIndex.value = clampedIndex
+  }
+  
   const note = props.notes[clampedIndex]
   if (note) {
     emit('update:modelValue', note.value)

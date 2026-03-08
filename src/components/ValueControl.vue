@@ -39,6 +39,7 @@
 
 <script setup lang="ts">
 import { computed, ref, onBeforeUnmount } from 'vue'
+import { useHaptics } from '../composables/useHaptics'
 
 const props = withDefaults(defineProps<{
   modelValue: number
@@ -65,6 +66,9 @@ const emit = defineEmits<{
 const isDragging = ref(false)
 const dragStartX = ref(0)
 const dragStartValue = ref(0)
+const lastHapticValue = ref(0)
+
+const { light } = useHaptics()
 
 const isAtMin = computed(() => props.modelValue <= props.min)
 const isAtMax = computed(() => props.modelValue >= props.max)
@@ -78,11 +82,13 @@ function snapToStep(value: number): number {
 }
 
 function decreaseSmall() {
+  light()
   const newValue = snapToStep(props.modelValue - props.smallStep)
   emit('update:modelValue', clamp(newValue))
 }
 
 function increaseSmall() {
+  light()
   const newValue = snapToStep(props.modelValue + props.smallStep)
   emit('update:modelValue', clamp(newValue))
 }
@@ -115,6 +121,12 @@ function handleWheel(event: WheelEvent) {
   const delta = event.deltaY > 0 ? -1 : 1
   const change = delta * props.smallStep
   const newValue = snapToStep(props.modelValue + change)
+  
+  // Haptic only when value actually changes
+  if (newValue !== props.modelValue) {
+    light()
+  }
+  
   emit('update:modelValue', clamp(newValue))
 }
 
@@ -124,6 +136,7 @@ function handleMouseDown(event: MouseEvent) {
   isDragging.value = true
   dragStartX.value = event.clientX
   dragStartValue.value = props.modelValue
+  lastHapticValue.value = props.modelValue
   
   document.addEventListener('mousemove', handleMouseMove)
   document.addEventListener('mouseup', handleMouseUp)
@@ -137,6 +150,13 @@ function handleMouseMove(event: MouseEvent) {
   const steps = Math.round(deltaX / 5)
   const change = steps * props.step
   const newValue = snapToStep(dragStartValue.value + change)
+  
+  // Haptic on every step change during drag
+  if (newValue !== lastHapticValue.value) {
+    light()
+    lastHapticValue.value = newValue
+  }
+  
   emit('update:modelValue', clamp(newValue))
 }
 
@@ -152,6 +172,7 @@ function handleTouchStart(event: TouchEvent) {
   isDragging.value = true
   dragStartX.value = event.touches[0].clientX
   dragStartValue.value = props.modelValue
+  lastHapticValue.value = props.modelValue
 }
 
 function handleTouchMove(event: TouchEvent) {
@@ -163,6 +184,13 @@ function handleTouchMove(event: TouchEvent) {
   const steps = Math.round(deltaX / 5)
   const change = steps * props.step
   const newValue = snapToStep(dragStartValue.value + change)
+  
+  // Haptic on every step change during touch drag
+  if (newValue !== lastHapticValue.value) {
+    light()
+    lastHapticValue.value = newValue
+  }
+  
   emit('update:modelValue', clamp(newValue))
 }
 

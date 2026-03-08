@@ -256,6 +256,7 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
+import { useHaptics } from '../composables/useHaptics'
 import NotePickerControl from './NotePickerControl.vue'
 import OptionWheelPicker from './OptionWheelPicker.vue'
 import ValueControl from './ValueControl.vue'
@@ -861,6 +862,9 @@ function handleKeyClick(midiNote: number) {
     emit('chromaticWarning', 'Default mapping')
     return
   }
+  
+  // Double tap haptic for root note selection
+  doubleTap()
   
   // Convert the clicked key's MIDI note to the root note range (60-71)
   // We need to map the note class (0-11) to the middle C octave range

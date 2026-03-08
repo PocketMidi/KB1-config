@@ -33,16 +33,30 @@
           <span class="unit-label">s</span>
         </div>
       </div>
+      <div class="input-divider"></div>
+
+      <div class="group">
+        <label for="haptics">HAPTIC FEEDBACK</label>
+        <div class="toggle-switch" @click="toggleHaptics">
+          <div class="toggle-track" :class="{ active: hapticsEnabled }">
+            <div class="toggle-thumb"></div>
+          </div>
+          <span class="toggle-label">{{ hapticsEnabled ? 'ON' : 'OFF' }}</span>
+        </div>
+      </div>
       
       <div class="hint-text">
         After idle time → pulsing LEDs (Light Sleep) → 90s later → deep sleep (lowest power). BLE Timeout: while web app is connected and pinging, sleep is prevented.
+        <br><br>
+        Haptic Feedback: subtle vibrations on mobile devices for wheel scrolling, button taps, and value changes.
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, watch } from 'vue'
+import { computed, watch, onMounted } from 'vue'
+import { useHaptics } from '../composables/useHaptics'
 import ValueControl from './ValueControl.vue'
 
 type SystemModel = {
@@ -63,6 +77,22 @@ const model = computed({
   get: () => props.modelValue,
   set: v => emit('update:modelValue', v)
 })
+
+// Haptics
+const { enabled: hapticsEnabled, init: initHaptics, selection } = useHaptics()
+
+// Initialize haptics from localStorage on mount
+onMounted(() => {
+  initHaptics()
+})
+
+function toggleHaptics() {
+  hapticsEnabled.value = !hapticsEnabled.value
+  // Give immediate feedback if enabling
+  if (hapticsEnabled.value) {
+    selection()
+  }
+}
 
 // Auto-calculate deep sleep as light sleep + 90s (fixed pulsing LED warning period)
 const autoDeepSleep = computed(() => model.value.lightSleepTimeout + 90)
@@ -176,5 +206,52 @@ const formatTime = (seconds: number): string => {
   font-weight: 400;
   cursor: default;
   user-select: none;
+}
+
+/* Toggle Switch */
+.toggle-switch {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+.toggle-track {
+  width: 44px;
+  height: 24px;
+  background: #2A2A2A;
+  border-radius: 12px;
+  position: relative;
+  transition: background-color 0.25s ease;
+  border: 1px solid #3A3A3A;
+}
+
+.toggle-track.active {
+  background: #0DC988;
+  border-color: #0DC988;
+}
+
+.toggle-thumb {
+  width: 18px;
+  height: 18px;
+  background: #EAEAEA;
+  border-radius: 50%;
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  transition: transform 0.25s ease;
+}
+
+.toggle-track.active .toggle-thumb {
+  transform: translateX(20px);
+}
+
+.toggle-label {
+  font-family: 'Roboto Mono';
+  font-size: 0.8125rem;
+  color: #EAEAEA;
+  font-weight: 400;
+  min-width: 32px;
 }
 </style>

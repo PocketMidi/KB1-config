@@ -39,6 +39,7 @@
 
 <script setup lang="ts">
 import { ref, watch, nextTick, onBeforeUnmount, computed } from 'vue';
+import { useHaptics } from '../composables/useHaptics';
 
 interface WheelOption {
   label: string;
@@ -61,7 +62,10 @@ const emit = defineEmits<{
 const scrollContainer = ref<HTMLElement | null>(null);
 const ITEM_HEIGHT = 44; // Height of each item in px
 const VISIBLE_ITEMS = 5; // Number of visible items
+const lastHapticIndex = ref(-1);
 let scrollTimeout: ReturnType<typeof setTimeout> | null = null;
+
+const { detent, selection } = useHaptics();
 
 // Calculate position relative to trigger element
 const positionStyle = computed(() => {
@@ -117,6 +121,7 @@ function scrollToIndex(index: number, smooth = true) {
 function selectItem(index: number) {
   const selectedOption = props.options[index];
   if (selectedOption) {
+    selection();
     // Scroll to the selected position before closing
     scrollToIndex(index, true);
     
@@ -130,6 +135,17 @@ function selectItem(index: number) {
 
 function handleScroll() {
   updateItemStyles();
+  
+  // Trigger detent haptic when scrolling past items
+  const scrollTop = scrollContainer.value?.scrollTop || 0;
+  const currentIndex = Math.round(scrollTop / ITEM_HEIGHT);
+  if (currentIndex !== lastHapticIndex.value && currentIndex >= 0 && currentIndex < props.options.length) {
+    // Only haptic for non-dividers
+    if (!props.options[currentIndex]?.isDivider) {
+      detent();
+      lastHapticIndex.value = currentIndex;
+    }
+  }
   
   // Clear existing timeout
   if (scrollTimeout) clearTimeout(scrollTimeout);

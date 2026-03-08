@@ -40,6 +40,7 @@
 
 <script setup lang="ts">
 import { ref, watch, nextTick } from 'vue'
+import { useHaptics } from '../composables/useHaptics'
 
 const props = withDefaults(defineProps<{
   isOpen: boolean
@@ -66,6 +67,9 @@ const scrollStartY = ref(0)
 const velocity = ref(0)
 const lastTouchTime = ref(0)
 const lastTouchY = ref(0)
+const lastHapticIndex = ref(-1)
+
+const { detent, selection } = useHaptics()
 
 // Generate array of values
 const values = ref<number[]>([])
@@ -127,6 +131,7 @@ function cancel() {
 }
 
 function done() {
+  selection()
   emit('update:modelValue', selectedValue.value)
   emit('close')
 }
@@ -195,6 +200,12 @@ function updateSelectedFromScroll() {
     const value = values.value[index]
     if (value !== undefined) {
       selectedValue.value = value
+      
+      // Trigger detent haptic when crossing into a new item
+      if (index !== lastHapticIndex.value) {
+        detent()
+        lastHapticIndex.value = index
+      }
     }
   }
 }

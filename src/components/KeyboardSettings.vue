@@ -179,7 +179,7 @@
             class="advanced-strum-header"
             @click="advancedStrumOpen = !advancedStrumOpen"
           >
-            <span class="mood-text">{{ currentMood }}</span>
+            <span class="mood-text" v-html="currentMood"></span>
             <div class="right-controls">
               <span class="adv-label">ADVANCED</span>
               <span class="icon">{{ advancedStrumOpen ? '−' : '+' }}</span>
@@ -240,7 +240,7 @@
 
       <!-- Static Mood Description Bar (for all modes) -->
       <div class="static-mood-bar" v-if="currentMood">
-        <span class="mood-text">{{ currentMood }}</span>
+        <span class="mood-text" v-html="currentMood"></span>
       </div>
     </div>
 
@@ -760,46 +760,46 @@ const chordIntervals: Record<number, number[]> = {
 
 // Scale mood descriptions - production-focused
 const scaleMoods: Record<number, string> = {
-  0: 'all notes • no filtering • full range',
-  1: 'bright • pop hooks • uplifting',
-  2: 'sad • emotional • introspective',
-  3: 'dark drama • cinematic • tension',
-  4: 'jazz smooth • sophisticated • lush',
-  5: 'simple melodies • catchy • universal',
-  6: 'blues riffs • minor grooves • soulful',
-  7: 'classic blues • gritty • expressive',
-  8: 'modal jazz • funky • sophisticated',
-  9: 'Spanish vibes • flamenco • exotic',
-  10: 'dreamy • floating • major bright',
-  11: 'funk grooves • classic rock • bold',
-  12: 'dark jazz • unstable • dissonant',
-  13: 'middle eastern • powerful • exotic',
-  14: 'ambient pads • spacey • floating',
-  15: 'glitchy • jazz tension • symmetrical',
-  16: 'bluesy major • swing • vintage',
-  17: 'Japanese • meditative • pentatonic',
-  18: 'Japanese • ethereal • minimal',
-  19: 'Indian classical • dramatic • intense',
-  20: 'altered jazz • super dark • dissonant'
+  0: 'all notes<br>no filtering // full range',
+  1: 'bright // uplifting<br>pop hooks',
+  2: 'sad // emotional<br>introspective',
+  3: 'dark drama<br>cinematic // tension',
+  4: 'jazz smooth // lush<br>sophisticated',
+  5: 'catchy // simple<br>universal melodies',
+  6: 'blues riffs // soulful<br>minor grooves',
+  7: 'gritty // expressive<br>classic blues',
+  8: 'modal jazz // funky<br>sophisticated',
+  9: 'Spanish // exotic<br>flamenco vibes',
+  10: 'dreamy // floating<br>major bright',
+  11: 'funk grooves // bold<br>classic rock',
+  12: 'dark jazz<br>unstable // dissonant',
+  13: 'exotic // powerful<br>middle eastern',
+  14: 'spacey // ambient<br>floating pads',
+  15: 'glitchy<br>symmetrical // jazz tension',
+  16: 'bluesy // vintage<br>major swing',
+  17: 'Japanese<br>meditative // pentatonic',
+  18: 'minimal // Japanese<br>ethereal',
+  19: 'intense // dramatic<br>Indian classical',
+  20: 'altered jazz<br>super dark // dissonant'
 }
 
 // Chord mood descriptions - production-focused
 const chordMoods: Record<number, string> = {
-  0: 'bright • clean pop • uplifting vibes',
-  1: 'dark • emotional • trap feels',
-  2: 'tension • horror vibes • glitchy',
-  3: 'weird • glitchy • experimental',
-  4: 'airy • modern pop • bright shimmer',
-  5: 'build-up • tension • anticipation',
-  6: '808 bass • heavy • EDM drop',
-  7: 'neo-soul • smooth jazz • lush pads',
-  8: 'R&B grooves • chill beats • moody',
-  9: 'bluesy • tension • resolving',
-  10: 'shimmer • modern pop • bright color',
-  11: 'emotional depth • trap soul • moody',
-  12: 'lo-fi gold • retro • nostalgia',
-  13: 'boom-bap • vintage • melancholic',
-  14: 'lush pads • neo-soul • rich texture'
+  0: 'bright // clean pop<br>uplifting vibes',
+  1: 'dark // emotional<br>trap feels',
+  2: 'tension // glitchy<br>horror vibes',
+  3: 'weird // glitchy<br>experimental',
+  4: 'airy // shimmer<br>bright modern pop',
+  5: 'build-up // tension<br>anticipation',
+  6: '808 bass // heavy<br>EDM drop',
+  7: 'neo-soul // lush<br>smooth jazz pads',
+  8: 'R&B grooves // moody<br>chill beats',
+  9: 'bluesy // tension<br>resolving',
+  10: 'shimmer // color<br>bright modern pop',
+  11: 'trap soul // moody<br>emotional depth',
+  12: 'lo-fi // retro<br>gold nostalgia',
+  13: 'vintage // boom-bap<br>melancholic',
+  14: 'lush pads // neo-soul<br>rich texture'
 }
 
 // Keyboard layout - starting from B (MIDI 59) for ~2 octaves

@@ -202,115 +202,115 @@ const templates = ref<Template[]>([
   {
     id: 1,
     name: 'Major Triad',
-    mood: 'bright • clean pop • uplifting vibes',
+    mood: 'bright // clean pop // uplifting vibes',
     intervals: [0, 4, 7, 12]
   },
   {
     id: 2,
     name: 'Minor Triad',
-    mood: 'dark • emotional • trap feels',
+    mood: 'dark // emotional // trap feels',
     intervals: [0, 3, 7, 12]
   },
   {
     id: 3,
     name: 'Major 7th',
-    mood: 'neo-soul • smooth jazz • lush pads',
+    mood: 'neo-soul // smooth jazz // lush pads',
     intervals: [0, 4, 7, 11, 12]
   },
   {
     id: 4,
     name: 'Minor 7th',
-    mood: 'R&B grooves • chill beats • moody',
+    mood: 'R&B grooves // chill beats // moody',
     intervals: [0, 3, 7, 10, 12]
   },
   {
     id: 5,
     name: 'Pentatonic',
-    mood: 'melodic trap • simple hooks • catchy',
+    mood: 'melodic trap // simple hooks // catchy',
     intervals: [0, 2, 4, 7, 9, 12]
   },
   {
     id: 6,
     name: 'Blues Scale',
-    mood: 'soulful • dirty beats • classic grit',
+    mood: 'soulful // dirty beats // classic grit',
     intervals: [0, 3, 5, 6, 7, 10, 12]
   },
   {
     id: 7,
     name: 'Diminished',
-    mood: 'tension • horror vibes • glitchy',
+    mood: 'tension // horror vibes // glitchy',
     intervals: [0, 3, 6, 9, 12]
   },
   {
     id: 8,
     name: 'Whole Tone',
-    mood: 'dreamy • ambient pads • spacey',
+    mood: 'dreamy // ambient pads // spacey',
     intervals: [0, 2, 4, 6, 8, 10, 12]
   },
   {
     id: 9,
     name: 'Power Chord',
-    mood: '808 bass • heavy • EDM drop',
+    mood: '808 bass // heavy // EDM drop',
     intervals: [0, 7, 12]
   },
   {
     id: 10,
     name: 'Octave Jump',
-    mood: 'dynamic leads • bouncy • energy',
+    mood: 'dynamic leads // bouncy // energy',
     intervals: [0, 12, 7, 12, 0]
   },
   {
     id: 11,
     name: 'Augmented',
-    mood: 'weird • glitchy • experimental',
+    mood: 'weird // glitchy // experimental',
     intervals: [0, 4, 8, 12]
   },
   {
     id: 12,
     name: 'Sus2',
-    mood: 'airy • modern pop • bright shimmer',
+    mood: 'airy // modern pop // bright shimmer',
     intervals: [0, 2, 7, 12]
   },
   {
     id: 13,
     name: 'Sus4',
-    mood: 'build-up • tension • anticipation',
+    mood: 'build-up // tension // anticipation',
     intervals: [0, 5, 7, 12]
   },
   {
     id: 14,
     name: 'Dominant 7th',
-    mood: 'bluesy • tension • resolving',
+    mood: 'bluesy // tension // resolving',
     intervals: [0, 4, 7, 10, 12]
   },
   {
     id: 15,
     name: 'Major add9',
-    mood: 'shimmer • modern pop • bright color',
+    mood: 'shimmer // modern pop // bright color',
     intervals: [0, 4, 7, 14]
   },
   {
     id: 16,
     name: 'Minor add9',
-    mood: 'emotional depth • trap soul • moody',
+    mood: 'emotional depth // trap soul // moody',
     intervals: [0, 3, 7, 14]
   },
   {
     id: 17,
     name: 'Major 6th',
-    mood: 'lo-fi gold • retro • nostalgia',
+    mood: 'lo-fi gold // retro // nostalgia',
     intervals: [0, 4, 7, 9, 12]
   },
   {
     id: 18,
     name: 'Minor 6th',
-    mood: 'boom-bap • vintage • melancholic',
+    mood: 'boom-bap // vintage // melancholic',
     intervals: [0, 3, 7, 9, 12]
   },
   {
     id: 19,
     name: 'Major 9th',
-    mood: 'lush pads • neo-soul • rich texture',
+    mood: 'lush pads // neo-soul // rich texture',
     intervals: [0, 4, 7, 11, 14]
   }
 ])

@@ -65,7 +65,7 @@ const VISIBLE_ITEMS = 5; // Number of visible items
 const lastHapticIndex = ref(-1);
 let scrollTimeout: ReturnType<typeof setTimeout> | null = null;
 
-const { detent, selection } = useHaptics();
+const { detent } = useHaptics();
 
 // Calculate position relative to trigger element
 const positionStyle = computed(() => {

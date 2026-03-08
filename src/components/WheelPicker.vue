@@ -69,7 +69,7 @@ const lastTouchTime = ref(0)
 const lastTouchY = ref(0)
 const lastHapticIndex = ref(-1)
 
-const { detent, selection } = useHaptics()
+const { detent } = useHaptics()
 
 // Generate array of values
 const values = ref<number[]>([])

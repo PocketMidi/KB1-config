@@ -16,6 +16,7 @@
           <div 
             ref="pickerScroll"
             class="picker-scroll"
+            @scroll="handleScroll"
             @touchstart="handleTouchStart"
             @touchmove="handleTouchMove"
             @touchend="handleTouchEnd"
@@ -187,6 +188,11 @@ function handleTouchEnd() {
   setTimeout(() => {
     snapToNearest()
   }, 300)
+}
+
+// Handle scroll events (for programmatic scrolling and wheel events)
+function handleScroll() {
+  updateSelectedFromScroll()
 }
 
 function updateSelectedFromScroll() {

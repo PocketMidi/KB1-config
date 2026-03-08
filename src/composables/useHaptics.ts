@@ -57,8 +57,8 @@ export function useHaptics() {
     // Error feedback
     error: () => conditionalTrigger('error'),
     
-    // Double tap for root note selection
-    doubleTap: () => conditionalTrigger([100, 50, 100]), // Pattern: on-off-on for iOS compatibility
+    // Double tap for root note selection (shorter for less intensity)
+    doubleTap: () => conditionalTrigger([50, 40, 50]), // Pattern: on-off-on (shorter duration)
     
     // State management
     isSupported: computed(() => isSupported),

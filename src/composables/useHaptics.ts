@@ -1,9 +1,11 @@
 import { ref, computed } from 'vue'
 import { useWebHaptics } from 'web-haptics/vue'
 
-// Global state for haptics preference
-const hapticsEnabled = ref(true)
+// Global state for haptics preference (default OFF for live app)
+const hapticsEnabled = ref(false)
 let initialized = false
+let lastHapticTime = 0
+const HAPTIC_THROTTLE_MS = 50 // Minimum time between haptics
 
 // Auto-initialize from localStorage on first import
 function autoInit() {
@@ -35,37 +37,50 @@ export function useHaptics() {
   // Check if haptics should be triggered
   const shouldTrigger = computed(() => hapticsEnabled.value && isSupported)
 
-  // Helper function to conditionally trigger haptics
-  const conditionalTrigger = (pattern: any) => {
-    if (shouldTrigger.value) {
-      console.log('[Haptics] Triggering:', pattern)
-      trigger(pattern)
-    } else {
+  // Helper function to conditionally trigger haptics with throttling
+  const conditionalTrigger = (pattern: any, allowThrottle = true) => {
+    if (!shouldTrigger.value) {
       console.log('[Haptics] Skipped - enabled:', hapticsEnabled.value, 'supported:', isSupported)
+      return
+    }
+    
+    // Throttle rapid-fire haptics
+    const now = Date.now()
+    if (allowThrottle && (now - lastHapticTime) < HAPTIC_THROTTLE_MS) {
+      console.log('[Haptics] Throttled')
+      return
+    }
+    
+    lastHapticTime = now
+    console.log('[Haptics] Triggering:', pattern)
+    try {
+      trigger(pattern)
+    } catch (error) {
+      console.error('[Haptics] Failed to trigger:', error)
     }
   }
 
   return {
-    // Detent bump for wheel scrolling (very subtle, like physical detents)
-    detent: () => conditionalTrigger([{ duration: 8, intensity: 0.3 }]),
+    // Detent bump for wheel scrolling - throttled to prevent overload
+    detent: () => conditionalTrigger('selection', true),
     
-    // Light tap for value increment/decrement
-    light: () => conditionalTrigger([{ duration: 15, intensity: 0.35 }]),
+    // Light tap for value increment/decrement - throttled
+    light: () => conditionalTrigger('selection', true),
     
-    // Selection confirmation (slightly stronger)
-    selection: () => conditionalTrigger([{ duration: 20, intensity: 0.5 }]),
+    // Selection confirmation - not throttled for immediate response
+    selection: () => conditionalTrigger('success', false),
     
-    // Success feedback
-    success: () => conditionalTrigger('success'),
+    // Success feedback - not throttled
+    success: () => conditionalTrigger('success', false),
     
-    // Error feedback
-    error: () => conditionalTrigger('error'),
+    // Error feedback - not throttled
+    error: () => conditionalTrigger('error', false),
     
-    // Double tap for important selections (like root note)
+    // Double tap for important selections - not throttled
     doubleTap: () => conditionalTrigger([
       { duration: 15, intensity: 0.4 },
       { delay: 30, duration: 15, intensity: 0.4 }
-    ]),
+    ], false),
     
     // State management
     isSupported: computed(() => isSupported),

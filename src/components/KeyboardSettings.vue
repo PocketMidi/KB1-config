@@ -324,6 +324,8 @@ const typeTriggerRef = ref<HTMLElement | null>(null)
 // Advanced strum section state
 const advancedStrumOpen = ref(false)
 
+const { doubleTap } = useHaptics()
+
 // Watch advanced strum panel state to control pattern mode
 watch(advancedStrumOpen, (isOpen) => {
   // When closing the panel, reset strumPattern to 0 (use chord type intervals)

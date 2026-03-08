@@ -38,17 +38,28 @@
       <div v-if="!isIOSDevice" class="group">
         <label for="haptics">HAPTIC FEEDBACK</label>
         <div class="toggle-switch" @click="toggleHaptics">
+          <span class="toggle-label-left" :class="{ active: !hapticsEnabled }">OFF</span>
           <div class="toggle-track" :class="{ active: hapticsEnabled }">
             <div class="toggle-thumb"></div>
           </div>
-          <span class="toggle-label">{{ hapticsEnabled ? 'ON' : 'OFF' }}</span>
+          <span class="toggle-label-right" :class="{ active: hapticsEnabled }">ON</span>
+        </div>
+      </div>
+      <div class="input-divider"></div>
+
+      <div class="group">
+        <label>PARAMETER RESOLUTION</label>
+        <div class="toggle-switch resolution-toggle" @click="toggleResolution">
+          <span class="toggle-label-left" :class="{ active: unipolarStepSize === 1 }">1</span>
+          <div class="toggle-track" :class="{ active: unipolarStepSize === 5 }">
+            <div class="toggle-thumb"></div>
+          </div>
+          <span class="toggle-label-right" :class="{ active: unipolarStepSize === 5 }">5</span>
         </div>
       </div>
       
       <div class="hint-text">
         After idle time → pulsing LEDs (Light Sleep) → 90s later → deep sleep (lowest power). BLE Timeout: while web app is connected and pinging, sleep is prevented.
-        <br v-if="!isIOSDevice"><br v-if="!isIOSDevice">
-        <span v-if="!isIOSDevice">Haptic Feedback: subtle vibrations on mobile devices for wheel scrolling, button taps, and value changes.</span>
       </div>
     </div>
   </div>
@@ -57,6 +68,7 @@
 <script setup lang="ts">
 import { computed, watch, onMounted } from 'vue'
 import { useHaptics } from '../composables/useHaptics'
+import { useUIPreferences } from '../composables/useUIPreferences'
 import ValueControl from './ValueControl.vue'
 
 type SystemModel = {
@@ -96,6 +108,14 @@ function toggleHaptics() {
   if (hapticsEnabled.value) {
     snap()
   }
+}
+
+// UI Preferences
+const { unipolarStepSize, setUnipolarStepSize } = useUIPreferences()
+
+function toggleResolution() {
+  setUnipolarStepSize(unipolarStepSize.value === 1 ? 5 : 1)
+  snap()
 }
 
 // Auto-calculate deep sleep as light sleep + 90s (fixed pulsing LED warning period)
@@ -251,11 +271,31 @@ const formatTime = (seconds: number): string => {
   transform: translateX(20px);
 }
 
-.toggle-label {
+.toggle-label-left,
+.toggle-label-right {
   font-family: 'Roboto Mono';
   font-size: 0.8125rem;
-  color: #EAEAEA;
+  color: #848484;
   font-weight: 400;
   min-width: 32px;
+  text-align: center;
+  transition: color 0.25s ease;
+}
+
+.toggle-label-left.active,
+.toggle-label-right.active {
+  color: #EAEAEA;
+}
+
+/* Resolution toggle - keep track gray, highlight active number in yellow */
+.resolution-toggle .toggle-track.active {
+  background: #2A2A2A;
+  border-color: #3A3A3A;
+}
+
+.resolution-toggle .toggle-label-left.active,
+.resolution-toggle .toggle-label-right.active {
+  color: #FFD700;
+  font-weight: 500;
 }
 </style>

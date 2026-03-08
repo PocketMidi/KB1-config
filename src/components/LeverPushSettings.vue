@@ -119,9 +119,9 @@
           v-model="userMin"
           :min="minRange"
           :max="constrainedMaxForMin"
-          :step="isPatternSelector ? 1 : 5"
-          :small-step="isPatternSelector ? 1 : 5"
-          :large-step="isPatternSelector ? 1 : 10"
+          :step="isPatternSelector ? 1 : unipolarStepSize"
+          :small-step="isPatternSelector ? 1 : unipolarStepSize"
+          :large-step="isPatternSelector ? 1 : unipolarStepSize * 2"
           :disabled="isResetMode"
         />
       </div>
@@ -133,9 +133,9 @@
           v-model="userMax"
           :min="constrainedMinForMax"
           :max="maxRange"
-          :step="isPatternSelector ? 1 : 5"
-          :small-step="isPatternSelector ? 1 : 5"
-          :large-step="isPatternSelector ? 1 : 10"
+          :step="isPatternSelector ? 1 : unipolarStepSize"
+          :small-step="isPatternSelector ? 1 : unipolarStepSize"
+          :large-step="isPatternSelector ? 1 : unipolarStepSize * 2"
           :disabled="isResetMode"
         />
       </div>
@@ -226,6 +226,7 @@ import LevelMeter from './LevelMeter.vue'
 import OptionWheelPicker from './OptionWheelPicker.vue'
 import PatternSelector from './PatternSelector.vue'
 import { useHaptics } from '../composables/useHaptics'
+import { useUIPreferences } from '../composables/useUIPreferences'
 
 const BASE_PATH = import.meta.env.BASE_URL || '/'
 
@@ -266,6 +267,9 @@ const model = computed({
 
 // Haptics
 const { snap, isSupported } = useHaptics()
+
+// UI Preferences
+const { unipolarStepSize } = useUIPreferences()
 
 // Function mode constants
 const FUNCTION_MODE_INTERPOLATED = 0
@@ -613,17 +617,17 @@ const userMin = computed({
     } else {
       value = midiToUnipolar(model.value.minCCValue)
     }
-    // Snap displayed value to 5-unit increments (except pattern selector)
+    // Snap displayed value to user preference step size (except pattern selector)
     if (model.value.ccNumber !== 201) {
-      return Math.round(value / 5) * 5
+      return Math.round(value / unipolarStepSize.value) * unipolarStepSize.value
     }
     return value
   },
   set: (userValue: number) => {
-    // Snap to 5% increments before converting to MIDI
+    // Snap to step increments before converting to MIDI
     let snappedValue = userValue
     if (model.value.ccNumber !== 201) {
-      snappedValue = Math.round(userValue / 5) * 5
+      snappedValue = Math.round(userValue / unipolarStepSize.value) * unipolarStepSize.value
     }
     
     if (model.value.ccNumber === 200) {
@@ -647,17 +651,17 @@ const userMax = computed({
     } else {
       value = midiToUnipolar(model.value.maxCCValue)
     }
-    // Snap displayed value to 5-unit increments (except pattern selector)
+    // Snap displayed value to user preference step size (except pattern selector)
     if (model.value.ccNumber !== 201) {
-      return Math.round(value / 5) * 5
+      return Math.round(value / unipolarStepSize.value) * unipolarStepSize.value
     }
     return value
   },
   set: (userValue: number) => {
-    // Snap to 5% increments before converting to MIDI
+    // Snap to step increments before converting to MIDI
     let snappedValue = userValue
     if (model.value.ccNumber !== 201) {
-      snappedValue = Math.round(userValue / 5) * 5
+      snappedValue = Math.round(userValue / unipolarStepSize.value) * unipolarStepSize.value
     }
     
     if (model.value.ccNumber === 200) {
@@ -682,17 +686,17 @@ const resetValue = computed({
     } else {
       value = midiToUnipolar(model.value.minCCValue)
     }
-    // Snap displayed value to 5-unit increments (except pattern selector)
+    // Snap displayed value to user preference step size (except pattern selector)
     if (model.value.ccNumber !== 201) {
-      return Math.round(value / 5) * 5
+      return Math.round(value / unipolarStepSize.value) * unipolarStepSize.value
     }
     return value
   },
   set: (userValue: number) => {
-    // Snap to 5% increments before converting to MIDI
+    // Snap to step increments before converting to MIDI
     let snappedValue = userValue
     if (model.value.ccNumber !== 201) {
-      snappedValue = Math.round(userValue / 5) * 5
+      snappedValue = Math.round(userValue / unipolarStepSize.value) * unipolarStepSize.value
     }
     
     if (model.value.ccNumber === 200) {

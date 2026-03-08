@@ -262,6 +262,7 @@ import LevelMeter from './LevelMeter.vue'
 import OptionWheelPicker from './OptionWheelPicker.vue'
 import IncrementalProfile from './IncrementalProfile.vue'
 import { useHaptics } from '../composables/useHaptics'
+import { useUIPreferences } from '../composables/useUIPreferences'
 
 type LeverModel = {
   ccNumber: number
@@ -300,6 +301,9 @@ const model = computed({
 
 // Haptics
 const { tap, snap, isSupported } = useHaptics()
+
+// UI Preferences
+const { unipolarStepSize } = useUIPreferences()
 
 // Constants
 const BASE_PATH = '/KB1-config'
@@ -596,8 +600,9 @@ const minMaxStepSize = computed(() => {
   // In non-incremental mode, use step size that avoids MIDI precision issues
   // Bipolar: -100 to +100 (200 range) → 0-127 MIDI
   // Each MIDI value ≈ 1.57 user units, so use step=5 to avoid rounding collisions
-  // Unipolar: 0 to 100 (100 range) → 0-127 MIDI (finer resolution, step=1 works)
-  return model.value.valueMode === VALUE_MODE_BIPOLAR ? 5 : 1
+  // Unipolar: 0 to 100 (100 range) → 0-127 MIDI (finer resolution)
+  // Use user preference (1 or 5) for unipolar mode
+  return model.value.valueMode === VALUE_MODE_BIPOLAR ? 5 : unipolarStepSize.value
 })
 
 // Snap value to step increments in incremental mode

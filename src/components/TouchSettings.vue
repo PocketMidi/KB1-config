@@ -95,8 +95,8 @@
           :min="minRange"
           :max="constrainedMaxForMin"
           :step="1"
-          :small-step="isPatternSelector ? 1 : 5"
-          :large-step="isPatternSelector ? 1 : 10"
+          :small-step="isPatternSelector ? 1 : unipolarStepSize"
+          :large-step="isPatternSelector ? 1 : unipolarStepSize * 2"
         />
       </div>
       <div class="input-divider"></div>
@@ -108,8 +108,8 @@
           :min="constrainedMinForMax"
           :max="maxRange"
           :step="1"
-          :small-step="isPatternSelector ? 1 : 5"
-          :large-step="isPatternSelector ? 1 : 10"
+          :small-step="isPatternSelector ? 1 : unipolarStepSize"
+          :large-step="isPatternSelector ? 1 : unipolarStepSize * 2"
         />
       </div>
       <div class="input-divider"></div>
@@ -153,6 +153,7 @@ import ValueControl from './ValueControl.vue'
 import LevelMeter from './LevelMeter.vue'
 import OptionWheelPicker from './OptionWheelPicker.vue'
 import PatternSelector from './PatternSelector.vue'
+import { useUIPreferences } from '../composables/useUIPreferences'
 
 type TouchModel = {
   ccNumber: number
@@ -180,6 +181,9 @@ const model = computed({
   get: () => props.modelValue,
   set: v => emit('update:modelValue', v)
 })
+
+// UI Preferences
+const { unipolarStepSize } = useUIPreferences()
 
 const BASE_PATH = import.meta.env.BASE_URL || '/'
 
@@ -375,9 +379,9 @@ const userMin = computed({
     } else {
       value = midiToUnipolar(model.value.minCCValue)
     }
-    // Snap displayed value to 5-unit increments (except pattern selector)
+    // Snap displayed value to user preference step size (except pattern selector)
     if (model.value.ccNumber !== 201) {
-      return Math.round(value / 5) * 5
+      return Math.round(value / unipolarStepSize.value) * unipolarStepSize.value
     }
     return value
   },
@@ -403,9 +407,9 @@ const userMax = computed({
     } else {
       value = midiToUnipolar(model.value.maxCCValue)
     }
-    // Snap displayed value to 5-unit increments (except pattern selector)
+    // Snap displayed value to user preference step size (except pattern selector)
     if (model.value.ccNumber !== 201) {
-      return Math.round(value / 5) * 5
+      return Math.round(value / unipolarStepSize.value) * unipolarStepSize.value
     }
     return value
   },

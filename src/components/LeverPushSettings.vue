@@ -225,6 +225,7 @@ import ValueControl from './ValueControl.vue'
 import LevelMeter from './LevelMeter.vue'
 import OptionWheelPicker from './OptionWheelPicker.vue'
 import PatternSelector from './PatternSelector.vue'
+import { useHaptics } from '../composables/useHaptics'
 
 const BASE_PATH = import.meta.env.BASE_URL || '/'
 
@@ -262,6 +263,9 @@ const model = computed({
   get: () => props.modelValue,
   set: v => emit('update:modelValue', v)
 })
+
+// Haptics
+const { light, isSupported } = useHaptics()
 
 // Function mode constants
 const FUNCTION_MODE_INTERPOLATED = 0
@@ -421,6 +425,8 @@ const toggleTooltip = computed(() =>
 )
 
 function handleToggleClick() {
+  if (isSupported.value) light()
+  
   if (isMomentary.value) {
     // Switch to latched - set offsetTime to match onsetTime
     // If onsetTime is 0, use a sensible default (100ms)
@@ -466,6 +472,8 @@ const activeProfileName = computed(() => {
 })
 
 const selectProfile = (profile: ProfileType) => {
+  if (isSupported.value) light()
+  
   if (profile === 'inc') {
     model.value.functionMode = 2 // STATIC
   } else if (profile === 'pd') {

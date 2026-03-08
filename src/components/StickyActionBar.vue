@@ -4,7 +4,7 @@
       class="action-icon-btn"
       title="Load"
       aria-label="Load"
-      @click="$emit('load')"
+      @click="handleLoad"
       :disabled="!isConnected || isLoading"
     >
       <img src="/load.svg" alt="" class="action-icon" />
@@ -14,7 +14,7 @@
       class="action-icon-btn"
       title="Reset"
       aria-label="Reset"
-      @click="$emit('reset-defaults')"
+      @click="handleReset"
       :disabled="!isConnected || isLoading"
     >
       <img src="/reset.svg" alt="" class="action-icon" />
@@ -24,7 +24,7 @@
       class="action-icon-btn"
       title="Upload"
       aria-label="Upload"
-      @click="$emit('save')"
+      @click="handleSave"
       :disabled="!isConnected || isLoading"
     >
       <img src="/save.svg" alt="" class="action-icon" />
@@ -33,17 +33,36 @@
 </template>
 
 <script setup lang="ts">
+import { useHaptics } from '../composables/useHaptics'
+
 defineProps<{
   isConnected: boolean;
   isLoading: boolean;
   hasChanges: boolean;
 }>();
 
-defineEmits<{
+const emit = defineEmits<{
   load: [];
   'reset-defaults': [];
   save: [];
 }>();
+
+const { light, isSupported } = useHaptics()
+
+function handleLoad() {
+  if (isSupported.value) light()
+  emit('load')
+}
+
+function handleReset() {
+  if (isSupported.value) light()
+  emit('reset-defaults')
+}
+
+function handleSave() {
+  if (isSupported.value) light()
+  emit('save')
+}
 </script>
 
 <style scoped>

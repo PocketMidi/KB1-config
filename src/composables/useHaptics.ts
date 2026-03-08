@@ -60,7 +60,7 @@ export function useHaptics() {
 
   // Timestamp for throttling rapid scroll haptics
   let lastDetentTime = 0
-  const DETENT_THROTTLE_MS = 60 // Minimum time between scroll haptics
+  const DETENT_THROTTLE_MS = 35 // Minimum time between scroll haptics (allows slow scrolling)
 
   // Helper function to conditionally trigger haptics
   const conditionalTrigger = (pattern: any) => {
@@ -78,7 +78,7 @@ export function useHaptics() {
     const now = Date.now()
     if (now - lastDetentTime < DETENT_THROTTLE_MS) return
     lastDetentTime = now
-    conditionalTrigger(30) // Stronger 30ms pulse
+    conditionalTrigger(50) // Strong 50ms pulse for scroll detents
   }
 
   return {
@@ -86,7 +86,7 @@ export function useHaptics() {
     detent: throttledDetent,
     
     // Light tap for value increment/decrement
-    light: () => conditionalTrigger(15),
+    light: () => conditionalTrigger(20), // Increased from 15ms to 20ms
     
     // Selection confirmation (currently unused - haptics only during scroll)
     selection: () => conditionalTrigger(20),

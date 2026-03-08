@@ -45,7 +45,8 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
+import { useHaptics } from '../composables/useHaptics'
 
 const props = withDefaults(defineProps<{
   min: number
@@ -68,6 +69,10 @@ const emit = defineEmits<{
   'update:value': [value: number]
 }>()
 
+// Haptics
+const { light, isSupported } = useHaptics()
+const lastHapticValue = ref<number | null>(null)
+
 // Direct marker interaction handlers
 const updateValueFromPosition = (clientX: number, rect: DOMRect) => {
   const rangeMin = props.minAllowed ?? (props.isBipolar ? -100 : 0)
@@ -80,9 +85,20 @@ const updateValueFromPosition = (clientX: number, rect: DOMRect) => {
   // Snap to step size
   const snappedValue = Math.round(clickedValue / props.stepSize) * props.stepSize
   
+  // Haptic feedback on dots: trigger every 5 units (or step size if larger)
+  const dotInterval = Math.max(5, props.stepSize)
+  const currentDot = Math.round(snappedValue / dotInterval)
+  const lastDot = lastHapticValue.value !== null ? Math.round(lastHapticValue.value / dotInterval) : null
+  const crossedDot = currentDot !== lastDot
+  
   if (props.mode === 'reset') {
     // In reset mode, update the single value
-    emit('update:value', Math.round(snappedValue))
+    const newValue = Math.round(snappedValue)
+    emit('update:value', newValue)
+    if (isSupported.value && crossedDot) {
+      light()
+      lastHapticValue.value = snappedValue
+    }
   } else {
     // In range mode, update whichever is closer (min or max)
     const distToMin = Math.abs(snappedValue - props.min)
@@ -92,10 +108,18 @@ const updateValueFromPosition = (clientX: number, rect: DOMRect) => {
       // Update min, but don't go above max
       const newMin = Math.min(Math.round(snappedValue), props.max)
       emit('update:min', newMin)
+      if (isSupported.value && crossedDot) {
+        light()
+        lastHapticValue.value = snappedValue
+      }
     } else {
       // Update max, but don't go below min
       const newMax = Math.max(Math.round(snappedValue), props.min)
       emit('update:max', newMax)
+      if (isSupported.value && crossedDot) {
+        light()
+        lastHapticValue.value = snappedValue
+      }
     }
   }
 }

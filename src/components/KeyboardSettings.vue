@@ -762,7 +762,7 @@ const chordIntervals: Record<number, number[]> = {
 
 // Scale mood descriptions - production-focused
 const scaleMoods: Record<number, string> = {
-  0: 'all notes<br>no filtering // full range',
+  0: 'all notes // full range<br>no filtering',
   1: 'bright // uplifting<br>pop hooks',
   2: 'sad // emotional<br>introspective',
   3: 'dark drama<br>cinematic // tension',
@@ -777,12 +777,12 @@ const scaleMoods: Record<number, string> = {
   12: 'dark jazz<br>unstable // dissonant',
   13: 'exotic // powerful<br>middle eastern',
   14: 'spacey // ambient<br>floating pads',
-  15: 'glitchy<br>symmetrical // jazz tension',
+  15: 'angular // symmetrical<br>jazz tension',
   16: 'bluesy // vintage<br>major swing',
-  17: 'Japanese<br>meditative // pentatonic',
-  18: 'minimal // Japanese<br>ethereal',
+  17: 'Japanese // meditative<br>traditional',
+  18: 'Japanese // minimal<br>contemplative',
   19: 'intense // dramatic<br>Indian classical',
-  20: 'altered jazz<br>super dark // dissonant'
+  20: 'super dark // dissonant<br>altered jazz'
 }
 
 // Chord mood descriptions - production-focused
@@ -790,7 +790,7 @@ const chordMoods: Record<number, string> = {
   0: 'bright // clean pop<br>uplifting vibes',
   1: 'dark // emotional<br>trap feels',
   2: 'tension // glitchy<br>horror vibes',
-  3: 'weird // glitchy<br>experimental',
+  3: 'weird // wonky<br>experimental',
   4: 'airy // shimmer<br>bright modern pop',
   5: 'build-up // tension<br>anticipation',
   6: '808 bass // heavy<br>EDM drop',

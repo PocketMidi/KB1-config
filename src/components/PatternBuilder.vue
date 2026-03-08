@@ -262,7 +262,7 @@ const templates = ref<Template[]>([
   {
     id: 11,
     name: 'Augmented',
-    mood: 'weird // glitchy // experimental',
+    mood: 'weird // wonky // experimental',
     intervals: [0, 4, 8, 12]
   },
   {

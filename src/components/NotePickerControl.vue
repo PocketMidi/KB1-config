@@ -176,7 +176,7 @@ onBeforeUnmount(() => {
 .note-picker-control {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.15rem;
   width: auto;
   min-width: 120px;
 }

@@ -3,11 +3,34 @@ import { useWebHaptics } from 'web-haptics/vue'
 
 // Global state for haptics preference
 const hapticsEnabled = ref(true)
+let initialized = false
+
+// Auto-initialize from localStorage on first import
+function autoInit() {
+  if (initialized) return
+  initialized = true
+  
+  try {
+    const stored = localStorage.getItem('kb1-haptics-enabled')
+    if (stored !== null) {
+      hapticsEnabled.value = JSON.parse(stored)
+      console.log('[Haptics] Loaded from localStorage:', hapticsEnabled.value)
+    } else {
+      console.log('[Haptics] No stored preference, defaulting to:', hapticsEnabled.value)
+    }
+  } catch (e) {
+    console.warn('[Haptics] Failed to load from localStorage:', e)
+  }
+}
 
 export function useHaptics() {
+  autoInit() // Initialize on first use
+  
   const { trigger, isSupported } = useWebHaptics({
     debug: false, // Set to true for desktop audio feedback testing
   })
+
+  console.log('[Haptics] isSupported:', isSupported, 'enabled:', hapticsEnabled.value)
 
   // Check if haptics should be triggered
   const shouldTrigger = computed(() => hapticsEnabled.value && isSupported)
@@ -15,19 +38,22 @@ export function useHaptics() {
   // Helper function to conditionally trigger haptics
   const conditionalTrigger = (pattern: any) => {
     if (shouldTrigger.value) {
+      console.log('[Haptics] Triggering:', pattern)
       trigger(pattern)
+    } else {
+      console.log('[Haptics] Skipped - enabled:', hapticsEnabled.value, 'supported:', isSupported)
     }
   }
 
   return {
     // Detent bump for wheel scrolling (very subtle, like physical detents)
-    detent: () => conditionalTrigger({ duration: 8, intensity: 0.3 }),
+    detent: () => conditionalTrigger([{ duration: 8, intensity: 0.3 }]),
     
     // Light tap for value increment/decrement
-    light: () => conditionalTrigger({ duration: 15, intensity: 0.35 }),
+    light: () => conditionalTrigger([{ duration: 15, intensity: 0.35 }]),
     
     // Selection confirmation (slightly stronger)
-    selection: () => conditionalTrigger({ duration: 20, intensity: 0.5 }),
+    selection: () => conditionalTrigger([{ duration: 20, intensity: 0.5 }]),
     
     // Success feedback
     success: () => conditionalTrigger('success'),

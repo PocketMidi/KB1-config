@@ -181,7 +181,7 @@
           >
             <span class="mood-text" v-html="currentMood"></span>
             <div class="right-controls">
-              <span class="adv-label">ADVANCED</span>
+              <span class="adv-label">SHAPE</span>
               <span class="icon">{{ advancedStrumOpen ? '−' : '+' }}</span>
             </div>
           </button>

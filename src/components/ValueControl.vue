@@ -68,7 +68,7 @@ const dragStartX = ref(0)
 const dragStartValue = ref(0)
 const lastHapticValue = ref(0)
 
-const { light, isSupported } = useHaptics()
+const { light, tap, isSupported } = useHaptics()
 
 const isAtMin = computed(() => props.modelValue <= props.min)
 const isAtMax = computed(() => props.modelValue >= props.max)
@@ -82,13 +82,13 @@ function snapToStep(value: number): number {
 }
 
 function decreaseSmall() {
-  if (isSupported.value) light()
+  if (isSupported.value) tap()
   const newValue = snapToStep(props.modelValue - props.smallStep)
   emit('update:modelValue', clamp(newValue))
 }
 
 function increaseSmall() {
-  if (isSupported.value) light()
+  if (isSupported.value) tap()
   const newValue = snapToStep(props.modelValue + props.smallStep)
   emit('update:modelValue', clamp(newValue))
 }

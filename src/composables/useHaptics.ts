@@ -85,8 +85,14 @@ export function useHaptics() {
     // Detent bump for wheel scrolling (throttled to prevent rapid-fire)
     detent: throttledDetent,
     
-    // Light tap for value increment/decrement
-    light: () => conditionalTrigger(20), // Increased from 15ms to 20ms
+    // Light tap for continuous drag feedback (subtle for rapid-fire)
+    light: () => conditionalTrigger(12),
+    
+    // Button tap for +/- clicks and discrete actions (stronger single pulse)
+    tap: () => conditionalTrigger(35),
+    
+    // Snap for switches and profile selection (strong satisfying click)
+    snap: () => conditionalTrigger(60),
     
     // Selection confirmation (currently unused - haptics only during scroll)
     selection: () => conditionalTrigger(20),

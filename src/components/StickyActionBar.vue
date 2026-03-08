@@ -47,20 +47,20 @@ const emit = defineEmits<{
   save: [];
 }>();
 
-const { light, isSupported } = useHaptics()
+const { tap, isSupported } = useHaptics()
 
 function handleLoad() {
-  if (isSupported.value) light()
+  if (isSupported.value) tap()
   emit('load')
 }
 
 function handleReset() {
-  if (isSupported.value) light()
+  if (isSupported.value) tap()
   emit('reset-defaults')
 }
 
 function handleSave() {
-  if (isSupported.value) light()
+  if (isSupported.value) tap()
   emit('save')
 }
 </script>

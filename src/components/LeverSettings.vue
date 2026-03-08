@@ -299,7 +299,7 @@ const model = computed({
 })
 
 // Haptics
-const { light, isSupported } = useHaptics()
+const { light, tap, snap, isSupported } = useHaptics()
 
 // Constants
 const BASE_PATH = '/KB1-config'
@@ -321,7 +321,7 @@ const toggleTooltip = computed(() => {
 const handleToggleClick = () => {
   if (isKB1Expression.value) return // Prevent toggle for KB1 Expression
   
-  if (isSupported.value) light()
+  if (isSupported.value) snap()
   
   model.value.valueMode = model.value.valueMode === 0 ? 1 : 0
   
@@ -367,7 +367,7 @@ const activeProfileName = computed(() => {
 })
 
 const selectProfile = (profile: ProfileType) => {
-  if (isSupported.value) light()
+  if (isSupported.value) snap()
   
   if (profile === 'inc') {
     model.value.functionMode = 2
@@ -899,7 +899,7 @@ const isStepsAtMax = computed(() => {
 
 // Arrow button functions for steps
 function decreaseSteps() {
-  if (isSupported.value) light()
+  if (isSupported.value) tap()
   const currentIndex = stepsOptions.indexOf(stepsValue.value)
   if (currentIndex > 0) {
     stepsValue.value = stepsOptions[currentIndex - 1]!
@@ -907,7 +907,7 @@ function decreaseSteps() {
 }
 
 function increaseSteps() {
-  if (isSupported.value) light()
+  if (isSupported.value) tap()
   const currentIndex = stepsOptions.indexOf(stepsValue.value)
   if (currentIndex < stepsOptions.length - 1) {
     stepsValue.value = stepsOptions[currentIndex + 1]!

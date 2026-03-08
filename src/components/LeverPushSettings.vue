@@ -265,7 +265,7 @@ const model = computed({
 })
 
 // Haptics
-const { light, isSupported } = useHaptics()
+const { tap, snap, isSupported } = useHaptics()
 
 // Function mode constants
 const FUNCTION_MODE_INTERPOLATED = 0
@@ -425,7 +425,7 @@ const toggleTooltip = computed(() =>
 )
 
 function handleToggleClick() {
-  if (isSupported.value) light()
+  if (isSupported.value) snap()
   
   if (isMomentary.value) {
     // Switch to latched - set offsetTime to match onsetTime
@@ -472,7 +472,7 @@ const activeProfileName = computed(() => {
 })
 
 const selectProfile = (profile: ProfileType) => {
-  if (isSupported.value) light()
+  if (isSupported.value) snap()
   
   if (profile === 'inc') {
     model.value.functionMode = 2 // STATIC

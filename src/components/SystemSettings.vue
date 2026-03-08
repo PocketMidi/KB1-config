@@ -83,7 +83,7 @@ const isIOSDevice = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
                     (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
 
 // Haptics
-const { enabled: hapticsEnabled, init: initHaptics, selection } = useHaptics()
+const { enabled: hapticsEnabled, init: initHaptics, snap } = useHaptics()
 
 // Initialize haptics from localStorage on mount
 onMounted(() => {
@@ -94,7 +94,7 @@ function toggleHaptics() {
   hapticsEnabled.value = !hapticsEnabled.value
   // Give immediate feedback if enabling
   if (hapticsEnabled.value) {
-    selection()
+    snap()
   }
 }
 

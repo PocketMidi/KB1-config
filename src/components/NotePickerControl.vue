@@ -52,7 +52,7 @@ const currentIndex = computed(() => {
   return props.notes.findIndex(note => note.value === props.modelValue)
 })
 
-const { light } = useHaptics()
+const { tap } = useHaptics()
 
 // Enharmonic equivalents for sharp/flat notes
 const enharmonicMap: Record<string, string> = {
@@ -81,7 +81,7 @@ const isAtMax = computed(() => currentIndex.value >= props.notes.length - 1)
 
 function decreaseNote() {
   if (props.disabled || isAtMin.value) return
-  light()
+  tap()
   const newIndex = currentIndex.value - 1
   const note = props.notes[newIndex]
   if (note) {
@@ -91,7 +91,7 @@ function decreaseNote() {
 
 function increaseNote() {
   if (props.disabled || isAtMax.value) return
-  light()
+  tap()
   const newIndex = currentIndex.value + 1
   const note = props.notes[newIndex]
   if (note) {
@@ -109,7 +109,7 @@ function setNoteByIndex(index: number) {
   
   // Haptic only when index actually changes
   if (clampedIndex !== lastHapticIndex.value) {
-    light()
+    tap()
     lastHapticIndex.value = clampedIndex
   }
   

@@ -56,6 +56,7 @@
       mode="range"
       :min-allowed="minRange"
       :max-allowed="maxRange"
+      :step-size="isPatternSelector ? 1 : 5"
       @update:min="userMin = $event"
       @update:max="userMax = $event"
     />
@@ -94,8 +95,8 @@
           :min="minRange"
           :max="maxRange"
           :step="1"
-          :small-step="5"
-          :large-step="10"
+          :small-step="isPatternSelector ? 1 : 5"
+          :large-step="isPatternSelector ? 1 : 10"
         />
       </div>
       <div class="input-divider"></div>
@@ -107,8 +108,8 @@
           :min="minRange"
           :max="maxRange"
           :step="1"
-          :small-step="5"
-          :large-step="10"
+          :small-step="isPatternSelector ? 1 : 5"
+          :large-step="isPatternSelector ? 1 : 10"
         />
       </div>
       <div class="input-divider"></div>

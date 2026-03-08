@@ -80,7 +80,7 @@
       :value="resetValue"
       :min-allowed="minRange"
       :max-allowed="maxRange"
-      :step-size="5"
+      :step-size="isPatternSelector ? 1 : 5"
       @update:min="userMin = $event"
       @update:max="userMax = $event"
       @update:value="resetValue = $event"
@@ -119,9 +119,9 @@
           v-model="userMin"
           :min="minRange"
           :max="maxRange"
-          :step="5"
-          :small-step="5"
-          :large-step="10"
+          :step="isPatternSelector ? 1 : 5"
+          :small-step="isPatternSelector ? 1 : 5"
+          :large-step="isPatternSelector ? 1 : 10"
           :disabled="isResetMode"
         />
       </div>
@@ -133,9 +133,9 @@
           v-model="userMax"
           :min="minRange"
           :max="maxRange"
-          :step="5"
-          :small-step="5"
-          :large-step="10"
+          :step="isPatternSelector ? 1 : 5"
+          :small-step="isPatternSelector ? 1 : 5"
+          :large-step="isPatternSelector ? 1 : 10"
           :disabled="isResetMode"
         />
       </div>

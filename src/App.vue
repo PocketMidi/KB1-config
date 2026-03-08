@@ -103,6 +103,9 @@ const themeIcon = computed(() => {
 function toggleTheme() {
   isDarkMode.value = !isDarkMode.value;
   localStorage.setItem(THEME_KEY, isDarkMode.value ? 'dark' : 'light');
+  // Apply theme class to html element for proper CSS variable inheritance
+  document.documentElement.classList.remove('theme-kb1-dark', 'theme-kb1-light');
+  document.documentElement.classList.add(isDarkMode.value ? 'theme-kb1-dark' : 'theme-kb1-light');
   console.log('Theme toggled to:', isDarkMode.value ? 'dark' : 'light');
 }
 
@@ -156,6 +159,8 @@ onMounted(() => {
   if (!hasSeenIntro && !isConnected.value) {
     showFirstTimeOverlay.value = true;
   }
+  // Apply initial theme class to html element
+  document.documentElement.classList.add(isDarkMode.value ? 'theme-kb1-dark' : 'theme-kb1-light');
 });
 
 async function handleConnect() {
@@ -558,8 +563,8 @@ body {
 
 /* Invert logo for light mode for better visibility */
 .theme-kb1-light .header-logo {
-  filter: invert(1) hue-rotate(180deg);
-  opacity: 0.85;
+  filter: brightness(0) saturate(100%) invert(45%) sepia(18%) saturate(651%) hue-rotate(10deg) brightness(94%) contrast(87%);
+  opacity: 1;
 }
 
 .warning-banner {

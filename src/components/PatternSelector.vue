@@ -12,7 +12,6 @@
         }"
       >
         <img :src="pattern.icon" :alt="pattern.name" />
-        <div v-if="current !== undefined && pattern.number === current" class="current-indicator"></div>
       </div>
     </div>
   </div>

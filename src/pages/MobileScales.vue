@@ -929,4 +929,23 @@ defineExpose({
     padding-bottom: 0;
   }
 }
+
+/* ===== LIGHT MODE OVERRIDES ===== */
+:global(html.theme-kb1-light .collapse-all-bar) {
+  background: rgba(180, 180, 188, 0.85) !important;
+  color: #2f2f2f !important;
+}
+
+:global(html.theme-kb1-light .collapse-all-bar:hover) {
+  background: rgba(158, 159, 175, 0.95) !important;
+  color: #ffffff !important;
+}
+
+:global(html.theme-kb1-light .collapse-all-bar:active) {
+  background: rgba(158, 159, 175, 1.0) !important;
+}
+
+:global(html.theme-kb1-light .root-note-display) {
+  color: #2f2f2f !important;
+}
 </style>

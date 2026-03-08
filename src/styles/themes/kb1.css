@@ -14,7 +14,7 @@
  */
 
 /* ===== DARK MODE (Default) ===== */
-.theme-kb1-dark {
+:root.theme-kb1-dark {
   /* ===== Generic Color Variables (used throughout app) ===== */
   --color-background: #0F0F0F;
   --color-background-soft: #0F0F0F;
@@ -149,11 +149,11 @@
 }
 
 /* ===== LIGHT MODE ===== */
-.theme-kb1-light {
+:root.theme-kb1-light {
   /* ===== Generic Color Variables (used throughout app) ===== */
-  --color-background: #F8F8F8;
-  --color-background-soft: #F8F8F8;
-  --color-background-mute: #F8F8F8;
+  --color-background: #e0e0e5;
+  --color-background-soft: #e0e0e5;
+  --color-background-mute: #e0e0e5;
   --color-border: transparent;
   --color-border-hover: transparent;
   --color-divider: rgba(0, 0, 0, 0.2);
@@ -161,7 +161,7 @@
   --color-text-muted: rgba(0, 0, 0, 0.6);
   
   /* ===== KB1 Brand Colors (Inverted) ===== */
-  --kb1-background: #F8F8F8;
+  --kb1-background: #e0e0e5;
   --kb1-text-primary: #0D0D0D;
   --kb1-text-secondary: rgba(0, 0, 0, 0.6);
   
@@ -385,15 +385,15 @@
 }
 
 .theme-kb1-light .accordion-section.is-open .accordion-header {
-  background: rgba(149, 151, 172, 0.35) !important;
+  background: rgba(149, 151, 172, 0.2) !important;
 }
 
 .theme-kb1-light .accordion-header:hover {
-  background: rgba(149, 151, 172, 0.3) !important;
+  background: rgba(149, 151, 172, 0.25) !important;
 }
 
 .theme-kb1-light .accordion-header:active {
-  background: rgba(149, 151, 172, 0.45) !important;
+  background: rgba(149, 151, 172, 0.3) !important;
 }
 
 .theme-kb1-light .slider-row {
@@ -430,13 +430,6 @@
 
 /* Invert entire slot indicator for light mode */
 .theme-kb1-light .slot-indicator {
-  filter: invert(1);
-}
-
-/* Invert piano keys for light mode */
-.theme-kb1-light .key,
-.theme-kb1-light .key.active,
-.theme-kb1-light .key.root-note {
   filter: invert(1);
 }
 
@@ -549,4 +542,120 @@
 .theme-kb1-light .tab-button:not(.active)::after {
   background: #707070 !important;
   opacity: 0.3 !important;
+}
+
+/* ===== KEYBOARD VISUALIZATION (Light Mode) ===== */
+.theme-kb1-light .keyboard-visual .key {
+  background-color: #c8c8ce !important;
+  color: rgba(0, 0, 0, 0.45) !important;
+}
+
+.theme-kb1-light .keyboard-visual .key.active {
+  background-color: #389265 !important;
+  color: #ffffff !important;
+}
+
+.theme-kb1-light .keyboard-visual .key.clickable.active:hover {
+  background-color: #4AA67A !important;
+  color: #ffffff !important;
+}
+
+.theme-kb1-light .keyboard-visual .key.root-note {
+  box-shadow:
+    inset 0 0 0 2px #e0e0e5,
+    0 0 0 1px var(--accent-highlight) !important;
+  animation: root-note-pulse-light 2s ease-in-out infinite !important;
+}
+
+@keyframes root-note-pulse-light {
+  0%, 100% {
+    box-shadow:
+      inset 0 0 0 2px #e0e0e5,
+      0 0 0 1px var(--accent-highlight);
+  }
+  50% {
+    box-shadow:
+      inset 0 0 0 2px #e0e0e5,
+      0 0 0 1px var(--accent-highlight),
+      0 0 8px 2px rgba(249, 172, 32, 0.4);
+  }
+}
+
+/* ===== SHAPE SECTION (Light Mode) ===== */
+.theme-kb1-light .advanced-strum-section {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+.theme-kb1-light .advanced-strum-header .mood-text {
+  color: #2f2f2f;
+  opacity: 0.7;
+}
+
+.theme-kb1-light .advanced-strum-header .adv-label,
+.theme-kb1-light .swing-control label {
+  color: #2f2f2f;
+}
+
+.theme-kb1-light .unit-label {
+  color: #2f2f2f;
+}
+
+.theme-kb1-light .strum-dynamic-dots .dot {
+  background-color: rgb(138, 104, 218);
+}
+
+.theme-kb1-light .connection-line {
+  stroke: rgb(138, 104, 218);
+}
+
+.theme-kb1-light .note-dot {
+  fill: rgb(138, 104, 218);
+  stroke: rgb(138, 104, 218);
+}
+
+.theme-kb1-light .root-dot {
+  fill: rgb(138, 104, 218);
+}
+
+.theme-kb1-light .build-mode-desc {
+  color: #2f2f2f;
+  opacity: 0.8;
+}
+
+.theme-kb1-light .template-name {
+  color: #2f2f2f;
+  opacity: 0.7;
+}
+
+.theme-kb1-light .svg line {
+  stroke: rgba(0, 0, 0, 0.3);
+}
+
+.theme-kb1-light .mode-btn svg {
+  opacity: 0.4;
+  filter: brightness(0) saturate(100%) invert(44%) sepia(50%) saturate(1500%) hue-rotate(230deg);
+}
+
+.theme-kb1-light .mode-btn.active svg {
+  opacity: 1;
+  filter: brightness(0) saturate(100%) invert(44%) sepia(50%) saturate(1500%) hue-rotate(230deg);
+}
+
+/* Pattern Selector arrows (Touch settings) */
+.theme-kb1-light .pattern-item img {
+  filter: brightness(0) saturate(100%) invert(44%) sepia(50%) saturate(1500%) hue-rotate(230deg) !important;
+  opacity: 0.4;
+}
+
+.theme-kb1-light .pattern-item.active img {
+  opacity: 0.5;
+}
+
+.theme-kb1-light .pattern-item.current img {
+  filter: brightness(0) saturate(100%) invert(44%) sepia(50%) saturate(1500%) hue-rotate(230deg) !important;
+  opacity: 1;
+}
+
+.theme-kb1-light .pattern-selector {
+  background: rgba(149, 151, 172, 0.2) !important;
 }

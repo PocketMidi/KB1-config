@@ -121,7 +121,7 @@ function scrollToIndex(index: number, smooth = true) {
 function selectItem(index: number) {
   const selectedOption = props.options[index];
   if (selectedOption) {
-    selection();
+    // No haptic on tap - only during scroll
     // Scroll to the selected position before closing
     scrollToIndex(index, true);
     

@@ -131,7 +131,7 @@ function cancel() {
 }
 
 function done() {
-  selection()
+  // No haptic on done button
   emit('update:modelValue', selectedValue.value)
   emit('close')
 }

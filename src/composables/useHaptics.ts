@@ -4,8 +4,6 @@ import { useWebHaptics } from 'web-haptics/vue'
 // Global state for haptics preference (default OFF for live app)
 const hapticsEnabled = ref(false)
 let initialized = false
-let lastHapticTime = 0
-const HAPTIC_THROTTLE_MS = 50 // Minimum time between haptics
 
 // Auto-initialize from localStorage on first import
 function autoInit() {
@@ -16,12 +14,9 @@ function autoInit() {
     const stored = localStorage.getItem('kb1-haptics-enabled')
     if (stored !== null) {
       hapticsEnabled.value = JSON.parse(stored)
-      console.log('[Haptics] Loaded from localStorage:', hapticsEnabled.value)
-    } else {
-      console.log('[Haptics] No stored preference, defaulting to:', hapticsEnabled.value)
     }
   } catch (e) {
-    console.warn('[Haptics] Failed to load from localStorage:', e)
+    // Ignore localStorage errors
   }
 }
 
@@ -32,55 +27,38 @@ export function useHaptics() {
     debug: false, // Set to true for desktop audio feedback testing
   })
 
-  console.log('[Haptics] isSupported:', isSupported, 'enabled:', hapticsEnabled.value)
-
   // Check if haptics should be triggered
   const shouldTrigger = computed(() => hapticsEnabled.value && isSupported)
 
-  // Helper function to conditionally trigger haptics with throttling
-  const conditionalTrigger = (pattern: any, allowThrottle = true) => {
-    if (!shouldTrigger.value) {
-      console.log('[Haptics] Skipped - enabled:', hapticsEnabled.value, 'supported:', isSupported)
-      return
-    }
+  // Helper function to conditionally trigger haptics (no time throttling for scroll detents)
+  const conditionalTrigger = (pattern: any) => {
+    if (!shouldTrigger.value) return
     
-    // Throttle rapid-fire haptics
-    const now = Date.now()
-    if (allowThrottle && (now - lastHapticTime) < HAPTIC_THROTTLE_MS) {
-      console.log('[Haptics] Throttled')
-      return
-    }
-    
-    lastHapticTime = now
-    console.log('[Haptics] Triggering:', pattern)
     try {
       trigger(pattern)
     } catch (error) {
-      console.error('[Haptics] Failed to trigger:', error)
+      console.error('[Haptics] Error:', error)
     }
   }
 
   return {
-    // Detent bump for wheel scrolling - throttled to prevent overload
-    detent: () => conditionalTrigger('selection', true),
+    // Detent bump for wheel scrolling (fires on each item during scroll)
+    detent: () => conditionalTrigger(10), // Simple 10ms vibration for iOS compatibility
     
-    // Light tap for value increment/decrement - throttled
-    light: () => conditionalTrigger('selection', true),
+    // Light tap for value increment/decrement
+    light: () => conditionalTrigger(15),
     
-    // Selection confirmation - not throttled for immediate response
-    selection: () => conditionalTrigger('success', false),
+    // Selection confirmation (currently unused - haptics only during scroll)
+    selection: () => conditionalTrigger(20),
     
-    // Success feedback - not throttled
-    success: () => conditionalTrigger('success', false),
+    // Success feedback
+    success: () => conditionalTrigger('success'),
     
-    // Error feedback - not throttled
-    error: () => conditionalTrigger('error', false),
+    // Error feedback
+    error: () => conditionalTrigger('error'),
     
-    // Double tap for important selections - not throttled
-    doubleTap: () => conditionalTrigger([
-      { duration: 15, intensity: 0.4 },
-      { delay: 30, duration: 15, intensity: 0.4 }
-    ], false),
+    // Double tap for root note selection
+    doubleTap: () => conditionalTrigger([100, 50, 100]), // Pattern: on-off-on for iOS compatibility
     
     // State management
     isSupported: computed(() => isSupported),

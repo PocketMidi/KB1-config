@@ -299,7 +299,7 @@ const model = computed({
 })
 
 // Haptics
-const { light, tap, snap, isSupported } = useHaptics()
+const { tap, snap, isSupported } = useHaptics()
 
 // Constants
 const BASE_PATH = '/KB1-config'

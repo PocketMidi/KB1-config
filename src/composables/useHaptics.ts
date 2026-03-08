@@ -38,6 +38,8 @@ export function useHaptics() {
     return {
       detent: () => {},
       light: () => {},
+      tap: () => {},
+      snap: () => {},
       selection: () => {},
       success: () => {},
       error: () => {},

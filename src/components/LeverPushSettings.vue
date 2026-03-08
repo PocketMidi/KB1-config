@@ -265,7 +265,7 @@ const model = computed({
 })
 
 // Haptics
-const { tap, snap, isSupported } = useHaptics()
+const { snap, isSupported } = useHaptics()
 
 // Function mode constants
 const FUNCTION_MODE_INTERPOLATED = 0

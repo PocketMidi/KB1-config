@@ -35,7 +35,7 @@
       </div>
       <div class="input-divider"></div>
 
-      <div class="group">
+      <div v-if="!isIOSDevice" class="group">
         <label for="haptics">HAPTIC FEEDBACK</label>
         <div class="toggle-switch" @click="toggleHaptics">
           <div class="toggle-track" :class="{ active: hapticsEnabled }">
@@ -47,8 +47,8 @@
       
       <div class="hint-text">
         After idle time → pulsing LEDs (Light Sleep) → 90s later → deep sleep (lowest power). BLE Timeout: while web app is connected and pinging, sleep is prevented.
-        <br><br>
-        Haptic Feedback: subtle vibrations on mobile devices for wheel scrolling, button taps, and value changes.
+        <br v-if="!isIOSDevice"><br v-if="!isIOSDevice">
+        <span v-if="!isIOSDevice">Haptic Feedback: subtle vibrations on mobile devices for wheel scrolling, button taps, and value changes.</span>
       </div>
     </div>
   </div>
@@ -77,6 +77,10 @@ const model = computed({
   get: () => props.modelValue,
   set: v => emit('update:modelValue', v)
 })
+
+// Detect iOS
+const isIOSDevice = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
+                    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
 
 // Haptics
 const { enabled: hapticsEnabled, init: initHaptics, selection } = useHaptics()

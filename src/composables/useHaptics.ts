@@ -1,8 +1,15 @@
 import { ref, computed } from 'vue'
 import { useWebHaptics } from 'web-haptics/vue'
 
+// Detect iOS
+function isIOS(): boolean {
+  return /iPad|iPhone|iPod/.test(navigator.userAgent) || 
+         (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
+}
+
 // Global state for haptics preference (default OFF for live app)
 const hapticsEnabled = ref(false)
+const isIOSDevice = isIOS()
 let initialized = false
 
 // Auto-initialize from localStorage on first import
@@ -23,8 +30,26 @@ function autoInit() {
 export function useHaptics() {
   autoInit() // Initialize on first use
   
+  // Completely disable on iOS - no haptic calls at all
+  if (isIOSDevice) {
+    return {
+      detent: () => {},
+      light: () => {},
+      selection: () => {},
+      success: () => {},
+      error: () => {},
+      doubleTap: () => {},
+      isSupported: computed(() => false),
+      enabled: computed({
+        get: () => false,
+        set: (_value: boolean) => {} // No-op on iOS
+      }),
+      init: () => {}
+    }
+  }
+  
   const { trigger, isSupported } = useWebHaptics({
-    debug: false, // Set to true for desktop audio feedback testing
+    debug: false,
   })
 
   // Check if haptics should be triggered

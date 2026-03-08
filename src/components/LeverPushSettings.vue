@@ -118,7 +118,7 @@
         <ValueControl
           v-model="userMin"
           :min="minRange"
-          :max="maxRange"
+          :max="constrainedMaxForMin"
           :step="isPatternSelector ? 1 : 5"
           :small-step="isPatternSelector ? 1 : 5"
           :large-step="isPatternSelector ? 1 : 10"
@@ -131,7 +131,7 @@
         <label :for="`push-max-${lever}`">MAX</label>
         <ValueControl
           v-model="userMax"
-          :min="minRange"
+          :min="constrainedMinForMax"
           :max="maxRange"
           :step="isPatternSelector ? 1 : 5"
           :small-step="isPatternSelector ? 1 : 5"
@@ -553,6 +553,20 @@ const maxRange = computed(() => {
   const cc = model.value.ccNumber
   if (cc === 201) return 6   // Pattern Selector: 1-6 (discrete)
   return 100  // Default maximum
+})
+
+// Buffer between min and max to prevent overlap (at least 5 units)
+const MIN_MAX_BUFFER = 5
+
+// Constrained ranges to prevent min/max overlap
+const constrainedMaxForMin = computed(() => {
+  // userMin can't exceed userMax - buffer
+  return Math.min(maxRange.value, userMax.value - MIN_MAX_BUFFER)
+})
+
+const constrainedMinForMax = computed(() => {
+  // userMax can't go below userMin + buffer
+  return Math.max(minRange.value, userMin.value + MIN_MAX_BUFFER)
 })
 
 // Conversion functions

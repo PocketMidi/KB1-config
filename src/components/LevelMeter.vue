@@ -73,6 +73,9 @@ const emit = defineEmits<{
 const { light, isSupported } = useHaptics()
 const lastHapticValue = ref<number | null>(null)
 
+// Buffer between min and max to prevent visual overlap (at least 5 units)
+const MIN_MAX_BUFFER = 5
+
 // Direct marker interaction handlers
 const updateValueFromPosition = (clientX: number, rect: DOMRect) => {
   const rangeMin = props.minAllowed ?? (props.isBipolar ? -100 : 0)
@@ -105,16 +108,16 @@ const updateValueFromPosition = (clientX: number, rect: DOMRect) => {
     const distToMax = Math.abs(snappedValue - props.max)
     
     if (distToMin < distToMax) {
-      // Update min, but don't go above max
-      const newMin = Math.min(Math.round(snappedValue), props.max)
+      // Update min, but maintain buffer from max
+      const newMin = Math.min(Math.round(snappedValue), props.max - MIN_MAX_BUFFER)
       emit('update:min', newMin)
       if (isSupported.value && crossedDot) {
         light()
         lastHapticValue.value = snappedValue
       }
     } else {
-      // Update max, but don't go below min
-      const newMax = Math.max(Math.round(snappedValue), props.min)
+      // Update max, but maintain buffer from min
+      const newMax = Math.max(Math.round(snappedValue), props.min + MIN_MAX_BUFFER)
       emit('update:max', newMax)
       if (isSupported.value && crossedDot) {
         light()

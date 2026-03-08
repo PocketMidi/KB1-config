@@ -119,7 +119,7 @@
         <ValueControl
           v-model="userMin"
           :min="minRange"
-          :max="maxRange"
+          :max="constrainedMaxForMin"
           :step="minMaxStepSize"
           :small-step="minMaxStepSize"
           :large-step="minMaxStepSize * 2"
@@ -131,7 +131,7 @@
         <label :for="`lever-max-${lever}`">MAX</label>
         <ValueControl
           v-model="userMax"
-          :min="minRange"
+          :min="constrainedMinForMax"
           :max="maxRange"
           :step="minMaxStepSize"
           :small-step="minMaxStepSize"
@@ -572,6 +572,20 @@ const maxRange = computed(() => {
   return 100  // Default maximum
 })
 
+// Buffer between min and max to prevent overlap (at least 5 units)
+const MIN_MAX_BUFFER = 5
+
+// Constrained ranges to prevent min/max overlap
+const constrainedMaxForMin = computed(() => {
+  // userMin can't exceed userMax - buffer
+  return Math.min(maxRange.value, userMax.value - MIN_MAX_BUFFER)
+})
+
+const constrainedMinForMax = computed(() => {
+  // userMax can't go below userMin + buffer
+  return Math.max(minRange.value, userMin.value + MIN_MAX_BUFFER)
+})
+
 // Step size for MIN/MAX controls in incremental mode
 const minMaxStepSize = computed(() => {
   // In incremental mode, match the STEPS percentage (5%, 10%, 15%, 25%)
@@ -579,10 +593,11 @@ const minMaxStepSize = computed(() => {
     return stepsValue.value
   }
   
-  // In non-incremental mode, use step size that respects MIDI precision
-  // Bipolar: -100 to +100 (200 range) → 0-127 MIDI (200/127 ≈ 1.57, so use step=2)
-  // Unipolar: 0 to 100 (100 range) → 0-127 MIDI (100/127 ≈ 0.79, so step=1 works)
-  return model.value.valueMode === VALUE_MODE_BIPOLAR ? 2 : 1
+  // In non-incremental mode, use step size that avoids MIDI precision issues
+  // Bipolar: -100 to +100 (200 range) → 0-127 MIDI
+  // Each MIDI value ≈ 1.57 user units, so use step=5 to avoid rounding collisions
+  // Unipolar: 0 to 100 (100 range) → 0-127 MIDI (finer resolution, step=1 works)
+  return model.value.valueMode === VALUE_MODE_BIPOLAR ? 5 : 1
 })
 
 // Snap value to step increments in incremental mode

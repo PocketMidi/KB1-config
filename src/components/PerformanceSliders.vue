@@ -1283,7 +1283,7 @@ defineExpose({
       <div class="setup-header">
         <div class="header-buttons-row">
           <button class="btn-live" @click="enterLiveMode">
-            <span class="btn-live-label">+ ENTER LIVE</span>
+            <span class="btn-live-label"><span class="plus-icon">+</span> PERFORMANCE VIEW</span>
             <span class="explainer-text" :class="{ fading: explainerFading }">
               {{ explainerText }}
             </span>
@@ -1673,6 +1673,10 @@ defineExpose({
 
 .btn-live-label {
   flex-shrink: 0;
+}
+
+.btn-live-label .plus-icon {
+  color: #F4C542;
 }
 
 .btn-live .explainer-text {
@@ -2192,16 +2196,16 @@ defineExpose({
 
 .hint-close-btn {
   position: absolute;
-  top: 16px;
-  right: 16px;
+  top: 12px;
+  right: 12px;
   background: none;
   border: none;
   font-size: 1.5rem;
   color: #848484;
   cursor: pointer;
   padding: 0;
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2217,7 +2221,7 @@ defineExpose({
 
 .hint-title {
   margin: 0;
-  padding: 1.5rem 3rem 1rem 1.5rem;
+  padding: 1rem 2.5rem 0.75rem 1rem;
   font-size: 0.8125rem;
   font-weight: 600;
   color: #EAEAEA;
@@ -2228,7 +2232,7 @@ defineExpose({
 
 .hint-description {
   margin: 0;
-  padding: 1.5rem;
+  padding: 1rem;
   font-size: 0.8125rem;
   line-height: 1.6;
   color: var(--color-text, #EAEAEA);
@@ -2236,16 +2240,16 @@ defineExpose({
 }
 
 .hint-footer {
-  padding: 1rem 1.5rem;
+  padding: 0.75rem 1rem;
   border-top: 1px solid var(--color-border, #333333);
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 0.5rem;
 }
 
 .hint-btn-primary {
   width: 100%;
-  padding: 0.75rem 1.5rem;
+  padding: 0.625rem 1.25rem;
   background: #0DC988;
   color: #1A1A1A;
   border: none;
@@ -2265,7 +2269,7 @@ defineExpose({
 
 .hint-btn-secondary {
   width: 100%;
-  padding: 0.75rem 1.5rem;
+  padding: 0.625rem 1.25rem;
   background: transparent;
   color: #848484;
   border: 1px solid #333333;

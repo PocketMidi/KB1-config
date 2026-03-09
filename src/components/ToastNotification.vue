@@ -53,7 +53,7 @@ onMounted(() => {
   gap: 12px;
   padding: 16px 24px;
   border-radius: 8px;
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
   font-weight: 500;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   backdrop-filter: blur(10px);

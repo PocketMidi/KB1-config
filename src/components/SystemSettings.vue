@@ -2,7 +2,10 @@
   <div class="settings-system">
     <div class="inputs">
       <div class="group">
-        <label for="light-sleep">LIGHT SLEEP</label>
+        <label for="light-sleep">
+          SLEEP TIMEOUT
+          <span class="info-icon" @click.stop="showHelp('sleepTimeout')" title="Show help">?</span>
+        </label>
         <span class="time-display">{{ formatTime(model.lightSleepTimeout) }}</span>
         <div class="time-control-wrapper">
           <ValueControl
@@ -19,7 +22,10 @@
       <div class="input-divider"></div>
 
       <div class="group">
-        <label for="ble-timeout">BLE TIMEOUT</label>
+        <label for="ble-timeout">
+          BLE TIMEOUT
+          <span class="info-icon" @click.stop="showHelp('bleTimeout')" title="Show help">?</span>
+        </label>
         <span class="time-display">{{ formatTime(model.bleTimeout) }}</span>
         <div class="time-control-wrapper">
           <ValueControl
@@ -35,6 +41,21 @@
       </div>
       <div class="input-divider"></div>
 
+      <div class="group">
+        <label>
+          PARAMETER RESOLUTION
+          <span class="info-icon" @click.stop="showHelp('resolution')" title="Show help">?</span>
+        </label>
+        <div class="toggle-switch resolution-toggle" @click="toggleResolution">
+          <span class="toggle-label-left" :class="{ active: unipolarStepSize === 1 }">1</span>
+          <div class="toggle-track" :class="{ active: unipolarStepSize === 5 }">
+            <div class="toggle-thumb"></div>
+          </div>
+          <span class="toggle-label-right" :class="{ active: unipolarStepSize === 5 }">5</span>
+        </div>
+      </div>
+      <div v-if="!isIOSDevice" class="input-divider"></div>
+
       <div v-if="!isIOSDevice" class="group">
         <label for="haptics">HAPTIC FEEDBACK</label>
         <div class="toggle-switch" @click="toggleHaptics">
@@ -45,28 +66,28 @@
           <span class="toggle-label-right" :class="{ active: hapticsEnabled }">ON</span>
         </div>
       </div>
-      <div class="input-divider"></div>
-
-      <div class="group">
-        <label>PARAMETER RESOLUTION</label>
-        <div class="toggle-switch resolution-toggle" @click="toggleResolution">
-          <span class="toggle-label-left" :class="{ active: unipolarStepSize === 1 }">1</span>
-          <div class="toggle-track" :class="{ active: unipolarStepSize === 5 }">
-            <div class="toggle-thumb"></div>
-          </div>
-          <span class="toggle-label-right" :class="{ active: unipolarStepSize === 5 }">5</span>
-        </div>
+    </div>
+  </div>
+  
+  <!-- Help Guide Modal -->
+  <div v-if="showHelpModal" class="help-modal-overlay" @click="dismissHelp">
+    <div class="help-modal" @click.stop>
+      <div class="help-modal-header">
+        <h3>{{ helpContent.title }}</h3>
+        <button class="close-btn" @click="dismissHelp">×</button>
       </div>
-      
-      <div class="hint-text">
-        After idle time → pulsing LEDs (Light Sleep) → 90s later → deep sleep (lowest power). BLE Timeout: while web app is connected and pinging, sleep is prevented.
+      <div class="help-modal-body">
+        <p>{{ helpContent.description }}</p>
+      </div>
+      <div class="help-modal-footer">
+        <button class="btn-primary" @click="dismissHelp">Got it</button>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, watch, onMounted } from 'vue'
+import { computed, ref, watch, onMounted } from 'vue'
 import { useHaptics } from '../composables/useHaptics'
 import { useUIPreferences } from '../composables/useUIPreferences'
 import ValueControl from './ValueControl.vue'
@@ -116,6 +137,34 @@ const { unipolarStepSize, setUnipolarStepSize } = useUIPreferences()
 function toggleResolution() {
   setUnipolarStepSize(unipolarStepSize.value === 1 ? 5 : 1)
   snap()
+}
+
+// Help modal system
+const showHelpModal = ref(false)
+const helpContent = ref({ title: '', description: '' })
+
+const helpTexts = {
+  sleepTimeout: {
+    title: 'Sleep Timeout',
+    description: 'Controls how long this device stays awake when not in use. At timeout, LEDs pulse briefly as a warning, then the device enters deep sleep to save battery.'
+  },
+  bleTimeout: {
+    title: 'BLE Timeout', 
+    description: 'Controls how long Bluetooth stays active when the Configurator web app is not connected. Shorter times will conserve battery life.'
+  },
+  resolution: {
+    title: 'Parameter Resolution',
+    description: 'Choose how precisely to adjust values: Resolution 1 for fine control (1% increments), or Resolution 5 for faster adjustments (5% jumps).'
+  }
+}
+
+function showHelp(type: keyof typeof helpTexts) {
+  helpContent.value = helpTexts[type]
+  showHelpModal.value = true
+}
+
+function dismissHelp() {
+  showHelpModal.value = false
 }
 
 // Auto-calculate deep sleep as light sleep + 90s (fixed pulsing LED warning period)
@@ -197,6 +246,29 @@ const formatTime = (seconds: number): string => {
   letter-spacing: 0.05em;
   flex-shrink: 0;
   min-width: 120px;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.info-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  font-size: 0.625rem;
+  color: #848484;
+  border: 1px solid #848484;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.2s;
+  user-select: none;
+}
+
+.info-icon:hover {
+  color: #0DC988;
+  border-color: #0DC988;
 }
 
 .time-display {
@@ -206,14 +278,6 @@ const formatTime = (seconds: number): string => {
   font-weight: 400;
   margin-right: auto;
   padding-left: 1rem;
-}
-
-.hint-text {
-  font-size: 0.8125rem; /* 13px */
-  font-style: italic;
-  color: var(--color-text-muted);
-  padding: 0.5rem 0 1rem 0;
-  font-family: 'Roboto Mono';
 }
 
 .time-control-wrapper {
@@ -297,5 +361,103 @@ const formatTime = (seconds: number): string => {
 .resolution-toggle .toggle-label-right.active {
   color: #FFD700;
   font-weight: 500;
+}
+
+/* Help Modal */
+.help-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  padding: 1rem;
+}
+
+.help-modal {
+  background: var(--color-background-soft);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  max-width: 500px;
+  width: 100%;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  font-family: 'Roboto Mono';
+}
+
+.help-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.help-modal-header h3 {
+  margin: 0;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #EAEAEA;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: #848484;
+  cursor: pointer;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.close-btn:hover {
+  background: var(--color-background-mute);
+  color: #EAEAEA;
+}
+
+.help-modal-body {
+  padding: 1.5rem;
+}
+
+.help-modal-body p {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.6;
+  color: var(--color-text);
+}
+
+.help-modal-footer {
+  padding: 1rem 1.5rem;
+  border-top: 1px solid var(--color-border);
+  display: flex;
+  justify-content: flex-end;
+}
+
+.help-modal-footer .btn-primary {
+  padding: 0.5rem 1.5rem;
+  background: #0DC988;
+  color: #1A1A1A;
+  border: none;
+  border-radius: 4px;
+  font-family: 'Roboto Mono';
+  font-size: 0.8125rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.help-modal-footer .btn-primary:hover {
+  background: #0BA872;
 }
 </style>

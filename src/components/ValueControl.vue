@@ -40,8 +40,6 @@
 <script setup lang="ts">
 import { computed, ref, onBeforeUnmount } from 'vue'
 import { useHaptics } from '../composables/useHaptics'
-import { useUIPreferences } from '../composables/useUIPreferences'
-import { useToast } from '../composables/useToast'
 
 const props = withDefaults(defineProps<{
   modelValue: number
@@ -71,40 +69,6 @@ const dragStartValue = ref(0)
 const lastHapticValue = ref(0)
 
 const { light, tap, isSupported } = useHaptics()
-const { unipolarStepSize } = useUIPreferences()
-const toast = useToast()
-
-// Rapid click detection for resolution tip
-const clickTimestamps = ref<number[]>([])
-const RAPID_CLICK_THRESHOLD = 8 // clicks
-const RAPID_CLICK_WINDOW = 3000 // ms
-const TIP_STORAGE_KEY = 'kb1-resolution-tip-shown-count'
-const MAX_TIP_SHOWS = 3
-
-function checkRapidClicking() {
-  // Only suggest if currently on resolution 5
-  if (unipolarStepSize.value !== 5) return
-  
-  const now = Date.now()
-  clickTimestamps.value.push(now)
-  
-  // Remove clicks older than the time window
-  clickTimestamps.value = clickTimestamps.value.filter(
-    timestamp => now - timestamp < RAPID_CLICK_WINDOW
-  )
-  
-  // Check if we've exceeded the threshold
-  if (clickTimestamps.value.length >= RAPID_CLICK_THRESHOLD) {
-    // Check how many times we've shown this tip
-    const shownCount = parseInt(localStorage.getItem(TIP_STORAGE_KEY) || '0')
-    
-    if (shownCount < MAX_TIP_SHOWS) {
-      toast.info('Tip: Switch to Resolution 1 in System settings for finer control')
-      localStorage.setItem(TIP_STORAGE_KEY, String(shownCount + 1))
-      clickTimestamps.value = [] // Reset after showing tip
-    }
-  }
-}
 
 const isAtMin = computed(() => props.modelValue <= props.min)
 const isAtMax = computed(() => props.modelValue >= props.max)
@@ -119,14 +83,12 @@ function snapToStep(value: number): number {
 
 function decreaseSmall() {
   if (isSupported.value) tap()
-  checkRapidClicking()
   const newValue = snapToStep(props.modelValue - props.smallStep)
   emit('update:modelValue', clamp(newValue))
 }
 
 function increaseSmall() {
   if (isSupported.value) tap()
-  checkRapidClicking()
   const newValue = snapToStep(props.modelValue + props.smallStep)
   emit('update:modelValue', clamp(newValue))
 }

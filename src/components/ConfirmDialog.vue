@@ -76,7 +76,7 @@ function handleCancel() {
 
 .confirm-message {
   color: var(--color-text);
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
   line-height: 1.5;
   margin-bottom: 20px;
   white-space: pre-wrap;

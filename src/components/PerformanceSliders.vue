@@ -2028,7 +2028,7 @@ defineExpose({
 
 .prompt-text {
   font-family: 'Roboto Mono';
-  font-size: 1.5rem;
+  font-size: 0.8125rem;
   color: #74C4FF;
   font-weight: 600;
   margin-bottom: 0.5rem;

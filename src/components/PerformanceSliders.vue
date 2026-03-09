@@ -126,6 +126,7 @@ let tapTimeout: number | null = null;
 // Reset hint state
 const showResetHint = ref(false);
 const RESET_HINT_SEEN_KEY = 'kb1-reset-hint-seen';
+const RESET_HINT_DISABLED_KEY = 'kb1-reset-hint-disabled';
 
 
 
@@ -537,6 +538,12 @@ function handleLiveContainerTap(event: MouseEvent | TouchEvent) {
   tapTimeout = window.setTimeout(() => {
     tapCount.value = 0;
   }, 500);
+}
+
+// Dismiss reset hint permanently
+function dismissResetHintPermanently() {
+  localStorage.setItem(RESET_HINT_DISABLED_KEY, 'true');
+  showResetHint.value = false;
 }
 
 // Map slider value to CC value (0-127)
@@ -1100,22 +1107,19 @@ async function enterLiveMode() {
   viewMode.value = 'live';
   showExitButton.value = false; // Start with X hidden
   
-  // Show reset hint (first time longer, subsequent times shorter)
+  // Show reset hint only if user hasn't disabled it
   if (isMobile.value) {
     await nextTick();
-    showResetHint.value = true;
+    const isDisabled = localStorage.getItem(RESET_HINT_DISABLED_KEY);
     
-    const hasSeenBefore = localStorage.getItem(RESET_HINT_SEEN_KEY);
-    const duration = hasSeenBefore ? 4000 : 7000; // 4s if seen before, 7s first time
-    
-    // Auto-hide after duration
-    setTimeout(() => {
-      showResetHint.value = false;
-    }, duration);
-    
-    // Mark as seen
-    if (!hasSeenBefore) {
-      localStorage.setItem(RESET_HINT_SEEN_KEY, 'true');
+    if (!isDisabled) {
+      showResetHint.value = true;
+      
+      // Mark as seen (for analytics or future use)
+      const hasSeenBefore = localStorage.getItem(RESET_HINT_SEEN_KEY);
+      if (!hasSeenBefore) {
+        localStorage.setItem(RESET_HINT_SEEN_KEY, 'true');
+      }
     }
   }
   
@@ -1447,10 +1451,23 @@ defineExpose({
       >
         <!-- Reset Hint (first time only) -->
         <Transition name="hint-fade">
-          <div v-if="showResetHint" class="reset-hint" @click="showResetHint = false" @touchend.prevent="showResetHint = false">
-            <div class="hint-line">Swipe horizontally to exit</div>
-            <div class="hint-line">Triple-tap between bars to reset</div>
-            <div class="hint-dismiss">Tap to dismiss</div>
+          <div v-if="showResetHint" class="reset-hint">
+            <button class="hint-close-btn" @click="showResetHint = false" @touchend.prevent.stop="showResetHint = false">
+              ×
+            </button>
+            <h3 class="hint-title">LIVE MODE CONTROLS</h3>
+            <p class="hint-description">
+              Swipe horizontally to exit.<br>
+              Triple-tap between the bars to reset Sliders.
+            </p>
+            <div class="hint-footer">
+              <button class="hint-btn-primary" @click="showResetHint = false" @touchend.prevent.stop="showResetHint = false">
+                Got it
+              </button>
+              <button class="hint-btn-secondary" @click="dismissResetHintPermanently" @touchend.prevent.stop="dismissResetHintPermanently">
+                Don't show again
+              </button>
+            </div>
           </div>
         </Transition>
         
@@ -2156,48 +2173,120 @@ defineExpose({
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  background: rgba(15, 15, 15, 0.95);
-  border: 2px solid rgba(116, 196, 255, 0.5);
-  color: #74C4FF;
-  padding: 1.5rem 2rem;
-  border-radius: 12px;
-  font-family: 'Roboto Mono';
-  font-size: 1rem;
-  font-weight: 500;
+  background: var(--color-background-soft, #1A1A1A);
+  border: 1px solid var(--color-border, #333333);
+  border-radius: 8px;
+  padding: 0;
   z-index: 100;
   pointer-events: auto;
-  cursor: pointer;
-  text-align: center;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-  transition: all 0.2s ease;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
   user-select: none;
   -webkit-user-select: none;
   -webkit-tap-highlight-color: transparent;
+  max-width: 500px;
+  width: 90%;
+  font-family: 'Roboto Mono';
 }
 
-.reset-hint:hover {
-  background: rgba(15, 15, 15, 0.98);
-  border-color: rgba(116, 196, 255, 0.7);
-  transform: translate(-50%, -50%) scale(1.02);
+.hint-close-btn {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: #848484;
+  cursor: pointer;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all 0.2s;
+  z-index: 1;
 }
 
-.reset-hint:active {
-  transform: translate(-50%, -50%) scale(0.98);
-  border-color: rgba(116, 196, 255, 0.9);
+.hint-close-btn:hover {
+  background: var(--color-background-mute, #222222);
+  color: #EAEAEA;
 }
 
-.hint-line {
-  margin: 0.5rem 0;
-  line-height: 1.4;
+.hint-title {
+  margin: 0;
+  padding: 1.5rem 3rem 1rem 1.5rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #EAEAEA;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid var(--color-border, #333333);
 }
 
-.hint-dismiss {
-  margin-top: 1rem;
-  font-size: 0.75rem;
-  opacity: 0.6;
+.hint-description {
+  margin: 0;
+  padding: 1.5rem;
+  font-size: 0.8125rem;
+  line-height: 1.6;
+  color: var(--color-text, #EAEAEA);
   font-weight: 400;
+}
+
+.hint-footer {
+  padding: 1rem 1.5rem;
+  border-top: 1px solid var(--color-border, #333333);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.hint-btn-primary {
+  width: 100%;
+  padding: 0.75rem 1.5rem;
+  background: #0DC988;
+  color: #1A1A1A;
+  border: none;
+  border-radius: 4px;
+  font-family: 'Roboto Mono';
+  font-size: 0.8125rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.hint-btn-primary:hover {
+  background: #0BA872;
+}
+
+.hint-btn-secondary {
+  width: 100%;
+  padding: 0.75rem 1.5rem;
+  background: transparent;
+  color: #848484;
+  border: 1px solid #333333;
+  border-radius: 4px;
+  font-family: 'Roboto Mono';
+  font-size: 0.8125rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.hint-btn-secondary:hover {
+  background: rgba(234, 234, 234, 0.05);
+  border-color: #484848;
+  color: #EAEAEA;
+}
+
+.hint-btn-secondary:active {
+  background: rgba(234, 234, 234, 0.1);
 }
 
 /* Hint fade transition */

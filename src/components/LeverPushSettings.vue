@@ -88,7 +88,7 @@
 
     <div class="inputs">
       <div class="group">
-        <label>CATEGORY</label>
+        <label>CATEGORY<span class="info-icon" @click.stop="showHelp('category')">?</span></label>
         <button 
           ref="categoryTriggerRef"
           class="picker-trigger"
@@ -101,7 +101,7 @@
       <div class="input-divider"></div>
 
       <div class="group">
-        <label>PARAMETER</label>
+        <label>PARAMETER<span class="info-icon" @click.stop="showHelp('parameter')">?</span></label>
         <button 
           ref="parameterTriggerRef"
           class="picker-trigger"
@@ -215,6 +215,22 @@
       :options="filteredOptions"
       :trigger-el="parameterTriggerRef"
     />
+
+    <!-- Help Modal -->
+    <div v-if="showHelpModal" class="help-modal-overlay" @click="dismissHelp">
+      <div class="help-modal" @click.stop>
+        <div class="help-modal-header">
+          <h3>{{ helpContent.title }}</h3>
+          <button class="close-btn" @click="dismissHelp">×</button>
+        </div>
+        <div class="help-modal-body">
+          <p v-for="(para, idx) in helpContent.description" :key="idx">{{ para }}</p>
+        </div>
+        <div class="help-modal-footer">
+          <button class="got-it-btn" @click="dismissHelp">Got it</button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -796,6 +812,36 @@ const handleDurationBarTouchStart = (e: TouchEvent) => {
   document.addEventListener('touchend', handleTouchEnd)
 }
 
+// Help system
+const showHelpModal = ref(false)
+const helpContent = ref({ title: '', description: [''] })
+
+const helpTexts = {
+  category: {
+    title: 'Category',
+    description: [
+      'Select a category to filter the available parameters for this lever to control.'
+    ]
+  },
+  parameter: {
+    title: 'Parameter',
+    description: [
+      'Parameters are specific MIDI CCs that this lever will control.'
+    ]
+  }
+}
+
+function showHelp(type: keyof typeof helpTexts) {
+  helpContent.value = helpTexts[type]
+  showHelpModal.value = true
+  if (isSupported.value) snap()
+}
+
+function dismissHelp() {
+  showHelpModal.value = false
+  if (isSupported.value) snap()
+}
+
 </script>
 
 <style scoped>
@@ -1265,5 +1311,122 @@ const handleDurationBarTouchStart = (e: TouchEvent) => {
 
 .group :deep(.dropdown-label) {
   text-align: right;
+}
+
+/* Help System */
+.info-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border: 1px solid #999;
+  border-radius: 50%;
+  font-size: 11px;
+  margin-left: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+  user-select: none;
+}
+
+.info-icon:hover {
+  border-color: #0DC988;
+  color: #0DC988;
+}
+
+.help-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.help-modal {
+  background: var(--color-background-soft);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  max-width: 500px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+  font-family: 'Roboto Mono', monospace;
+}
+
+.help-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.help-modal-header h3 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.help-modal-header .close-btn {
+  background: none;
+  border: none;
+  color: var(--color-text);
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  transition: color 0.2s;
+}
+
+.help-modal-header .close-btn:hover {
+  color: #0DC988;
+}
+
+.help-modal-body {
+  padding: 1rem;
+  line-height: 1.6;
+}
+
+.help-modal-body p {
+  margin: 0 0 1rem 0;
+}
+
+.help-modal-body p:last-child {
+  margin-bottom: 0;
+}
+
+.help-modal-footer {
+  padding: 1rem;
+  border-top: 1px solid var(--color-border);
+  display: flex;
+  justify-content: flex-end;
+}
+
+.help-modal-footer .got-it-btn {
+  background: #0DC988;
+  color: white;
+  border: none;
+  padding: 0.5rem 1.5rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: 'Roboto Mono', monospace;
+  font-weight: 500;
+  transition: opacity 0.2s;
+}
+
+.help-modal-footer .got-it-btn:hover {
+  opacity: 0.9;
 }
 </style>

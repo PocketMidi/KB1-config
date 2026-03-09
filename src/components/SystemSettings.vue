@@ -56,6 +56,21 @@
       </div>
       <div v-if="!isIOSDevice" class="input-divider"></div>
 
+      <div class="group">
+        <label>
+          HINTS & MESSAGES
+          <span class="info-icon" @click.stop="showHelp('hints')" title="Show help">?</span>
+        </label>
+        <div class="toggle-switch momentary-btn" :class="{ active: restoringHints }" @click="resetHints">
+          <span class="toggle-label-left">RESTORE</span>
+          <div class="toggle-track">
+            <div class="toggle-thumb"></div>
+          </div>
+          <span class="toggle-label-right">↺</span>
+        </div>
+      </div>
+      <div v-if="!isIOSDevice" class="input-divider"></div>
+
       <div v-if="!isIOSDevice" class="group">
         <label for="haptics">HAPTIC FEEDBACK</label>
         <div class="toggle-switch" @click="toggleHaptics">
@@ -143,6 +158,9 @@ function toggleResolution() {
 const showHelpModal = ref(false)
 const helpContent = ref({ title: '', description: '' })
 
+// Restore hints momentary button state
+const restoringHints = ref(false)
+
 const helpTexts = {
   sleepTimeout: {
     title: 'Sleep Timeout',
@@ -155,6 +173,10 @@ const helpTexts = {
   resolution: {
     title: 'Parameter Resolution',
     description: 'Choose how precisely to adjust values: Resolution 1 for fine control (1% increments), or Resolution 5 for faster adjustments (5% jumps).'
+  },
+  hints: {
+    title: 'Hints & Messages',
+    description: 'This will restore all dismissed hints and messages so they appear again next time.'
   }
 }
 
@@ -165,6 +187,32 @@ function showHelp(type: keyof typeof helpTexts) {
 
 function dismissHelp() {
   showHelpModal.value = false
+}
+
+// Reset all hint/warning preferences
+function resetHints() {
+  // Momentary visual feedback
+  restoringHints.value = true
+  
+  // List of all localStorage keys for dismissed hints/warnings
+  const hintKeys = [
+    'kb1-reset-hint-disabled',
+    'kb1-reset-hint-seen',
+    // Add any future hint keys here
+  ]
+  
+  // Clear all hint preferences
+  hintKeys.forEach(key => {
+    localStorage.removeItem(key)
+  })
+  
+  // Haptic feedback
+  snap()
+  
+  // Reset momentary state after brief delay
+  setTimeout(() => {
+    restoringHints.value = false
+  }, 600)
 }
 
 // Auto-calculate deep sleep as light sleep + 90s (fixed pulsing LED warning period)
@@ -459,5 +507,42 @@ const formatTime = (seconds: number): string => {
 
 .help-modal-footer .btn-primary:hover {
   background: #0BA872;
+}
+
+/* Momentary button (looks like toggle, acts momentarily) */
+.toggle-switch.momentary-btn {
+  cursor: pointer;
+}
+
+.toggle-switch.momentary-btn.active .toggle-track {
+  background: rgba(13, 201, 136, 0.35);
+  border-color: rgba(13, 201, 136, 0.5);
+}
+
+.toggle-switch.momentary-btn.active .toggle-thumb {
+  transform: translateX(22px);
+  background: #0DC988;
+}
+
+.toggle-switch.momentary-btn.active .toggle-label-right {
+  color: #0DC988;
+  font-weight: 500;
+}
+
+.toggle-switch.momentary-btn .toggle-label-left {
+  color: #848484;
+  font-weight: 400;
+  font-size: 0.6875rem;
+}
+
+.toggle-switch.momentary-btn .toggle-label-right {
+  font-size: 1rem;
+  color: #848484;
+  transition: all 0.2s ease;
+}
+
+.toggle-switch.momentary-btn:hover .toggle-label-left,
+.toggle-switch.momentary-btn:hover .toggle-label-right {
+  color: #EAEAEA;
 }
 </style>

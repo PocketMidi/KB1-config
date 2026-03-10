@@ -135,16 +135,22 @@ const isIOS = computed(() => {
          (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 });
 
+const isAndroid = computed(() => {
+  return /Android/i.test(navigator.userAgent);
+});
+
 const isMobileDevice = computed(() => {
   return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 });
 
 // Dynamic warning message based on platform
 const bluetoothWarningMessage = computed(() => {
-  if (isIOS.value || isMobileDevice.value) {
-    return '⚠️ Web Bluetooth is not supported. iOS/Safari: download V Browser from the App Store.';
+  if (isIOS.value) {
+    return '⚠️ Web Bluetooth not supported on iOS Safari. Download V Browser from the App Store.';
+  } else if (isAndroid.value) {
+    return '⚠️ Web Bluetooth not supported in this browser. Use Chrome, Edge, Samsung Internet, or Opera.';
   } else {
-    return '⚠️ Web Bluetooth is not supported. Desktop: use Chrome, Edge, or Opera.';
+    return '⚠️ Web Bluetooth is not supported. Use Chrome, Edge, or Opera.';
   }
 });
 
@@ -371,10 +377,6 @@ function handleTabClick(tabId: Tab) {
               <span class="toggle-slider"></span>
             </label>
             <span class="toggle-label">{{ devMode ? 'Disable' : 'Enable' }} Evaluation Mode</span>
-          </div>
-          
-          <div class="modal-note">
-            <p>💡 Tip: Tap the logo 5 times to toggle this menu</p>
           </div>
         </div>
         
@@ -972,17 +974,18 @@ body {
 }
 
 .dev-mode-modal {
-  background: var(--color-background);
-  border: 2px solid #F9AC20;
+  background: #1D1D1D;
+  border: 1px solid rgba(234, 234, 234, 0.2);
   border-radius: 8px;
   max-width: 500px;
   width: 100%;
-  padding: 1.5rem;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  padding: 1rem;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.8);
   animation: modal-slide-in 0.3s ease-out;
   touch-action: manipulation; /* Prevent zoom */
   user-select: none;
   -webkit-user-select: none;
+  font-family: 'Roboto Mono', monospace;
 }
 
 @keyframes modal-slide-in {
@@ -997,23 +1000,23 @@ body {
 }
 
 .dev-mode-modal h2 {
-  margin: 0 0 1rem 0;
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: #F9AC20;
+  margin: 0 0 0.5rem 0;
+  font-size: 1rem;
+  font-weight: 500;
+  color: #EAEAEA;
   font-family: 'Roboto Mono', monospace;
-  text-align: center;
+  text-align: left;
 }
 
 .modal-content {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 0.75rem;
 }
 
 .dev-mode-warning {
-  background: rgba(239, 68, 68, 0.1);
-  border: 1px solid rgba(239, 68, 68, 0.3);
+  background: rgba(234, 234, 234, 0.05);
+  border: 1px solid rgba(234, 234, 234, 0.15);
   border-radius: 6px;
   padding: 1rem;
   font-size: 0.8125rem;
@@ -1029,10 +1032,10 @@ body {
 }
 
 .status-line {
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
   margin-top: 0.75rem !important;
   padding-top: 0.75rem;
-  border-top: 1px solid rgba(239, 68, 68, 0.2);
+  border-top: 1px solid rgba(234, 234, 234, 0.15);
 }
 
 .status-enabled {
@@ -1050,8 +1053,8 @@ body {
   align-items: center;
   gap: 1rem;
   padding: 1rem;
-  background: rgba(249, 172, 32, 0.1);
-  border: 1px solid rgba(249, 172, 32, 0.3);
+  background: rgba(234, 234, 234, 0.05);
+  border: 1px solid rgba(234, 234, 234, 0.15);
   border-radius: 6px;
 }
 
@@ -1076,8 +1079,8 @@ body {
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(255, 255, 255, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  background-color: rgba(234, 234, 234, 0.2);
+  border: 1px solid rgba(234, 234, 234, 0.3);
   transition: 0.3s;
   border-radius: 28px;
 }
@@ -1089,14 +1092,14 @@ body {
   width: 20px;
   left: 3px;
   bottom: 3px;
-  background-color: white;
+  background-color: #EAEAEA;
   transition: 0.3s;
   border-radius: 50%;
 }
 
 input:checked + .toggle-slider {
-  background-color: #F9AC20;
-  border-color: #F9AC20;
+  background-color: #6A6853;
+  border-color: #6A6853;
 }
 
 input:checked + .toggle-slider:before {
@@ -1104,36 +1107,23 @@ input:checked + .toggle-slider:before {
 }
 
 .toggle-label {
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
   font-weight: 500;
   color: var(--color-text);
 }
 
-.modal-note {
-  background: rgba(249, 172, 32, 0.05);
-  border: 1px solid rgba(249, 172, 32, 0.2);
-  border-radius: 6px;
-  padding: 0.75rem;
-  font-size: 0.75rem;
-  color: var(--color-text-muted);
-  text-align: center;
-}
-
-.modal-note p {
-  margin: 0;
-}
-
 .dev-mode-actions {
   display: flex;
-  justify-content: center;
-  margin-top: 1rem;
+  justify-content: flex-end;
+  margin-top: 0.75rem;
+  gap: 0.5rem;
 }
 
 .btn-modal-close {
-  padding: 0.5rem 2rem;
-  background: rgba(249, 172, 32, 0.2);
-  border: 1px solid rgba(249, 172, 32, 0.4);
-  color: var(--color-text);
+  padding: 0.25rem 1rem;
+  background: #6A6853;
+  border: none;
+  color: #EAEAEA;
   font-size: 0.8125rem;
   font-weight: 500;
   border-radius: 4px;
@@ -1143,9 +1133,7 @@ input:checked + .toggle-slider:before {
 }
 
 .btn-modal-close:hover {
-  background: rgba(249, 172, 32, 0.3);
-  border-color: rgba(249, 172, 32, 0.6);
-  box-shadow: 0 0 8px rgba(249, 172, 32, 0.3);
+  background: #7A7863;
 }
 
 .btn-modal-close:active {

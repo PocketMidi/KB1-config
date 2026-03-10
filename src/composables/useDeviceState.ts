@@ -461,12 +461,11 @@ export function useDeviceState() {
       return isChrome || isEdge || isSamsung;
     }
     
-    // On desktop, only Chrome, Edge, and Opera are supported
+    // On desktop, only Chrome and Edge are tested and supported
     const isChrome = /Chrome/i.test(userAgent) && !/Edg/i.test(userAgent);
     const isEdge = /Edg/i.test(userAgent);
-    const isOpera = /OPR/i.test(userAgent) || /Opera/i.test(userAgent);
     
-    return isChrome || isEdge || isOpera;
+    return isChrome || isEdge;
   });
 
   /**

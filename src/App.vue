@@ -152,9 +152,13 @@ const bluetoothWarningMessage = computed(() => {
   if (isIOS.value) {
     return '⚠️ Web Bluetooth not supported on iOS Safari. Download V Browser from the App Store.';
   } else if (isFirefox.value) {
-    return '⚠️ Web Bluetooth untested in Firefox. Chrome or Edge are recommended.';
+    return isAndroid.value 
+      ? '⚠️ Web Bluetooth untested in Firefox. Chrome, Edge, or Samsung Internet are recommended.'
+      : '⚠️ Web Bluetooth untested in Firefox. Chrome or Edge are recommended.';
   } else if (isBrave.value) {
-    return '⚠️ Web Bluetooth untested in Brave. Chrome or Edge are recommended.';
+    return isAndroid.value
+      ? '⚠️ Web Bluetooth untested in Brave. Chrome, Edge, or Samsung Internet are recommended.'
+      : '⚠️ Web Bluetooth untested in Brave. Chrome or Edge are recommended.';
   } else if (isAndroid.value) {
     return '⚠️ Web Bluetooth untested in this browser. Chrome, Edge, or Samsung Internet are recommended.';
   } else {

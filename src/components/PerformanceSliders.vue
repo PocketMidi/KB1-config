@@ -1414,8 +1414,6 @@ defineExpose({
           <Vue3Lottie
             v-if="toLandAnimationData"
             :animationData="toLandAnimationData"
-            :height="300"
-            :width="300"
             :loop="true"
             :autoPlay="true"
             class="rotate-icon-img"
@@ -1432,8 +1430,6 @@ defineExpose({
           <Vue3Lottie
             v-if="toPortAnimationData"
             :animationData="toPortAnimationData"
-            :height="300"
-            :width="300"
             :loop="true"
             :autoPlay="true"
             class="rotate-icon-img"

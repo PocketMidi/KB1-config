@@ -434,9 +434,27 @@ export function useDeviceState() {
   };
 
   /**
-   * Check if Web Bluetooth is available
+   * Check if Web Bluetooth is available in a supported browser
    */
-  const isBluetoothAvailable = computed(() => devMode.value || bleClient.isBluetoothAvailable());
+  const isBluetoothAvailable = computed(() => {
+    if (devMode.value) return true;
+    
+    // Check if Web Bluetooth API exists
+    if (!bleClient.isBluetoothAvailable()) return false;
+    
+    // On Android, only Chrome, Edge, and Samsung Internet are tested and supported
+    const isAndroid = /Android/i.test(navigator.userAgent);
+    if (isAndroid) {
+      const userAgent = navigator.userAgent;
+      const isChrome = /Chrome/i.test(userAgent) && !/Edg/i.test(userAgent) && !/SamsungBrowser/i.test(userAgent);
+      const isEdge = /Edg/i.test(userAgent);
+      const isSamsung = /SamsungBrowser/i.test(userAgent);
+      return isChrome || isEdge || isSamsung;
+    }
+    
+    // On other platforms (desktop), trust the Web Bluetooth API availability
+    return true;
+  });
 
   /**
    * Check if connected

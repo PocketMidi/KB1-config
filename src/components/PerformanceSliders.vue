@@ -2296,7 +2296,7 @@ defineExpose({
 /* Hint fade transition */
 .hint-fade-enter-active,
 .hint-fade-leave-active {
-  transition: opacity 2s ease;
+  transition: opacity 0.3s ease;
 }
 
 .hint-fade-enter-from,

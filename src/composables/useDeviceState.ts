@@ -455,14 +455,14 @@ export function useDeviceState() {
     // On Android, only Chrome, Edge, and Samsung Internet are tested and supported
     const isAndroid = /Android/i.test(userAgent);
     if (isAndroid) {
-      const isChrome = /Chrome/i.test(userAgent) && !/Edg/i.test(userAgent) && !/SamsungBrowser/i.test(userAgent);
+      const isChrome = /Chrome/i.test(userAgent) && !/Edg/i.test(userAgent) && !/SamsungBrowser/i.test(userAgent) && !/OPR/i.test(userAgent);
       const isEdge = /Edg/i.test(userAgent);
       const isSamsung = /SamsungBrowser/i.test(userAgent);
       return isChrome || isEdge || isSamsung;
     }
     
     // On desktop, only Chrome and Edge are tested and supported
-    const isChrome = /Chrome/i.test(userAgent) && !/Edg/i.test(userAgent);
+    const isChrome = /Chrome/i.test(userAgent) && !/Edg/i.test(userAgent) && !/OPR/i.test(userAgent);
     const isEdge = /Edg/i.test(userAgent);
     
     return isChrome || isEdge;

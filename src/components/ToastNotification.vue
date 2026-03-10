@@ -28,10 +28,10 @@ const emit = defineEmits<{
 const visible = ref(false);
 
 const icon = {
-  success: '✓',
-  error: '✕',
-  info: 'ℹ',
-  warning: '⚠'
+  success: '',
+  error: '',
+  info: '',
+  warning: ''
 }[props.type];
 
 onMounted(() => {

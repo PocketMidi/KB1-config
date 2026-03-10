@@ -143,7 +143,7 @@
         </div>
         <div class="form-actions">
           <button class="btn-secondary" @click="generateName">
-            🎲 Random Name
+            Random Name
           </button>
         </div>
         <div class="modal-buttons">

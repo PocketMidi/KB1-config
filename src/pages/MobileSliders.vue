@@ -32,7 +32,7 @@
         </div>
         <div class="form-actions">
           <button class="btn-secondary" @click="generateName">
-            🎲 Random Name
+            Random Name
           </button>
         </div>
         <div class="modal-buttons">
@@ -62,7 +62,7 @@
             </div>
             <div class="preset-actions">
               <button class="btn-icon" @click.stop="deletePreset(preset.id)" title="Delete">
-                🗑️
+                Delete
               </button>
             </div>
           </div>
@@ -84,12 +84,14 @@
 import { ref, nextTick, onMounted, computed } from 'vue';
 import { useDeviceState } from '../composables/useDeviceState';
 import { useConfirm } from '../composables/useConfirm';
+import { useToast } from '../composables/useToast';
 import PerformanceSliders from '../components/PerformanceSliders.vue';
 import StickyActionBar from '../components/StickyActionBar.vue';
 import { SliderPresetStore, generateRandomSliderName, type NamedSliderPreset } from '../state/sliderPresets';
 
 const { isConnected } = useDeviceState();
 const { confirm } = useConfirm();
+const toast = useToast();
 const performanceSlidersRef = ref<InstanceType<typeof PerformanceSliders> | null>(null);
 
 // Check if in live mode
@@ -132,8 +134,10 @@ function handleResetDefaults() {
     // In live mode, only reset values to 0, not full reset
     if (isInLiveMode()) {
       performanceSlidersRef.value.resetValuesToZero();
+      toast.success('Sliders reset to zero');
     } else {
       performanceSlidersRef.value.resetToDefaults();
+      toast.success('Sliders reset to defaults');
     }
   }
 }
@@ -267,83 +271,84 @@ defineExpose({
 }
 
 .modal-dialog {
-  background: #1A1A1A;
-  border: 1px solid #6A6853;
+  background: #1D1D1D;
+  border: 1px solid rgba(234, 234, 234, 0.2);
   border-radius: 8px;
-  padding: 1.5rem;
-  max-width: 500px;
+  padding: 1rem;
+  max-width: 400px;
   width: 100%;
   max-height: 80vh;
   overflow-y: auto;
   font-family: 'Roboto Mono', monospace;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.8);
 }
 
 .modal-dialog h3 {
-  margin: 0 0 1.5rem 0;
+  margin: 0 0 0.5rem 0;
   color: #EAEAEA;
-  font-size: 1.125rem;
+  font-size: 1rem;
   font-weight: 500;
 }
 
 .form-group {
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem;
 }
 
 .form-group label {
   display: block;
-  margin-bottom: 0.5rem;
-  color: #EAEAEA;
-  font-size: 0.8125rem;
+  margin-bottom: 0.375rem;
+  color: #848484;
+  font-size: 0.75rem;
+  text-transform: uppercase;
 }
 
 .input-text {
   width: 100%;
-  padding: 0.625rem;
-  background: rgba(106, 104, 83, 0.1);
-  border: 1px solid #6A6853;
+  padding: 0.25rem 1rem;
+  background: rgba(234, 234, 234, 0.05);
+  border: none;
   border-radius: 4px;
   color: #EAEAEA;
   font-family: 'Roboto Mono', monospace;
   font-size: 0.8125rem;
+  box-sizing: border-box;
 }
 
 .input-text:focus {
   outline: none;
-  border-color: #8B8970;
-  background: rgba(106, 104, 83, 0.15);
+  background: rgba(234, 234, 234, 0.08);
 }
 
 .form-actions {
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem;
 }
 
 .modal-buttons {
   display: flex;
-  gap: 0.75rem;
+  gap: 0.5rem;
   justify-content: flex-end;
-  margin-top: 1.5rem;
+  margin-top: 0.75rem;
 }
 
 .btn-primary,
 .btn-secondary {
-  padding: 0.625rem 1.25rem;
+  padding: 0.25rem 1rem;
   border-radius: 4px;
   font-family: 'Roboto Mono', monospace;
   font-size: 0.8125rem;
+  font-weight: 500;
   cursor: pointer;
   transition: all 0.2s;
-  border: 1px solid;
 }
 
 .btn-primary {
-  background: rgba(106, 104, 83, 0.3);
-  border-color: #6A6853;
+  background: #6A6853;
+  border: none;
   color: #EAEAEA;
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: rgba(106, 104, 83, 0.5);
-  border-color: #8B8970;
+  background: #7A7863;
 }
 
 .btn-primary:disabled {
@@ -353,29 +358,29 @@ defineExpose({
 
 .btn-secondary {
   background: transparent;
-  border-color: #6A6853;
+  border: 1px solid rgba(234, 234, 234, 0.2);
   color: #EAEAEA;
 }
 
 .btn-secondary:hover {
-  background: rgba(106, 104, 83, 0.2);
-  border-color: #8B8970;
+  background: rgba(234, 234, 234, 0.05);
+  border-color: rgba(234, 234, 234, 0.3);
 }
 
 /* Presets List */
 .presets-list {
-  max-height: 400px;
+  max-height: 300px;
   overflow-y: auto;
-  margin-bottom: 1rem;
+  margin-bottom: 0.5rem;
 }
 
 .preset-item {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.75rem;
-  background: rgba(106, 104, 83, 0.1);
-  border: 1px solid #6A6853;
+  padding: 0.25rem 1rem;
+  background: rgba(29, 29, 29, 0.4);
+  border: none;
   border-radius: 4px;
   margin-bottom: 0.5rem;
   cursor: pointer;
@@ -383,8 +388,7 @@ defineExpose({
 }
 
 .preset-item:hover {
-  background: rgba(106, 104, 83, 0.2);
-  border-color: #8B8970;
+  background: rgba(234, 234, 234, 0.1);
 }
 
 .preset-info {
@@ -410,25 +414,26 @@ defineExpose({
 .btn-icon {
   background: transparent;
   border: none;
-  padding: 0.25rem;
+  padding: 0.25rem 0.5rem;
   cursor: pointer;
-  font-size: 1rem;
-  opacity: 0.6;
-  transition: opacity 0.2s;
+  font-size: 0.75rem;
+  color: #848484;
+  font-family: 'Roboto Mono', monospace;
+  transition: color 0.2s;
 }
 
 .btn-icon:hover {
-  opacity: 1;
+  color: #EAEAEA;
 }
 
 .empty-state {
   text-align: center;
-  padding: 2rem 1rem;
-  color: #8B8970;
+  padding: 1rem;
+  color: #848484;
 }
 
 .empty-state p {
-  margin: 0.5rem 0;
+  margin: 0;
   font-size: 0.8125rem;
 }
 

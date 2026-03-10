@@ -56,7 +56,7 @@ function handleInput(e: Event) {
         @click.stop="$emit('lock')"
         :title="locked ? 'Unlock' : 'Lock'"
       >
-        {{ locked ? '🔒' : '🔓' }}
+        {{ locked ? 'L' : 'L' }}
       </button>
       <button
         class="slider-center"
@@ -64,7 +64,7 @@ function handleInput(e: Event) {
         @click.stop="$emit('center')"
         title="Center"
       >
-        ⊙
+        C
       </button>
     </div>
     <div class="slider-label">{{ parameter.label }}</div>

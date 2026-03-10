@@ -498,7 +498,6 @@ function resetToDefaults() {
   }
   links.value = new Array(11).fill(false);
   savePreset();
-  showExplainerText('Reset to Defaults');
 }
 
 // Reset values to zero (only values, keep colors/settings)
@@ -507,7 +506,6 @@ function resetValuesToZero() {
     slider.value = 0;
   }
   savePreset();
-  showExplainerText('Values Reset to Zero');
 }
 
 // Handle triple-tap on blank space in live mode

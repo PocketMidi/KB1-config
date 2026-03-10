@@ -62,6 +62,20 @@
       </div>
     </div>
 
+    <!-- Inactive Keys Hint Banner (Chromatic Mode Only) -->
+    <div v-if="showInactiveKeyHint" class="inactive-keys-hint">
+      <button class="hint-close-btn" @click="dismissHint(false)" title="Dismiss">×</button>
+      <h3 class="hint-title">CHROMATIC MODE</h3>
+      <div class="hint-description">
+        Root note selection is inactive while SCALE TYPE is set to <strong>Chromatic</strong>.<br><br>
+        Because all 12 notes are active, root note selection is disabled.
+      </div>
+      <div class="hint-footer">
+        <button class="hint-btn-primary" @click="dismissHint(false)">Got it</button>
+        <button class="hint-btn-secondary" @click="dismissHint(true)">Don't show again</button>
+      </div>
+    </div>
+
     <!-- Scale Mode: Mapping Toggle and Visualization -->
     <div v-if="playMode === 'scale'" class="mapping-toggle-row">
       <button 
@@ -255,8 +269,9 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, ref, watch, onMounted, onUnmounted } from 'vue'
 import { useHaptics } from '../composables/useHaptics'
+import { useToast } from '../composables/useToast'
 import NotePickerControl from './NotePickerControl.vue'
 import OptionWheelPicker from './OptionWheelPicker.vue'
 import ValueControl from './ValueControl.vue'
@@ -325,6 +340,35 @@ const typeTriggerRef = ref<HTMLElement | null>(null)
 const advancedStrumOpen = ref(false)
 
 const { doubleTap } = useHaptics()
+const toast = useToast()
+
+// Track clicks in chromatic mode to show helpful hint banner
+const inactiveKeyClicks = ref(0)
+const inactiveClickTimer = ref<number | null>(null)
+const showInactiveKeyHint = ref(false)
+const HINT_STORAGE_KEY = 'kb1-inactive-keys-hint-dismissed'
+
+// Check localStorage on mount
+const hintDismissedPermanently = ref(localStorage.getItem(HINT_STORAGE_KEY) === 'true')
+
+// Listen for storage events to react when hints are restored via RESTORE button
+const handleStorageChange = () => {
+  const dismissed = localStorage.getItem(HINT_STORAGE_KEY) === 'true'
+  hintDismissedPermanently.value = dismissed
+}
+
+onMounted(() => {
+  window.addEventListener('storage', handleStorageChange)
+  // Also check periodically for same-window storage changes (RESTORE button is same window)
+  const interval = setInterval(() => {
+    handleStorageChange()
+  }, 500)
+  
+  onUnmounted(() => {
+    window.removeEventListener('storage', handleStorageChange)
+    clearInterval(interval)
+  })
+})
 
 // Watch advanced strum panel state to control pattern mode
 watch(advancedStrumOpen, (isOpen) => {
@@ -447,6 +491,10 @@ watch(() => [model.value.scale.scaleType, model.value.mode] as const, ([newScale
       emit('update:modelValue', updated)
     }
   }
+  
+  // Reset inactive key hint when scale/mode changes
+  showInactiveKeyHint.value = false
+  inactiveKeyClicks.value = 0
 }, { immediate: true })
 
 const selectedTypeLabel = computed(() => {
@@ -857,9 +905,45 @@ function isRootNote(midiNote: number): boolean {
   return (midiNote % 12) === (rootNote % 12)
 }
 
+// Dismiss hint banner
+function dismissHint(permanent: boolean) {
+  showInactiveKeyHint.value = false
+  inactiveKeyClicks.value = 0
+  
+  if (permanent) {
+    localStorage.setItem(HINT_STORAGE_KEY, 'true')
+    hintDismissedPermanently.value = true
+  }
+}
+
 // Handle keyboard key clicks to set root note
 function handleKeyClick(midiNote: number) {
-  // Emit warning when trying to change root in Chromatic mode
+  // Track clicks for hint banner ONLY in chromatic mode (before early return)
+  if (isChromatic.value && !hintDismissedPermanently.value && !showInactiveKeyHint.value) {
+    // In chromatic mode, all keys are inactive for root change
+    inactiveKeyClicks.value++
+    
+    // Reset counter after 10 seconds of inactivity
+    if (inactiveClickTimer.value) {
+      clearTimeout(inactiveClickTimer.value)
+    }
+    inactiveClickTimer.value = window.setTimeout(() => {
+      inactiveKeyClicks.value = 0
+      inactiveClickTimer.value = null
+    }, 10000)
+    
+    // Show hint banner after 4 clicks in chromatic mode
+    if (inactiveKeyClicks.value >= 4) {
+      showInactiveKeyHint.value = true
+      inactiveKeyClicks.value = 0
+      if (inactiveClickTimer.value) {
+        clearTimeout(inactiveClickTimer.value)
+        inactiveClickTimer.value = null
+      }
+    }
+  }
+  
+  // Handle chromatic mode early return
   if (isChromatic.value) {
     emit('chromaticWarning', 'Default mapping')
     return
@@ -1059,6 +1143,111 @@ function handleKeyClick(midiNote: number) {
 .note-label-alt {
   line-height: 1;
   font-size: 0.625rem;
+}
+
+/* Inactive Keys Hint Banner */
+.inactive-keys-hint {
+  position: relative;
+  background: var(--color-background-soft, #1A1A1A);
+  border: 1px solid var(--color-border, #333333);
+  border-radius: 8px;
+  margin-top: 1rem;
+  padding: 0;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  font-family: 'Roboto Mono';
+}
+
+.hint-close-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: #848484;
+  cursor: pointer;
+  padding: 0;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all 0.2s;
+  z-index: 1;
+}
+
+.hint-close-btn:hover {
+  background: var(--color-background-mute, #222222);
+  color: #EAEAEA;
+}
+
+.hint-title {
+  margin: 0;
+  padding: 1rem 2.5rem 0.75rem 1rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #EAEAEA;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid var(--color-border, #333333);
+}
+
+.hint-description {
+  margin: 0;
+  padding: 1rem;
+  font-size: 0.8125rem;
+  line-height: 1.6;
+  color: var(--color-text, #EAEAEA);
+  font-weight: 400;
+}
+
+.hint-footer {
+  padding: 0.75rem 1rem;
+  border-top: 1px solid var(--color-border, #333333);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.hint-btn-primary {
+  width: 100%;
+  padding: 0.625rem 1.25rem;
+  background: #0DC988;
+  color: #1A1A1A;
+  border: none;
+  border-radius: 4px;
+  font-family: 'Roboto Mono';
+  font-size: 0.8125rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.hint-btn-primary:hover {
+  background: #0BA872;
+}
+
+.hint-btn-secondary {
+  width: 100%;
+  padding: 0.625rem 1.25rem;
+  background: transparent;
+  color: #848484;
+  border: 1px solid #333333;
+  border-radius: 4px;
+  font-family: 'Roboto Mono';
+  font-size: 0.8125rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.hint-btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: #484848;
+  color: #EAEAEA;
 }
 
 /* Mapping Toggle Row */

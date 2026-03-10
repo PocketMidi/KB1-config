@@ -338,7 +338,7 @@ const helpTexts = {
   category: {
     title: 'Category',
     description: [
-      'Select a category to filter the available parameters for this lever to control.'
+      'Select a category to filter the available parameters that this lever will control.'
     ]
   },
   parameter: {

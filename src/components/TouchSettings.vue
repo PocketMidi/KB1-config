@@ -469,13 +469,13 @@ const helpTexts = {
   category: {
     title: 'Category',
     description: [
-      'Select a category to filter the available parameters for this lever to control.'
+      'Select a category to filter the available parameters that the Touchpad can control.'
     ]
   },
   parameter: {
     title: 'Parameter',
     description: [
-      'Parameters are specific MIDI CCs that this lever will control.'
+      'Parameters are specific MIDI CCs that the Touchpad can control.'
     ]
   },
   threshold: {

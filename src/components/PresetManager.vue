@@ -22,7 +22,10 @@
     <!-- Community Tab Content -->
     <div v-show="activeTab === 'community'" class="tab-content">
       <!-- Your Working Presets Section -->
-      <div class="preset-section-header">Your Working Presets</div>
+      <div class="preset-section-header">
+        Working Presets
+        <span class="info-icon" @click.stop="showHelp('workingPresets')" title="Show help">?</span>
+      </div>
       
     <!-- Presets List -->
     <div v-if="presets.length > 0" class="presets-list">
@@ -276,7 +279,10 @@
     <!-- Device Presets Tab Content -->
     <div v-show="activeTab === 'device-presets'" class="tab-content">
       <!-- Device Storage Section -->
-      <div class="preset-section-header">Stored on Device</div>
+      <div class="preset-section-header">
+        Stored on Device
+        <span class="info-icon" @click.stop="showHelp('storedOnDevice')" title="Show help">?</span>
+      </div>
       <div class="preset-section">
       
       <!-- Slot Indicator -->
@@ -353,6 +359,22 @@
       </div>
     </div>
   </div>
+  
+  <!-- Help Guide Modal -->
+  <div v-if="showHelpModal" class="help-modal-overlay" @click="dismissHelp">
+    <div class="help-modal" @click.stop>
+      <div class="help-modal-header">
+        <h3>{{ helpContent.title }}</h3>
+        <button class="close-btn" @click="dismissHelp">×</button>
+      </div>
+      <div class="help-modal-body">
+        <p v-html="helpContent.description"></p>
+      </div>
+      <div class="help-modal-footer">
+        <button class="btn-primary" @click="dismissHelp">Got it</button>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -425,6 +447,30 @@ const exportingSelectedCount = ref(0);
 
 // File input
 const fileInput = ref<HTMLInputElement | null>(null);
+
+// Help modal system
+const showHelpModal = ref(false);
+const helpContent = ref({ title: '', description: '' });
+
+const helpTexts = {
+  workingPresets: {
+    title: 'Working Presets',
+    description: 'Unlimited presets saved in your browser. Perfect for experimenting and iterating on configurations. These persist between sessions but will be lost if browser cache is cleared.'
+  },
+  storedOnDevice: {
+    title: 'Stored on Device',
+    description: '8 preset slots stored permanently in <em>KB1</em>\'s flash memory. These survive browser resets and cache clears. Use these for your final, go-to configurations.'
+  }
+};
+
+function showHelp(type: keyof typeof helpTexts) {
+  helpContent.value = helpTexts[type];
+  showHelpModal.value = true;
+}
+
+function dismissHelp() {
+  showHelpModal.value = false;
+}
 
 // Device preset state
 const activeDeviceSlot = ref<number | null>(null);
@@ -1646,6 +1692,126 @@ function formatDate(timestamp: number): string {
   .device-presets-grid {
     grid-template-columns: repeat(2, 1fr);
   }
+}
+
+/* Info Icon */
+.info-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  font-size: 0.625rem;
+  color: #848484;
+  border: 1px solid #848484;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.2s;
+  user-select: none;
+  margin-left: 0.5rem;
+}
+
+.info-icon:hover {
+  color: #0DC988;
+  border-color: #0DC988;
+}
+
+/* Help Modal */
+.help-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  padding: 1rem;
+}
+
+.help-modal {
+  background: var(--color-background-soft);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  max-width: 500px;
+  width: 100%;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  font-family: 'Roboto Mono';
+}
+
+.help-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.help-modal-header h3 {
+  margin: 0;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #EAEAEA;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: #848484;
+  cursor: pointer;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.close-btn:hover {
+  background: var(--color-background-mute);
+  color: #EAEAEA;
+}
+
+.help-modal-body {
+  padding: 1.5rem;
+}
+
+.help-modal-body p {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.6;
+  color: var(--color-text);
+}
+
+.help-modal-footer {
+  padding: 1rem 1.5rem;
+  border-top: 1px solid var(--color-border);
+  display: flex;
+  justify-content: flex-end;
+}
+
+.help-modal-footer .btn-primary {
+  padding: 0.5rem 1.5rem;
+  background: #0DC988;
+  color: #1A1A1A;
+  border: none;
+  border-radius: 4px;
+  font-family: 'Roboto Mono';
+  font-size: 0.8125rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.help-modal-footer .btn-primary:hover {
+  background: #0BA872;
 }
 </style>
 

@@ -92,7 +92,7 @@
         <button class="close-btn" @click="dismissHelp">×</button>
       </div>
       <div class="help-modal-body">
-        <p>{{ helpContent.description }}</p>
+        <p v-html="helpContent.description"></p>
       </div>
       <div class="help-modal-footer">
         <button class="btn-primary" @click="dismissHelp">Got it</button>
@@ -164,11 +164,11 @@ const restoringHints = ref(false)
 const helpTexts = {
   sleepTimeout: {
     title: 'Sleep Timeout',
-    description: 'Controls how long this device stays awake when not in use. At timeout, LEDs pulse briefly as a warning, then the device enters deep sleep to save battery.'
+    description: 'Controls how long <em>KB1</em> stays awake when not in use. At timeout, LEDs pulse briefly as a warning, then the device enters deep sleep to save battery. Touchpad will wake system at any time.'
   },
   bleTimeout: {
     title: 'BLE Timeout', 
-    description: 'Controls how long Bluetooth stays active when the Configurator web app is not connected. Shorter times will conserve battery life.'
+    description: 'Controls how long Bluetooth stays active when the <em>Configurator</em> web app is not connected. Shorter times will conserve battery life.'
   },
   resolution: {
     title: 'Parameter Resolution',
@@ -198,6 +198,7 @@ function resetHints() {
   const hintKeys = [
     'kb1-reset-hint-disabled',
     'kb1-reset-hint-seen',
+    'kb1-inactive-keys-hint-dismissed',
     // Add any future hint keys here
   ]
   

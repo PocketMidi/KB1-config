@@ -442,18 +442,31 @@ export function useDeviceState() {
     // Check if Web Bluetooth API exists
     if (!bleClient.isBluetoothAvailable()) return false;
     
+    const userAgent = navigator.userAgent;
+    
+    // Firefox: Has experimental BLE support but not functional - block it
+    const isFirefox = /Firefox/i.test(userAgent);
+    if (isFirefox) return false;
+    
+    // Brave: BLE connect doesn't work - block it
+    const isBrave = /Brave/i.test(userAgent) || (navigator as any).brave !== undefined;
+    if (isBrave) return false;
+    
     // On Android, only Chrome, Edge, and Samsung Internet are tested and supported
-    const isAndroid = /Android/i.test(navigator.userAgent);
+    const isAndroid = /Android/i.test(userAgent);
     if (isAndroid) {
-      const userAgent = navigator.userAgent;
       const isChrome = /Chrome/i.test(userAgent) && !/Edg/i.test(userAgent) && !/SamsungBrowser/i.test(userAgent);
       const isEdge = /Edg/i.test(userAgent);
       const isSamsung = /SamsungBrowser/i.test(userAgent);
       return isChrome || isEdge || isSamsung;
     }
     
-    // On other platforms (desktop), trust the Web Bluetooth API availability
-    return true;
+    // On desktop, only Chrome, Edge, and Opera are supported
+    const isChrome = /Chrome/i.test(userAgent) && !/Edg/i.test(userAgent);
+    const isEdge = /Edg/i.test(userAgent);
+    const isOpera = /OPR/i.test(userAgent) || /Opera/i.test(userAgent);
+    
+    return isChrome || isEdge || isOpera;
   });
 
   /**

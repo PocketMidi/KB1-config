@@ -143,14 +143,26 @@ const isMobileDevice = computed(() => {
   return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 });
 
+const isFirefox = computed(() => {
+  return /Firefox/i.test(navigator.userAgent);
+});
+
+const isBrave = computed(() => {
+  return /Brave/i.test(navigator.userAgent) || (navigator as any).brave !== undefined;
+});
+
 // Dynamic warning message based on platform
 const bluetoothWarningMessage = computed(() => {
   if (isIOS.value) {
     return '⚠️ Web Bluetooth not supported on iOS Safari. Download V Browser from the App Store.';
+  } else if (isFirefox.value) {
+    return '⚠️ Web Bluetooth untested in Firefox. Chrome, Edge, or Opera are recommended.';
+  } else if (isBrave.value) {
+    return '⚠️ Web Bluetooth untested in Brave. Chrome, Edge, or Opera are recommended.';
   } else if (isAndroid.value) {
     return '⚠️ Web Bluetooth untested in this browser. Chrome, Edge, or Samsung Internet are recommended.';
   } else {
-    return '⚠️ Web Bluetooth is not supported. Use Chrome, Edge, or Opera.';
+    return '⚠️ Web Bluetooth untested in this browser. Chrome, Edge, or Opera are recommended.';
   }
 });
 

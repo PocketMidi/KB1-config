@@ -11,9 +11,9 @@ export interface Toast {
 const toasts = ref<Toast[]>([]);
 let nextId = 0;
 
-const haptics = useHaptics();
-
 export function useToast() {
+  const haptics = useHaptics();
+
   function show(
     message: string,
     type: 'success' | 'error' | 'info' | 'warning' = 'info',

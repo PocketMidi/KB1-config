@@ -407,6 +407,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: 'load', settings: DeviceSettings): void;
   (e: 'presetActivated', presetId: string | null): void;
+  (e: 'slotNameDisplay', name: string): void;
 }>();
 
 const presets = ref<Preset[]>([]);

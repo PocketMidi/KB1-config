@@ -271,7 +271,6 @@
 <script setup lang="ts">
 import { computed, ref, watch, onMounted, onUnmounted } from 'vue'
 import { useHaptics } from '../composables/useHaptics'
-import { useToast } from '../composables/useToast'
 import NotePickerControl from './NotePickerControl.vue'
 import OptionWheelPicker from './OptionWheelPicker.vue'
 import ValueControl from './ValueControl.vue'
@@ -340,7 +339,6 @@ const typeTriggerRef = ref<HTMLElement | null>(null)
 const advancedStrumOpen = ref(false)
 
 const { doubleTap } = useHaptics()
-const toast = useToast()
 
 // Track clicks in chromatic mode to show helpful hint banner
 const inactiveKeyClicks = ref(0)

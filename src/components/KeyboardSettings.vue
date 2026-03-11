@@ -214,7 +214,7 @@
               <div class="duration-control-wrapper">
                 <ValueControl
                   v-model="swingValue"
-                  :min="0"
+                  :min="50"
                   :max="100"
                   :step="5"
                   :small-step="5"
@@ -337,6 +337,7 @@ const typeTriggerRef = ref<HTMLElement | null>(null)
 
 // Advanced strum section state
 const advancedStrumOpen = ref(false)
+const userClosedPanel = ref(false) // Track if user manually closed the panel
 
 const { doubleTap } = useHaptics()
 
@@ -370,14 +371,27 @@ onMounted(() => {
 
 // Watch advanced strum panel state to control pattern mode
 watch(advancedStrumOpen, (isOpen) => {
-  // When closing the panel, reset strumPattern to 0 (use chord type intervals)
-  // When opening, set to 7 (use custom pattern)
-  const newPattern = isOpen ? 7 : 0
-  if (latestChord.value.strumPattern !== newPattern) {
-    latestChord.value.strumPattern = newPattern
-    const updated = { ...model.value }
-    updated.chord = { ...latestChord.value }
-    emit('update:modelValue', updated)
+  if (isOpen) {
+    // When opening: clear the manual close flag
+    userClosedPanel.value = false
+    // Only set to pattern 7 (custom) if currently at 0 (chord type)
+    // This allows preset-loaded patterns (1-6) to remain unchanged
+    if (latestChord.value.strumPattern === 0) {
+      latestChord.value.strumPattern = 7
+      const updated = { ...model.value }
+      updated.chord = { ...latestChord.value }
+      emit('update:modelValue', updated)
+    }
+  } else {
+    // When closing: mark that user manually closed the panel
+    userClosedPanel.value = true
+    // Always reset to 0 (chord type intervals)
+    if (latestChord.value.strumPattern !== 0) {
+      latestChord.value.strumPattern = 0
+      const updated = { ...model.value }
+      updated.chord = { ...latestChord.value }
+      emit('update:modelValue', updated)
+    }
   }
 })
 
@@ -388,6 +402,37 @@ const latestChord = ref({ ...props.modelValue.chord })
 watch(() => props.modelValue.chord, (newChord) => {
   latestChord.value = { ...newChord }
 }, { deep: true })
+
+// Auto-open shape panel when loading preset with strumPattern > 0
+watch(() => props.modelValue.chord.strumPattern, (newPattern, oldPattern) => {
+  // Detect preset load: transition from 0 to >0 means preset with shape mode loaded
+  // Reset the manual close flag to allow auto-opening
+  if (oldPattern === 0 && newPattern > 0) {
+    userClosedPanel.value = false
+    console.log('Preset with shape mode loaded - clearing manual close flag')
+  }
+  
+  // Don't auto-open if user manually closed the panel during this session
+  if (userClosedPanel.value) {
+    return
+  }
+  
+  // If preset has pattern 1-6 (built-in shapes), open the shape panel
+  if (newPattern > 0 && newPattern < 7 && !advancedStrumOpen.value) {
+    advancedStrumOpen.value = true
+    console.log('Auto-opened SHAPE panel for preset with strumPattern:', newPattern)
+  }
+  // If preset has pattern 7 (custom), also open
+  else if (newPattern === 7 && !advancedStrumOpen.value) {
+    advancedStrumOpen.value = true
+    console.log('Auto-opened SHAPE panel for custom pattern')
+  }
+  // If preset has pattern 0 (normal chord), close the panel only if it wasn't manually closed
+  else if (newPattern === 0 && advancedStrumOpen.value && !userClosedPanel.value) {
+    advancedStrumOpen.value = false
+    console.log('Auto-closed SHAPE panel for chord mode')
+  }
+})
 
 // Strum builder state
 const strumIntervals = computed({
@@ -416,11 +461,21 @@ const buildMode = computed({
   }
 })
 
-// Swing control
+// Swing control - UI displays 50-100%, firmware uses 0-100%
+function swingUiToFirmware(uiValue: number): number {
+  // Map 50-100% (UI) to 0-100 (firmware)
+  return Math.max(0, Math.min(100, uiValue - 50))
+}
+
+function swingFirmwareToUi(firmwareValue: number): number {
+  // Map 0-100 (firmware) to 50-100% (UI)
+  return Math.max(50, Math.min(100, firmwareValue + 50))
+}
+
 const swingValue = computed({
-  get: () => model.value.chord.strumSwing || 0,
+  get: () => swingFirmwareToUi(model.value.chord.strumSwing || 0),
   set: (v: number) => {
-    latestChord.value.strumSwing = v
+    latestChord.value.strumSwing = swingUiToFirmware(v)
     const updated = { ...model.value }
     updated.chord = { ...latestChord.value }
     emit('update:modelValue', updated)
@@ -551,16 +606,16 @@ const handleChordToggleClick = () => {
 }
 
 // ===== SMART SLIDER =====
-// Strum Speed conversion: UI shows 5-100% (faster), firmware uses 4-120ms (inverted)
-// 5% → 120ms (slowest), 100% → 4ms (fastest)
+// Strum Speed conversion: UI shows 5-100% (faster), firmware uses 4-360ms (inverted)
+// 5% → 360ms (slowest), 100% → 4ms (fastest)
 function strumSpeedToPercent(ms: number): number {
-  // Map 4-120ms to 100-5%
-  return Math.round(5 + ((120 - ms) / 116) * 95)
+  // Map 4-360ms to 100-5%
+  return Math.round(5 + ((360 - ms) / 356) * 95)
 }
 
 function percentToStrumSpeed(percent: number): number {
-  // Map 5-100% to 120-4ms
-  return Math.round(120 - ((percent - 5) / 95) * 116)
+  // Map 5-100% to 360-4ms
+  return Math.round(360 - ((percent - 5) / 95) * 356)
 }
 
 const smartSliderValue = computed({

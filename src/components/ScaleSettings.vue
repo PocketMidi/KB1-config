@@ -203,7 +203,7 @@ const handleToggleClick = () => {
   emit('mappingChanged', newMappingName)
   
   animationTimeoutId.value = window.setTimeout(() => {
-    model.value.keyMapping = isCurrentlyNatural ? 1 : 0
+    model.value = { ...model.value, keyMapping: isCurrentlyNatural ? 1 : 0 }
     isAnimating.value = false
     transitionDirection.value = null
     animationTimeoutId.value = null

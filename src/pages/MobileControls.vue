@@ -114,6 +114,8 @@
       <AccordionSection
         ref="touchAccordion"
         title="TOUCH"
+        :title-suffix="touchSuffix"
+        :title-suffix-fading="touchSuffixFading"
         :subtitle="getTouchSubtitle(localSettings.touch)"
         :midi-cc="localSettings.touch.ccNumber"
         :id="'touch-sensor'"
@@ -127,6 +129,7 @@
           :categories="categories"
           :functionModes="touchFunctionModes"
           @update:modelValue="markChanged"
+          @behaviourChanged="handleTouchBehaviourChange"
         />
       </AccordionSection>
     </div>
@@ -182,6 +185,8 @@ const lever2Suffix = ref<string>('');
 const lever2SuffixFading = ref<boolean>(false);
 const leverPush2Suffix = ref<string>('');
 const leverPush2SuffixFading = ref<boolean>(false);
+const touchSuffix = ref<string>('');
+const touchSuffixFading = ref<boolean>(false);
 
 // Timeout IDs for clearing suffixes
 let lever1FadeTimeoutId: ReturnType<typeof setTimeout> | null = null;
@@ -192,6 +197,8 @@ let lever2FadeTimeoutId: ReturnType<typeof setTimeout> | null = null;
 let lever2ClearTimeoutId: ReturnType<typeof setTimeout> | null = null;
 let leverPush2FadeTimeoutId: ReturnType<typeof setTimeout> | null = null;
 let leverPush2ClearTimeoutId: ReturnType<typeof setTimeout> | null = null;
+let touchFadeTimeoutId: ReturnType<typeof setTimeout> | null = null;
+let touchClearTimeoutId: ReturnType<typeof setTimeout> | null = null;
 
 // Handle profile and mode change events from lever components
 function handleLever1ProfileChange(profileName: string) {
@@ -274,6 +281,22 @@ function handleLeverPush2BehaviourChange(behaviourName: string) {
   handleLeverPush2ProfileChange(behaviourName);
 }
 
+function handleTouchBehaviourChange(behaviourName: string) {
+  if (touchFadeTimeoutId) clearTimeout(touchFadeTimeoutId);
+  if (touchClearTimeoutId) clearTimeout(touchClearTimeoutId);
+  touchSuffix.value = ` ${behaviourName}`;
+  touchSuffixFading.value = false;
+  touchFadeTimeoutId = setTimeout(() => {
+    touchSuffixFading.value = true;
+    touchFadeTimeoutId = null;
+  }, 500);
+  touchClearTimeoutId = setTimeout(() => {
+    touchSuffix.value = '';
+    touchSuffixFading.value = false;
+    touchClearTimeoutId = null;
+  }, 2500);
+}
+
 // Load CC map on mount
 onMounted(async () => {
   try {
@@ -350,7 +373,13 @@ function getLeverSubtitle(lever: LeverSettingsType): string {
   const ccInfo = ccMap.get(lever.ccNumber);
   const paramName = ccInfo?.parameter || `CC ${lever.ccNumber}`;
   // Show user-facing range based on polarity
-  const range = lever.valueMode === 1 ? '-100 to 100' : '0 to 100';
+  // For KB1 Expression parameters, use their specific range from ccMap
+  let range: string;
+  if (ccInfo?.range && (lever.ccNumber === 200 || lever.ccNumber === 201 || lever.ccNumber === 202 || lever.ccNumber === 203)) {
+    range = ccInfo.range.text;
+  } else {
+    range = lever.valueMode === 1 ? '-100 to 100' : '0 to 100';
+  }
   return `${paramName} | ${range}`;
 }
 
@@ -360,7 +389,15 @@ function getLeverPushSubtitle(leverPush: LeverPushSettingsType): string {
   const paramName = ccInfo?.parameter || `CC ${leverPush.ccNumber}`;
   // Check if in Reset mode (functionMode = 3)
   const FUNCTION_MODE_RESET = 3;
-  const range = leverPush.functionMode === FUNCTION_MODE_RESET ? 'Reset' : '0 to 100';
+  // For KB1 Expression parameters, use their specific range from ccMap
+  let range: string;
+  if (leverPush.functionMode === FUNCTION_MODE_RESET) {
+    range = 'Reset';
+  } else if (ccInfo?.range && (leverPush.ccNumber === 200 || leverPush.ccNumber === 201 || leverPush.ccNumber === 202 || leverPush.ccNumber === 203)) {
+    range = ccInfo.range.text;
+  } else {
+    range = '0 to 100';
+  }
   return `${paramName} | ${range}`;
 }
 
@@ -368,10 +405,16 @@ function getTouchSubtitle(touch: TouchSettingsType): string {
   const ccMap = ccMapByNumber.value;
   const ccInfo = ccMap.get(touch.ccNumber);
   const paramName = ccInfo?.parameter || `CC ${touch.ccNumber}`;
-  // Touch is always unipolar, convert MIDI values (0-127) to display range (0-100)
-  const min = Math.round((touch.minCCValue / 127) * 100);
-  const max = Math.round((touch.maxCCValue / 127) * 100);
-  const range = `${min} to ${max}`;
+  // For KB1 Expression parameters, use their specific range from ccMap
+  let range: string;
+  if (ccInfo?.range && (touch.ccNumber === 200 || touch.ccNumber === 201 || touch.ccNumber === 202 || touch.ccNumber === 203)) {
+    range = ccInfo.range.text;
+  } else {
+    // Touch is always unipolar, convert MIDI values (0-127) to display range (0-100)
+    const min = Math.round((touch.minCCValue / 127) * 100);
+    const max = Math.round((touch.maxCCValue / 127) * 100);
+    range = `${min} to ${max}`;
+  }
   return `${paramName} | ${range}`;
 }
 
@@ -382,7 +425,61 @@ watch(deviceSettings, (newSettings) => {
   }
 }, { deep: true });
 
+// Watch for SHAPE panel close - reset pattern controls when strumPattern goes to 0
+watch(() => localSettings.value.chord.strumPattern, (newPattern, oldPattern) => {
+  // Detect transition from shape mode (>0) to normal chord mode (0)
+  if (oldPattern > 0 && newPattern === 0) {
+    console.log('SHAPE panel closed - resetting pattern controls to defaults');
+    
+    // Default CC assignments from firmware defaults
+    const defaults = {
+      lever1: 3,
+      leverPush1: 24,
+      lever2: 128,
+      leverPush2: 128,
+      touch: 1
+    };
+    
+    // Reset any control still assigned to CC 201/202
+    if (localSettings.value.lever1.ccNumber === 201 || localSettings.value.lever1.ccNumber === 202) {
+      console.log(`Resetting Lever 1 from CC ${localSettings.value.lever1.ccNumber} to CC ${defaults.lever1}`);
+      localSettings.value.lever1.ccNumber = defaults.lever1;
+    }
+    
+    if (localSettings.value.leverPush1.ccNumber === 201 || localSettings.value.leverPush1.ccNumber === 202) {
+      console.log(`Resetting Press 1 from CC ${localSettings.value.leverPush1.ccNumber} to CC ${defaults.leverPush1}`);
+      localSettings.value.leverPush1.ccNumber = defaults.leverPush1;
+    }
+    
+    if (localSettings.value.lever2.ccNumber === 201 || localSettings.value.lever2.ccNumber === 202) {
+      console.log(`Resetting Lever 2 from CC ${localSettings.value.lever2.ccNumber} to CC ${defaults.lever2}`);
+      localSettings.value.lever2.ccNumber = defaults.lever2;
+    }
+    
+    if (localSettings.value.leverPush2.ccNumber === 201 || localSettings.value.leverPush2.ccNumber === 202) {
+      console.log(`Resetting Press 2 from CC ${localSettings.value.leverPush2.ccNumber} to CC ${defaults.leverPush2}`);
+      localSettings.value.leverPush2.ccNumber = defaults.leverPush2;
+    }
+    
+    if (localSettings.value.touch.ccNumber === 201 || localSettings.value.touch.ccNumber === 202) {
+      console.log(`Resetting Touch from CC ${localSettings.value.touch.ccNumber} to defaults`);
+      localSettings.value.touch = {
+        ...localSettings.value.touch,
+        ccNumber: 1,
+        minCCValue: 64,
+        maxCCValue: 127,
+        functionMode: 2, // Continuous
+        offsetTime: 0, // FWD mode
+      };
+    }
+    
+    // Mark as changed so user can upload the reset settings
+    markChanged();
+  }
+});
+
 function markChanged() {
+  console.log('✏️ Settings changed - hasChanges set to true');
   hasChanges.value = true;
 }
 

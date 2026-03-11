@@ -169,6 +169,7 @@
           :functionModes="touchFunctionModes"
           @update:modelValue="markChanged"
           @modeChanged="handleTouchModeChange"
+          @behaviourChanged="handleTouchBehaviourChange"
         />
       </AccordionSection>
       
@@ -668,6 +669,10 @@ function handleTouchModeChange(modeName: string) {
   }, 2500);
 }
 
+function handleTouchBehaviourChange(behaviourName: string) {
+  handleTouchModeChange(behaviourName);
+}
+
 function handleSlotNameDisplay(name: string) {
   if (presetsFadeTimeoutId) clearTimeout(presetsFadeTimeoutId);
   if (presetsClearTimeoutId) clearTimeout(presetsClearTimeoutId);
@@ -691,7 +696,61 @@ watch(deviceSettings, (newSettings) => {
   }
 }, { deep: true });
 
+// Watch for SHAPE panel close - reset pattern controls when strumPattern goes to 0
+watch(() => localSettings.value.chord.strumPattern, (newPattern, oldPattern) => {
+  // Detect transition from shape mode (>0) to normal chord mode (0)
+  if (oldPattern > 0 && newPattern === 0) {
+    console.log('SHAPE panel closed - resetting pattern controls to defaults');
+    
+    // Default CC assignments from firmware defaults
+    const defaults = {
+      lever1: 3,
+      leverPush1: 24,
+      lever2: 128,
+      leverPush2: 128,
+      touch: 1
+    };
+    
+    // Reset any control still assigned to CC 201/202
+    if (localSettings.value.lever1.ccNumber === 201 || localSettings.value.lever1.ccNumber === 202) {
+      console.log(`Resetting Lever 1 from CC ${localSettings.value.lever1.ccNumber} to CC ${defaults.lever1}`);
+      localSettings.value.lever1.ccNumber = defaults.lever1;
+    }
+    
+    if (localSettings.value.leverPush1.ccNumber === 201 || localSettings.value.leverPush1.ccNumber === 202) {
+      console.log(`Resetting Press 1 from CC ${localSettings.value.leverPush1.ccNumber} to CC ${defaults.leverPush1}`);
+      localSettings.value.leverPush1.ccNumber = defaults.leverPush1;
+    }
+    
+    if (localSettings.value.lever2.ccNumber === 201 || localSettings.value.lever2.ccNumber === 202) {
+      console.log(`Resetting Lever 2 from CC ${localSettings.value.lever2.ccNumber} to CC ${defaults.lever2}`);
+      localSettings.value.lever2.ccNumber = defaults.lever2;
+    }
+    
+    if (localSettings.value.leverPush2.ccNumber === 201 || localSettings.value.leverPush2.ccNumber === 202) {
+      console.log(`Resetting Press 2 from CC ${localSettings.value.leverPush2.ccNumber} to CC ${defaults.leverPush2}`);
+      localSettings.value.leverPush2.ccNumber = defaults.leverPush2;
+    }
+    
+    if (localSettings.value.touch.ccNumber === 201 || localSettings.value.touch.ccNumber === 202) {
+      console.log(`Resetting Touch from CC ${localSettings.value.touch.ccNumber} to defaults`);
+      localSettings.value.touch = {
+        ...localSettings.value.touch,
+        ccNumber: 1,
+        minCCValue: 64,
+        maxCCValue: 127,
+        functionMode: 2, // Continuous
+        offsetTime: 0, // FWD mode
+      };
+    }
+    
+    // Mark as changed so user can upload the reset settings
+    markChanged();
+  }
+});
+
 function markChanged() {
+  console.log('✏️ Settings changed - hasChanges set to true');
   hasChanges.value = true;
 }
 
@@ -748,7 +807,14 @@ function handleChromaticWarning(message: string) {
 }
 
 function handlePresetLoad(settings: DeviceSettings) {
+  console.log('📂 Preset loaded - hasChanges reset to false');
   localSettings.value = JSON.parse(JSON.stringify(settings));
+  
+  // Ensure offsetTime has a default value for older presets that don't have it
+  if (localSettings.value.touch.offsetTime === undefined) {
+    localSettings.value.touch.offsetTime = 0; // Default to FWD mode
+  }
+  
   hasChanges.value = false; // No changes yet - will become true when user modifies settings
 }
 

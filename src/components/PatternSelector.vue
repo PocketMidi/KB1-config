@@ -8,7 +8,8 @@
         :class="{ 
           current: current !== undefined && pattern.number === current,
           active: pattern.number >= min && pattern.number <= max,
-          dimmed: pattern.number < min || pattern.number > max
+          dimmed: pattern.number < min || pattern.number > max,
+          rangeBoundary: (pattern.number === min || pattern.number === max) && pattern.number !== current
         }"
       >
         <img :src="pattern.icon" :alt="pattern.name" />
@@ -98,15 +99,22 @@ const patterns = computed<Pattern[]>(() => [
   height: auto;
   object-fit: contain;
   display: block;
-  filter: brightness(0.5) sepia(1) saturate(0.5) hue-rotate(20deg);
+  filter: brightness(0.6) saturate(0.3);
+  opacity: 0.7;
 }
 
-.pattern-item.active {
+.pattern-item.active img {
+  filter: brightness(0.6) saturate(0.3);
   opacity: 1;
 }
 
-.pattern-item.dimmed {
+.pattern-item.dimmed img {
   opacity: 0.3;
+}
+
+.pattern-item.rangeBoundary img {
+  filter: brightness(1) saturate(1);
+  opacity: 1;
 }
 
 .pattern-item.current img {

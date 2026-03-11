@@ -2,24 +2,24 @@
   <div class="settings-leverpush" :class="`lever-${lever}`">
     <!-- Toggle and Profile Selection -->
     <div class="controls-row">
-      <!-- Momentary/Latch Toggle -->
+      <!-- Momentary/Latch Toggle (or REV/FWD for Pattern Selector) -->
       <button 
         class="toggle-btn" 
         @click="handleToggleClick"
         :title="toggleTooltip"
-        :disabled="isResetMode || isPatternSelector"
+        :disabled="isResetMode"
       >
-        <span :class="{ active: isResetMode || isMomentary }">MOM</span>
+        <span :class="{ active: isResetMode || (isPatternSelector ? !isMomentary : isMomentary) }">{{ isPatternSelector ? 'REV' : 'MOM' }}</span>
         <span class="toggle-divider">|</span>
-        <span :class="{ active: !isResetMode && !isMomentary }">LAT</span>
+        <span :class="{ active: !isResetMode && (isPatternSelector ? isMomentary : !isMomentary) }">{{ isPatternSelector ? 'FWD' : 'LAT' }}</span>
       </button>
 
-      <!-- Profile Text Selection -->
-      <div class="profile-selector">
+      <!-- Profile Text Selection (hidden for Pattern Selector) -->
+      <div class="profile-selector" v-if="!isPatternSelector">
         <button 
           class="profile-btn"
           :class="{ active: isProfileActive('lin') }"
-          :disabled="isResetMode || isPatternSelector"
+          :disabled="isResetMode"
           @click="selectProfile('lin')"
           title="Linear"
         >
@@ -28,7 +28,7 @@
         <button 
           class="profile-btn"
           :class="{ active: isProfileActive('exp') }"
-          :disabled="isResetMode || isPatternSelector"
+          :disabled="isResetMode"
           @click="selectProfile('exp')"
           title="Exponential"
         >
@@ -37,7 +37,7 @@
         <button 
           class="profile-btn"
           :class="{ active: isProfileActive('log') }"
-          :disabled="isResetMode || isPatternSelector"
+          :disabled="isResetMode"
           @click="selectProfile('log')"
           title="Logarithmic"
         >
@@ -46,7 +46,7 @@
         <button 
           class="profile-btn"
           :class="{ active: isProfileActive('pd') }"
-          :disabled="isResetMode || isPatternSelector"
+          :disabled="isResetMode"
           @click="selectProfile('pd')"
           title="Peak & Decay"
         >
@@ -235,7 +235,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, ref, watch, nextTick } from 'vue'
 import { type CCEntry } from '../data/ccMap'
 import ValueControl from './ValueControl.vue'
 import LevelMeter from './LevelMeter.vue'
@@ -321,6 +321,12 @@ const categoryOptions = computed(() => {
 const parameterPickerOpen = ref(false)
 const parameterTriggerRef = ref<HTMLElement | null>(null)
 
+// Cycle direction text state (for Pattern Selector fade animation)
+const cycleDirectionText = ref('')
+const cycleDirectionFading = ref(false)
+let cycleFadeTimeoutId: ReturnType<typeof setTimeout> | null = null
+let cycleClearTimeoutId: ReturnType<typeof setTimeout> | null = null
+
 // Get selected parameter label
 const selectedParameterLabel = computed(() => {
   const option = filteredOptions.value.find(opt => opt.value === model.value.ccNumber)
@@ -370,26 +376,22 @@ watch(() => model.value.ccNumber, (cc) => {
   
   // KB1 Expression parameters: Clamp to valid ranges
   if (cc === 200) {
-    // Strum Speed: 10-100% displayed (maps to 120ms-4ms)
+    // Strum Speed: 5-100% displayed (maps to 360ms-4ms)
     // Store MIDI values in ascending order even though UI presents them inverted
-    model.value.minCCValue = 0    // Maps to 100% (fastest) via speedPercentToMidi
-    model.value.maxCCValue = 127  // Maps to 10% (slowest) via speedPercentToMidi
+    model.value = { ...model.value, minCCValue: 0, maxCCValue: 127 }
   } else if (cc === 201) {
     // Pattern Selector: 1-6 (discrete values)
     // Force STATIC mode to prevent ramping through all patterns
-    model.value.functionMode = FUNCTION_MODE_STATIC
-    model.value.minCCValue = 0     // Pattern 1
-    model.value.maxCCValue = 127   // Pattern 6
+    // Default to FWD (forward) cycling: offsetTime = 0
+    model.value = { ...model.value, functionMode: FUNCTION_MODE_STATIC, minCCValue: 0, maxCCValue: 127, offsetTime: 0 }
   } else if (cc === 202) {
     // Swing: 0-100%
-    model.value.minCCValue = 0   // 0%
-    model.value.maxCCValue = 127 // 100%
+    model.value = { ...model.value, minCCValue: 0, maxCCValue: 127 }
   } else if (cc === 203) {
     // Velocity Spread: 8-100%
     const min = Math.round((8 / 100) * 127)   // 8 -> ~10 MIDI
     const max = Math.round((100 / 100) * 127) // 100 -> 127 MIDI
-    model.value.minCCValue = min
-    model.value.maxCCValue = max
+    model.value = { ...model.value, minCCValue: min, maxCCValue: max }
   }
   
   isUpdatingInternally.value = false
@@ -402,7 +404,7 @@ watch(selectedCategory, (cat) => {
   
   // Special case: Reset category sets functionMode to Reset
   if (cat === 'Reset') {
-    model.value.functionMode = FUNCTION_MODE_RESET
+    model.value = { ...model.value, functionMode: FUNCTION_MODE_RESET }
     // Keep current parameter selection
     isUpdatingInternally.value = false
     return
@@ -410,13 +412,13 @@ watch(selectedCategory, (cat) => {
   
   // If we were in Reset mode, exit it when selecting another category
   if (model.value.functionMode === FUNCTION_MODE_RESET) {
-    model.value.functionMode = FUNCTION_MODE_INTERPOLATED
+    model.value = { ...model.value, functionMode: FUNCTION_MODE_INTERPOLATED }
   }
   
   const ok = props.ccMapByNumber.get(model.value.ccNumber)?.category === cat
   if (!ok) {
     const first = filteredOptions.value.find(o => o.value >= 0)
-    if (first) model.value.ccNumber = first.value
+    if (first) model.value = { ...model.value, ccNumber: first.value }
   }
   isUpdatingInternally.value = false
 })
@@ -440,24 +442,27 @@ watch(() => model.value.functionMode, (mode) => {
 // Momentary/Latch Toggle (using offset time: 0 = momentary, >0 = latched)
 const isMomentary = computed(() => model.value.offsetTime === 0)
 
-const toggleTooltip = computed(() => 
-  isMomentary.value ? 'Switch to Latched' : 'Switch to Momentary'
-)
-
 function handleToggleClick() {
   if (isSupported.value) snap()
   
   if (isMomentary.value) {
-    // Switch to latched - set offsetTime to match onsetTime
+    // Switch to latched/reverse - set offsetTime to match onsetTime
     // If onsetTime is 0, use a sensible default (100ms)
     const timeValue = model.value.onsetTime || 100
-    model.value.onsetTime = timeValue
-    model.value.offsetTime = timeValue
-    emit('behaviourChanged', 'Latched')
+    model.value = { ...model.value, onsetTime: timeValue, offsetTime: timeValue }
+    if (isPatternSelector.value) {
+      emit('behaviourChanged', 'Cycle Reverse')
+    } else {
+      emit('behaviourChanged', 'Latched')
+    }
   } else {
-    // Switch to momentary - set offsetTime to 0
-    model.value.offsetTime = 0
-    emit('behaviourChanged', 'Momentary')
+    // Switch to momentary/forward - set offsetTime to 0
+    model.value = { ...model.value, offsetTime: 0 }
+    if (isPatternSelector.value) {
+      emit('behaviourChanged', 'Cycle Forward')
+    } else {
+      emit('behaviourChanged', 'Momentary')
+    }
   }
 }
 
@@ -495,23 +500,33 @@ const selectProfile = (profile: ProfileType) => {
   if (isSupported.value) snap()
   
   if (profile === 'inc') {
-    model.value.functionMode = 2 // STATIC
+    model.value = { ...model.value, functionMode: 2 } // STATIC
   } else if (profile === 'pd') {
-    model.value.functionMode = 1 // PEAK_DECAY
+    model.value = { ...model.value, functionMode: 1 } // PEAK_DECAY
   } else {
-    model.value.functionMode = 0 // INTERPOLATED
-    
     // Set onsetType and offsetType based on profile
     if (profile === 'exp') {
-      model.value.onsetType = 1
-      model.value.offsetType = 1
+      model.value = {
+        ...model.value,
+        functionMode: 0,  // INTERPOLATED
+        onsetType: 1,
+        offsetType: 1
+      }
     } else if (profile === 'log') {
-      model.value.onsetType = 2
-      model.value.offsetType = 2
+      model.value = {
+        ...model.value,
+        functionMode: 0,  // INTERPOLATED
+        onsetType: 2,
+        offsetType: 2
+      }
     } else {
       // lin
-      model.value.onsetType = 0
-      model.value.offsetType = 0
+      model.value = {
+        ...model.value,
+        functionMode: 0,  // INTERPOLATED
+        onsetType: 0,
+        offsetType: 0
+      }
     }
   }
   
@@ -553,6 +568,58 @@ const profileImage = computed(() => {
 // Computed properties to determine which controls to show
 const isResetMode = computed(() => model.value.functionMode === FUNCTION_MODE_RESET)
 const isPatternSelector = computed(() => model.value.ccNumber === 201)
+
+// Watch for Pattern Selector activation to emit initial direction state
+watch(isPatternSelector, (isActive) => {
+  if (isActive) {
+    // Emit current direction when Pattern Selector becomes active
+    nextTick(() => {
+      emit('behaviourChanged', isMomentary.value ? 'Cycle Forward' : 'Cycle Reverse')
+    })
+  }
+}, { immediate: true })
+
+// Toggle tooltip (depends on isPatternSelector)
+const toggleTooltip = computed(() => {
+  if (isPatternSelector.value) {
+    return isMomentary.value ? 'Switch to Reverse Cycling' : 'Switch to Forward Cycling'
+  }
+  return isMomentary.value ? 'Switch to Latched' : 'Switch to Momentary'
+})
+
+// Watch for cycle direction changes in Pattern Selector mode and trigger fade animation
+watch([isMomentary, isPatternSelector], ([momentary, patternSelector]) => {
+  if (!patternSelector) {
+    // Clear any pending timeouts if not in Pattern Selector mode
+    if (cycleFadeTimeoutId) clearTimeout(cycleFadeTimeoutId)
+    if (cycleClearTimeoutId) clearTimeout(cycleClearTimeoutId)
+    cycleDirectionText.value = ''
+    cycleDirectionFading.value = false
+    return
+  }
+  
+  // Clear any pending timeouts
+  if (cycleFadeTimeoutId) clearTimeout(cycleFadeTimeoutId)
+  if (cycleClearTimeoutId) clearTimeout(cycleClearTimeoutId)
+  
+  // Set the text and reset fading
+  cycleDirectionText.value = momentary ? 'Cycle Forward' : 'Cycle Reverse'
+  cycleDirectionFading.value = false
+  
+  // Start fade after 500ms
+  cycleFadeTimeoutId = setTimeout(() => {
+    cycleDirectionFading.value = true
+    cycleFadeTimeoutId = null
+  }, 500)
+  
+  // Clear text after 2500ms
+  cycleClearTimeoutId = setTimeout(() => {
+    cycleDirectionText.value = ''
+    cycleDirectionFading.value = false
+    cycleClearTimeoutId = null
+  }, 2500)
+}, { immediate: true })
+
 const showTimingControls = computed(() => {
   // Hide timing controls for Pattern Selector
   if (isPatternSelector.value) return false
@@ -563,8 +630,9 @@ const showTimingControls = computed(() => {
 // KB1 Expression parameters have hardware-enforced minimum values
 const minRange = computed(() => {
   const cc = model.value.ccNumber
-  if (cc === 200) return 10  // Strum Speed: 10-100% (perceived range, maps to 4-120ms)
+  if (cc === 200) return 5  // Strum Speed: 5-100% (perceived range, maps to 4-360ms)
   if (cc === 201) return 1   // Pattern Selector: 1-6
+  if (cc === 202) return 50  // Swing: 50-100%
   if (cc === 203) return 8   // Velocity Spread: 8-100%
   return 0  // Default minimum
 })
@@ -575,18 +643,21 @@ const maxRange = computed(() => {
   return 100  // Default maximum
 })
 
-// Buffer between min and max to prevent overlap (at least 5 units)
-const MIN_MAX_BUFFER = 5
+// Buffer between min and max to prevent overlap
+// Smaller buffer for Pattern Selector (1-6 range) vs regular params (0-100 range)
+const MIN_MAX_BUFFER = computed(() => {
+  return model.value.ccNumber === 201 ? 1 : 5
+})
 
 // Constrained ranges to prevent min/max overlap
 const constrainedMaxForMin = computed(() => {
   // userMin can't exceed userMax - buffer
-  return Math.min(maxRange.value, userMax.value - MIN_MAX_BUFFER)
+  return Math.min(maxRange.value, userMax.value - MIN_MAX_BUFFER.value)
 })
 
 const constrainedMinForMax = computed(() => {
   // userMax can't go below userMin + buffer
-  return Math.max(minRange.value, userMin.value + MIN_MAX_BUFFER)
+  return Math.max(minRange.value, userMin.value + MIN_MAX_BUFFER.value)
 })
 
 // Conversion functions
@@ -610,16 +681,27 @@ function midiToPattern(midiValue: number): number {
 }
 
 // Special conversion for Strum Speed (CC 200): higher % = faster (lower ms)
-// User sees 10-100% range (better UX), maps to 4-120ms: 100%→4ms, 10%→120ms
+// User sees 5-100% range (better UX), maps to 4-360ms: 100%→4ms, 5%→360ms
 // Store MIDI in normal ascending order: low MIDI = slow, high MIDI = fast
 function speedPercentToMidi(percent: number): number {
-  // Map 10-100% to MIDI 0-127 (normal order: higher MIDI = faster)
-  return Math.round(127 * (percent - 10) / 90)
+  // Map 5-100% to MIDI 0-127 (normal order: higher MIDI = faster)
+  return Math.round(127 * (percent - 5) / 95)
 }
 
 function midiToSpeedPercent(midiValue: number): number {
-  // Map MIDI 0-127 to 10-100%
-  return Math.round(10 + (midiValue / 127) * 90)
+  // Map MIDI 0-127 to 5-100%
+  return Math.round(5 + (midiValue / 127) * 95)
+}
+
+// Special conversion for Swing (CC 202): UI 50-100% maps to firmware 0-100
+function swingPercentToMidi(percent: number): number {
+  // Map 50-100% to MIDI 0-127
+  return Math.round(127 * (percent - 50) / 50)
+}
+
+function midiToSwingPercent(midiValue: number): number {
+  // Map MIDI 0-127 to 50-100%
+  return Math.round(50 + (midiValue / 127) * 50)
 }
 
 // User-facing Min value (0-100 for normal params, 1-7 for pattern selector)
@@ -630,6 +712,8 @@ const userMin = computed({
       value = midiToSpeedPercent(model.value.minCCValue)
     } else if (model.value.ccNumber === 201) {
       value = midiToPattern(model.value.minCCValue)
+    } else if (model.value.ccNumber === 202) {
+      value = midiToSwingPercent(model.value.minCCValue)
     } else {
       value = midiToUnipolar(model.value.minCCValue)
     }
@@ -647,11 +731,13 @@ const userMin = computed({
     }
     
     if (model.value.ccNumber === 200) {
-      model.value.minCCValue = speedPercentToMidi(snappedValue)
+      model.value = { ...model.value, minCCValue: speedPercentToMidi(snappedValue) }
     } else if (model.value.ccNumber === 201) {
-      model.value.minCCValue = patternToMidi(snappedValue)
+      model.value = { ...model.value, minCCValue: patternToMidi(snappedValue) }
+    } else if (model.value.ccNumber === 202) {
+      model.value = { ...model.value, minCCValue: swingPercentToMidi(snappedValue) }
     } else {
-      model.value.minCCValue = unipolarToMidi(snappedValue)
+      model.value = { ...model.value, minCCValue: unipolarToMidi(snappedValue) }
     }
   }
 })
@@ -664,6 +750,8 @@ const userMax = computed({
       value = midiToSpeedPercent(model.value.maxCCValue)
     } else if (model.value.ccNumber === 201) {
       value = midiToPattern(model.value.maxCCValue)
+    } else if (model.value.ccNumber === 202) {
+      value = midiToSwingPercent(model.value.maxCCValue)
     } else {
       value = midiToUnipolar(model.value.maxCCValue)
     }
@@ -681,11 +769,13 @@ const userMax = computed({
     }
     
     if (model.value.ccNumber === 200) {
-      model.value.maxCCValue = speedPercentToMidi(snappedValue)
+      model.value = { ...model.value, maxCCValue: speedPercentToMidi(snappedValue) }
     } else if (model.value.ccNumber === 201) {
-      model.value.maxCCValue = patternToMidi(snappedValue)
+      model.value = { ...model.value, maxCCValue: patternToMidi(snappedValue) }
+    } else if (model.value.ccNumber === 202) {
+      model.value = { ...model.value, maxCCValue: swingPercentToMidi(snappedValue) }
     } else {
-      model.value.maxCCValue = unipolarToMidi(snappedValue)
+      model.value = { ...model.value, maxCCValue: unipolarToMidi(snappedValue) }
     }
   }
 })
@@ -699,6 +789,8 @@ const resetValue = computed({
       value = midiToSpeedPercent(model.value.minCCValue)
     } else if (model.value.ccNumber === 201) {
       value = midiToPattern(model.value.minCCValue)
+    } else if (model.value.ccNumber === 202) {
+      value = midiToSwingPercent(model.value.minCCValue)
     } else {
       value = midiToUnipolar(model.value.minCCValue)
     }
@@ -717,16 +809,32 @@ const resetValue = computed({
     
     if (model.value.ccNumber === 200) {
       const midiValue = speedPercentToMidi(snappedValue)
-      model.value.minCCValue = midiValue
-      model.value.maxCCValue = midiValue
+      model.value = {
+        ...model.value,
+        minCCValue: midiValue,
+        maxCCValue: midiValue
+      }
     } else if (model.value.ccNumber === 201) {
       const midiValue = patternToMidi(snappedValue)
-      model.value.minCCValue = midiValue
-      model.value.maxCCValue = midiValue
+      model.value = {
+        ...model.value,
+        minCCValue: midiValue,
+        maxCCValue: midiValue
+      }
+    } else if (model.value.ccNumber === 202) {
+      const midiValue = swingPercentToMidi(snappedValue)
+      model.value = {
+        ...model.value,
+        minCCValue: midiValue,
+        maxCCValue: midiValue
+      }
     } else {
       const midiValue = unipolarToMidi(snappedValue)
-      model.value.minCCValue = midiValue
-      model.value.maxCCValue = midiValue
+      model.value = {
+        ...model.value,
+        minCCValue: midiValue,
+        maxCCValue: midiValue
+      }
     }
   }
 })
@@ -743,10 +851,15 @@ const currentPattern = computed(() => {
 const duration = computed({
   get: () => model.value.onsetTime,
   set: (value: number) => {
-    model.value.onsetTime = value
     // Only update offsetTime if we're in latched mode (offsetTime > 0)
     if (model.value.offsetTime > 0) {
-      model.value.offsetTime = value
+      model.value = {
+        ...model.value,
+        onsetTime: value,
+        offsetTime: value
+      }
+    } else {
+      model.value = { ...model.value, onsetTime: value }
     }
   }
 })
@@ -976,6 +1089,28 @@ function dismissHelp() {
   right: 0;
   height: 2px;
   background-color: #CDCDCD;
+}
+
+.cycle-direction {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  padding: 0.5rem 0;
+}
+
+.cycle-text {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #F9AC20;
+  font-family: 'Roboto Mono';
+  text-align: center;
+  opacity: 1;
+  transition: opacity 2s ease-out;
+}
+
+.cycle-text.fading {
+  opacity: 0;
 }
 
 .profile-visualization {

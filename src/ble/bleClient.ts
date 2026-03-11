@@ -411,6 +411,8 @@ export class BLEClient {
       minCCValue: data.getInt32(4, true),
       maxCCValue: data.getInt32(8, true),
       functionMode: data.getInt32(12, true),
+      threshold: data.getInt32(16, true),
+      offsetTime: data.getInt32(20, true),
     };
   }
 
@@ -540,13 +542,14 @@ export class BLEClient {
    * Encode touch settings to binary format for writing to device
    */
   private encodeTouchData(settings: TouchSettings): ArrayBuffer {
-    const buffer = new ArrayBuffer(20); // 5 int32 values = 20 bytes
+    const buffer = new ArrayBuffer(24); // 6 int32 values = 24 bytes
     const view = new DataView(buffer);
     view.setInt32(0, settings.ccNumber, true);
     view.setInt32(4, settings.minCCValue, true);
     view.setInt32(8, settings.maxCCValue, true);
     view.setInt32(12, settings.functionMode, true);
     view.setInt32(16, settings.threshold || 24000, true); // Default threshold if not set
+    view.setInt32(20, settings.offsetTime || 0, true); // Default offsetTime (FWD mode)
     return buffer;
   }
 
@@ -768,6 +771,10 @@ export class BLEClient {
 
     const errors: string[] = [];
     
+    // Helper to add small delay between writes to prevent BLE queue overflow
+    const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+    const WRITE_DELAY = 50; // 50ms between writes
+    
     try {
       console.log('Writing lever1 settings...');
       await this.writeLever1Settings(settings.lever1);
@@ -777,6 +784,7 @@ export class BLEClient {
       console.warn(msg);
       errors.push(msg);
     }
+    await delay(WRITE_DELAY);
 
     try {
       console.log('Writing leverPush1 settings...');
@@ -787,6 +795,7 @@ export class BLEClient {
       console.warn(msg);
       errors.push(msg);
     }
+    await delay(WRITE_DELAY);
 
     try {
       console.log('Writing lever2 settings...');
@@ -797,6 +806,7 @@ export class BLEClient {
       console.warn(msg);
       errors.push(msg);
     }
+    await delay(WRITE_DELAY);
 
     try {
       console.log('Writing leverPush2 settings...');
@@ -807,6 +817,7 @@ export class BLEClient {
       console.warn(msg);
       errors.push(msg);
     }
+    await delay(WRITE_DELAY);
 
     try {
       console.log('Writing touch settings...');
@@ -817,6 +828,7 @@ export class BLEClient {
       console.warn(msg);
       errors.push(msg);
     }
+    await delay(WRITE_DELAY);
 
     try {
       console.log('Writing scale settings...');
@@ -827,6 +839,7 @@ export class BLEClient {
       console.warn(msg);
       errors.push(msg);
     }
+    await delay(WRITE_DELAY);
 
     try {
       console.log('Writing chord settings...');
@@ -837,6 +850,7 @@ export class BLEClient {
       console.warn(msg);
       errors.push(msg);
     }
+    await delay(WRITE_DELAY);
 
     try {
       console.log('Writing system settings...');
@@ -1094,7 +1108,7 @@ export class BLEClient {
 
   /**
    * Update strum speed in real-time
-   * @param speed Strum speed in milliseconds (5-100)
+   * @param speed Strum speed in milliseconds (4-360)
    */
   async updateStrumSpeed(speed: number): Promise<void> {
     if (!this.chordCharacteristic) {
@@ -1107,7 +1121,7 @@ export class BLEClient {
       const currentSettings = this.parseChordData(currentData);
 
       // Update only the strum speed
-      currentSettings.strumSpeed = Math.max(4, Math.min(120, Math.round(speed)));
+      currentSettings.strumSpeed = Math.max(4, Math.min(360, Math.round(speed)));
 
       // Write back to device
       const data = this.encodeChordData(currentSettings);
@@ -1146,7 +1160,7 @@ export class BLEClient {
 
   /**
    * Update strum swing in real-time
-   * @param swing Swing percentage (0-100)
+   * @param swing Swing percentage (50-100 UI, internally maps to 0-100 firmware)
    */
   async updateStrumSwing(swing: number): Promise<void> {
     if (!this.chordCharacteristic) {
@@ -1158,8 +1172,9 @@ export class BLEClient {
       const currentData = await this.chordCharacteristic.readValue();
       const currentSettings = this.parseChordData(currentData);
 
-      // Update only the strum swing
-      currentSettings.strumSwing = Math.max(0, Math.min(100, Math.round(swing)));
+      // Update only the strum swing (UI passes 50-100, convert to firmware 0-100)
+      const firmwareValue = Math.max(0, Math.min(100, Math.round(swing - 50)));
+      currentSettings.strumSwing = firmwareValue;
 
       // Write back to device
       const data = this.encodeChordData(currentSettings);

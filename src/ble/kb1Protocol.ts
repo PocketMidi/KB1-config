@@ -57,6 +57,8 @@ export interface TouchSettings {
   functionMode: number;
   /** Touch threshold value (0-65535). Default: 24000. Lower = more sensitive */
   threshold?: number;
+  /** For pattern selector direction: 0=FWD (forward), >0=REV (reverse) */
+  offsetTime?: number;
 }
 
 /**
@@ -76,7 +78,7 @@ export interface ChordSettings {
   chordType: number;       // MAJOR=0, MINOR=1, DIMINISHED=2, AUGMENTED=3, SUS2=4, SUS4=5, POWER=6, MAJOR7=7, MINOR7=8, DOM7=9, MAJOR_ADD9=10, MINOR_ADD9=11, MAJOR6=12, MINOR6=13, MAJOR9=14
   strumEnabled: boolean;   // false = chord (all notes together), true = strum (cascaded)
   velocitySpread: number;  // 0-100 (percentage) - velocity variation for chord notes
-  strumSpeed: number;      // 4-120 (milliseconds) - delay between notes in strum mode
+  strumSpeed: number;      // 4-360 (milliseconds) - delay between notes in strum mode
   strumPattern: number;    // 0-7 - pattern index (0 = use chord type, 1-7 = interval patterns)
   strumSwing: number;      // 0-100 (percentage) - swing amount for strum timing
   strumIntervals?: number[]; // Custom interval pattern (semitones from root) - UI only
@@ -438,6 +440,7 @@ export class KB1Protocol {
         maxCCValue: 127,
         functionMode: 2, // Continuous
         threshold: 24000,
+        offsetTime: 0, // FWD mode (forward cycling) by default
       },
       scale: {
         scaleType: ScaleType.CHROMATIC,
@@ -449,7 +452,7 @@ export class KB1Protocol {
         chordType: 0, // MAJOR chord
         strumEnabled: false, // Chord mode (not strum)
         velocitySpread: 8, // 8% velocity spread
-        strumSpeed: 30, // 30ms strum speed (range: 4-120ms)
+        strumSpeed: 30, // 30ms strum speed (range: 4-360ms)
         strumPattern: 0, // Use chord type (not pattern)
         strumSwing: 0, // No swing by default
       },
@@ -523,7 +526,8 @@ export class KB1Protocol {
     // Helper to validate touch settings
     const validateTouch = (touch: TouchSettings): boolean => {
       return (
-        touch.ccNumber >= -1 && touch.ccNumber <= 128 && // Support CC 128 for Velocity
+        ((touch.ccNumber >= -1 && touch.ccNumber <= 128) || // Support CC 128 for Velocity
+         (touch.ccNumber >= 200 && touch.ccNumber <= 203)) && // Support KB1 Expression CCs (200-203)
         touch.minCCValue >= 0 && touch.minCCValue <= 127 &&
         touch.maxCCValue >= 0 && touch.maxCCValue <= 127 &&
         touch.minCCValue <= touch.maxCCValue
@@ -546,7 +550,7 @@ export class KB1Protocol {
         chord.chordType >= 0 && chord.chordType <= 14 &&
         typeof chord.strumEnabled === 'boolean' &&
         chord.velocitySpread >= 0 && chord.velocitySpread <= 100 &&
-        chord.strumSpeed >= 4 && chord.strumSpeed <= 120 &&
+        chord.strumSpeed >= 4 && chord.strumSpeed <= 360 &&
         chord.strumPattern >= 0 && chord.strumPattern <= 7 &&
         chord.strumSwing >= 0 && chord.strumSwing <= 100
       );

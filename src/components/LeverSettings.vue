@@ -377,10 +377,11 @@ const handleToggleClick = () => {
   
   if (isSupported.value) snap()
   
-  model.value.valueMode = model.value.valueMode === 0 ? 1 : 0
+  const newMode = model.value.valueMode === 0 ? 1 : 0
+  model.value = { ...model.value, valueMode: newMode }
   
   // Emit the new mode name for parent to display
-  const newModeName = model.value.valueMode === 0 ? 'Unipolar' : 'Bipolar'
+  const newModeName = newMode === 0 ? 'Unipolar' : 'Bipolar'
   emit('valueModeChanged', newModeName)
 }
 
@@ -424,23 +425,18 @@ const selectProfile = (profile: ProfileType) => {
   if (isSupported.value) snap()
   
   if (profile === 'inc') {
-    model.value.functionMode = 2
+    model.value = { ...model.value, functionMode: 2 }
   } else if (profile === 'pd') {
-    model.value.functionMode = 1
+    model.value = { ...model.value, functionMode: 1 }
   } else {
-    model.value.functionMode = 0
-    
     // Set onsetType and offsetType based on profile
     if (profile === 'exp') {
-      model.value.onsetType = 1
-      model.value.offsetType = 1
+      model.value = { ...model.value, functionMode: 0, onsetType: 1, offsetType: 1 }
     } else if (profile === 'log') {
-      model.value.onsetType = 2
-      model.value.offsetType = 2
+      model.value = { ...model.value, functionMode: 0, onsetType: 2, offsetType: 2 }
     } else {
       // lin
-      model.value.onsetType = 0
-      model.value.offsetType = 0
+      model.value = { ...model.value, functionMode: 0, onsetType: 0, offsetType: 0 }
     }
   }
   
@@ -531,23 +527,32 @@ watch(() => model.value.ccNumber, (cc) => {
   
   // KB1 Expression parameters: Force unipolar mode and clamp to valid ranges
   if (cc === 200) {
-    // Strum Speed: 10-100% displayed (maps to 120ms-4ms)
+    // Strum Speed: 5-100% displayed (maps to 360ms-4ms)
     // Store MIDI values in ascending order even though UI presents them inverted
-    model.value.valueMode = VALUE_MODE_UNIPOLAR
-    model.value.minCCValue = 0    // Maps to 100% (fastest) via speedPercentToMidi
-    model.value.maxCCValue = 127  // Maps to 10% (slowest) via speedPercentToMidi
+    model.value = {
+      ...model.value,
+      valueMode: VALUE_MODE_UNIPOLAR,
+      minCCValue: 0,    // Maps to 100% (fastest) via speedPercentToMidi
+      maxCCValue: 127   // Maps to 5% (slowest) via speedPercentToMidi
+    }
   } else if (cc === 202) {
-    // Swing: 0-100%
-    model.value.valueMode = VALUE_MODE_UNIPOLAR
-    model.value.minCCValue = 0   // 0%
-    model.value.maxCCValue = 127 // 100%
+    // Swing: 50-100% (UI) maps to 0-100 (firmware)
+    model.value = {
+      ...model.value,
+      valueMode: VALUE_MODE_UNIPOLAR,
+      minCCValue: 0,    // 50% UI
+      maxCCValue: 127   // 100% UI
+    }
   } else if (cc === 203) {
     // Velocity Spread: 8-100%
-    model.value.valueMode = VALUE_MODE_UNIPOLAR
     const min = Math.round((8 / 100) * 127)   // 8 -> ~10 MIDI
     const max = Math.round((100 / 100) * 127) // 100 -> 127 MIDI
-    model.value.minCCValue = min
-    model.value.maxCCValue = max
+    model.value = {
+      ...model.value,
+      valueMode: VALUE_MODE_UNIPOLAR,
+      minCCValue: min,
+      maxCCValue: max
+    }
   }
   // Note: Pattern Selector (201) filtered out for levers - handled by press controls only
   
@@ -562,7 +567,7 @@ watch(selectedCategory, (cat) => {
   const ok = props.ccMapByNumber.get(model.value.ccNumber)?.category === cat
   if (!ok) {
     const first = filteredOptions.value.find(o => o.value >= 0)
-    if (first) model.value.ccNumber = first.value
+    if (first) model.value = { ...model.value, ccNumber: first.value }
   }
   isUpdatingInternally.value = false
 })
@@ -590,7 +595,7 @@ const stepsValue = computed({
     return stepsFirmwareToDisplay[model.value.stepSize] ?? 5
   },
   set: (displayPercent: number) => {
-    model.value.stepSize = stepsDisplayToFirmware[displayPercent] ?? 6
+    model.value = { ...model.value, stepSize: stepsDisplayToFirmware[displayPercent] ?? 6 }
   }
 })
 
@@ -613,8 +618,9 @@ const minRange = computed(() => {
   }
   
   // KB1 Expression parameters have hardware-enforced minimum values
-  if (cc === 200) return 10  // Strum Speed: 10-100% (perceived range, maps to 4-120ms)
+  if (cc === 200) return 5  // Strum Speed: 5-100% (perceived range, maps to 4-360ms)
   if (cc === 201) return 1   // Pattern Selector: 1-6
+  if (cc === 202) return 50  // Swing: 50-100%
   if (cc === 203) return 8   // Velocity Spread: 8-100%
   
   return 0  // Default unipolar minimum
@@ -709,16 +715,27 @@ function midiToPattern(midiValue: number): number {
 }
 
 // Special conversion for Strum Speed (CC 200): higher % = faster (lower ms)
-// User sees 10-100% range (better UX), maps to 4-120ms: 100%→4ms, 10%→120ms
+// User sees 5-100% range (better UX), maps to 4-360ms: 100%→4ms, 5%→360ms
 // Store MIDI in normal ascending order: low MIDI = slow, high MIDI = fast
 function speedPercentToMidi(percent: number): number {
-  // Map 10-100% to MIDI 0-127 (normal order: higher MIDI = faster)
-  return Math.round(127 * (percent - 10) / 90)
+  // Map 5-100% to MIDI 0-127 (normal order: higher MIDI = faster)
+  return Math.round(127 * (percent - 5) / 95)
 }
 
 function midiToSpeedPercent(midiValue: number): number {
-  // Map MIDI 0-127 to 10-100%
-  return Math.round(10 + (midiValue / 127) * 90)
+  // Map MIDI 0-127 to 5-100%
+  return Math.round(5 + (midiValue / 127) * 95)
+}
+
+// Special conversion for Swing (CC 202): UI 50-100% maps to firmware 0-100
+function swingPercentToMidi(percent: number): number {
+  // Map 50-100% to MIDI 0-127
+  return Math.round(127 * (percent - 50) / 50)
+}
+
+function midiToSwingPercent(midiValue: number): number {
+  // Map MIDI 0-127 to 50-100%
+  return Math.round(50 + (midiValue / 127) * 50)
 }
 
 // User-facing Min value (0-100 or -100 to +100, or 1-7 for pattern selector)
@@ -729,6 +746,8 @@ const userMin = computed({
       value = midiToSpeedPercent(model.value.minCCValue)
     } else if (model.value.ccNumber === 201) {
       value = midiToPattern(model.value.minCCValue)
+    } else if (model.value.ccNumber === 202) {
+      value = midiToSwingPercent(model.value.minCCValue)
     } else if (model.value.valueMode === VALUE_MODE_BIPOLAR) {
       value = midiToBipolar(model.value.minCCValue)
     } else {
@@ -741,13 +760,15 @@ const userMin = computed({
   set: (userValue: number) => {
     const snappedValue = snapToStepIncrement(userValue)
     if (model.value.ccNumber === 200) {
-      model.value.minCCValue = speedPercentToMidi(snappedValue)
+      model.value = { ...model.value, minCCValue: speedPercentToMidi(snappedValue) }
     } else if (model.value.ccNumber === 201) {
-      model.value.minCCValue = patternToMidi(snappedValue)
+      model.value = { ...model.value, minCCValue: patternToMidi(snappedValue) }
+    } else if (model.value.ccNumber === 202) {
+      model.value = { ...model.value, minCCValue: swingPercentToMidi(snappedValue) }
     } else if (model.value.valueMode === VALUE_MODE_BIPOLAR) {
-      model.value.minCCValue = bipolarToMidi(snappedValue)
+      model.value = { ...model.value, minCCValue: bipolarToMidi(snappedValue) }
     } else {
-      model.value.minCCValue = unipolarToMidi(snappedValue)
+      model.value = { ...model.value, minCCValue: unipolarToMidi(snappedValue) }
     }
   }
 })
@@ -760,6 +781,8 @@ const userMax = computed({
       value = midiToSpeedPercent(model.value.maxCCValue)
     } else if (model.value.ccNumber === 201) {
       value = midiToPattern(model.value.maxCCValue)
+    } else if (model.value.ccNumber === 202) {
+      value = midiToSwingPercent(model.value.maxCCValue)
     } else if (model.value.valueMode === VALUE_MODE_BIPOLAR) {
       value = midiToBipolar(model.value.maxCCValue)
     } else {
@@ -772,13 +795,15 @@ const userMax = computed({
   set: (userValue: number) => {
     const snappedValue = snapToStepIncrement(userValue)
     if (model.value.ccNumber === 200) {
-      model.value.maxCCValue = speedPercentToMidi(snappedValue)
+      model.value = { ...model.value, maxCCValue: speedPercentToMidi(snappedValue) }
     } else if (model.value.ccNumber === 201) {
-      model.value.maxCCValue = patternToMidi(snappedValue)
+      model.value = { ...model.value, maxCCValue: patternToMidi(snappedValue) }
+    } else if (model.value.ccNumber === 202) {
+      model.value = { ...model.value, maxCCValue: swingPercentToMidi(snappedValue) }
     } else if (model.value.valueMode === VALUE_MODE_BIPOLAR) {
-      model.value.maxCCValue = bipolarToMidi(snappedValue)
+      model.value = { ...model.value, maxCCValue: bipolarToMidi(snappedValue) }
     } else {
-      model.value.maxCCValue = unipolarToMidi(snappedValue)
+      model.value = { ...model.value, maxCCValue: unipolarToMidi(snappedValue) }
     }
   }
 })
@@ -794,8 +819,11 @@ watch(() => model.value.valueMode, (newMode, oldMode) => {
     const currentMaxMidi = model.value.maxCCValue
     
     // Keep MIDI values the same, they'll just display differently
-    model.value.minCCValue = currentMinMidi
-    model.value.maxCCValue = currentMaxMidi
+    model.value = {
+      ...model.value,
+      minCCValue: currentMinMidi,
+      maxCCValue: currentMaxMidi
+    }
   } else if (newMode === VALUE_MODE_UNIPOLAR && oldMode === VALUE_MODE_BIPOLAR) {
     // Switching from Bipolar to Unipolar
     // Map 0 → 50 (center), clamp negatives to 0
@@ -803,8 +831,11 @@ watch(() => model.value.valueMode, (newMode, oldMode) => {
     const currentMaxMidi = model.value.maxCCValue
     
     // Keep MIDI values the same, they'll just display differently
-    model.value.minCCValue = currentMinMidi
-    model.value.maxCCValue = currentMaxMidi
+    model.value = {
+      ...model.value,
+      minCCValue: currentMinMidi,
+      maxCCValue: currentMaxMidi
+    }
   }
 })
 
@@ -812,8 +843,11 @@ watch(() => model.value.valueMode, (newMode, oldMode) => {
 const duration = computed({
   get: () => model.value.onsetTime,
   set: (value: number) => {
-    model.value.onsetTime = value
-    model.value.offsetTime = value
+    model.value = {
+      ...model.value,
+      onsetTime: value,
+      offsetTime: value
+    }
   }
 })
 

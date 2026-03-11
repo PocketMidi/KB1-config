@@ -214,7 +214,7 @@ async function parsePolyendCSV(csvText: string): Promise<void> {
                 ccNumber: 202,
                 parameter: 'Swing',
                 category: 'KB1 Expression',
-                range: { min: 0, max: 100, text: '0 to 100' },
+                range: { min: 50, max: 100, text: '50 to 100' },
               },
               {
                 ccNumber: 201,

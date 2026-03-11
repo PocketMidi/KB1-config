@@ -651,6 +651,11 @@
   opacity: 0.5;
 }
 
+.theme-kb1-light .pattern-item.rangeBoundary img {
+  filter: brightness(1) saturate(1) !important;
+  opacity: 1;
+}
+
 .theme-kb1-light .pattern-item.current img {
   filter: brightness(0) saturate(100%) invert(44%) sepia(50%) saturate(1500%) hue-rotate(230deg) !important;
   opacity: 1;

@@ -131,7 +131,7 @@ const props = defineProps<{
   modelValue: number[]
   mode: string
   chordType?: number  // Chord type from parent to sync template
-  swingValue?: number  // Swing amount 0-100
+  swingValue?: number  // Swing amount 50-100% (50 = straight, 100 = max swing)
 }>()
 
 const emit = defineEmits<{
@@ -364,16 +364,16 @@ function getPathPoints(): string {
 
 // Check if dot should split for swing visualization
 function shouldSplitDot(index: number): boolean {
-  const swing = props.swingValue || 0
-  // Split alternating dots (odd indices) when swing > 0
-  return swing > 0 && index % 2 === 1
+  const swing = props.swingValue || 50
+  // Split alternating dots (odd indices) when swing > 50% (straight timing)
+  return swing > 50 && index % 2 === 1
 }
 
-// Get horizontal swing offset based on swing value (0-100)
+// Get horizontal swing offset based on swing value (50-100%)
 function getSwingOffset(): number {
-  const swing = props.swingValue || 0
-  // Max offset is ~25 pixels at 100% swing
-  return (swing / 100) * 25
+  const swing = props.swingValue || 50
+  // Map 50-100% to 0-25 pixels offset (50% = straight, 100% = max swing)
+  return ((swing - 50) / 50) * 25
 }
 
 // Handle canvas click to add notes

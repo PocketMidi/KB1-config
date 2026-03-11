@@ -221,7 +221,7 @@ const autoDeepSleep = computed(() => model.value.lightSleepTimeout + 90)
 
 // Sync deep sleep whenever light sleep changes
 watch(() => model.value.lightSleepTimeout, () => {
-  model.value.deepSleepTimeout = autoDeepSleep.value
+  model.value = { ...model.value, deepSleepTimeout: autoDeepSleep.value }
 }, { immediate: true })
 
 // BLE Timeout: independent, just needs minimum

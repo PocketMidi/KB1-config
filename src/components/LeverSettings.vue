@@ -511,7 +511,7 @@ watch(() => props.ccMapByNumber.size, () => {
 }, { immediate: true })
 
 // Filter options by selected category
-// Note: Pattern Selector (201) excluded from levers - discrete values better suited for press controls
+// Note: Shape Selector (201) excluded from levers - discrete values better suited for press controls
 const filteredOptions = computed(() => {
   return props.ccOptions.filter(opt => 
     opt.group === selectedCategory.value && opt.value !== 201

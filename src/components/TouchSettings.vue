@@ -240,7 +240,7 @@ const modeImage = computed(() => {
   return `${BASE_PATH}touch/gate_animated.svg`
 })
 
-// Check if Pattern Selector is active
+// Check if Shape Selector is active
 const isPatternSelector = computed(() => model.value.ccNumber === 201)
 
 // Initialize selectedCategory from current ccNumber's category (fallback to first available category)
@@ -306,7 +306,7 @@ watch(() => model.value.ccNumber, (cc) => {
       maxCCValue: 0     // Maps to 100% (fastest)
     }
   } else if (cc === 201) {
-    // Pattern Selector: 1-6 (discrete values)
+    // Shape Selector: 1-6 (discrete values)
     // Force TOGGLE mode for cycling
     // Preserve offsetTime if already set (for preset loading), otherwise default to FWD mode
     const currentOffsetTime = model.value.offsetTime ?? 0;
@@ -360,7 +360,7 @@ function midiToUnipolar(midiValue: number): number {
   return Math.round((midiValue / 127) * 100)
 }
 
-// Special conversion for Pattern Selector (1-6)
+// Special conversion for Shape Selector (1-6)
 function patternToMidi(pattern: number): number {
   // Map pattern 1-6 to MIDI 0-127
   return Math.round(((pattern - 1) / 5) * 127)
@@ -399,7 +399,7 @@ function midiToSwingPercent(midiValue: number): number {
 const minRange = computed(() => {
   const cc = model.value.ccNumber
   if (cc === 200) return 5  // Strum Speed: 5-100% (perceived range, maps to 4-360ms)
-  if (cc === 201) return 1   // Pattern Selector: 1-6
+  if (cc === 201) return 1   // Shape Selector: 1-6
   if (cc === 202) return 50  // Swing: 50-100%
   if (cc === 203) return 8   // Velocity Spread: 8-100%
   return 0  // Default minimum
@@ -407,12 +407,12 @@ const minRange = computed(() => {
 
 const maxRange = computed(() => {
   const cc = model.value.ccNumber
-  if (cc === 201) return 6   // Pattern Selector: 1-6 (discrete)
+  if (cc === 201) return 6   // Shape Selector: 1-6 (discrete)
   return 100  // Default maximum
 })
 
 // Buffer between min and max to prevent overlap
-// Pattern Selector (1-6 range) needs smaller buffer than regular params (0-100 range)
+// Shape Selector (1-6 range) needs smaller buffer than regular params (0-100 range)
 const MIN_MAX_BUFFER = computed(() => {
   return model.value.ccNumber === 201 ? 1 : 5
 })
@@ -428,7 +428,7 @@ const constrainedMinForMax = computed(() => {
   return Math.max(minRange.value, userMin.value + MIN_MAX_BUFFER.value)
 })
 
-// User-facing Min value (0-100 for normal params, 1-7 for pattern selector, always unipolar for Touch)
+// User-facing Min value (0-100 for normal params, 1-6 for shape selector, always unipolar for Touch)
 const userMin = computed({
   get: () => {
     let value: number
@@ -441,7 +441,7 @@ const userMin = computed({
     } else {
       value = midiToUnipolar(model.value.minCCValue)
     }
-    // Snap displayed value to user preference step size (except pattern selector)
+    // Snap displayed value to user preference step size (except shape selector)
     if (model.value.ccNumber !== 201) {
       return Math.round(value / unipolarStepSize.value) * unipolarStepSize.value
     }
@@ -460,7 +460,7 @@ const userMin = computed({
   }
 })
 
-// User-facing Max value (0-100 for normal params, 1-7 for pattern selector, always unipolar for Touch)
+// User-facing Max value (0-100 for normal params, 1-6 for shape selector, always unipolar for Touch)
 const userMax = computed({
   get: () => {
     let value: number
@@ -473,7 +473,7 @@ const userMax = computed({
     } else {
       value = midiToUnipolar(model.value.maxCCValue)
     }
-    // Snap displayed value to user preference step size (except pattern selector)
+    // Snap displayed value to user preference step size (except shape selector)
     if (model.value.ccNumber !== 201) {
       return Math.round(value / unipolarStepSize.value) * unipolarStepSize.value
     }
@@ -516,10 +516,10 @@ const userThreshold = computed({
 // Momentary/Reverse Toggle (using offset time: 0 = momentary/FWD, >0 = latched/REV)
 const isMomentary = computed(() => (model.value.offsetTime ?? 0) === 0)
 
-// Watch for Pattern Selector activation to emit initial direction state
+// Watch for Shape Selector activation to emit initial direction state
 watch(isPatternSelector, (isActive) => {
   if (isActive) {
-    // Emit current direction when Pattern Selector becomes active
+    // Emit current direction when Shape Selector becomes active
     nextTick(() => {
       emit('behaviourChanged', isMomentary.value ? 'Cycle Forward' : 'Cycle Reverse')
     })
@@ -761,7 +761,7 @@ function dismissHelp() {
   flex-wrap: nowrap;
 }
 
-/* Toggle Button (REV/FWD for Pattern Selector) */
+/* Toggle Button (REV/FWD for Shape Selector) */
 .toggle-btn {
   flex: 0 0 auto;
   padding: 0.15rem 0.375rem;

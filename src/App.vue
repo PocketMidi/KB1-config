@@ -1110,8 +1110,8 @@ body {
 }
 
 input:checked + .toggle-slider {
-  background-color: #6A6853;
-  border-color: #6A6853;
+  background-color: #0DC988;
+  border-color: #0DC988;
 }
 
 input:checked + .toggle-slider:before {

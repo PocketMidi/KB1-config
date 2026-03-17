@@ -218,7 +218,7 @@ async function parsePolyendCSV(csvText: string): Promise<void> {
               },
               {
                 ccNumber: 201,
-                parameter: 'Pattern Selector',
+                parameter: 'Shape Selector',
                 category: 'KB1 Expression',
                 range: { min: 1, max: 6, text: '1 to 6' },
               },

@@ -444,6 +444,11 @@ export function useDeviceState() {
     
     const userAgent = navigator.userAgent;
     
+    // iOS: If Web Bluetooth API exists, it's V Browser or similar BLE-capable browser — allow it
+    const isIOS = /iPad|iPhone|iPod/.test(userAgent) || 
+                  (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    if (isIOS) return true;
+    
     // Firefox: Has experimental BLE support but not functional - block it
     const isFirefox = /Firefox/i.test(userAgent);
     if (isFirefox) return false;

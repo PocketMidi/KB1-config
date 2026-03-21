@@ -145,16 +145,13 @@
 
           <div class="action-row">
             <button 
-              class="action-button" 
-              :class="estimatedPercentage === 254 ? 'calibrate-button' : 'recalibrate-button'"
+              class="action-button recalibrate-button"
               @click="handleRecalibrate"
-              :disabled="isRecalibrating"
+              :disabled="isRecalibrating || estimatedPercentage === 254"
             >
-              {{ isRecalibrating ? 'Resetting...' : (estimatedPercentage === 254 ? 'Calibrate' : 'Recalibrate') }}
+              {{ isRecalibrating ? 'Resetting...' : 'Recalibrate' }}
             </button>
-            <div class="action-description">
-              {{ estimatedPercentage === 254 ? 'Connect to computer USB for 5.5hr charge' : 'Clears tracking. Requires 5.5hr charge' }}
-            </div>
+            <div class="action-description">Clears tracking. Requires 5.5hr charge</div>
           </div>
         </div>
         
@@ -174,34 +171,13 @@
           <div class="toggle-description">Numeric percentage display</div>
         </div>
 
-        <!-- Charging Instructions (Collapsible) -->
-        <div class="charging-section">
-          <div class="charging-header" @click="showChargingInstructions = !showChargingInstructions">
-            <span>Charging Instructions</span>
-            <span class="chevron" :class="{ expanded: showChargingInstructions }">▼</span>
-          </div>
-          <div v-if="showChargingInstructions" class="charging-content">
-            <ol class="charging-steps">
-              <li><strong>Power on <em>KB1</em> from battery first</strong></li>
-              <li>Connect to computer USB port - <em>KB1</em> auto-detects charging</li>
-              <li>Partial charges tracked automatically after initial calibration</li>
-            </ol>
-          </div>
-        </div>
-      </div>
-
-      <!-- Calibration Info Dialog -->
-      <div v-if="showCalibrationInfo" class="confirmation-overlay" @click="closeCalibrationInfo">
-        <div class="confirmation-dialog" @click.stop>
-          <h3>Begin Calibration</h3>
-          <ol class="calibration-steps">
+        <!-- Charging Instructions (always visible, dimmed when calibrated) -->
+        <div class="charging-section" :class="{ dimmed: estimatedPercentage !== 254 }">
+          <ol class="charging-steps">
             <li><strong>Power on <em>KB1</em> from battery first</strong></li>
-            <li>Connect to computer USB port - <em>KB1</em> auto-detects charging</li>
-            <li>Leave connected for 5.5 hours to complete calibration</li>
+            <li>Connect to computer USB port — auto-detects charging</li>
+            <li>Initial calibration requires 5.5hr continuous charge</li>
           </ol>
-          <div class="confirmation-actions">
-            <button class="confirm-button cancel-btn" @click="closeCalibrationInfo">Got It</button>
-          </div>
         </div>
       </div>
 
@@ -286,8 +262,6 @@ const {
 const isSyncing = ref(false);
 const isRecalibrating = ref(false);
 const showConfirmation = ref(false);
-const showCalibrationInfo = ref(false);
-const showChargingInstructions = ref(false);
 const showSpeakerHelp = ref(false);
 
 // Calculate large battery fill width (max 90 for visual)
@@ -321,15 +295,10 @@ async function handleSync() {
 }
 
 function handleRecalibrate() {
-  // Show info dialog for initial calibration (no reset needed) — works without connection
-  if (estimatedPercentage.value === 254) {
-    showCalibrationInfo.value = true;
-  } else {
-    // Recalibrate requires device connection (destructive write)
-    if (!props.isConnected) { emit('needs-connect'); return; }
-    // Show confirmation dialog for recalibration (destructive)
-    showConfirmation.value = true;
-  }
+  // Recalibrate requires device connection (destructive write)
+  if (!props.isConnected) { emit('needs-connect'); return; }
+  // Show confirmation dialog for recalibration (destructive)
+  showConfirmation.value = true;
 }
 
 async function confirmRecalibrate() {
@@ -350,11 +319,6 @@ async function confirmRecalibrate() {
 
 function cancelRecalibrate() {
   showConfirmation.value = false;
-}
-
-function closeCalibrationInfo() {
-  showCalibrationInfo.value = false;
-  close(); // Close entire modal - user should now go plug in USB
 }
 
 function handleTogglePercentage() {
@@ -393,6 +357,8 @@ function dismissSpeakerHelp() {
   border-radius: 16px;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
   max-width: 480px;
+  max-height: 90vh;
+  overflow-y: auto;
   width: 100%;
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
@@ -901,9 +867,15 @@ input:checked + .toggle-slider:before {
 
 .charging-section {
   margin-top: 12px;
+  padding: 12px 16px;
   border: 1px solid rgba(106, 104, 83, 0.3);
   border-radius: 8px;
-  overflow: hidden;
+  background-color: rgba(0, 0, 0, 0.2);
+  transition: opacity 0.3s ease;
+}
+
+.charging-section.dimmed {
+  opacity: 0.35;
 }
 
 .charging-header {

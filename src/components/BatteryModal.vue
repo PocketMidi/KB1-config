@@ -140,7 +140,7 @@
             >
               {{ isSyncing ? 'Syncing...' : 'Sync Now' }}
             </button>
-            <div class="action-description">Updates battery status from device</div>
+            <div class="action-description">Battery status update</div>
           </div>
 
           <div class="action-row">
@@ -151,7 +151,7 @@
             >
               {{ isRecalibrating ? 'Resetting...' : 'Recalibrate' }}
             </button>
-            <div class="action-description">Clears tracking. Requires 5.5hr charge</div>
+            <div class="action-description">5.5hr charge required</div>
           </div>
         </div>
         
@@ -168,7 +168,7 @@
               <span class="toggle-slider"></span>
             </div>
           </label>
-          <div class="toggle-description">Numeric percentage display</div>
+          <div class="toggle-description">Numeric display</div>
         </div>
 
         <!-- Charging Instructions (always visible, dimmed when calibrated) -->

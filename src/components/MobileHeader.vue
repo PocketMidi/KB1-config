@@ -12,12 +12,31 @@
       
       <!-- Always show KB1 logo -->
       <img src="/kb1_title.svg" alt="KB1 CONFIGURATOR" class="header-logo" />
+      
+      <!-- Connected state: Show battery meter (only if monitoring enabled) -->
+      <BatteryMeter 
+        v-if="isConnected && batteryMonitoringEnabled"
+        @click="openBatteryModal"
+      />
     </div>
+    
+    <!-- Battery Modal -->
+    <BatteryModal 
+      :is-open="showBatteryModal"
+      @close="closeBatteryModal"
+    />
   </header>
 </template>
 
 <script setup lang="ts">
-defineProps<{
+import { watch, onMounted } from 'vue';
+import BatteryMeter from './BatteryMeter.vue';
+import BatteryModal from './BatteryModal.vue';
+import { useBatteryStatus } from '../composables/useBatteryStatus';
+import { useBatteryModal } from '../composables/useBatteryModal';
+import { useUIPreferences } from '../composables/useUIPreferences';
+
+const props = defineProps<{
   isConnected: boolean;
   deviceName?: string;
 }>();
@@ -25,6 +44,36 @@ defineProps<{
 defineEmits<{
   connect: [];
 }>();
+
+const { showBatteryModal, openBatteryModal, closeBatteryModal } = useBatteryModal();
+const { initBatteryStatus, syncBatteryStatus } = useBatteryStatus();
+const { batteryMonitoringEnabled } = useUIPreferences();
+
+// Sync battery status when connecting (always runs in background)
+watch(() => props.isConnected, async (connected) => {
+  if (connected) {
+    // Small delay to ensure BLE is fully ready
+    setTimeout(async () => {
+      try {
+        await initBatteryStatus();  // Initialize first to set isAvailable
+        await syncBatteryStatus();   // Then sync to get current status
+      } catch (error) {
+        console.error('Failed to sync battery on connect:', error);
+      }
+    }, 1000);
+  }
+});
+
+// Listen for battery alerts
+onMounted(() => {
+  window.addEventListener('battery-alert', handleBatteryAlert);
+});
+
+function handleBatteryAlert(event: Event) {
+  const customEvent = event as CustomEvent<{ percentage: number; level: string }>;
+  console.log('Battery alert:', customEvent.detail);
+  // Note: toast notifications handled by parent App.vue if needed
+}
 </script>
 
 <style scoped>
@@ -44,9 +93,15 @@ defineEmits<{
   gap: 2rem;
 }
 
-/* When only logo is present (connected state), center it */
+/* When connected (no BT button), center logo and push battery to right */
 .header-top:not(:has(.bluetooth-connect-btn)) {
   justify-content: center;
+  position: relative;
+}
+
+.header-top:not(:has(.bluetooth-connect-btn)) .battery-meter {
+  position: absolute;
+  right: 2rem;
 }
 
 /* Bluetooth Connect Button - Disconnected State */
@@ -62,6 +117,7 @@ defineEmits<{
   cursor: pointer;
   transition: all 0.2s;
   white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .bluetooth-connect-btn:hover {
@@ -73,7 +129,38 @@ defineEmits<{
 }
 
 .header-logo {
-  width: 100%;
   height: 40px;
+  flex-shrink: 0;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .header-top {
+    padding: 1rem 1.5rem;
+  }
+  
+  .header-top:not(:has(.bluetooth-connect-btn)) .battery-meter {
+    right: 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .header-top {
+    padding: 1rem;
+    gap: 1rem;
+  }
+  
+  .header-logo {
+    height: 32px;
+  }
+  
+  .bluetooth-connect-btn {
+    padding: 0.6rem 1.2rem;
+    font-size: 0.875rem;
+  }
+  
+  .header-top:not(:has(.bluetooth-connect-btn)) .battery-meter {
+    right: 1rem;
+  }
 }
 </style>

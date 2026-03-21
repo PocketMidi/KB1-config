@@ -2,6 +2,21 @@
   <div class="settings-system">
     <div class="inputs">
       <div class="group">
+        <label>
+          BATTERY MONITORING
+          <span class="info-icon" @click.stop="showHelp('batteryMonitoring')" title="Show help">?</span>
+        </label>
+        <div class="toggle-switch" @click="toggleBatteryMonitoring">
+          <span class="toggle-label-left" :class="{ active: !batteryMonitoringEnabled }">OFF</span>
+          <div class="toggle-track" :class="{ active: batteryMonitoringEnabled }">
+            <div class="toggle-thumb"></div>
+          </div>
+          <span class="toggle-label-right" :class="{ active: batteryMonitoringEnabled }">ON</span>
+        </div>
+      </div>
+      <div class="input-divider"></div>
+
+      <div class="group">
         <label for="light-sleep">
           SLEEP TIMEOUT
           <span class="info-icon" @click.stop="showHelp('sleepTimeout')" title="Show help">?</span>
@@ -105,6 +120,7 @@
 import { computed, ref, watch, onMounted } from 'vue'
 import { useHaptics } from '../composables/useHaptics'
 import { useUIPreferences } from '../composables/useUIPreferences'
+import { useBatteryModal } from '../composables/useBatteryModal'
 import ValueControl from './ValueControl.vue'
 
 type SystemModel = {
@@ -147,12 +163,30 @@ function toggleHaptics() {
 }
 
 // UI Preferences
-const { unipolarStepSize, setUnipolarStepSize } = useUIPreferences()
+const { unipolarStepSize, setUnipolarStepSize, batteryMonitoringEnabled, setBatteryMonitoringEnabled } = useUIPreferences()
+
+// Battery Modal
+const { openBatteryModal } = useBatteryModal()
 
 function toggleResolution() {
   setUnipolarStepSize(unipolarStepSize.value === 1 ? 5 : 1)
   snap()
 }
+
+function toggleBatteryMonitoring() {
+  setBatteryMonitoringEnabled(!batteryMonitoringEnabled.value)
+  snap()
+}
+
+// Auto-open battery modal when monitoring is enabled
+watch(batteryMonitoringEnabled, (newValue, oldValue) => {
+  if (newValue && !oldValue) {
+    // Toggled from OFF to ON - open the modal after brief delay
+    setTimeout(() => {
+      openBatteryModal()
+    }, 100)
+  }
+})
 
 // Help modal system
 const showHelpModal = ref(false)
@@ -162,6 +196,10 @@ const helpContent = ref({ title: '', description: '' })
 const restoringHints = ref(false)
 
 const helpTexts = {
+  batteryMonitoring: {
+    title: 'Battery Monitoring',
+    description: 'Shows or hides the battery icon in the navigation bar. Battery tracking runs in the background regardless of this setting. Toggle ON to view battery status and access calibration features.'
+  },
   sleepTimeout: {
     title: 'Sleep Timeout',
     description: 'Controls how long <em>KB1</em> stays awake when not in use. At timeout, LEDs pulse briefly as a warning, then the device enters deep sleep to save battery. Touchpad will wake system at any time.'

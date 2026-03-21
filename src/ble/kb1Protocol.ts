@@ -154,6 +154,22 @@ export const DEVICE_PRESET = {
 } as const;
 
 /**
+ * Battery status from device
+ */
+export interface BatteryStatus {
+  /** Battery percentage: 0-100 (battery %), 254 = uncalibrated (needs full charge), 255 = charging/USB powered */
+  percentage: number;
+  /** Estimated remaining seconds on battery */
+  remainingSeconds: number;
+  /** USB connection status: true = plugged in */
+  usbConnected: boolean;
+  /** Calibration timestamp: seconds since boot when calibration completed (0 = never calibrated) */
+  calibrationTimestamp: number;
+  /** Last update timestamp (client-side) */
+  lastUpdate?: number;
+}
+
+/**
  * Message types for KB1 protocol
  */
 export enum KB1MessageType {
@@ -690,4 +706,30 @@ export function decodePresetList(data: DataView): DevicePresetMetadata[] {
   }
   
   return presets;
+}
+
+/**
+ * Decode battery status response
+ * Format: [percentage(1 byte)][remainingSeconds(4 bytes LE)][usbConnected(1 byte)][calibrationTimestamp(4 bytes LE)]
+ */
+export function decodeBatteryStatus(data: DataView): BatteryStatus {
+  // Support both old (6 bytes) and new (10 bytes) protocol for backwards compatibility
+  if (data.byteLength < 6) {
+    throw new Error(`Invalid battery status data length: ${data.byteLength}, expected 6 or 10 bytes`);
+  }
+  
+  const percentage = data.getUint8(0);
+  const remainingSeconds = data.getUint32(1, true); // Little-endian
+  const usbConnected = data.getUint8(5) === 1;
+  
+  // Read calibration timestamp if available (new protocol)
+  const calibrationTimestamp = data.byteLength >= 10 ? data.getUint32(6, true) : 0;
+  
+  return {
+    percentage,
+    remainingSeconds,
+    usbConnected,
+    calibrationTimestamp,
+    lastUpdate: Date.now(),
+  };
 }

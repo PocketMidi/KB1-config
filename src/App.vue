@@ -1,14 +1,19 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import MobileScales from './pages/MobileScales.vue';
 import MobileSliders from './pages/MobileSliders.vue';
 import FirstTimeOverlay from './components/FirstTimeOverlay.vue';
 import ContextualConnectionModal from './components/ContextualConnectionModal.vue';
+import BatteryMeter from './components/BatteryMeter.vue';
+import BatteryModal from './components/BatteryModal.vue';
 import ToastNotification from './components/ToastNotification.vue';
 import ConfirmDialog from './components/ConfirmDialog.vue';
 import { useDeviceState } from './composables/useDeviceState';
 import { useToast } from './composables/useToast';
 import { useConfirm } from './composables/useConfirm';
+import { useBatteryStatus } from './composables/useBatteryStatus';
+import { useBatteryModal } from './composables/useBatteryModal';
+import { useUIPreferences } from './composables/useUIPreferences';
 import { FIRST_TIME_BLE_INTRO_KEY } from './constants';
 import './styles/themes/kb1.css';
 
@@ -21,6 +26,9 @@ const {
   setDevMode,
 } = useDeviceState();
 const { dialogs, remove: removeDialog } = useConfirm();
+const { initBatteryStatus, syncBatteryStatus } = useBatteryStatus();
+const { batteryMonitoringEnabled } = useUIPreferences();
+const { showBatteryModal, openBatteryModal, closeBatteryModal } = useBatteryModal();
 
 const { toasts, remove } = useToast();
 
@@ -187,6 +195,16 @@ async function handleConnect() {
     // Close any open modals on successful connection
     showFirstTimeOverlay.value = false;
     showContextualModal.value = false;
+    
+    // Initialize battery status after connection (always runs in background)
+    setTimeout(async () => {
+      try {
+        await initBatteryStatus();
+        await syncBatteryStatus();
+      } catch (error) {
+        console.error('Failed to initialize battery:', error);
+      }
+    }, 1000);
   } catch (error) {
     console.error('Connection failed:', error);
   }
@@ -294,6 +312,12 @@ function handleTabClick(tabId: Tab) {
       @dismiss="handleContextualDismiss"
     />
     
+    <!-- Battery Modal -->
+    <BatteryModal 
+      :is-open="showBatteryModal"
+      @close="closeBatteryModal"
+    />
+    
     <!-- Unified Responsive Layout -->
     <header v-if="!hideUI" class="app-header">
       <div class="header-content">
@@ -340,20 +364,28 @@ function handleTabClick(tabId: Tab) {
         <!-- Vertical divider before Bluetooth -->
         <div class="separator"></div>
         
-        <!-- Bluetooth status section -->
-        <div 
-          class="bluetooth-status" 
-          :class="{ connected: isConnected, hoverable: true }"
-          @click="isConnected ? handleDisconnect() : handleConnect()"
-          @touchstart="isHoveringStatus = true"
-          @touchend="isHoveringStatus = false"
-          @mouseenter="isHoveringStatus = true"
-          @mouseleave="isHoveringStatus = false"
-        >
-          <span class="status-text">
-            {{ bluetoothStatusText }}
-          </span>
-          <img src="/bluetooth-icon.svg" alt="Bluetooth" class="bluetooth-icon" />
+        <!-- Right navigation group (Bluetooth + Battery) -->
+        <div class="nav-right">
+          <!-- Bluetooth status section (icon only) -->
+          <div 
+            class="bluetooth-status" 
+            :class="{ connected: isConnected, hoverable: true }"
+            @click="isConnected ? handleDisconnect() : handleConnect()"
+            @touchstart="isHoveringStatus = true"
+            @touchend="isHoveringStatus = false"
+            @mouseenter="isHoveringStatus = true"
+            @mouseleave="isHoveringStatus = false"
+            :title="bluetoothStatusText"
+          >
+            <img src="/bluetooth-icon.svg" alt="Bluetooth" class="bluetooth-icon" />
+          </div>
+          
+          <!-- Battery Meter (conditionally visible based on preference) -->
+          <BatteryMeter 
+            v-if="batteryMonitoringEnabled"
+            class="battery-meter-nav"
+            @click="openBatteryModal"
+          />
         </div>
       </nav>
       
@@ -733,8 +765,26 @@ body {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  padding: 1rem 1.5rem;
+  padding: 1rem 0.25rem;
   white-space: nowrap;
+}
+
+/* Right navigation group - keeps Bluetooth and Battery together */
+.nav-right {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  flex-shrink: 0;
+}
+
+/* Battery meter in nav - tight spacing */
+.battery-meter-nav {
+  margin-left: 0;
+  margin-right: 0.5rem;
+}
+
+.battery-meter-nav :deep(.battery-meter) {
+  padding: 4px 4px 4px 0;
 }
 
 .bluetooth-status.hoverable {

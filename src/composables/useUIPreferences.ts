@@ -4,13 +4,15 @@ export type UnipolarStepSize = 1 | 5
 
 interface UIPreferences {
   unipolarStepSize: UnipolarStepSize
+  batteryMonitoringEnabled: boolean
 }
 
 const STORAGE_KEY = 'kb1-ui-preferences'
 
 // Default preferences
 const defaultPreferences: UIPreferences = {
-  unipolarStepSize: 5
+  unipolarStepSize: 5,
+  batteryMonitoringEnabled: false
 }
 
 // Load from localStorage or use defaults
@@ -55,13 +57,25 @@ export function useUIPreferences() {
     }
   })
 
+  const batteryMonitoringEnabled = computed({
+    get: () => preferences.value.batteryMonitoringEnabled,
+    set: (value: boolean) => {
+      preferences.value.batteryMonitoringEnabled = value
+    }
+  })
+
   return {
     preferences,
     unipolarStepSize,
+    batteryMonitoringEnabled,
     
     // Setters
     setUnipolarStepSize(size: UnipolarStepSize) {
       preferences.value.unipolarStepSize = size
+    },
+    
+    setBatteryMonitoringEnabled(enabled: boolean) {
+      preferences.value.batteryMonitoringEnabled = enabled
     },
     
     // Reset to defaults

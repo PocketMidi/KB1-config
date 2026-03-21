@@ -45,6 +45,29 @@ Want to explore the interface without hardware? Enable **Evaluation Mode** to in
 
 **Disconnected State**: When disconnected, all controls are shown but grayed out. Click any control to see a prompt to connect.
 
+### ⚠️ Battery Calibration (Firmware v1.3.0+)
+
+**IMPORTANT:** If you see a gray battery icon with a `?` symbol, your device needs calibration.
+
+**Why?** Fresh firmware cannot measure battery voltage—it estimates by tracking usage. Without calibration, it doesn't know if your battery is at 100% or 20%.
+
+**How to Calibrate:**
+1. Connect USB cable to your KB1
+2. Charge for **ONE continuous 5.5+ hour session**
+3. **Do NOT unplug during this time!**
+4. Battery meter will automatically show accurate percentage
+
+**⚠️ CRITICAL - All-or-Nothing Calibration:**
+- The 5.5 hour charge **MUST be continuous** in ONE session
+- If you unplug before 5.5 hours, the timer **resets to ZERO**
+- Partial charges **do NOT accumulate** (3hrs + 2.5hrs ≠ calibrated)
+- This is **intentional** to ensure accurate baseline
+- **Only needs to happen ONCE** - future USB connections just pause discharge
+
+**Until Calibrated:** The battery meter shows "Needs Calibration" and battery percentage is unreliable. Complete a full charge cycle before trusting battery estimates.
+
+**After Calibration:** The meter provides accurate runtime estimates (±10%) based on measured power consumption.
+
 ---
 
 ## SETTINGS Tab

@@ -6,8 +6,8 @@
  * connecting, disconnecting, and sending/receiving data.
  */
 
-import type { LeverSettings, LeverPushSettings, TouchSettings, ScaleSettings, ChordSettings, SystemSettings, DeviceSettings, DevicePresetMetadata } from './kb1Protocol';
-import { PRESET_CHARACTERISTIC_UUIDS, encodePresetSave, encodePresetLoad, encodePresetDelete, decodePresetList } from './kb1Protocol';
+import type { LeverSettings, LeverPushSettings, TouchSettings, ScaleSettings, ChordSettings, SystemSettings, DeviceSettings, DevicePresetMetadata, BatteryStatus } from './kb1Protocol';
+import { PRESET_CHARACTERISTIC_UUIDS, encodePresetSave, encodePresetLoad, encodePresetDelete, decodePresetList, decodeBatteryStatus } from './kb1Protocol';
 
 // KB1-specific BLE UUIDs (custom, not standard MIDI BLE)
 // These UUIDs are defined in the KB1 firmware (firmware/src/objects/Constants.h)
@@ -26,6 +26,8 @@ const SYSTEM_SETTINGS_UUID = '8f7e6d5c-4b3a-2c1d-0e9f-8a7b6c5d4e3f';
 const MIDI_UUID = 'eb58b31b-d963-4c7d-9a11-e8aabec2fe32';
 const KEEPALIVE_UUID = 'a8f3d5e2-9c4b-11ef-8e7a-325096b39f47';
 const FIRMWARE_VERSION_UUID = 'f3b2c1a0-5e4d-3c2b-1a0f-9e8d7c6b5a4f';
+const BATTERY_STATUS_UUID = 'a1b2c3d4-5e6f-7a8b-9c0d-1e2f3a4b5c6d';
+const BATTERY_CONTROL_UUID = 'a1b2c3d4-5e6f-7a8b-9c0d-1e2f3a4b5c6e'; // Write commands (reset/recalibrate)
 
 export interface BLEConnectionStatus {
   connected: boolean;
@@ -52,6 +54,8 @@ export class BLEClient {
   private systemCharacteristic: BluetoothRemoteGATTCharacteristic | null = null;
   private keepAliveCharacteristic: BluetoothRemoteGATTCharacteristic | null = null;
   private firmwareVersionCharacteristic: BluetoothRemoteGATTCharacteristic | null = null;
+  private batteryStatusCharacteristic: BluetoothRemoteGATTCharacteristic | null = null;
+  private batteryControlCharacteristic: BluetoothRemoteGATTCharacteristic | null = null;
   
   // Firmware version string (e.g., "1.1.2")
   private firmwareVersion: string | null = null;
@@ -184,6 +188,22 @@ export class BLEClient {
       } catch (e) {
         console.log('ℹ️ Firmware version characteristic not available (assuming v1.1.1 or older)');
         this.firmwareVersion = null; // Unknown/old version
+      }
+
+      // Try to get battery status characteristic (optional, requires updated firmware)
+      try {
+        this.batteryStatusCharacteristic = await service.getCharacteristic(BATTERY_STATUS_UUID);
+        console.log('✅ Battery status characteristic found');
+      } catch (e) {
+        console.log('ℹ️ Battery status characteristic not available (requires firmware v1.3.0+)');
+      }
+
+      // Try to get battery control characteristic (optional, requires updated firmware)
+      try {
+        this.batteryControlCharacteristic = await service.getCharacteristic(BATTERY_CONTROL_UUID);
+        console.log('✅ Battery control characteristic found');
+      } catch (e) {
+        console.log('ℹ️ Battery control characteristic not available (requires firmware v1.3.0+)');
       }
 
       // Start notifications if supported
@@ -962,6 +982,80 @@ export class BLEClient {
   }
 
   /**
+   * Read battery status from device
+   * Returns battery percentage, estimated runtime, and USB connection status
+   */
+  async readBatteryStatus(): Promise<BatteryStatus | null> {
+    // Evaluation mode: return mock calibrated battery
+    const isEvalMode = localStorage.getItem('kb1-dev-mode') === 'true';
+    if (isEvalMode) {
+      return {
+        percentage: 85,
+        remainingSeconds: 7200, // 2 hours
+        usbConnected: false
+      };
+    }
+    
+    if (!this.batteryStatusCharacteristic) {
+      return null; // Battery status not supported
+    }
+
+    try {
+      const data = await this.batteryStatusCharacteristic.readValue();
+      const status = decodeBatteryStatus(data);
+      console.log(`🔋 Battery: ${status.percentage}% (~${Math.floor(status.remainingSeconds / 60)}min remaining)`);
+      return status;
+    } catch (error) {
+      console.error('Failed to read battery status:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Check if battery status is available
+   */
+  hasBatteryStatus(): boolean {
+    const isEvalMode = localStorage.getItem('kb1-dev-mode') === 'true';
+    return isEvalMode || this.batteryStatusCharacteristic !== null;
+  }
+
+  /**
+   * Reset battery calibration state (recalibrate)
+   * Sends command 0x01 to battery control characteristic
+   * Clears calibration data and resets battery percentage to 254 (uncalibrated)
+   */
+  async resetBattery(): Promise<void> {
+    // Evaluation mode: simulate battery reset
+    const isEvalMode = localStorage.getItem('kb1-dev-mode') === 'true';
+    if (isEvalMode) {
+      console.log('🔋 Battery reset command sent (evaluation mode)');
+      return;
+    }
+    
+    if (!this.batteryControlCharacteristic) {
+      throw new Error('Battery control not supported');
+    }
+
+    try {
+      // Send command byte 0x01 to trigger reset
+      const command = new Uint8Array([0x01]);
+      await this.batteryControlCharacteristic.writeValue(command);
+      console.log('🔋 Battery reset command sent - waiting for recalibration');
+    } catch (error) {
+      console.error('Failed to reset battery:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Check if battery control (recalibrate) is available
+   */
+  hasBatteryControl(): boolean {
+    const isEvalMode = localStorage.getItem('kb1-dev-mode') === 'true';
+    return isEvalMode || this.batteryControlCharacteristic !== null;
+  }
+
+  /**
    * Get current connection status
    */
   getStatus(): BLEConnectionStatus {
@@ -1229,6 +1323,9 @@ export class BLEClient {
     this.scaleCharacteristic = null;
     this.systemCharacteristic = null;
     this.keepAliveCharacteristic = null;
+    this.firmwareVersionCharacteristic = null;
+    this.batteryStatusCharacteristic = null;
+    this.batteryControlCharacteristic = null;
     this.presetSaveCharacteristic = null;
     this.presetLoadCharacteristic = null;
     this.presetListCharacteristic = null;

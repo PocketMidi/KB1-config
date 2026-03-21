@@ -258,10 +258,12 @@ import { useBatteryStatus } from '../composables/useBatteryStatus';
 
 interface Props {
   isOpen: boolean;
+  isConnected: boolean;
 }
 
 interface Emits {
   (e: 'close'): void;
+  (e: 'needs-connect'): void;
 }
 
 const props = defineProps<Props>();
@@ -305,6 +307,7 @@ function handleOverlayClick() {
 }
 
 async function handleSync() {
+  if (!props.isConnected) { emit('needs-connect'); return; }
   if (isSyncing.value) return;
   
   isSyncing.value = true;
@@ -318,10 +321,12 @@ async function handleSync() {
 }
 
 function handleRecalibrate() {
-  // Show info dialog for initial calibration (no reset needed)
+  // Show info dialog for initial calibration (no reset needed) — works without connection
   if (estimatedPercentage.value === 254) {
     showCalibrationInfo.value = true;
   } else {
+    // Recalibrate requires device connection (destructive write)
+    if (!props.isConnected) { emit('needs-connect'); return; }
     // Show confirmation dialog for recalibration (destructive)
     showConfirmation.value = true;
   }

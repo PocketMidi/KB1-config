@@ -315,7 +315,9 @@ function handleTabClick(tabId: Tab) {
     <!-- Battery Modal -->
     <BatteryModal 
       :is-open="showBatteryModal"
+      :is-connected="isConnected"
       @close="closeBatteryModal"
+      @needs-connect="closeBatteryModal(); showContextualModal = true;"
     />
     
     <!-- Unified Responsive Layout -->

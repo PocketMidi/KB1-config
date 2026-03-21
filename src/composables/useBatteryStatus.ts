@@ -77,7 +77,7 @@ async function syncBatteryStatus() {
  * Estimates drain based on time elapsed since last sync
  */
 function getEstimatedPercentage(): number {
-  if (!batteryStatus.value) return 100;
+  if (!batteryStatus.value) return 254;
   
   const syncedPercentage = batteryStatus.value.percentage;
   

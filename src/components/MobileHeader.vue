@@ -23,7 +23,9 @@
     <!-- Battery Modal -->
     <BatteryModal 
       :is-open="showBatteryModal"
+      :is-connected="isConnected"
       @close="closeBatteryModal"
+      @needs-connect="closeBatteryModal(); $emit('connect');"
     />
   </header>
 </template>

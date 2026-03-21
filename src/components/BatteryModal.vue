@@ -151,7 +151,7 @@
             >
               {{ isRecalibrating ? 'Resetting...' : 'Recalibrate' }}
             </button>
-            <div class="action-description">5.5hr charge required</div>
+            <div class="action-description">Prior tracking cleared</div>
           </div>
         </div>
         
@@ -174,9 +174,9 @@
         <!-- Charging Instructions (always visible, dimmed when calibrated) -->
         <div class="charging-section" :class="{ dimmed: estimatedPercentage !== 254 }">
           <ol class="charging-steps">
-            <li><strong>Power on <em>KB1</em> from battery first</strong></li>
-            <li>Connect to computer USB port — auto-detects charging</li>
-            <li>Initial calibration requires 5.5hr continuous charge</li>
+            <li><strong>Switch ON battery power</strong></li>
+            <li>Connect to computer USB — charging auto-detected</li>
+            <li>Initial calibration requires 5.5hr charge</li>
           </ol>
         </div>
       </div>

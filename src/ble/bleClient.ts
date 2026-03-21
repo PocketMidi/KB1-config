@@ -992,7 +992,8 @@ export class BLEClient {
       return {
         percentage: 85,
         remainingSeconds: 7200, // 2 hours
-        usbConnected: false
+        usbConnected: false,
+        calibrationTimestamp: 0
       };
     }
     

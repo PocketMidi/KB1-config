@@ -367,7 +367,7 @@ function dismissSpeakerHelp() {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 20px 24px;
+  padding: 15px 24px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
@@ -418,7 +418,7 @@ function dismissSpeakerHelp() {
 }
 
 .modal-content {
-  padding: 24px;
+  padding: 18px 24px;
 }
 
 /* Battery display moved to header */
@@ -426,9 +426,9 @@ function dismissSpeakerHelp() {
 .battery-details {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  margin-bottom: 20px;
-  padding: 16px;
+  gap: 8px;
+  margin-bottom: 15px;
+  padding: 12px;
   background-color: rgba(0, 0, 0, 0.3);
   border-radius: 8px;
 }
@@ -453,16 +453,16 @@ function dismissSpeakerHelp() {
 
 /* Speaker Compensation Section */
 .speaker-compensation-section {
-  margin-top: 16px;
-  margin-bottom: 20px;
-  padding: 16px;
+  margin-top: 12px;
+  margin-bottom: 15px;
+  padding: 12px;
   background-color: rgba(0, 0, 0, 0.3);
   border-radius: 8px;
 }
 
 .speaker-meter {
   width: 100%;
-  margin-bottom: 12px;
+  margin-bottom: 8px;
 }
 
 .speaker-bar-container {
@@ -664,14 +664,14 @@ function dismissSpeakerHelp() {
 .modal-actions {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  margin-bottom: 16px;
+  gap: 8px;
+  margin-bottom: 12px;
 }
 
 .action-row {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 9px;
 }
 
 .action-button {
@@ -789,9 +789,9 @@ function dismissSpeakerHelp() {
 .percentage-toggle-section {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 16px;
-  margin-bottom: 12px;
+  gap: 9px;
+  padding: 12px;
+  margin-bottom: 8px;
   background-color: rgba(255, 255, 255, 0.03);
   border-radius: 8px;
 }

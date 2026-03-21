@@ -384,7 +384,7 @@ function handleTabClick(tabId: Tab) {
           <BatteryMeter 
             v-if="batteryMonitoringEnabled"
             class="battery-meter-nav"
-            @click="openBatteryModal"
+            @click="isConnected ? openBatteryModal() : (showContextualModal = true)"
           />
         </div>
       </nav>

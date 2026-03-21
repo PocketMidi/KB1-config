@@ -439,15 +439,16 @@ export function useDeviceState() {
   const isBluetoothAvailable = computed(() => {
     if (devMode.value) return true;
     
-    // Check if Web Bluetooth API exists
-    if (!bleClient.isBluetoothAvailable()) return false;
-    
     const userAgent = navigator.userAgent;
     
-    // iOS: If Web Bluetooth API exists, it's V Browser or similar BLE-capable browser — allow it
+    // iOS: Checking navigator.bluetooth triggers native "Bluetooth Required" prompt on V Browser
+    // Instead, detect iOS and assume BLE-capable (only V Browser supports Web Bluetooth on iOS)
     const isIOS = /iPad|iPhone|iPod/.test(userAgent) || 
                   (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
     if (isIOS) return true;
+    
+    // Check if Web Bluetooth API exists (safe on non-iOS platforms)
+    if (!bleClient.isBluetoothAvailable()) return false;
     
     // Firefox: Has experimental BLE support but not functional - block it
     const isFirefox = /Firefox/i.test(userAgent);

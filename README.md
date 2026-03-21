@@ -242,6 +242,12 @@ The slider interface now supports two distinct control modes, selectable via the
 
 For the best experience on iOS devices, we recommend using **[vBrowser](https://vbrowser.co)** to access the KB1 web configurator. vBrowser provides reliable Web Bluetooth support and accurate touch handling for all 12 performance sliders.
 
+**V Browser Setup (iOS):**
+1. Download **V Browser** from the App Store
+2. Go to **iOS Settings > V Browser > Bluetooth** and toggle **ON**
+3. Open V Browser and navigate to the KB1 Configurator URL
+4. If you see a "Bluetooth Required" prompt, tap OK — this is V Browser requesting iOS permission
+
 ## Configuration Flexibility
 
 The KB1 system offers **~10²⁷ total unique configurations** (approximately 1 octillion possible combinations). When focusing on the most commonly adjusted parameters—CC numbers, min/max values, function modes, and interpolation curves—there are still **~10¹⁰ to 10¹² practical combinations** (10-100 billion distinct configurations).

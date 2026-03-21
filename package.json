@@ -1,11 +1,7 @@
 {
   "name": "kb1-config",
   "private": false,
-<<<<<<< HEAD
   "version": "1.4.0",
-=======
-  "version": "1.2.6",
->>>>>>> parent of b5fe5f8 (v1.3.0)
   "description": "Web Bluetooth MIDI editor for the PocketMidi KB1 device",
   "type": "module",
   "scripts": {

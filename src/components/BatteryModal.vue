@@ -98,21 +98,23 @@
         <!-- Speaker Compensation -->
         <div class="speaker-compensation-section">
           <div class="speaker-meter">
-            <div class="speaker-bar-container">
-              <div class="speaker-bar-base"></div>
+            <div 
+              class="speaker-bar-container"
+              @mousedown="handleBarMouseDown"
+              @touchstart="handleBarTouchStart"
+            >
+              <!-- 4-segment background: green | yellow | orange | red -->
+              <div class="speaker-segments">
+                <div class="segment segment-green"></div>
+                <div class="segment segment-yellow"></div>
+                <div class="segment segment-orange"></div>
+                <div class="segment segment-red"></div>
+              </div>
+              <!-- Active overlay (darkens unused portion) -->
               <div 
-                class="speaker-bar-active"
-                :style="{ width: `${10 + (speakerMinutes / 120) * 90}%` }"
+                class="speaker-bar-inactive"
+                :style="{ left: `${Math.max(2, (speakerMinutes / 240) * 100)}%`, width: `${100 - Math.max(2, (speakerMinutes / 240) * 100)}%` }"
               ></div>
-              <input 
-                type="range" 
-                min="0" 
-                max="120" 
-                step="5"
-                :value="speakerMinutes"
-                @input="handleSpeakerChange"
-                class="speaker-slider-hidden"
-              />
             </div>
           </div>
           
@@ -125,7 +127,17 @@
                 title="What is this?"
               >?</button>
             </div>
-            <span class="speaker-time-value">{{ formattedSpeakerTime }}</span>
+            <div class="duration-control-wrapper">
+              <ValueControl
+                v-model="speakerMinutesModel"
+                :min="0"
+                :max="240"
+                :step="5"
+                :small-step="5"
+                :large-step="15"
+              />
+              <span class="unit-label">min</span>
+            </div>
           </div>
         </div>
 
@@ -176,7 +188,7 @@
           <ol class="charging-steps">
             <li><strong>Switch ON battery power</strong></li>
             <li>Connect to computer USB — charging auto-detected</li>
-            <li>Initial calibration requires 5hr charge</li>
+            <li>Initial calibration requires 5 hour charge</li>
           </ol>
         </div>
       </div>
@@ -216,7 +228,7 @@
               Since speaker usage is analog and can't be automatically tracked, use this slider to manually report how long you've used the speakers. This helps provide a more accurate battery estimate.
             </p>
             <p>
-              The KB1's built-in speakers draw approximately 135mA additional current (on top of the normal 95mA active drain).
+              The color bar reflects real battery behavior: <strong style="color: #22c55e">green</strong> and <strong style="color: #eab308">yellow</strong> zones are full volume. <strong style="color: #f97316">Orange</strong> is where volume starts tapering. <strong style="color: #ef4444">Red</strong> means low volume but MIDI still works. A full battery lasts about 3.5 hours with speakers.
             </p>
           </div>
           <div class="help-modal-footer">
@@ -231,6 +243,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import { useBatteryStatus } from '../composables/useBatteryStatus';
+import ValueControl from './ValueControl.vue';
 
 interface Props {
   isOpen: boolean;
@@ -252,7 +265,6 @@ const {
   timeSinceSync,
   formattedRemainingTime,
   speakerMinutes,
-  formattedSpeakerTime,
   syncBatteryStatus,
   resetBattery,
   toggleShowPercentage,
@@ -325,9 +337,44 @@ function handleTogglePercentage() {
   toggleShowPercentage();
 }
 
-function handleSpeakerChange(event: Event) {
-  const target = event.target as HTMLInputElement;
-  setSpeakerMinutes(parseInt(target.value, 10));
+const speakerMinutesModel = computed({
+  get: () => speakerMinutes.value,
+  set: (val: number) => setSpeakerMinutes(val),
+});
+
+function updateSpeakerFromPosition(clientX: number, rect: DOMRect) {
+  const percentage = Math.max(0, Math.min(100, ((clientX - rect.left) / rect.width) * 100));
+  const minutes = Math.round((percentage / 100) * 240 / 5) * 5; // snap to step 5
+  setSpeakerMinutes(minutes);
+}
+
+function handleBarMouseDown(event: MouseEvent) {
+  const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
+  updateSpeakerFromPosition(event.clientX, rect);
+
+  const onMouseMove = (e: MouseEvent) => updateSpeakerFromPosition(e.clientX, rect);
+  const onMouseUp = () => {
+    window.removeEventListener('mousemove', onMouseMove);
+    window.removeEventListener('mouseup', onMouseUp);
+  };
+  window.addEventListener('mousemove', onMouseMove);
+  window.addEventListener('mouseup', onMouseUp);
+}
+
+function handleBarTouchStart(event: TouchEvent) {
+  const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
+  if (event.touches[0]) updateSpeakerFromPosition(event.touches[0].clientX, rect);
+
+  const onTouchMove = (e: TouchEvent) => {
+    e.preventDefault();
+    if (e.touches[0]) updateSpeakerFromPosition(e.touches[0].clientX, rect);
+  };
+  const onTouchEnd = () => {
+    window.removeEventListener('touchmove', onTouchMove);
+    window.removeEventListener('touchend', onTouchEnd);
+  };
+  window.addEventListener('touchmove', onTouchMove, { passive: false });
+  window.addEventListener('touchend', onTouchEnd);
 }
 
 function dismissSpeakerHelp() {
@@ -475,27 +522,41 @@ function dismissSpeakerHelp() {
   user-select: none;
 }
 
-.speaker-bar-base {
-  position: absolute;
-  top: 0;
-  left: 0;
+.speaker-segments {
+  display: flex;
   width: 100%;
   height: 9px;
-  background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%);
-  opacity: 0.4;
   border-radius: 4.5px;
+  overflow: hidden;
 }
 
-.speaker-bar-active {
+.segment {
+  height: 100%;
+}
+
+/* 4 segments: proportional to tier spans (90/70/50/30 min) */
+.segment-green  { width: 37.5%; background: #22c55e; }
+.segment-yellow { width: 29%; background: #eab308; }
+.segment-orange { width: 21%; background: #f97316; }
+.segment-red    { width: 12.5%; background: #ef4444; }
+
+.speaker-bar-inactive {
   position: absolute;
   top: 0;
-  left: 0;
   height: 9px;
-  background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%);
-  opacity: 1;
+  background: rgba(0, 0, 0, 0.7);
   z-index: 1;
-  border-radius: 4.5px;
-  transition: width 0.15s ease-out;
+  transition: left 0.15s ease-out, width 0.15s ease-out;
+}
+
+.speaker-bar-inactive::before {
+  content: '';
+  position: absolute;
+  right: 100%;
+  top: 0;
+  width: 5px;
+  height: 9px;
+  background: radial-gradient(circle at 0% 50%, transparent 4px, rgba(0, 0, 0, 0.7) 4.5px);
 }
 
 .speaker-controls {
@@ -541,22 +602,20 @@ function dismissSpeakerHelp() {
   color: #fff;
 }
 
-.speaker-slider-hidden {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  opacity: 0;
-  cursor: pointer;
-  z-index: 2;
+.duration-control-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  justify-content: flex-end;
 }
 
-.speaker-time-value {
-  color: #fff;
-  font-weight: 600;
-  font-family: 'Roboto Mono', monospace;
+.unit-label {
   font-size: 0.8125rem;
+  color: #EAEAEA;
+  font-family: 'Roboto Mono';
+  font-weight: 400;
+  cursor: default;
+  user-select: none;
 }
 
 /* Help Modal Styles (matching app-wide pattern) */

@@ -25,7 +25,18 @@ const lastAlertPercentage = ref<number>(100);
 // Constants
 const ACTIVE_DRAIN_MA = 95; // Active mode current draw
 const BATTERY_CAPACITY_MAH = 420;
-const SPEAKER_DRAIN_MA = 135; // Speaker amp additional drain (typical volume average)
+
+// Speaker compensation: flat 80mA additional draw from PAM8406 amp
+// Observed: ~80mA amp draw (sleep test: 99% lasting 4hr+ with 2mA system sleep)
+// During active use, this stacks with 95mA base drain = ~175mA total
+const SPEAKER_DRAIN_MA = 80;
+
+/**
+ * Calculate speaker drain in mAh (flat rate)
+ */
+function getSpeakerDrainMah(minutes: number): number {
+  return (minutes / 60) * SPEAKER_DRAIN_MA;
+}
 
 // Speaker compensation tracking (app-only, localStorage)
 const SPEAKER_TIME_KEY = 'kb1-battery-speaker-minutes';
@@ -84,20 +95,17 @@ function getEstimatedPercentage(): number {
   // Uncalibrated state
   if (syncedPercentage === 254) return 254;
   
-  // Already at 100% or no time elapsed
-  if (syncedPercentage === 100 || !lastSyncTime.value) {
-    return syncedPercentage;
+  // Calculate estimated drain since last sync
+  let drainedPercentage = 0;
+  if (lastSyncTime.value && syncedPercentage !== 100) {
+    const elapsedMs = Date.now() - lastSyncTime.value;
+    const elapsedHours = elapsedMs / 3600000;
+    const drainedMah = elapsedHours * ACTIVE_DRAIN_MA;
+    drainedPercentage = (drainedMah / BATTERY_CAPACITY_MAH) * 100;
   }
   
-  // Calculate estimated drain since last sync
-  const elapsedMs = Date.now() - lastSyncTime.value;
-  const elapsedHours = elapsedMs / 3600000;
-  const drainedMah = elapsedHours * ACTIVE_DRAIN_MA;
-  const drainedPercentage = (drainedMah / BATTERY_CAPACITY_MAH) * 100;
-  
-  // Add speaker compensation drain (user-reported usage time)
-  const speakerHours = speakerMinutes.value / 60;
-  const speakerDrainMah = speakerHours * SPEAKER_DRAIN_MA;
+  // Always apply speaker compensation drain (tiered non-linear model)
+  const speakerDrainMah = getSpeakerDrainMah(speakerMinutes.value);
   const speakerDrainPercentage = (speakerDrainMah / BATTERY_CAPACITY_MAH) * 100;
   
   // Subtract estimated drain + speaker drain (but never go below 0)
@@ -134,10 +142,7 @@ function formatRemainingTime(seconds: number): string {
   const hours = Math.floor(seconds / 3600);
   const minutes = Math.floor((seconds % 3600) / 60);
   
-  if (hours > 0) {
-    return `${hours}h ${minutes}m`;
-  }
-  return `${minutes}m`;
+  return `${hours}h ${minutes.toString().padStart(2, '0')}m`;
 }
 
 /**
@@ -249,19 +254,19 @@ function getTimeSinceSync(): string {
  * Set speaker usage time (minutes) - persists to localStorage
  */
 function setSpeakerMinutes(minutes: number) {
-  // Clamp to 0-120 (2 hours max)
-  const clamped = Math.max(0, Math.min(120, minutes));
+  // Clamp to 0-240 (4 hours max)
+  const clamped = Math.max(0, Math.min(240, minutes));
   speakerMinutes.value = clamped;
   localStorage.setItem(SPEAKER_TIME_KEY, clamped.toString());
 }
 
 /**
- * Format speaker minutes as H:MM
+ * Format speaker minutes as Xh Ym (matching runtime format)
  */
 function formatSpeakerTime(): string {
   const hours = Math.floor(speakerMinutes.value / 60);
   const mins = speakerMinutes.value % 60;
-  return `${hours}:${mins.toString().padStart(2, '0')}`;
+  return `${hours}h ${mins.toString().padStart(2, '0')}m`;
 }
 
 export function useBatteryStatus() {

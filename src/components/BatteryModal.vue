@@ -176,7 +176,7 @@
           <ol class="charging-steps">
             <li><strong>Switch ON battery power</strong></li>
             <li>Connect to computer USB — charging auto-detected</li>
-            <li>Initial calibration requires 5.5hr charge</li>
+            <li>Initial calibration requires 5hr charge</li>
           </ol>
         </div>
       </div>
@@ -187,7 +187,7 @@
           <template v-if="!isRecalibrating">
             <h3>Reset Battery Calibration?</h3>
             <p>
-              Clears all tracking data. Requires new 5.5 hour calibration charge.
+              Clears all tracking data. Requires new 5 hour calibration charge.
             </p>
             <div class="confirmation-actions">
               <button class="confirm-button cancel-btn" @click="cancelRecalibrate">Cancel</button>

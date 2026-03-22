@@ -58,8 +58,8 @@ Want to explore the interface without hardware? Enable **Evaluation Mode** to in
 4. Battery meter will automatically show accurate percentage
 
 **⚠️ CRITICAL - All-or-Nothing Calibration:**
-- The 5.5 hour charge **MUST be continuous** in ONE session
-- If you unplug before 5.5 hours, the timer **resets to ZERO**
+- The 5 hour charge **MUST be continuous** in ONE session
+- If you unplug before 5 hours, the timer **resets to ZERO**
 - Partial charges **do NOT accumulate** (3hrs + 2.5hrs ≠ calibrated)
 - This is **intentional** to ensure accurate baseline
 - **Only needs to happen ONCE** - future USB connections just pause discharge

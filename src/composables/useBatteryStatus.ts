@@ -26,10 +26,10 @@ const lastAlertPercentage = ref<number>(100);
 const ACTIVE_DRAIN_MA = 95; // Active mode current draw
 const BATTERY_CAPACITY_MAH = 420;
 
-// Speaker compensation: flat 80mA additional draw from PAM8406 amp
-// Observed: ~80mA amp draw (sleep test: 99% lasting 4hr+ with 2mA system sleep)
-// During active use, this stacks with 95mA base drain = ~175mA total
-const SPEAKER_DRAIN_MA = 80;
+// Speaker compensation: flat 50mA additional draw from PAM8406 amp
+// Observed: ~48mA amp draw (sleep test: 99% → 8hr 15min with 2mA system sleep)
+// During active use, this stacks with 95mA base drain = ~145mA total
+const SPEAKER_DRAIN_MA = 50;
 
 /**
  * Calculate speaker drain in mAh (flat rate)
@@ -254,8 +254,8 @@ function getTimeSinceSync(): string {
  * Set speaker usage time (minutes) - persists to localStorage
  */
 function setSpeakerMinutes(minutes: number) {
-  // Clamp to 0-240 (4 hours max)
-  const clamped = Math.max(0, Math.min(240, minutes));
+  // Clamp to 0-420 (7 hours max)
+  const clamped = Math.max(0, Math.min(420, minutes));
   speakerMinutes.value = clamped;
   localStorage.setItem(SPEAKER_TIME_KEY, clamped.toString());
 }

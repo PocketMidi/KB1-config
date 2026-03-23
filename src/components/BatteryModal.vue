@@ -113,7 +113,7 @@
               <!-- Active overlay (darkens unused portion) -->
               <div 
                 class="speaker-bar-inactive"
-                :style="{ left: `${Math.max(2, (speakerMinutes / 240) * 100)}%`, width: `${100 - Math.max(2, (speakerMinutes / 240) * 100)}%` }"
+                :style="{ left: `${Math.max(2, (speakerMinutes / 420) * 100)}%`, width: `${100 - Math.max(2, (speakerMinutes / 420) * 100)}%` }"
               ></div>
             </div>
           </div>
@@ -131,7 +131,7 @@
               <ValueControl
                 v-model="speakerMinutesModel"
                 :min="0"
-                :max="240"
+                :max="420"
                 :step="5"
                 :small-step="5"
                 :large-step="15"
@@ -344,7 +344,7 @@ const speakerMinutesModel = computed({
 
 function updateSpeakerFromPosition(clientX: number, rect: DOMRect) {
   const percentage = Math.max(0, Math.min(100, ((clientX - rect.left) / rect.width) * 100));
-  const minutes = Math.round((percentage / 100) * 240 / 5) * 5; // snap to step 5
+  const minutes = Math.round((percentage / 100) * 420 / 5) * 5; // snap to step 5
   setSpeakerMinutes(minutes);
 }
 
@@ -534,11 +534,11 @@ function dismissSpeakerHelp() {
   height: 100%;
 }
 
-/* 4 segments: proportional to tier spans (90/70/50/30 min) */
-.segment-green  { width: 37.5%; background: #22c55e; }
-.segment-yellow { width: 29%; background: #eab308; }
-.segment-orange { width: 21%; background: #f97316; }
-.segment-red    { width: 12.5%; background: #ef4444; }
+/* 4 segments: Green 0-2hr / Yellow 2-4hr / Orange 4-6hr / Red 6-7hr */
+.segment-green  { width: 28.6%; background: #22c55e; }
+.segment-yellow { width: 28.6%; background: #eab308; }
+.segment-orange { width: 28.5%; background: #f97316; }
+.segment-red    { width: 14.3%; background: #ef4444; }
 
 .speaker-bar-inactive {
   position: absolute;

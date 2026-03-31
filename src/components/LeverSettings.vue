@@ -713,21 +713,6 @@ function midiToPattern(midiValue: number): number {
   return Math.round((midiValue / 127) * 5) + 1
 }
 
-// Special conversions (deprecated - Strum Speed now uses standard bipolar)
-// Keeping these for legacy reference only - no longer used for CC 200
-
-// OLD Strum Speed conversion (CC 200 - now bipolar): Used to map 5-100% to 4-360ms
-// Replaced with standard bipolar -100 to +100 range
-function speedPercentToMidi(percent: number): number {
-  // Map 5-100% to MIDI 0-127 (normal order: higher MIDI = faster)
-  return Math.round(127 * (percent - 5) / 95)
-}
-
-function midiToSpeedPercent(midiValue: number): number {
-  // Map MIDI 0-127 to 5-100%
-  return Math.round(5 + (midiValue / 127) * 95)
-}
-
 // Special conversion for Swing (CC 202): UI 50-100% maps to firmware 0-100
 function swingPercentToMidi(percent: number): number {
   // Map 50-100% to MIDI 0-127

@@ -354,7 +354,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch, onMounted, onUnmounted, nextTick } from 'vue'
+import { computed, ref, watch, onMounted, onUnmounted } from 'vue'
 import { useHaptics } from '../composables/useHaptics'
 import NotePickerControl from './NotePickerControl.vue'
 import OptionWheelPicker from './OptionWheelPicker.vue'
@@ -702,11 +702,7 @@ function handleVoicingMouseDown() {
   isDraggingVoicing.value = true
 }
 
-function handleVoicingMouseUp() {
-  isDraggingVoicing.value = false
-}
-
-function handleVoicingMouseMove(event: MouseEvent, dotValue: number) {
+function handleVoicingMouseMove(_event: MouseEvent, dotValue: number) {
   if (isDraggingVoicing.value) {
     voicingValue.value = dotValue
   }
@@ -714,10 +710,6 @@ function handleVoicingMouseMove(event: MouseEvent, dotValue: number) {
 
 function handleVoicingTouchStart() {
   isDraggingVoicing.value = true
-}
-
-function handleVoicingTouchEnd() {
-  isDraggingVoicing.value = false
 }
 
 function handleVoicingTouchMove(event: TouchEvent, dotValue: number) {

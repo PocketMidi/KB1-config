@@ -493,7 +493,7 @@ const userMax = computed({
 })
 
 // Threshold range in firmware (based on typical capacitive touch sensor values)
-const THRESHOLD_MIN = 24000
+const THRESHOLD_MIN = 30000  // Raised from 24000 to prevent false triggers from humidity
 const THRESHOLD_MAX = 64000
 
 // User-facing Threshold (0-100 percentage)

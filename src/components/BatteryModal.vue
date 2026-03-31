@@ -243,6 +243,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import { useBatteryStatus } from '../composables/useBatteryStatus';
+import { useToast } from '../composables/useToast';
 import ValueControl from './ValueControl.vue';
 
 interface Props {
@@ -259,6 +260,7 @@ const props = defineProps<Props>();
 const emit = defineEmits<Emits>();
 
 const {
+  batteryStatus,
   batteryColor,
   estimatedPercentage,
   showPercentage,
@@ -270,6 +272,8 @@ const {
   toggleShowPercentage,
   setSpeakerMinutes,
 } = useBatteryStatus();
+
+const toast = useToast();
 
 const isSyncing = ref(false);
 const isRecalibrating = ref(false);
@@ -295,6 +299,12 @@ function handleOverlayClick() {
 async function handleSync() {
   if (!props.isConnected) { emit('needs-connect'); return; }
   if (isSyncing.value) return;
+  
+  // Check if device is on USB power
+  if (batteryStatus.value?.usbConnected) {
+    toast.warning('Switch to battery power to sync battery status');
+    return;
+  }
   
   isSyncing.value = true;
   try {

@@ -189,14 +189,14 @@ onBeforeUnmount(() => {
 .note-picker-control {
   display: flex;
   align-items: center;
-  gap: 0.15rem;
+  gap: 0.1rem;
   width: auto;
-  min-width: 120px;
+  min-width: 110px;
 }
 
 .stepper-btn {
-  width: 24px;
-  height: 24px;
+  width: 22px;
+  height: 22px;
   padding: 0;
   background: transparent;
   border: none;
@@ -220,13 +220,14 @@ onBeforeUnmount(() => {
 }
 
 .note-display {
-  width: 70px;
+  min-width: 50px;
+  width: auto;
   text-align: center;
   font-family: 'Roboto Mono';
   font-size: 0.8125rem;
   color: #EAEAEA;
   font-weight: 400;
-  padding: 1px 0.5rem;
+  padding: 1px 0.25rem;
   cursor: ew-resize;
   user-select: none;
   transition: background 0.2s ease, opacity 0.2s, color 0.2s;

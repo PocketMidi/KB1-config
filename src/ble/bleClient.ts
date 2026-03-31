@@ -449,7 +449,7 @@ export class BLEClient {
 
   /**
    * Parse chord data from DataView (little-endian int32)
-   * Struct: playMode(4), chordType(4), strumEnabled(4), velocitySpread(4), strumSpeed(4), strumPattern(4), strumSwing(4) = 28 bytes
+   * Struct: playMode(4), chordType(4), strumEnabled(4), velocitySpread(4), strumSpeed(4), strumPattern(4), strumSwing(4), voicing(4) = 32 bytes
    */
   private parseChordData(data: DataView): ChordSettings {
     return {
@@ -460,6 +460,7 @@ export class BLEClient {
       strumSpeed: data.getInt32(16, true),
       strumPattern: data.getInt32(20, true),
       strumSwing: data.getInt32(24, true),
+      voicing: data.getInt32(28, true),
     };
   }
 
@@ -568,7 +569,7 @@ export class BLEClient {
     view.setInt32(4, settings.minCCValue, true);
     view.setInt32(8, settings.maxCCValue, true);
     view.setInt32(12, settings.functionMode, true);
-    view.setInt32(16, settings.threshold || 24000, true); // Default threshold if not set
+    view.setInt32(16, settings.threshold || 36800, true); // Default threshold (20%)
     view.setInt32(20, settings.offsetTime || 0, true); // Default offsetTime (FWD mode)
     return buffer;
   }
@@ -587,10 +588,10 @@ export class BLEClient {
 
   /**
    * Encode chord settings to binary format for writing to device
-   * Struct: playMode(4), chordType(4), strumEnabled(4), velocitySpread(4), strumSpeed(4), strumPattern(4), strumSwing(4) = 28 bytes
+   * Struct: playMode(4), chordType(4), strumEnabled(4), velocitySpread(4), strumSpeed(4), strumPattern(4), strumSwing(4), voicing(4) = 32 bytes
    */
   private encodeChordData(settings: ChordSettings): ArrayBuffer {
-    const buffer = new ArrayBuffer(28); // 7 int32 values = 28 bytes
+    const buffer = new ArrayBuffer(32); // 8 int32 values = 32 bytes
     const view = new DataView(buffer);
     view.setInt32(0, settings.playMode, true);
     view.setInt32(4, settings.chordType, true);
@@ -599,6 +600,7 @@ export class BLEClient {
     view.setInt32(16, settings.strumSpeed, true);
     view.setInt32(20, settings.strumPattern, true);
     view.setInt32(24, settings.strumSwing, true);
+    view.setInt32(28, settings.voicing, true);
     return buffer;
   }
 
@@ -1203,7 +1205,7 @@ export class BLEClient {
 
   /**
    * Update strum speed in real-time
-   * @param speed Strum speed in milliseconds (4-360)
+   * @param speed Strum speed in milliseconds (-360 to -4 = reverse, 4 to 360 = forward)
    */
   async updateStrumSpeed(speed: number): Promise<void> {
     if (!this.chordCharacteristic) {
@@ -1215,8 +1217,10 @@ export class BLEClient {
       const currentData = await this.chordCharacteristic.readValue();
       const currentSettings = this.parseChordData(currentData);
 
-      // Update only the strum speed
-      currentSettings.strumSpeed = Math.max(4, Math.min(360, Math.round(speed)));
+      // Update strum speed - preserve sign, clamp absolute value to 4-360
+      const sign = speed < 0 ? -1 : 1;
+      const absSpeed = Math.abs(speed);
+      currentSettings.strumSpeed = sign * Math.max(4, Math.min(360, Math.round(absSpeed)));
 
       // Write back to device
       const data = this.encodeChordData(currentSettings);

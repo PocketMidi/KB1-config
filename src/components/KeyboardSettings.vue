@@ -21,7 +21,23 @@
     </div>
 
     <!-- Keyboard Visualization -->
-    <div class="keyboard-visual" :class="{ 'chromatic-mode': isChromatic }">
+    <div ref="keyboardRef" class="keyboard-visual" :class="{ 'chromatic-mode': isChromatic }">
+      <!-- Octave meter bars (only in CHORD mode) - positioned from left -->
+      <div v-if="playMode === 'chord'" ref="octaveMeterRef" class="octave-meter" :style="{ left: meterLeftPosition, right: 'auto' }">
+        <button
+          v-for="n in 3"
+          :key="n"
+          class="meter-bar"
+          :class="{ active: voicingValue >= n }"
+          @click="voicingValue = n"
+          @mousedown="handleVoicingMouseDown"
+          @mouseenter="handleVoicingMouseMove($event, n)"
+          @touchstart="handleVoicingTouchStart"
+          @touchmove="handleVoicingTouchMove($event, n)"
+          :title="`${n}x octave range`"
+        ></button>
+      </div>
+      
       <!-- Top row: Sharps/Flats -->
       <div class="keyboard-row top-row">
         <div 
@@ -52,7 +68,8 @@
             active: isNoteActive(note.midi),
             'gap-after': note.gapAfter,
             'root-note': isRootNote(note.midi),
-            'chromatic-disabled': isChromatic
+            'chromatic-disabled': isChromatic,
+            'last-f-key': note.midi === 77
           }"
           @click="handleKeyClick(note.midi)"
           :title="`Set root note to ${note.name}`"
@@ -130,14 +147,39 @@
             <div class="velocity-indicator-right" :style="{ left: `${50 + visualSpread / 2}%` }"></div>
           </div>
           
-          <!-- Strum: Dynamic Spacing Dots -->
-          <div v-else class="strum-dynamic-dots">
+          <!-- Strum: Bidirectional Dots with Draggable Bar -->
+          <div v-else class="strum-bidirectional-dots">
+            <!-- Left side: Purple dots (reverse) -->
+            <div class="dots-side dots-left">
+              <div 
+                v-for="i in 7" 
+                :key="`left-${i}`" 
+                class="dot purple"
+                :class="{ active: isStrumReversed }"
+                :style="{ left: `${leftDotPositions[i-1]}%` }"
+              ></div>
+            </div>
+            
+            <!-- Draggable bar -->
             <div 
-              v-for="i in 13" 
-              :key="i" 
-              class="dot"
-              :style="{ left: `${(i - 1) * dotSpacing}%` }"
+              class="strum-bar"
+              :style="{ left: `${barPosition}%` }"
+              @mousedown="handleBarMouseDown"
+              @touchstart.prevent="handleBarTouchStart"
+              @dblclick="handleBarDoubleClick"
+              title="Drag to adjust speed | Double-click to reset to 80ms"
             ></div>
+            
+            <!-- Right side: Yellow dots (forward) -->
+            <div class="dots-side dots-right">
+              <div 
+                v-for="i in 7" 
+                :key="`right-${i}`" 
+                class="dot yellow"
+                :class="{ active: !isStrumReversed }"
+                :style="{ left: `${rightDotPositions[i-1]}%` }"
+              ></div>
+            </div>
           </div>
         </div>
       </div>
@@ -145,15 +187,32 @@
       <!-- Smart Slider Controls -->
       <div class="smart-slider-section">
         <div class="group">
-          <label>{{ smartSliderLabel }}</label>
+          <label>
+            {{ smartSliderLabel }}
+            <span v-if="isChordStyle" 
+                  class="info-icon" 
+                  @click.stop="showHelp('velocitySpread')">
+              ?
+            </span>
+          </label>
           <div class="duration-control-wrapper">
             <ValueControl
               v-model="smartSliderValue"
               :min="smartSliderMin"
               :max="smartSliderMax"
-              :step="1"
+              :step="5"
               :small-step="5"
               :large-step="10"
+              :reset-value="smartSliderReset"
+              :left-label="strumLeftLabel"
+              :right-label="strumRightLabel"
+              :read-only="!isChordStyle"
+              :on-left-click="isChordStyle ? undefined : handleStrumLeftClick"
+              :on-right-click="isChordStyle ? undefined : handleStrumRightClick"
+              :drag-mapper="isChordStyle ? undefined : strumSpeedDragMapper"
+              :display-formatter="isChordStyle ? undefined : strumDisplayFormatter"
+              :left-disabled="strumLeftDisabled"
+              :right-disabled="strumRightDisabled"
             />
             <span class="unit-label">{{ smartSliderUnit }}</span>
           </div>
@@ -162,81 +221,51 @@
 
       <!-- Strum Builder (only for STRUM mode) -->
       <div v-if="!isChordStyle" class="strum-builder-section">
-        <!-- Type/Root Note Selectors (for STRUM mode, shown before builder) -->
-        <div class="inputs">
-          <div class="group">
-            <label>ROOT NOTE</label>
-            <NotePickerControl
-              v-model.number="rootNoteValue"
-              :notes="rootNotes"
-              :disabled="isChromatic"
-            />
-          </div>
-          <div class="input-divider"></div>
-
-          <div class="group">
-            <label>CHORD TYPE</label>
-            <button 
-              ref="typeTriggerRef"
-              class="picker-trigger"
-              :class="{ 'picker-open': typePickerOpen }"
-              @click="typePickerOpen = true"
-            >
-              {{ selectedTypeLabel }}
-            </button>
-          </div>
-        </div>
-
-        <!-- Advanced Strum Collapsible Section (only in chord mode) -->
-        <div v-if="playMode === 'chord'" class="advanced-strum-section" :class="{ 'active': advancedStrumOpen }">
-          <button 
-            class="advanced-strum-header"
-            @click="advancedStrumOpen = !advancedStrumOpen"
-          >
-            <span class="mood-text" v-html="currentMood"></span>
-            <div class="right-controls">
-              <span class="adv-label">SHAPE</span>
-              <span class="icon">{{ advancedStrumOpen ? '−' : '+' }}</span>
-            </div>
-          </button>
-
-          <div v-if="advancedStrumOpen" class="advanced-strum-content">
-            <PatternBuilder 
-              v-model="strumIntervals"
-              v-model:mode="buildMode"
-              :chord-type="typeValue"
-              :swing-value="swingValue"
-            />
-
-            <!-- Swing Control -->
-            <div class="swing-control">
-              <label>SWING</label>
-              <div class="duration-control-wrapper">
-                <ValueControl
-                  v-model="swingValue"
-                  :min="50"
-                  :max="100"
-                  :step="5"
-                  :small-step="5"
-                  :large-step="10"
-                />
-                <span class="unit-label">%</span>
-              </div>
-            </div>
-          </div>
-        </div>
+        <!-- Strum builder content removed - SHAPE section moved below -->
       </div>
     </div>
 
-    <!-- Type/Root Note Selectors (for SCALE mode or CHORD style) -->
-    <div v-if="playMode === 'scale' || isChordStyle" class="inputs">
-      <div class="group">
-        <label>ROOT NOTE</label>
-        <NotePickerControl
-          v-model.number="rootNoteValue"
-          :notes="rootNotes"
-          :disabled="isChromatic"
-        />
+    <!-- Type/Root Note Selectors (for SCALE mode or CHORD/STRUM styles) -->
+    <div v-if="playMode === 'scale' || playMode === 'chord'" class="inputs">
+      <div class="group" :class="{ 'root-range-group': playMode === 'chord' }">
+        <label>
+          {{ playMode === 'chord' ? 'ROOT NOTE/RANGE' : 'ROOT NOTE' }}
+          <span v-if="playMode === 'chord'" 
+                class="info-icon" 
+                @click.stop="showHelp('voicing')">
+            ?
+          </span>
+          <span v-if="playMode === 'scale'" 
+                class="info-icon" 
+                @click.stop="showHelp('rootNote')">
+            ?
+          </span>
+        </label>
+        <div class="root-range-row">
+          <NotePickerControl
+            v-model.number="rootNoteValue"
+            :notes="rootNotes"
+            :disabled="isChromatic"
+          />
+          
+          <!-- Voicing dots control (for both CHORD and STRUM modes) -->
+          <div v-if="playMode === 'chord'" class="voicing-dots">
+            <button
+              v-for="n in 3"
+              :key="n"
+              class="dot-btn"
+              :class="{ active: voicingValue >= n }"
+              @click="voicingValue = n"
+              @mousedown="handleVoicingMouseDown"
+              @mouseenter="hoveredDot = n; handleVoicingMouseMove($event, n)"
+              @mouseleave="hoveredDot = 0"
+              @touchstart="handleVoicingTouchStart"
+              @touchmove="handleVoicingTouchMove($event, n)"
+            >
+              <span class="dot" :class="{ hovered: hoveredDot === n }"></span>
+            </button>
+          </div>
+        </div>
       </div>
       <div class="input-divider"></div>
 
@@ -252,9 +281,49 @@
         </button>
       </div>
 
-      <!-- Static Mood Description Bar (for all modes) -->
-      <div class="static-mood-bar" v-if="currentMood">
+      <!-- Static Mood Description Bar (for CHORD mode only) -->
+      <div class="static-mood-bar" v-if="isChordStyle && currentMood">
         <span class="mood-text" v-html="currentMood"></span>
+      </div>
+    </div>
+
+    <!-- Advanced Strum Collapsible Section (SHAPE - for STRUM mode) -->
+    <div v-if="playMode === 'chord' && !isChordStyle" class="advanced-strum-section" :class="{ 'active': advancedStrumOpen }">
+      <button 
+        class="advanced-strum-header"
+        @click="advancedStrumOpen = !advancedStrumOpen"
+      >
+        <span class="mood-text" v-html="currentMood"></span>
+        <div class="right-controls">
+          <span class="adv-label">SHAPE</span>
+          <span class="icon">{{ advancedStrumOpen ? '−' : '+' }}</span>
+        </div>
+      </button>
+
+      <div v-if="advancedStrumOpen" class="advanced-strum-content">
+        <PatternBuilder 
+          v-model="strumIntervals"
+          v-model:mode="buildMode"
+          :chord-type="typeValue"
+          :swing-value="swingValue"
+          :reverse="model.chord.strumSpeed < 0"
+        />
+
+        <!-- Swing Control -->
+        <div class="swing-control">
+          <label>SWING</label>
+          <div class="duration-control-wrapper">
+            <ValueControl
+              v-model="swingValue"
+              :min="50"
+              :max="100"
+              :step="5"
+              :small-step="5"
+              :large-step="10"
+            />
+            <span class="unit-label">%</span>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -265,11 +334,27 @@
       :options="typeOptions"
       :trigger-el="typeTriggerRef"
     />
+
+    <!-- Help Modal -->
+    <div v-if="showHelpModal" class="help-modal-overlay" @click="dismissHelp">
+      <div class="help-modal" @click.stop>
+        <div class="help-modal-header">
+          <h3>{{ helpContent.title }}</h3>
+          <button class="close-btn" @click="dismissHelp">×</button>
+        </div>
+        <div class="help-modal-body">
+          <p v-html="helpContent.description"></p>
+        </div>
+        <div class="help-modal-footer">
+          <button class="btn-primary" @click="dismissHelp">Got it</button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch, onMounted, onUnmounted } from 'vue'
+import { computed, ref, watch, onMounted, onUnmounted, nextTick } from 'vue'
 import { useHaptics } from '../composables/useHaptics'
 import NotePickerControl from './NotePickerControl.vue'
 import OptionWheelPicker from './OptionWheelPicker.vue'
@@ -289,6 +374,7 @@ type ChordModel = {
   strumSpeed: number
   strumPattern: number  // Kept for backward compatibility
   strumSwing: number
+  voicing: number       // 1-3 (octave range: 1x, 2x, 3x)
   strumIntervals?: number[]  // Array of semitone intervals
   buildMode?: string    // 'up', 'down', 'updown', 'custom', etc.
 }
@@ -335,6 +421,41 @@ function selectMode(mode: 'scale' | 'chord') {
 const typePickerOpen = ref(false)
 const typeTriggerRef = ref<HTMLElement | null>(null)
 
+// Voicing dots hover state
+const hoveredDot = ref(0)
+
+// Octave meter positioning
+const keyboardRef = ref<HTMLElement | null>(null)
+const meterLeftPosition = ref('auto')
+
+// Help modal system
+const showHelpModal = ref(false)
+const helpContent = ref({ title: '', description: '' })
+
+const helpTexts = {
+  rootNote: {
+    title: 'Root Note',
+    description: 'The starting note of the scale. All other scale degrees are built from this fundamental pitch.'
+  },
+  voicing: {
+    title: 'Root Note and Range',
+    description: '<strong>Root Note:</strong> The starting note of the chord. All other chord notes are built from this fundamental pitch.<br><br><strong>Octave Range:</strong> Stack chord voicing across 1-3 octaves for fuller sound.'
+  },
+  velocitySpread: {
+    title: 'Velocity Spread',
+    description: 'Velocity envelope across chord notes. <strong>Lower values</strong> = tight envelope (punchy attack/decay). <strong>Higher values</strong> = gentle envelope (smooth blend).'
+  }
+}
+
+function showHelp(type: keyof typeof helpTexts) {
+  helpContent.value = helpTexts[type]
+  showHelpModal.value = true
+}
+
+function dismissHelp() {
+  showHelpModal.value = false
+}
+
 // Advanced strum section state
 const advancedStrumOpen = ref(false)
 const userClosedPanel = ref(false) // Track if user manually closed the panel
@@ -349,6 +470,33 @@ const HINT_STORAGE_KEY = 'kb1-inactive-keys-hint-dismissed'
 
 // Check localStorage on mount
 const hintDismissedPermanently = ref(localStorage.getItem(HINT_STORAGE_KEY) === 'true')
+
+// Update octave meter position to align with last F key
+function updateMeterPosition() {
+  if (!keyboardRef.value || playMode.value !== 'chord') {
+    return
+  }
+  
+  // Use setTimeout to ensure layout is fully settled
+  setTimeout(() => {
+    const keyboard = keyboardRef.value
+    if (!keyboard) return
+    
+    // Find last F key by CSS class
+    const fKey = keyboard.querySelector('.last-f-key') as HTMLElement
+    if (!fKey) return
+    
+    const keyboardRect = keyboard.getBoundingClientRect()
+    const fKeyRect = fKey.getBoundingClientRect()
+    
+    // Calculate left position: distance from left edge of keyboard to center of F key
+    const distanceFromLeft = fKeyRect.left - keyboardRect.left + (fKeyRect.width / 2)
+    // Offset by half the meter width (24px / 2 = 12px) to center meter on key
+    const finalPosition = distanceFromLeft - 12
+    
+    meterLeftPosition.value = `${Math.max(0, finalPosition)}px`
+  }, 100)
+}
 
 // Listen for storage events to react when hints are restored via RESTORE button
 const handleStorageChange = () => {
@@ -367,6 +515,26 @@ onMounted(() => {
     window.removeEventListener('storage', handleStorageChange)
     clearInterval(interval)
   })
+})
+
+// Initialize meter position and listen for resize
+onMounted(() => {
+  updateMeterPosition()
+  window.addEventListener('resize', updateMeterPosition)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', updateMeterPosition)
+})
+
+// Watch for mode changes and update position
+watch(playMode, () => {
+  updateMeterPosition()
+})
+
+// Watch for voicing changes (might affect layout)
+watch(() => model.value.chord.voicing, () => {
+  updateMeterPosition()
 })
 
 // Watch advanced strum panel state to control pattern mode
@@ -518,6 +686,65 @@ const rootNoteValue = computed({
   }
 })
 
+const voicingValue = computed({
+  get: () => model.value.chord.voicing,
+  set: (v: number) => {
+    const updated = { ...model.value }
+    updated.chord = { ...updated.chord, voicing: v }
+    emit('update:modelValue', updated)
+  }
+})
+
+// Voicing drag state
+const isDraggingVoicing = ref(false)
+
+function handleVoicingMouseDown() {
+  isDraggingVoicing.value = true
+}
+
+function handleVoicingMouseUp() {
+  isDraggingVoicing.value = false
+}
+
+function handleVoicingMouseMove(event: MouseEvent, dotValue: number) {
+  if (isDraggingVoicing.value) {
+    voicingValue.value = dotValue
+  }
+}
+
+function handleVoicingTouchStart() {
+  isDraggingVoicing.value = true
+}
+
+function handleVoicingTouchEnd() {
+  isDraggingVoicing.value = false
+}
+
+function handleVoicingTouchMove(event: TouchEvent, dotValue: number) {
+  if (isDraggingVoicing.value) {
+    event.preventDefault()
+    voicingValue.value = dotValue
+  }
+}
+
+// Add global listeners for mouse/touch up
+onMounted(() => {
+  const handleGlobalMouseUp = () => {
+    isDraggingVoicing.value = false
+  }
+  const handleGlobalTouchEnd = () => {
+    isDraggingVoicing.value = false
+  }
+  
+  window.addEventListener('mouseup', handleGlobalMouseUp)
+  window.addEventListener('touchend', handleGlobalTouchEnd)
+  
+  onUnmounted(() => {
+    window.removeEventListener('mouseup', handleGlobalMouseUp)
+    window.removeEventListener('touchend', handleGlobalTouchEnd)
+  })
+})
+
 // Watch for Chromatic scale on mount/change - enforce C root and Natural mapping
 // Only apply these restrictions in SCALE mode, not in CHORD mode
 watch(() => [model.value.scale.scaleType, model.value.mode] as const, ([newScaleType, mode]) => {
@@ -606,25 +833,15 @@ const handleChordToggleClick = () => {
 }
 
 // ===== SMART SLIDER =====
-// Strum Speed conversion: UI shows 5-100% (faster), firmware uses 4-360ms (inverted)
-// 5% → 360ms (slowest), 100% → 4ms (fastest)
-function strumSpeedToPercent(ms: number): number {
-  // Map 4-360ms to 100-5%
-  return Math.round(5 + ((360 - ms) / 356) * 95)
-}
-
-function percentToStrumSpeed(percent: number): number {
-  // Map 5-100% to 360-4ms
-  return Math.round(360 - ((percent - 5) / 95) * 356)
-}
-
+// Strum Speed: UI shows -360ms to -5ms (reverse), 5ms to 360ms (forward)
+// Negative = reverse order, positive = forward order
+// Skip -4 to 4 range (too fast, not useful)
 const smartSliderValue = computed({
   get: () => {
     if (isChordStyle.value) {
       return model.value.chord.velocitySpread
     } else {
-      // Convert ms to percentage for display
-      return strumSpeedToPercent(model.value.chord.strumSpeed)
+      return model.value.chord.strumSpeed
     }
   },
   set: (v: number) => {
@@ -632,23 +849,126 @@ const smartSliderValue = computed({
     if (isChordStyle.value) {
       updated.chord = { ...updated.chord, velocitySpread: v }
     } else {
-      // Convert percentage back to ms for storage
-      updated.chord = { ...updated.chord, strumSpeed: percentToStrumSpeed(v) }
+      // Ensure value skips the -4 to 4 range
+      let strumSpeed = v
+      if (v > -5 && v < 5) {
+        // Snap to nearest valid value (-5 or 5)
+        strumSpeed = v < 0 ? -5 : 5
+      }
+      updated.chord = { ...updated.chord, strumSpeed }
     }
     emit('update:modelValue', updated)
   }
 })
 
-const smartSliderMin = computed(() => isChordStyle.value ? 8 : 5)
-const smartSliderMax = computed(() => 100)
+const smartSliderMin = computed(() => isChordStyle.value ? 10 : -360)
+const smartSliderMax = computed(() => isChordStyle.value ? 100 : 360)
 
 const smartSliderLabel = computed(() => {
   return isChordStyle.value ? 'VELOCITY SPREAD' : 'STRUM SPEED'
 })
 
 const smartSliderUnit = computed(() => {
-  return ''
+  return isChordStyle.value ? '' : 'ms'
 })
+
+// Display formatter for strum speed - show "CTR" at center (±360)
+const strumDisplayFormatter = (value: number): string => {
+  if (Math.abs(value) === 360) return 'CTR'
+  return String(value)
+}
+
+// Disable arrows at actual extremes (±5)
+const strumLeftDisabled = computed(() => {
+  if (isChordStyle.value) return false
+  return smartSliderValue.value === -5
+})
+
+const strumRightDisabled = computed(() => {
+  if (isChordStyle.value) return false
+  return smartSliderValue.value === 5
+})
+
+// Drag mapper for strum speed - inverted mapping (edges fast, center slow)
+const strumSpeedDragMapper = (percentage: number): number => {
+  // Snap to center (±360) if within 5% of midpoint
+  if (percentage >= 45 && percentage <= 55) {
+    // Determine which side based on exact percentage
+    return percentage < 50 ? -360 : 360
+  }
+  
+  // Map edges (fast) to center (slow): 0% = -5ms, 50% = ±360ms, 100% = 5ms
+  let newValue: number
+  if (percentage < 50) {
+    // Left side: 0% = -5ms, approaching 50% = -360ms
+    const t = percentage / 50 // 0 to 1
+    newValue = Math.round(-5 - t * 355) // -5 to -360
+  } else {
+    // Right side: 50% = 360ms, 100% = 5ms
+    const t = (percentage - 50) / 50 // 0 to 1
+    newValue = Math.round(360 - t * 355) // 360 to 5
+  }
+  // Snap to step of 5
+  const snapped = Math.round(newValue / 5) * 5
+  // Clamp to valid range (skip -4 to 4)
+  let clamped = snapped
+  if (clamped > -5 && clamped < 5) {
+    clamped = clamped < 0 ? -5 : 5
+  }
+  return Math.max(-360, Math.min(360, clamped))
+}
+
+const smartSliderReset = computed(() => {
+  return isChordStyle.value ? 80 : 80
+})
+
+// Dynamic arrow labels for strum speed - always single arrows
+const strumLeftLabel = computed(() => {
+  return isChordStyle.value ? '−' : '◀'
+})
+
+const strumRightLabel = computed(() => {
+  return isChordStyle.value ? '+' : '▶'
+})
+
+// Custom button handlers for strum mode (inverted mapping: edges fast, center slow)
+function handleStrumLeftClick() {
+  // Left (◀) moves bar LEFT on screen
+  const current = smartSliderValue.value
+  
+  if (current >= 5) {
+    // Positive side: LEFT = toward center (slower), increase value
+    if (current >= 360) {
+      // At center, cross to negative side
+      smartSliderValue.value = -360
+      return
+    }
+    smartSliderValue.value = Math.min(360, current + 5)
+  } else {
+    // Negative side: LEFT = toward edge (faster), increase toward -5
+    if (current >= -5) return // Already at edge
+    smartSliderValue.value = Math.min(-5, current + 5) // -165 + 5 = -160 ✓
+  }
+}
+
+function handleStrumRightClick() {
+  // Right (▶) moves bar RIGHT on screen
+  const current = smartSliderValue.value
+  
+  if (current >= 5) {
+    // Positive side: RIGHT = toward edge (faster), decrease to 5
+    if (current <= 5) return // Already at edge
+    smartSliderValue.value = Math.max(5, current - 5) // Stop at 5, don't cross
+  } else {
+    // Negative side: RIGHT = toward center (slower), decrease value
+    if (current <= -360) {
+      // At center, cross to positive side
+      smartSliderValue.value = 360
+      return
+    }
+    smartSliderValue.value = Math.max(-360, current - 5) // -165 - 5 = -170 ✓
+  }
+}
 
 const sliderPercentage = computed(() => {
   const range = smartSliderMax.value - smartSliderMin.value
@@ -656,26 +976,93 @@ const sliderPercentage = computed(() => {
   return (value / range) * 100
 })
 
+// Check if strum is in reverse (speed < 0)
+const isStrumReversed = computed(() => {
+  return !isChordStyle.value && model.value.chord.strumSpeed < 0
+})
+
+// Bar position for bidirectional strum (15% = -4ms fast, 50% = ±360ms slow, 85% = 4ms fast)
+// Constrained to 15-85% to leave 15% space for dots on both sides
+const barPosition = computed(() => {
+  if (isChordStyle.value) return 50
+  const value = smartSliderValue.value
+  // Map inverted: edges=fast(5ms), center=slow(360ms)
+  let normalized: number
+  if (value < 0) {
+    // Left side: -5 (0%) to -360 (50%)
+    const absValue = Math.abs(value)
+    normalized = (absValue - 5) / 355 * 0.5 // 0.0 to 0.5
+  } else {
+    // Right side: 360 (50%) to 5 (100%)
+    normalized = 0.5 + (360 - value) / 355 * 0.5 // 0.5 to 1.0
+  }
+  return 15 + normalized * 70 // 15% to 85%
+})
+
+// Left dot positions (purple, reverse) - EXPAND as bar moves right (inactive side)
+const leftDotPositions = computed(() => {
+  const barPos = barPosition.value // 10% to 90%
+  const positions: number[] = []
+  
+  // Available space: 0% to barPos (always at least 15%)
+  const availableSpace = barPos
+  
+  // Compression factor: 0.0 (compressed) when bar at 15%, 1.0 (expanded) when bar at 85%
+  const expansion = (barPos - 15) / 70 // 0.0 to 1.0
+  
+  // Use 90% of space when compressed (tight but all visible), 70% when expanded
+  const minUsage = 0.90
+  const maxUsage = 0.70
+  const usage = minUsage + expansion * (maxUsage - minUsage)
+  const visualRange = availableSpace * usage
+  
+  // Spread 7 dots with quadratic easing (easeOutQuad) for better visual distribution
+  const startPos = barPos - visualRange
+  for (let i = 0; i < 7; i++) {
+    const t = i / 6 // 0.0 to 1.0 linear
+    const eased = 1 - Math.pow(1 - t, 2) // easeOutQuad: spreads more at edges
+    positions.push(startPos + eased * visualRange)
+  }
+  return positions
+})
+
+// Right dot positions (yellow, forward) - COMPRESS as bar moves right (active side)
+const rightDotPositions = computed(() => {
+  const barPos = barPosition.value // 10% to 90%
+  const positions: number[] = []
+  
+  // Available space: barPos to 100% (always at least 15%)
+  const availableSpace = 100 - barPos
+  
+  // Compression factor: 1.0 (expanded) when bar at 15%, 0.0 (compressed) when bar at 85%
+  const expansion = (85 - barPos) / 70 // 1.0 to 0.0
+  
+  // Use 90% of space when compressed (tight but all visible), 70% when expanded
+  const minUsage = 0.90
+  const maxUsage = 0.70
+  const usage = minUsage + expansion * (maxUsage - minUsage)
+  const visualRange = availableSpace * usage
+  
+  // Spread 7 dots with quadratic easing (easeInQuad) - compressed near bar, spread at edge
+  const startPos = barPos
+  for (let i = 0; i < 7; i++) {
+    const t = i / 6 // 0.0 to 1.0 linear
+    const eased = Math.pow(t, 2) // easeInQuad: compressed at start, spreads toward end
+    positions.push(startPos + eased * visualRange)
+  }
+  return positions
+})
+
 // Visual spread percentage with minimum gap for chord mode
 const visualSpread = computed(() => {
   if (!isChordStyle.value) return sliderPercentage.value
   
   // REVERSED: Remap slider percentage (0-100) to visual spread (82-8)
-  // Lower velocitySpread values (like 8) = wider visual gap (~82%)
+  // Lower velocitySpread values (like 10) = wider visual gap (~82%)
   // Higher velocitySpread values (like 100) = narrower visual gap (~8%)
   const minVisual = 8   // Minimum 8% visual spread at 100% velocity
-  const maxVisual = 82  // Maximum 82% visual spread at 8% velocity
+  const maxVisual = 82  // Maximum 82% visual spread at 10% velocity
   return maxVisual - (sliderPercentage.value / 100) * (maxVisual - minVisual)
-})
-
-// Dynamic dot spacing for strum mode (faster = tighter, slower = wider)
-const dotSpacing = computed(() => {
-  // Speed range: 5% (slow/wide) to 100% (fast/tight)
-  // sliderPercentage: 0% at 5%, 100% at 100%
-  // Map to spacing: maximum 7% (spread out at slow) to minimum 1.5% (tight at fast)
-  const minSpacing = 1.5  // tight spacing at high speed (100%)
-  const maxSpacing = 7    // wide spacing at low speed (5%)
-  return maxSpacing - (sliderPercentage.value / 100) * (maxSpacing - minSpacing)
 })
 
 // Create banded velocity visualization (center-out)
@@ -774,6 +1161,9 @@ const updateValueFromPosition = (clientX: number, rect: DOMRect) => {
 }
 
 const handleVisualizationMouseDown = (e: MouseEvent) => {
+  // Only handle clicks in chord mode (not in bidirectional strum mode)
+  if (!isChordStyle.value) return
+  
   e.preventDefault()
   const target = e.currentTarget as HTMLElement
   const rect = target.getBoundingClientRect()
@@ -793,6 +1183,9 @@ const handleVisualizationMouseDown = (e: MouseEvent) => {
 }
 
 const handleVisualizationTouchStart = (e: TouchEvent) => {
+  // Only handle touches in chord mode (not in bidirectional strum mode)
+  if (!isChordStyle.value) return
+  
   if (e.touches.length !== 1) return
   const target = e.currentTarget as HTMLElement
   const rect = target.getBoundingClientRect()
@@ -815,6 +1208,73 @@ const handleVisualizationTouchStart = (e: TouchEvent) => {
   
   document.addEventListener('touchmove', handleTouchMove, { passive: false })
   document.addEventListener('touchend', handleTouchEnd)
+}
+
+// ===== BAR DRAG HANDLERS (for bidirectional strum) =====
+
+const handleBarMouseDown = (e: MouseEvent) => {
+  e.preventDefault()
+  e.stopPropagation()
+  
+  const visualContainer = (e.currentTarget as HTMLElement).parentElement
+  if (!visualContainer) return
+  const rect = visualContainer.getBoundingClientRect()
+  
+  const updateFromBarDrag = (clientX: number) => {
+    const percentage = Math.max(0, Math.min(100, ((clientX - rect.left) / rect.width) * 100))
+    smartSliderValue.value = strumSpeedDragMapper(percentage)
+  }
+  
+  updateFromBarDrag(e.clientX)
+  
+  const handleMouseMove = (e: MouseEvent) => {
+    updateFromBarDrag(e.clientX)
+  }
+  
+  const handleMouseUp = () => {
+    document.removeEventListener('mousemove', handleMouseMove)
+    document.removeEventListener('mouseup', handleMouseUp)
+  }
+  
+  document.addEventListener('mousemove', handleMouseMove)
+  document.addEventListener('mouseup', handleMouseUp)
+}
+
+const handleBarTouchStart = (e: TouchEvent) => {
+  e.stopPropagation()
+  
+  const visualContainer = (e.currentTarget as HTMLElement).parentElement
+  if (!visualContainer || e.touches.length !== 1) return
+  const touch = e.touches[0]
+  if (!touch) return
+  
+  const updateFromBarDrag = (clientX: number) => {
+    const rect = visualContainer.getBoundingClientRect()
+    const percentage = Math.max(0, Math.min(100, ((clientX - rect.left) / rect.width) * 100))
+    smartSliderValue.value = strumSpeedDragMapper(percentage)
+  }
+  
+  updateFromBarDrag(touch.clientX)
+  
+  const handleTouchMove = (e: TouchEvent) => {
+    if (e.touches.length !== 1) return
+    const touch = e.touches[0]
+    if (!touch) return
+    e.preventDefault()
+    updateFromBarDrag(touch.clientX)
+  }
+  
+  const handleTouchEnd = () => {
+    document.removeEventListener('touchmove', handleTouchMove)
+    document.removeEventListener('touchend', handleTouchEnd)
+  }
+  
+  document.addEventListener('touchmove', handleTouchMove, { passive: false })
+  document.addEventListener('touchend', handleTouchEnd)
+}
+
+const handleBarDoubleClick = () => {
+  smartSliderValue.value = 80
 }
 
 // ===== KEYBOARD VISUALIZATION =====
@@ -1070,6 +1530,7 @@ function handleKeyClick(midiNote: number) {
   gap: 0.5rem;
   padding: 5px;
   overflow: visible;
+  position: relative;
 }
 
 .keyboard-row {
@@ -1478,56 +1939,103 @@ function handleKeyClick(midiNote: number) {
   background: rgb(138, 104, 218);
 }
 
-/* Strum: Dynamic Spacing Dots */
-.strum-dynamic-dots {
+/* Strum: Bidirectional Dots with Draggable Bar */
+.strum-bidirectional-dots {
   position: relative;
   width: 100%;
   height: 100%;
   display: flex;
   align-items: center;
+  pointer-events: none;
 }
 
-.strum-dynamic-dots .dot {
+.dots-side {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 100%;
+  height: 5px;
+  pointer-events: none;
+}
+
+.strum-bidirectional-dots .dot {
   position: absolute;
   width: 5px;
   height: 5px;
   border-radius: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  transition: left 0.15s ease;
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.strum-bidirectional-dots .dot.purple {
+  background-color: #C084FC;
+}
+
+.strum-bidirectional-dots .dot.yellow {
   background-color: var(--accent-highlight);
-  transition: left 0.2s ease;
-  transform: translateX(-50%);
+}
+
+/* Pulse animation only on active side */
+.strum-bidirectional-dots .dot.active {
   animation: strum-cascade 1.8s ease-in-out infinite;
 }
 
-.strum-dynamic-dots .dot:nth-child(1) { animation-delay: 0s; }
-.strum-dynamic-dots .dot:nth-child(2) { animation-delay: 0.12s; }
-.strum-dynamic-dots .dot:nth-child(3) { animation-delay: 0.24s; }
-.strum-dynamic-dots .dot:nth-child(4) { animation-delay: 0.36s; }
-.strum-dynamic-dots .dot:nth-child(5) { animation-delay: 0.48s; }
-.strum-dynamic-dots .dot:nth-child(6) { animation-delay: 0.6s; }
-.strum-dynamic-dots .dot:nth-child(7) { animation-delay: 0.72s; }
-.strum-dynamic-dots .dot:nth-child(8) { animation-delay: 0.84s; }
-.strum-dynamic-dots .dot:nth-child(9) { animation-delay: 0.96s; }
-.strum-dynamic-dots .dot:nth-child(10) { animation-delay: 1.08s; }
-.strum-dynamic-dots .dot:nth-child(11) { animation-delay: 1.2s; }
-.strum-dynamic-dots .dot:nth-child(12) { animation-delay: 1.32s; }
-.strum-dynamic-dots .dot:nth-child(13) { animation-delay: 1.44s; }
+/* Staggered delays for left side (purple, reverse order when active) */
+.dots-left .dot.active:nth-child(1) { animation-delay: 1.2s; }
+.dots-left .dot.active:nth-child(2) { animation-delay: 1.0s; }
+.dots-left .dot.active:nth-child(3) { animation-delay: 0.8s; }
+.dots-left .dot.active:nth-child(4) { animation-delay: 0.6s; }
+.dots-left .dot.active:nth-child(5) { animation-delay: 0.4s; }
+.dots-left .dot.active:nth-child(6) { animation-delay: 0.2s; }
+.dots-left .dot.active:nth-child(7) { animation-delay: 0s; }
+
+/* Staggered delays for right side (yellow, forward order when active) */
+.dots-right .dot.active:nth-child(1) { animation-delay: 0s; }
+.dots-right .dot.active:nth-child(2) { animation-delay: 0.2s; }
+.dots-right .dot.active:nth-child(3) { animation-delay: 0.4s; }
+.dots-right .dot.active:nth-child(4) { animation-delay: 0.6s; }
+.dots-right .dot.active:nth-child(5) { animation-delay: 0.8s; }
+.dots-right .dot.active:nth-child(6) { animation-delay: 1.0s; }
+.dots-right .dot.active:nth-child(7) { animation-delay: 1.2s; }
+
+/* Draggable bar */
+.strum-bar {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 6px;
+  height: 20px;
+  background: var(--accent-highlight);
+  border-radius: 10px;
+  cursor: grab;
+  transition: left 0.1s ease;
+  z-index: 10;
+  pointer-events: auto;
+}
+
+.strum-bar:active {
+  cursor: grabbing;
+}
 
 @keyframes strum-cascade {
   0%, 100% { 
     opacity: 0.5;
-    transform: translateX(-50%) scale(1);
+    transform: translate(-50%, -50%) scale(1);
   }
   10% { 
     opacity: 1;
-    transform: translateX(-50%) scale(1.5);
+    transform: translate(-50%, -50%) scale(1.5);
   }
   20% {
     opacity: 0.7;
-    transform: translateX(-50%) scale(1.1);
+    transform: translate(-50%, -50%) scale(1.1);
   }
   30%, 100% {
     opacity: 0.5;
-    transform: translateX(-50%) scale(1);
+    transform: translate(-50%, -50%) scale(1);
   }
 }
 
@@ -1754,5 +2262,219 @@ function handleKeyClick(midiNote: number) {
 :global(html.theme-kb1-light .static-mood-bar .mood-text) {
   color: #2f2f2f;
   opacity: 1;
+}
+
+/* ===== VOICING CONTROLS ===== */
+
+/* Info icon (?) - matches existing app style */
+.info-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  font-size: 0.625rem;
+  color: #848484;
+  border: 1px solid #848484;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.2s;
+  user-select: none;
+  margin-left: 0.375rem;
+}
+
+.info-icon:hover {
+  color: #0DC988;
+  border-color: #0DC988;
+}
+
+/* Root & Range row wrapper */
+.root-range-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Voicing dots container */
+.voicing-dots {
+  display: flex;
+  gap: 0.2rem;
+  align-items: center;
+  user-select: none;
+}
+
+/* Individual dot button */
+.dot-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 9px;
+  height: 9px;
+  flex-shrink: 0;
+}
+
+/* The actual dot */
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #6a6853;
+  transition: all 0.2s ease;
+}
+
+/* Active dot (yellow) */
+.dot-btn.active .dot {
+  background: #f9ac20;
+  box-shadow: 0 0 6px rgba(249, 172, 32, 0.4);
+}
+
+/* Hovered dot (grows) */
+.dot.hovered {
+  width: 9px;
+  height: 9px;
+}
+
+/* Octave meter bars */
+.octave-meter {
+  position: absolute;
+  top: 5px;
+  right: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding: 0;
+  width: 24px;
+  height: 60px;
+  justify-content: center;
+  align-items: center;
+  border-radius: 4px;
+  background-color: transparent;
+  user-select: none;
+}
+
+.meter-bar {
+  width: 100%;
+  height: 7px;
+  background: rgba(106, 104, 83, 0.4);
+  border: none;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.meter-bar:hover {
+  background: rgba(106, 104, 83, 0.6);
+}
+
+.meter-bar.active {
+  background: #f9ac20;
+  box-shadow: 0 0 4px rgba(249, 172, 32, 0.3);
+}
+
+.meter-bar.active:hover {
+  background: #fbbf24;
+}
+
+/* Help Modal */
+.help-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  padding: 1rem;
+}
+
+.help-modal {
+  background: var(--color-background-soft);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  max-width: 500px;
+  width: 100%;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  font-family: 'Roboto Mono';
+}
+
+.help-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.help-modal-header h3 {
+  margin: 0;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #EAEAEA;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: #848484;
+  cursor: pointer;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.close-btn:hover {
+  background: var(--color-background-mute);
+  color: #EAEAEA;
+}
+
+.help-modal-body {
+  padding: 1.5rem;
+}
+
+.help-modal-body p {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.6;
+  color: var(--color-text);
+}
+
+.help-modal-footer {
+  padding: 1rem 1.5rem;
+  border-top: 1px solid var(--color-border);
+  display: flex;
+  justify-content: flex-end;
+}
+
+.help-modal-footer .btn-primary {
+  padding: 0.5rem 1.5rem;
+  background: #0DC988;
+  color: #1A1A1A;
+  border: none;
+  border-radius: 4px;
+  font-family: 'Roboto Mono';
+  font-size: 0.8125rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.help-modal-footer .btn-primary:hover {
+  background: #0BA872;
 }
 </style>

@@ -202,13 +202,13 @@ async function parsePolyendCSV(csvText: string): Promise<void> {
                 ccNumber: 203,
                 parameter: 'Velocity Spread',
                 category: 'KB1 Expression',
-                range: { min: 8, max: 100, text: '8 to 100' },
+                range: { min: 10, max: 100, text: '10 to 100' },
               },
               {
                 ccNumber: 200,
                 parameter: 'Strum Speed',
                 category: 'KB1 Expression',
-                range: { min: 5, max: 100, text: '5 to 100' },
+                range: { min: -100, max: 100, text: '-100 to 100' },
               },
               {
                 ccNumber: 202,

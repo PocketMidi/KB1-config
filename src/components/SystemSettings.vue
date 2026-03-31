@@ -210,7 +210,7 @@ const helpTexts = {
   },
   resolution: {
     title: 'Parameter Resolution',
-    description: 'Choose how precisely to adjust values: Resolution 1 for fine control (1% increments), or Resolution 5 for faster adjustments (5% jumps).'
+    description: 'Choose how precisely to adjust values: Resolution 1 for fine control (1% increments), or Resolution 5 for faster adjustments (5% jumps).<br><br><strong>Note:</strong> Some controls (like chord/strum settings) use fixed step sizes optimized for their specific range.'
   },
   hints: {
     title: 'Hints & Messages',

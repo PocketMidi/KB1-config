@@ -21,7 +21,7 @@
           v-if="intervals.length > 1"
           :points="getPathPoints()"
           fill="none"
-          stroke="var(--accent-highlight)"
+          :stroke="activeDotColor"
           stroke-width="1.5"
           opacity="0.6"
           class="connection-line"
@@ -36,7 +36,7 @@
               :y1="87.5 - (interval * 3.8)"
               :x2="getXPosition(idx) + getSwingOffset()"
               :y2="87.5 - (interval * 3.8)"
-              stroke="var(--accent-highlight)"
+              :stroke="activeDotColor"
               stroke-width="1.5"
               opacity="1.0"
             />
@@ -44,8 +44,8 @@
               :cx="getXPosition(idx) - getSwingOffset()"
               :cy="87.5 - (interval * 3.8)"
               :r="3"
-              :fill="interval === 0 ? '#C084FC' : 'var(--accent-highlight)'"
-              :stroke="interval === 0 ? '#C084FC' : 'var(--accent-highlight)'"
+              :fill="interval === 0 ? '#C084FC' : activeDotColor"
+              :stroke="interval === 0 ? '#C084FC' : activeDotColor"
               stroke-width="0.5"
               class="note-dot"
               @click.stop="removeNote(idx)"
@@ -54,8 +54,8 @@
               :cx="getXPosition(idx) + getSwingOffset()"
               :cy="87.5 - (interval * 3.8)"
               :r="3"
-              :fill="interval === 0 ? '#C084FC' : 'var(--accent-highlight)'"
-              :stroke="interval === 0 ? '#C084FC' : 'var(--accent-highlight)'"
+              :fill="interval === 0 ? '#C084FC' : activeDotColor"
+              :stroke="interval === 0 ? '#C084FC' : activeDotColor"
               stroke-width="0.5"
               class="note-dot"
               @click.stop="removeNote(idx)"
@@ -67,8 +67,8 @@
               :cx="getXPosition(idx)"
               :cy="87.5 - (interval * 3.8)"
               :r="interval === 0 ? 4 : 3"
-              :fill="interval === 0 ? '#C084FC' : 'var(--accent-highlight)'"
-              :stroke="interval === 0 ? '#C084FC' : 'var(--accent-highlight)'"
+              :fill="interval === 0 ? '#C084FC' : activeDotColor"
+              :stroke="interval === 0 ? '#C084FC' : activeDotColor"
               stroke-width="0.5"
               class="note-dot"
               :class="{ 
@@ -87,7 +87,7 @@
           :cx="hoverPosition.x"
           :cy="hoverPosition.y"
           r="4"
-          fill="var(--accent-highlight)"
+          :fill="activeDotColor"
           opacity="0.5"
           class="hover-indicator"
         />
@@ -132,6 +132,7 @@ const props = defineProps<{
   mode: string
   chordType?: number  // Chord type from parent to sync template
   swingValue?: number  // Swing amount 50-100% (50 = straight, 100 = max swing)
+  reverse?: boolean    // Whether strum is in reverse (for color indication)
 }>()
 
 const emit = defineEmits<{
@@ -156,6 +157,11 @@ const selectedMode = computed({
   set: (v) => {
     emit('update:mode', v)
   }
+})
+
+// Active dot color - purple when reversed, yellow when forward
+const activeDotColor = computed(() => {
+  return props.reverse ? '#C084FC' : 'var(--accent-highlight)'
 })
 
 // Build modes with embedded SVG content

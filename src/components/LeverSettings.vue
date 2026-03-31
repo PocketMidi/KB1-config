@@ -525,15 +525,15 @@ watch(() => model.value.ccNumber, (cc) => {
   const cat = props.ccMapByNumber.get(cc)?.category
   if (cat) selectedCategory.value = cat
   
-  // KB1 Expression parameters: Force unipolar mode and clamp to valid ranges
+  // KB1 Expression parameters: Force specific modes and clamp to valid ranges
   if (cc === 200) {
-    // Strum Speed: 5-100% displayed (maps to 360ms-4ms)
-    // Store MIDI values in ascending order even though UI presents them inverted
+    // Strum Speed: Bipolar -100 to +100 (negative = reverse, positive = forward)
+    // MIDI: 0 = -100% (reverse max), 64 = 0% (center), 127 = +100% (forward max)
     model.value = {
       ...model.value,
-      valueMode: VALUE_MODE_UNIPOLAR,
-      minCCValue: 0,    // Maps to 100% (fastest) via speedPercentToMidi
-      maxCCValue: 127   // Maps to 5% (slowest) via speedPercentToMidi
+      valueMode: VALUE_MODE_BIPOLAR,
+      minCCValue: 0,    // -100% (full reverse)
+      maxCCValue: 127   // +100% (full forward)
     }
   } else if (cc === 202) {
     // Swing: 50-100% (UI) maps to 0-100 (firmware)
@@ -544,8 +544,8 @@ watch(() => model.value.ccNumber, (cc) => {
       maxCCValue: 127   // 100% UI
     }
   } else if (cc === 203) {
-    // Velocity Spread: 8-100%
-    const min = Math.round((8 / 100) * 127)   // 8 -> ~10 MIDI
+    // Velocity Spread: 10-100%
+    const min = Math.round((10 / 100) * 127)   // 10 -> ~13 MIDI
     const max = Math.round((100 / 100) * 127) // 100 -> 127 MIDI
     model.value = {
       ...model.value,
@@ -618,10 +618,9 @@ const minRange = computed(() => {
   }
   
   // KB1 Expression parameters have hardware-enforced minimum values
-  if (cc === 200) return 5  // Strum Speed: 5-100% (perceived range, maps to 4-360ms)
   if (cc === 201) return 1   // Pattern Selector: 1-6
   if (cc === 202) return 50  // Swing: 50-100%
-  if (cc === 203) return 8   // Velocity Spread: 8-100%
+  if (cc === 203) return 10   // Velocity Spread: 10-100%
   
   return 0  // Default unipolar minimum
 })
@@ -714,9 +713,11 @@ function midiToPattern(midiValue: number): number {
   return Math.round((midiValue / 127) * 5) + 1
 }
 
-// Special conversion for Strum Speed (CC 200): higher % = faster (lower ms)
-// User sees 5-100% range (better UX), maps to 4-360ms: 100%→4ms, 5%→360ms
-// Store MIDI in normal ascending order: low MIDI = slow, high MIDI = fast
+// Special conversions (deprecated - Strum Speed now uses standard bipolar)
+// Keeping these for legacy reference only - no longer used for CC 200
+
+// OLD Strum Speed conversion (CC 200 - now bipolar): Used to map 5-100% to 4-360ms
+// Replaced with standard bipolar -100 to +100 range
 function speedPercentToMidi(percent: number): number {
   // Map 5-100% to MIDI 0-127 (normal order: higher MIDI = faster)
   return Math.round(127 * (percent - 5) / 95)
@@ -742,9 +743,7 @@ function midiToSwingPercent(midiValue: number): number {
 const userMin = computed({
   get: () => {
     let value: number
-    if (model.value.ccNumber === 200) {
-      value = midiToSpeedPercent(model.value.minCCValue)
-    } else if (model.value.ccNumber === 201) {
+    if (model.value.ccNumber === 201) {
       value = midiToPattern(model.value.minCCValue)
     } else if (model.value.ccNumber === 202) {
       value = midiToSwingPercent(model.value.minCCValue)
@@ -759,9 +758,7 @@ const userMin = computed({
   },
   set: (userValue: number) => {
     const snappedValue = snapToStepIncrement(userValue)
-    if (model.value.ccNumber === 200) {
-      model.value = { ...model.value, minCCValue: speedPercentToMidi(snappedValue) }
-    } else if (model.value.ccNumber === 201) {
+    if (model.value.ccNumber === 201) {
       model.value = { ...model.value, minCCValue: patternToMidi(snappedValue) }
     } else if (model.value.ccNumber === 202) {
       model.value = { ...model.value, minCCValue: swingPercentToMidi(snappedValue) }
@@ -777,9 +774,7 @@ const userMin = computed({
 const userMax = computed({
   get: () => {
     let value: number
-    if (model.value.ccNumber === 200) {
-      value = midiToSpeedPercent(model.value.maxCCValue)
-    } else if (model.value.ccNumber === 201) {
+    if (model.value.ccNumber === 201) {
       value = midiToPattern(model.value.maxCCValue)
     } else if (model.value.ccNumber === 202) {
       value = midiToSwingPercent(model.value.maxCCValue)
@@ -794,9 +789,7 @@ const userMax = computed({
   },
   set: (userValue: number) => {
     const snappedValue = snapToStepIncrement(userValue)
-    if (model.value.ccNumber === 200) {
-      model.value = { ...model.value, maxCCValue: speedPercentToMidi(snappedValue) }
-    } else if (model.value.ccNumber === 201) {
+    if (model.value.ccNumber === 201) {
       model.value = { ...model.value, maxCCValue: patternToMidi(snappedValue) }
     } else if (model.value.ccNumber === 202) {
       model.value = { ...model.value, maxCCValue: swingPercentToMidi(snappedValue) }

@@ -461,7 +461,8 @@ const keyboardModel = computed<{
     strumIntervals: number[],
     buildMode: string,
     strumSwing: number,
-    strumPattern: number
+    strumPattern: number,
+    voicing: number
   } 
 }>({
   get: () => ({
@@ -476,6 +477,7 @@ const keyboardModel = computed<{
       buildMode: localSettings.value.chord.buildMode || 'up',
       strumSwing: localSettings.value.chord.strumSwing || 0,
       strumPattern: localSettings.value.chord.strumPattern || 0,
+      voicing: localSettings.value.chord.voicing || 1,
     }
   }),
   set: (v) => {
@@ -488,6 +490,7 @@ const keyboardModel = computed<{
     localSettings.value.chord.velocitySpread = v.chord.velocitySpread;
     localSettings.value.chord.strumEnabled = v.chord.strumEnabled;
     localSettings.value.chord.strumSpeed = v.chord.strumSpeed;
+    localSettings.value.chord.voicing = v.chord.voicing;
     localSettings.value.chord.strumIntervals = v.chord.strumIntervals;
     localSettings.value.chord.buildMode = v.chord.buildMode;
     localSettings.value.chord.strumSwing = v.chord.strumSwing;

@@ -3,20 +3,21 @@
     <div class="input-wrapper">
       <div 
         class="tap-zone tap-zone-left"
-        :class="{ disabled: isAtMin || disabled }"
+        :class="{ disabled: leftDisabled || (!onLeftClick && isAtMin) || disabled }"
         @click="decreaseSmall"
         :title="`Decrease by ${smallStep}`"
       >
-        <span class="tap-indicator">−</span>
+        <span class="tap-indicator">{{ leftLabel }}</span>
       </div>
       <input
-        type="number"
+        type="text"
         class="value-input"
-        :value="modelValue"
+        :value="displayValue"
         :min="min"
         :max="max"
         :step="step"
         :disabled="disabled"
+        :readonly="readOnly"
         @input="handleInput"
         @blur="validateAndUpdate"
         @wheel="handleWheel"
@@ -24,14 +25,16 @@
         @touchstart="handleTouchStart"
         @touchmove="handleTouchMove"
         @touchend="handleTouchEnd"
+        @dblclick="handleDoubleClick"
+        :title="resetValue !== undefined ? `Double-click to reset to ${resetValue}` : ''"
       />
       <div 
         class="tap-zone tap-zone-right"
-        :class="{ disabled: isAtMax || disabled }"
+        :class="{ disabled: rightDisabled || (!onRightClick && isAtMax) || disabled }"
         @click="increaseSmall"
         :title="`Increase by ${smallStep}`"
       >
-        <span class="tap-indicator">+</span>
+        <span class="tap-indicator">{{ rightLabel }}</span>
       </div>
     </div>
   </div>
@@ -49,13 +52,33 @@ const props = withDefaults(defineProps<{
   smallStep?: number
   largeStep?: number
   disabled?: boolean
+  resetValue?: number  // Optional reset value for double-click
+  leftLabel?: string   // Custom label for left button (default: "−")
+  rightLabel?: string  // Custom label for right button (default: "+")
+  readOnly?: boolean   // Make input field read-only (buttons/drag still work)
+  onLeftClick?: () => void   // Custom handler for left button
+  onRightClick?: () => void  // Custom handler for right button
+  dragMapper?: (percentage: number) => number  // Map position (0-100%) to value (replaces delta drag)
+  displayFormatter?: (value: number) => string  // Optional formatter for display value
+  leftDisabled?: boolean   // Explicitly disable left button
+  rightDisabled?: boolean  // Explicitly disable right button
 }>(), {
   min: 0,
   max: 100,
   step: 1,
   smallStep: 5,
   largeStep: 10,
-  disabled: false
+  disabled: false,
+  resetValue: undefined,
+  leftLabel: '−',
+  rightLabel: '+',
+  readOnly: false,
+  onLeftClick: undefined,
+  onRightClick: undefined,
+  dragMapper: undefined,
+  displayFormatter: undefined,
+  leftDisabled: false,
+  rightDisabled: false
 })
 
 const emit = defineEmits<{
@@ -67,11 +90,16 @@ const isDragging = ref(false)
 const dragStartX = ref(0)
 const dragStartValue = ref(0)
 const lastHapticValue = ref(0)
+const dragTarget = ref<HTMLElement | null>(null)
 
 const { light, tap, isSupported } = useHaptics()
 
 const isAtMin = computed(() => props.modelValue <= props.min)
 const isAtMax = computed(() => props.modelValue >= props.max)
+
+const displayValue = computed(() => {
+  return props.displayFormatter ? props.displayFormatter(props.modelValue) : String(props.modelValue)
+})
 
 function clamp(value: number): number {
   return Math.max(props.min, Math.min(props.max, value))
@@ -83,17 +111,26 @@ function snapToStep(value: number): number {
 
 function decreaseSmall() {
   if (isSupported.value) tap()
-  const newValue = snapToStep(props.modelValue - props.smallStep)
-  emit('update:modelValue', clamp(newValue))
+  if (props.onLeftClick) {
+    props.onLeftClick()
+  } else {
+    const newValue = snapToStep(props.modelValue - props.smallStep)
+    emit('update:modelValue', clamp(newValue))
+  }
 }
 
 function increaseSmall() {
   if (isSupported.value) tap()
-  const newValue = snapToStep(props.modelValue + props.smallStep)
-  emit('update:modelValue', clamp(newValue))
+  if (props.onRightClick) {
+    props.onRightClick()
+  } else {
+    const newValue = snapToStep(props.modelValue + props.smallStep)
+    emit('update:modelValue', clamp(newValue))
+  }
 }
 
 function handleInput(event: Event) {
+  if (props.readOnly) return // Block typing when read-only
   const target = event.target as HTMLInputElement
   const value = parseFloat(target.value)
   
@@ -103,6 +140,7 @@ function handleInput(event: Event) {
 }
 
 function validateAndUpdate(event: Event) {
+  if (props.readOnly) return // Block validation when read-only
   const target = event.target as HTMLInputElement
   const value = parseFloat(target.value)
   
@@ -137,6 +175,7 @@ function handleMouseDown(event: MouseEvent) {
   dragStartX.value = event.clientX
   dragStartValue.value = props.modelValue
   lastHapticValue.value = props.modelValue
+  dragTarget.value = event.target as HTMLElement
   
   document.addEventListener('mousemove', handleMouseMove)
   document.addEventListener('mouseup', handleMouseUp)
@@ -145,11 +184,20 @@ function handleMouseDown(event: MouseEvent) {
 function handleMouseMove(event: MouseEvent) {
   if (!isDragging.value) return
   
-  const deltaX = event.clientX - dragStartX.value
-  // Scale: 5 pixels of movement = 1 step
-  const steps = Math.round(deltaX / 5)
-  const change = steps * props.step
-  const newValue = snapToStep(dragStartValue.value + change)
+  let newValue: number
+  
+  if (props.dragMapper && dragTarget.value) {
+    // Position-based drag: map cursor position to value
+    const rect = dragTarget.value.getBoundingClientRect()
+    const percentage = Math.max(0, Math.min(100, ((event.clientX - rect.left) / rect.width) * 100))
+    newValue = props.dragMapper(percentage)
+  } else {
+    // Delta-based drag: movement distance determines change
+    const deltaX = event.clientX - dragStartX.value
+    const steps = Math.round(deltaX / 5)
+    const change = steps * props.step
+    newValue = snapToStep(dragStartValue.value + change)
+  }
   
   // Haptic on every step change during drag (skip on iOS)
   if (isSupported.value && newValue !== lastHapticValue.value) {
@@ -162,6 +210,7 @@ function handleMouseMove(event: MouseEvent) {
 
 function handleMouseUp() {
   isDragging.value = false
+  dragTarget.value = null
   document.removeEventListener('mousemove', handleMouseMove)
   document.removeEventListener('mouseup', handleMouseUp)
 }
@@ -173,17 +222,27 @@ function handleTouchStart(event: TouchEvent) {
   dragStartX.value = event.touches[0].clientX
   dragStartValue.value = props.modelValue
   lastHapticValue.value = props.modelValue
+  dragTarget.value = event.target as HTMLElement
 }
 
 function handleTouchMove(event: TouchEvent) {
   if (!isDragging.value || !event.touches[0]) return
   event.preventDefault()
   
-  const deltaX = event.touches[0].clientX - dragStartX.value
-  // Scale: 5 pixels of movement = 1 step
-  const steps = Math.round(deltaX / 5)
-  const change = steps * props.step
-  const newValue = snapToStep(dragStartValue.value + change)
+  let newValue: number
+  
+  if (props.dragMapper && dragTarget.value) {
+    // Position-based drag: map touch position to value
+    const rect = dragTarget.value.getBoundingClientRect()
+    const percentage = Math.max(0, Math.min(100, ((event.touches[0].clientX - rect.left) / rect.width) * 100))
+    newValue = props.dragMapper(percentage)
+  } else {
+    // Delta-based drag: movement distance determines change
+    const deltaX = event.touches[0].clientX - dragStartX.value
+    const steps = Math.round(deltaX / 5)
+    const change = steps * props.step
+    newValue = snapToStep(dragStartValue.value + change)
+  }
   
   // Haptic on every step change during touch drag (skip on iOS)
   if (isSupported.value && newValue !== lastHapticValue.value) {
@@ -196,6 +255,15 @@ function handleTouchMove(event: TouchEvent) {
 
 function handleTouchEnd() {
   isDragging.value = false
+  dragTarget.value = null
+}
+
+// Double-click to reset to default value
+function handleDoubleClick() {
+  if (props.resetValue !== undefined && !props.disabled) {
+    if (isSupported.value) tap()
+    emit('update:modelValue', clamp(snapToStep(props.resetValue)))
+  }
 }
 
 // Cleanup on unmount
@@ -263,7 +331,7 @@ onBeforeUnmount(() => {
 }
 
 .tap-indicator {
-  font-size: 0.75rem; /* 12px */
+  font-size: 0.75rem; /* 12px - smaller arrows */
   font-family: 'Roboto Mono';
   color: #EAEAEA;
   opacity: 0.4;

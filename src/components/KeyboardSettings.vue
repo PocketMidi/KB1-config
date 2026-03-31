@@ -1217,7 +1217,7 @@ const handleBarMouseDown = (e: MouseEvent) => {
     smartSliderValue.value = strumSpeedDragMapper(percentage)
   }
   
-  updateFromBarDrag(e.clientX)
+  // Don't update on initial click - only on drag (mousemove)
   
   const handleMouseMove = (e: MouseEvent) => {
     updateFromBarDrag(e.clientX)
@@ -1246,7 +1246,7 @@ const handleBarTouchStart = (e: TouchEvent) => {
     smartSliderValue.value = strumSpeedDragMapper(percentage)
   }
   
-  updateFromBarDrag(touch.clientX)
+  // Don't update on initial touch - only on drag (touchmove)
   
   const handleTouchMove = (e: TouchEvent) => {
     if (e.touches.length !== 1) return

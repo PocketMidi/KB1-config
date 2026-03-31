@@ -753,7 +753,6 @@ watch(() => localSettings.value.chord.strumPattern, (newPattern, oldPattern) => 
 });
 
 function markChanged() {
-  console.log('✏️ Settings changed - hasChanges set to true');
   hasChanges.value = true;
 }
 

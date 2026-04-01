@@ -479,6 +479,13 @@ function handleTabClick(tabId: Tab) {
   box-sizing: border-box;
 }
 
+html {
+  -webkit-text-size-adjust: 100%;
+  -moz-text-size-adjust: 100%;
+  -ms-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
 body {
   margin: 0;
   padding: 0;
@@ -488,7 +495,10 @@ body {
   color: var(--color-text);
   line-height: 1.6;
   touch-action: manipulation; /* Disable double-tap zoom */
-  -webkit-text-size-adjust: 100%; /* Prevent font scaling */
+  -webkit-text-size-adjust: 100%; /* Prevent font scaling in Safari/iOS */
+  -moz-text-size-adjust: 100%; /* Prevent font scaling in Firefox */
+  -ms-text-size-adjust: 100%; /* Prevent font scaling in IE/Edge */
+  text-size-adjust: 100%; /* Standard property */
 }
 
 #app {
@@ -883,7 +893,7 @@ body {
 .app-main {
   flex: 1;
   background: var(--color-background);
-  padding-bottom: 100px; /* Add padding to account for fixed footer bar */
+  padding-bottom: 2rem; /* Unified padding for all screens */
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;

@@ -916,16 +916,16 @@ const smartSliderReset = computed(() => {
 
 // Dynamic arrow labels for strum speed - always single arrows
 const strumLeftLabel = computed(() => {
-  return isChordStyle.value ? '−' : '◀'
+  return isChordStyle.value ? '−' : '<'
 })
 
 const strumRightLabel = computed(() => {
-  return isChordStyle.value ? '+' : '▶'
+  return isChordStyle.value ? '+' : '>'
 })
 
 // Custom button handlers for strum mode (inverted mapping: edges fast, center slow)
 function handleStrumLeftClick() {
-  // Left (◀) moves bar LEFT on screen
+  // Left (<) moves bar LEFT on screen
   const current = smartSliderValue.value
   
   if (current >= 5) {
@@ -944,7 +944,7 @@ function handleStrumLeftClick() {
 }
 
 function handleStrumRightClick() {
-  // Right (▶) moves bar RIGHT on screen
+  // Right (>) moves bar RIGHT on screen
   const current = smartSliderValue.value
   
   if (current >= 5) {
@@ -2006,6 +2006,19 @@ function handleKeyClick(midiNote: number) {
   transition: left 0.1s ease;
   z-index: 10;
   pointer-events: auto;
+}
+
+/* Larger touch target for mobile */
+.strum-bar::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 44px;
+  height: 60px;
+  /* Uncomment to visualize touch area during development */
+  /* background: rgba(255, 0, 0, 0.2); */
 }
 
 .strum-bar:active {

@@ -1534,7 +1534,7 @@ function handleKeyClick(midiNote: number) {
 }
 
 .key {
-  width: 24px;
+  width: 23px;
   height: 60px;
   border-radius: 4px;
   display: flex;
@@ -2353,7 +2353,7 @@ function handleKeyClick(midiNote: number) {
   flex-direction: column;
   gap: 7px;
   padding: 0;
-  width: 24px;
+  width: 23px;
   height: 60px;
   justify-content: center;
   align-items: center;

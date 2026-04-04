@@ -269,6 +269,38 @@ function formatSpeakerTime(): string {
   return `${hours}h ${mins.toString().padStart(2, '0')}m`;
 }
 
+/**
+ * Update battery percentage directly (called from keep-alive notifications)
+ * This provides automatic battery updates without manual sync
+ */
+export function updateBatteryFromKeepAlive(percentage: number) {
+  if (!batteryStatus.value) {
+    // Initialize battery status if not yet synced
+    batteryStatus.value = {
+      percentage,
+      isCharging: percentage === 255,
+      isUsbConnected: false, // Will be updated from flags if needed
+      activeTimeMs: 0,
+      lightSleepTimeMs: 0,
+      deepSleepTimeMs: 0,
+      lastFullChargeMs: 0
+    };
+  } else {
+    // Update existing status
+    batteryStatus.value.percentage = percentage;
+    batteryStatus.value.isCharging = percentage === 255;
+  }
+  
+  lastSyncTime.value = Date.now();
+  
+  // Check for low battery alerts
+  if (percentage !== 254 && percentage !== 255) {
+    checkLowBatteryAlert(percentage);
+  }
+  
+  console.log('🔋 Battery updated from keep-alive:', percentage === 254 ? 'uncalibrated' : percentage === 255 ? 'charging' : `${percentage}%`);
+}
+
 export function useBatteryStatus() {
   return {
     // State

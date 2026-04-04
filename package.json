@@ -12,6 +12,7 @@
     "clean": "rm -rf node_modules/.vite dist"
   },
   "dependencies": {
+    "esptool-js": "^0.4.2",
     "papaparse": "^5.5.3",
     "vue": "^3.5.25",
     "vue3-lottie": "^3.3.1",

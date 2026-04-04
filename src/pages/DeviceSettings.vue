@@ -105,10 +105,13 @@
           @update:modelValue="markChanged"
         />
         
-        <SystemSettings
-          v-model="localSettings.system"
-          @update:modelValue="markChanged"
-        />
+        <!-- System Settings always accessible (contains firmware update) -->
+        <div class="always-accessible">
+          <SystemSettings
+            v-model="localSettings.system"
+            @update:modelValue="markChanged"
+          />
+        </div>
         
         <ScaleSettings
           title="Scales"
@@ -378,6 +381,34 @@ async function handleSaveToDevice() {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
+}
+
+/* Ensure certain sections (like System Settings with firmware update) 
+   are always fully accessible regardless of connection state */
+.always-accessible {
+  opacity: 1 !important;
+  pointer-events: auto !important;
+  filter: none !important;
+}
+
+/* Give always-accessible sections brighter, more vibrant styling */
+.always-accessible .settings-system {
+  background: var(--color-background) !important;
+  border-color: rgba(74, 158, 255, 0.3) !important;
+  box-shadow: 0 0 0 1px rgba(74, 158, 255, 0.15) !important;
+}
+
+/* Disconnected state styling - dim settings that require BLE */
+.disconnected-state {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+/* System Settings remains fully accessible without BLE */
+.disconnected-state .always-accessible {
+  opacity: 1 !important;
+  filter: none !important;
+  pointer-events: auto !important;
 }
 
 .btn {

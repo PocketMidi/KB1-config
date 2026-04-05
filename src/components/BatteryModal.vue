@@ -4,7 +4,7 @@
       <!-- Header -->
       <div class="modal-header">
         <div class="header-left">
-          <div class="battery-visual">
+          <div class="battery-visual" @click="handleBatteryClick" style="cursor: pointer;" title="Click 5 times for dev mode">
             <svg 
               viewBox="0 0 120 60" 
               class="battery-header-icon"
@@ -141,6 +141,34 @@
           </div>
         </div>
 
+        <!-- Dev Mode (Hidden) -->
+        <div v-if="devModeUnlocked" class="dev-mode-section">
+          <div class="dev-mode-header">
+            <span>BATTERY LEVEL</span>
+            <button class="dev-close" @click="devModeUnlocked = false">×</button>
+          </div>
+          <div class="action-row">
+            <button 
+              class="action-button dev-button"
+              @click="handleSetBatteryPercent"
+              :disabled="!props.isConnected || isSettingBattery"
+            >
+              {{ isSettingBattery ? 'Setting...' : 'Set' }}
+            </button>
+            <div class="dev-value-wrapper">
+              <ValueControl
+                v-model="devBatteryPercent"
+                :min="0"
+                :max="100"
+                :step="1"
+                :small-step="1"
+                :large-step="10"
+              />
+              <span class="unit-label">%</span>
+            </div>
+          </div>
+        </div>
+
         <!-- Actions -->
         <div class="modal-actions">
           <div class="action-row">
@@ -244,6 +272,7 @@
 import { ref, computed } from 'vue';
 import { useBatteryStatus } from '../composables/useBatteryStatus';
 import { useToast } from '../composables/useToast';
+import { bleClient } from '../ble/bleClient';
 import ValueControl from './ValueControl.vue';
 
 interface Props {
@@ -280,6 +309,13 @@ const isRecalibrating = ref(false);
 const showConfirmation = ref(false);
 const showSpeakerHelp = ref(false);
 
+// Dev Mode: Secret menu for manual battery % setting
+const devModeUnlocked = ref(false);
+const devBatteryPercent = ref(93);
+const isSettingBattery = ref(false);
+const clickCount = ref(0);
+const clickTimer = ref<number | null>(null);
+
 // Calculate large battery fill width (max 90 for visual)
 const fillWidthLarge = computed(() => {
   const percentage = estimatedPercentage.value;
@@ -299,12 +335,6 @@ function handleOverlayClick() {
 async function handleSync() {
   if (!props.isConnected) { emit('needs-connect'); return; }
   if (isSyncing.value) return;
-  
-  // Check if device is on USB power
-  if (batteryStatus.value?.usbConnected) {
-    toast.warning('Switch to battery power to sync battery status');
-    return;
-  }
   
   isSyncing.value = true;
   try {
@@ -345,6 +375,56 @@ function cancelRecalibrate() {
 
 function handleTogglePercentage() {
   toggleShowPercentage();
+}
+
+// Handle battery icon clicks for dev mode unlock
+function handleBatteryClick() {
+  clickCount.value++;
+  
+  // Reset timer
+  if (clickTimer.value) {
+    clearTimeout(clickTimer.value);
+  }
+  
+  // 5 clicks within 2 seconds = unlock
+  if (clickCount.value >= 5) {
+    devModeUnlocked.value = true;
+    clickCount.value = 0;
+    console.log('Dev mode unlocked!');
+    return;
+  }
+  
+  // Reset counter after 2 seconds
+  clickTimer.value = window.setTimeout(() => {
+    clickCount.value = 0;
+  }, 2000);
+}
+
+// Set battery percentage via BLE (dev mode)
+async function handleSetBatteryPercent() {
+  if (!props.isConnected) {
+    emit('needs-connect');
+    return;
+  }
+  
+  if (devBatteryPercent.value < 0 || devBatteryPercent.value > 100) {
+    toast.warning('Battery % must be between 0-100');
+    return;
+  }
+  
+  isSettingBattery.value = true;
+  try {
+    await bleClient.setBatteryPercentage(devBatteryPercent.value);
+    toast.success(`Battery set to ${devBatteryPercent.value}%`);
+    // Sync to refresh display
+    await new Promise(resolve => setTimeout(resolve, 500));
+    await syncBatteryStatus();
+  } catch (error) {
+    console.error('Failed to set battery %:', error);
+    toast.error('Failed to set battery %');
+  } finally {
+    isSettingBattery.value = false;
+  }
 }
 
 const speakerMinutesModel = computed({
@@ -1239,6 +1319,94 @@ input:checked + .toggle-slider:before {
 .reset-btn:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+}
+
+/* Dev Mode */
+.dev-mode-section {
+  margin-bottom: 8px;
+  padding: 12px;
+  background-color: rgba(106, 104, 83, 0.15);
+  border: 1px solid rgba(106, 104, 83, 0.3);
+  border-radius: 8px;
+}
+
+.dev-mode-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #d1d5db;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.dev-close {
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: rgba(255, 255, 255, 0.1);
+  color: #9ca3af;
+  font-size: 1.25rem;
+  line-height: 1;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.dev-close:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+}
+
+.dev-button {
+  background: rgba(106, 104, 83, 0.35);
+  border: 1px solid rgba(106, 104, 83, 0.4);
+  color: #EAEAEA;
+  font-weight: 400;
+}
+
+.dev-button:hover:not(:disabled) {
+  background: rgba(106, 104, 83, 0.6);
+  border-color: rgba(106, 104, 83, 0.7);
+  transform: translateY(-2px);
+}
+
+.dev-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  color: #848484;
+}
+
+.dev-input {
+  width: 70px;
+  padding: 8px 12px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(106, 104, 83, 0.4);
+  border-radius: 6px;
+  color: #EAEAEA;
+  font-size: 0.8125rem;
+  font-family: monospace;
+  text-align: center;
+  transition: all 0.2s ease;
+}
+
+.dev-input:focus {
+  outline: none;
+  border-color: rgba(106, 104, 83, 0.7);
+  background: rgba(0, 0, 0, 0.4);
+}
+
+.dev-input::-webkit-inner-spin-button,
+.dev-input::-webkit-outer-spin-button {
+  opacity: 1;
+}
+
+.dev-value-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
 }
 
 /* Responsive */

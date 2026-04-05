@@ -77,7 +77,35 @@ async function checkUsbConnection(): Promise<boolean> {
 }
 
 /**
- * Request USB permission and connect
+ * Request USB port permission from user (early in process)
+ */
+async function requestUsbPort(): Promise<void> {
+  console.log('🔌 Requesting USB serial port selection (NOT Bluetooth)...');
+  
+  try {
+    // ALWAYS show port picker to let user choose correct device
+    // This happens FIRST so user knows what's coming
+    port = await navigator.serial.requestPort({
+      filters: [{ usbVendorId: 0x303a }] // Espressif Systems (ESP32)
+    });
+
+    if (!port) {
+      throw new Error('No USB device selected');
+    }
+    
+    console.log('✅ USB port selected - ready for firmware update');
+    
+    // NOTE: Don't try to open/close the port here
+    // Browser reports unreliable state (connected, readable, writable)
+    // Let Transport/ESPLoader handle all port operations
+  } catch (error) {
+    console.error('❌ Failed to select USB port:', error);
+    throw error;
+  }
+}
+
+/**
+ * Connect to USB device (after port already selected)
  */
 async function connectUsb(): Promise<void> {
   updateStatus.value = {
@@ -87,24 +115,16 @@ async function connectUsb(): Promise<void> {
   };
 
   try {
-    // Request port if not already granted
-    const ports = await navigator.serial.getPorts();
-    if (ports.length === 0) {
-      port = await navigator.serial.requestPort({
-        filters: [{ usbVendorId: 0x303a }] // Espressif vendor ID
-      });
-    } else {
-      port = ports[0];
-    }
-
     if (!port) {
-      throw new Error('No USB device selected');
+      throw new Error('No USB port selected');
     }
 
-    // Open port
-    await port.open({ baudRate: 115200 });
-
-    // Create transport and loader
+    console.log('🔌 Connecting to ESP32 bootloader...');
+    
+    // DON'T open port manually - let Transport handle it!
+    // The port browser properties (connected, readable, writable) are unreliable
+    
+    // Create transport and loader (Transport will handle opening the port)
     transport = new Transport(port, true);
     loader = new ESPLoader({
       transport,
@@ -112,10 +132,10 @@ async function connectUsb(): Promise<void> {
       romBaudrate: 115200,
     });
 
-    // Connect to bootloader
+    // Connect to bootloader (this will open the port if needed)
     await loader.main();
 
-    console.log('✅ USB connected successfully');
+    console.log('✅ Connected to ESP32 bootloader');
   } catch (error) {
     updateStatus.value = {
       step: 'error',
@@ -175,8 +195,14 @@ async function flashFirmware(firmwareBinary: ArrayBuffer): Promise<void> {
   };
 
   try {
+    // Convert ArrayBuffer to binary string (esptool-js expects string, not Uint8Array)
+    const uint8Array = new Uint8Array(firmwareBinary);
+    const binaryString = Array.from(uint8Array)
+      .map(byte => String.fromCharCode(byte))
+      .join('');
+    
     const fileArray = [{
-      data: new Uint8Array(firmwareBinary),
+      data: binaryString,
       address: 0x0,
     }];
 
@@ -187,7 +213,7 @@ async function flashFirmware(firmwareBinary: ArrayBuffer): Promise<void> {
       flashFreq: '80m',
       eraseAll: false,
       compress: true,
-      reportProgress: (fileIndex, written, total) => {
+      reportProgress: (_fileIndex, written, total) => {
         const progress = 30 + Math.floor((written / total) * 50);
         updateStatus.value.progress = progress;
       },
@@ -221,17 +247,22 @@ async function restoreNvs(): Promise<void> {
   };
 
   try {
+    // Convert Uint8Array to binary string (esptool-js expects string)
+    const binaryString = Array.from(nvsBackup)
+      .map(byte => String.fromCharCode(byte))
+      .join('');
+    
     await loader.writeFlash({
       fileArray: [{
-        data: nvsBackup,
+        data: binaryString,
         address: NVS_OFFSET,
       }],
       flashSize: '8MB',
       flashMode: 'dio',
       flashFreq: '80m',
       eraseAll: false,
-      compress: false,
-      reportProgress: (fileIndex, written, total) => {
+      compress: true, // esptool-js requires compression (will compress lots of 0xFF efficiently)
+      reportProgress: (_fileIndex, written, total) => {
         const progress = 80 + Math.floor((written / total) * 15);
         updateStatus.value.progress = progress;
       },
@@ -342,6 +373,7 @@ export function useFirmwareUpdate() {
     isUpdating,
     hasUsbSupport,
     checkUsbConnection,
+    requestUsbPort,
     updateFirmware,
     downloadFirmware,
     resetStatus,

@@ -30,7 +30,7 @@ const { initBatteryStatus, syncBatteryStatus } = useBatteryStatus();
 const { batteryMonitoringEnabled } = useUIPreferences();
 const { showBatteryModal, openBatteryModal, closeBatteryModal } = useBatteryModal();
 
-const { toasts, remove } = useToast();
+const { toasts, remove, success } = useToast();
 
 // Single unified tab state
 type Tab = 'settings' | 'sliders';
@@ -192,9 +192,13 @@ onMounted(() => {
 async function handleConnect() {
   try {
     await connect();
+    
     // Close any open modals on successful connection
     showFirstTimeOverlay.value = false;
     showContextualModal.value = false;
+    
+    // Show success toast with animated BLE icon
+    success('Connected via Bluetooth');
     
     // Initialize battery status after connection (always runs in background)
     setTimeout(async () => {

@@ -65,6 +65,12 @@ async function initBatteryStatus() {
  * Sync battery status from device (piggyback on BLE operations)
  */
 async function syncBatteryStatus() {
+  // Check if BLE is connected first
+  if (!bleClient.isConnected()) {
+    console.warn('Cannot sync battery: BLE not connected');
+    return;
+  }
+  
   try {
     const status = await bleClient.readBatteryStatus();
     
@@ -278,17 +284,14 @@ export function updateBatteryFromKeepAlive(percentage: number) {
     // Initialize battery status if not yet synced
     batteryStatus.value = {
       percentage,
-      isCharging: percentage === 255,
-      isUsbConnected: false, // Will be updated from flags if needed
-      activeTimeMs: 0,
-      lightSleepTimeMs: 0,
-      deepSleepTimeMs: 0,
-      lastFullChargeMs: 0
+      usbConnected: false, // Will be updated from flags if needed
+      remainingSeconds: 0,
+      calibrationTimestamp: 0,
+      lastUpdate: Date.now()
     };
   } else {
     // Update existing status
     batteryStatus.value.percentage = percentage;
-    batteryStatus.value.isCharging = percentage === 255;
   }
   
   lastSyncTime.value = Date.now();

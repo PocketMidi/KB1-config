@@ -13,9 +13,9 @@
       <!-- Always show KB1 logo -->
       <img src="/kb1_title.svg" alt="KB1 CONFIGURATOR" class="header-logo" />
       
-      <!-- Connected state: Show battery meter (only if monitoring enabled) -->
+      <!-- Battery meter: Show if monitoring enabled AND data available (persists when disconnected) -->
       <BatteryMeter 
-        v-if="isConnected && batteryMonitoringEnabled"
+        v-if="batteryMonitoringEnabled && batteryStatus"
         @click="openBatteryModal"
       />
     </div>
@@ -48,7 +48,7 @@ defineEmits<{
 }>();
 
 const { showBatteryModal, openBatteryModal, closeBatteryModal } = useBatteryModal();
-const { initBatteryStatus, syncBatteryStatus } = useBatteryStatus();
+const { batteryStatus, initBatteryStatus, syncBatteryStatus } = useBatteryStatus();
 const { batteryMonitoringEnabled } = useUIPreferences();
 
 // Sync battery status when connecting (always runs in background)

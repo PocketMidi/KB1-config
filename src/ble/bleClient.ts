@@ -1062,6 +1062,38 @@ export class BLEClient {
   }
 
   /**
+   * Set battery percentage manually (dev mode only)
+   * Sends command 0x02 followed by percentage byte to battery control characteristic
+   * For testing and calibration purposes
+   */
+  async setBatteryPercentage(percentage: number): Promise<void> {
+    // Evaluation mode: simulate battery set
+    const isEvalMode = localStorage.getItem('kb1-dev-mode') === 'true';
+    if (isEvalMode) {
+      console.log(`🔋 Battery set to ${percentage}% (evaluation mode)`);
+      return;
+    }
+    
+    if (!this.batteryControlCharacteristic) {
+      throw new Error('Battery control not supported');
+    }
+
+    if (percentage < 0 || percentage > 100) {
+      throw new Error('Battery percentage must be between 0 and 100');
+    }
+
+    try {
+      // Send command 0x02 (set percentage) followed by percentage value
+      const command = new Uint8Array([0x02, percentage]);
+      await this.batteryControlCharacteristic.writeValue(command);
+      console.log(`🔋 Battery set to ${percentage}% command sent`);
+    } catch (error) {
+      console.error('Failed to set battery percentage:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Check if battery control (recalibrate) is available
    */
   hasBatteryControl(): boolean {

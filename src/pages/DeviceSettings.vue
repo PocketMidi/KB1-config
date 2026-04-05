@@ -5,9 +5,9 @@
       <p>Configure KB1 lever, touch, and scale settings</p>
     </div>
     
-    <!-- Always show content, but apply disconnected styling -->
-    <div class="settings-content" :class="{ 'disconnected-state': !isConnected }">
-      <div class="action-bar">
+    <!-- Always show content, apply selective dimming to BLE-dependent sections -->
+    <div class="settings-content">
+      <div class="action-bar" :class="{ 'ble-required': !isConnected }">
         <button
           class="btn btn-secondary"
           @click="handleLoadClick"
@@ -47,79 +47,83 @@
            This prevents race conditions where category data might not be available
            during component initialization, which would cause blank category dropdowns. -->
       <div v-if="isCCMapLoaded()" class="settings-sections">
-        <LeverSettings
-          title="Lever"
-          :lever="1"
-          v-model="localSettings.lever1"
-          :ccOptions="ccOptions"
-          :ccMapByNumber="ccMapByNumber"
-          :categories="categories"
-          :functionModes="leverFunctionModes"
-          :valueModes="valueModes"
-          @update:modelValue="markChanged"
-        />
+        <div :class="{ 'ble-required': !isConnected }">
+          <LeverSettings
+            title="Lever"
+            :lever="1"
+            v-model="localSettings.lever1"
+            :ccOptions="ccOptions"
+            :ccMapByNumber="ccMapByNumber"
+            :categories="categories"
+            :functionModes="leverFunctionModes"
+            :valueModes="valueModes"
+            @update:modelValue="markChanged"
+          />
+          
+          <LeverPushSettings
+            title="Press"
+            :lever="1"
+            v-model="localSettings.leverPush1"
+            :ccOptions="ccOptions"
+            :ccMapByNumber="ccMapByNumber"
+            :categories="categories"
+            :functionModes="leverPushFunctionModes"
+            :interpolations="interpolations"
+            @update:modelValue="markChanged"
+          />
+          
+          <LeverSettings
+            title="Lever"
+            :lever="2"
+            v-model="localSettings.lever2"
+            :ccOptions="ccOptions"
+            :ccMapByNumber="ccMapByNumber"
+            :categories="categories"
+            :functionModes="leverFunctionModes"
+            :valueModes="valueModes"
+            @update:modelValue="markChanged"
+          />
+          
+          <LeverPushSettings
+            title="Press"
+            :lever="2"
+            v-model="localSettings.leverPush2"
+            :ccOptions="ccOptions"
+            :ccMapByNumber="ccMapByNumber"
+            :categories="categories"
+            :functionModes="leverPushFunctionModes"
+            :interpolations="interpolations"
+            @update:modelValue="markChanged"
+          />
+          
+          <TouchSettings
+            title="TOUCH"
+            v-model="localSettings.touch"
+            :ccOptions="ccOptions"
+            :ccMapByNumber="ccMapByNumber"
+            :categories="categories"
+            :functionModes="touchFunctionModes"
+            @update:modelValue="markChanged"
+          />
+        </div>
         
-        <LeverPushSettings
-          title="Press"
-          :lever="1"
-          v-model="localSettings.leverPush1"
-          :ccOptions="ccOptions"
-          :ccMapByNumber="ccMapByNumber"
-          :categories="categories"
-          :functionModes="leverPushFunctionModes"
-          :interpolations="interpolations"
-          @update:modelValue="markChanged"
-        />
-        
-        <LeverSettings
-          title="Lever"
-          :lever="2"
-          v-model="localSettings.lever2"
-          :ccOptions="ccOptions"
-          :ccMapByNumber="ccMapByNumber"
-          :categories="categories"
-          :functionModes="leverFunctionModes"
-          :valueModes="valueModes"
-          @update:modelValue="markChanged"
-        />
-        
-        <LeverPushSettings
-          title="Press"
-          :lever="2"
-          v-model="localSettings.leverPush2"
-          :ccOptions="ccOptions"
-          :ccMapByNumber="ccMapByNumber"
-          :categories="categories"
-          :functionModes="leverPushFunctionModes"
-          :interpolations="interpolations"
-          @update:modelValue="markChanged"
-        />
-        
-        <TouchSettings
-          title="TOUCH"
-          v-model="localSettings.touch"
-          :ccOptions="ccOptions"
-          :ccMapByNumber="ccMapByNumber"
-          :categories="categories"
-          :functionModes="touchFunctionModes"
-          @update:modelValue="markChanged"
-        />
-        
-        <!-- System Settings always accessible (contains firmware update) -->
-        <div class="always-accessible">
+        <!-- System Settings - NO dimming, always accessible -->
+        <div class="system-settings-wrapper">
           <SystemSettings
             v-model="localSettings.system"
             @update:modelValue="markChanged"
           />
         </div>
         
-        <ScaleSettings
-          title="Scales"
-          v-model="localSettings.scale"
-          :scales="scales"
-          :rootNotes="rootNotes"
-          @update:modelValue="markChanged"
-        />
+        <div :class="{ 'ble-required': !isConnected }">
+          <ScaleSettings
+            title="Scales"
+            v-model="localSettings.scale"
+            :scales="scales"
+            :rootNotes="rootNotes"
+            @update:modelValue="markChanged"
+          />
+        </div>
       </div>
     </div>
   </div>
@@ -383,32 +387,19 @@ async function handleSaveToDevice() {
   gap: 1.5rem;
 }
 
-/* Ensure certain sections (like System Settings with firmware update) 
-   are always fully accessible regardless of connection state */
-.always-accessible {
-  opacity: 1 !important;
-  pointer-events: auto !important;
-  filter: none !important;
-}
-
-/* Give always-accessible sections brighter, more vibrant styling */
-.always-accessible .settings-system {
-  background: var(--color-background) !important;
-  border-color: rgba(74, 158, 255, 0.3) !important;
-  box-shadow: 0 0 0 1px rgba(74, 158, 255, 0.15) !important;
-}
-
-/* Disconnected state styling - dim settings that require BLE */
-.disconnected-state {
+/* BLE-dependent sections dimmed when disconnected */
+.ble-required {
   opacity: 0.5;
   pointer-events: none;
-}
-
-/* System Settings remains fully accessible without BLE */
-.disconnected-state .always-accessible {
-  opacity: 1 !important;
-  filter: none !important;
-  pointer-events: auto !important;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}wrapper gets blue accent to show it's always available */
+.system-settings-wrapper :deep(.settings-system)
+/* System Settings gets blue accent to show it's always available */
+.settings-system {
+  border-color: rgba(74, 158, 255, 0.3) !important;
+  box-shadow: 0 0 0 1px rgba(74, 158, 255, 0.15) !important;
 }
 
 .btn {

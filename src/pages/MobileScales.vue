@@ -9,14 +9,15 @@
       @save="handleSaveToDevice"
     />
     
-    <!-- Always show content, but apply disconnected styling -->
-    <div v-if="isCCMapLoaded()" class="scales-content" :class="{ 'disconnected-state': !isConnected }">
-      <!-- Collapse All Bar (top - shy, only shows when 2+ open) -->
-      <Transition name="collapse-fade">
-        <button v-if="openAccordionCount >= 2" class="collapse-all-bar" @click="closeAllAccordions">
-          COLLAPSE ALL
-        </button>
-      </Transition>
+    <!-- Settings content - dims when disconnected (except System) -->
+    <div v-if="isCCMapLoaded()" class="scales-content">
+      <div :class="{ 'disconnected-state': !isConnected }">
+        <!-- Collapse All Bar (top - shy, only shows when 2+ open) -->
+        <Transition name="collapse-fade">
+          <button v-if="openAccordionCount >= 2" class="collapse-all-bar" @click="closeAllAccordions">
+            COLLAPSE ALL
+          </button>
+        </Transition>
       
       <!-- Keyboard first -->
       <AccordionSection
@@ -191,20 +192,23 @@
           @slot-name-display="handleSlotNameDisplay"
         />
       </AccordionSection>
+      </div>
       
-      <!-- System at bottom -->
-      <AccordionSection
-        ref="systemAccordion"
-        title="SYSTEM"
-        subtitle="Power & Timeout Settings"
-        :id="'system-settings'"
-        :default-open="false"
-      >
-        <SystemSettings
-          v-model="localSettings.system"
-          @update:modelValue="markChanged"
-        />
-      </AccordionSection>
+      <!-- System Settings - OUTSIDE disconnected-state (always accessible) -->
+      <div class="system-settings-wrapper">
+        <AccordionSection
+          ref="systemAccordion"
+          title="SYSTEM v1.6"
+          subtitle="Configurator Settings"
+          :id="'system-settings'"
+          :default-open="false"
+        >
+          <SystemSettings
+            v-model="localSettings.system"
+            @update:modelValue="markChanged"
+          />
+        </AccordionSection>
+      </div>
       
       <!-- Collapse All Bar (bottom - always visible) -->
       <button class="collapse-all-bar" @click="closeAllAccordions">
@@ -990,6 +994,19 @@ defineExpose({
   .scales-content {
     padding: 0.75rem;
   }
+}
+
+/* System Settings always accessible - never dimmed */
+.system-settings-wrapper {
+  opacity: 1 !important;
+  filter: none !important;
+  pointer-events: auto !important;
+}
+
+/* Blue accent border to show System is always available */
+.system-settings-wrapper :deep(.accordion-header) {
+  border-color: rgba(74, 158, 255, 0.3) !important;
+  box-shadow: 0 0 0 1px rgba(74, 158, 255, 0.15) !important;
 }
 
 @media (min-width: 769px) {

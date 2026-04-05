@@ -289,7 +289,6 @@ const props = defineProps<Props>();
 const emit = defineEmits<Emits>();
 
 const {
-  batteryStatus,
   batteryColor,
   estimatedPercentage,
   showPercentage,

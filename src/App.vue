@@ -646,21 +646,19 @@ body {
   top: 0;
   z-index: 200; /* High z-index to stay above header */
   background-color: var(--color-background);
-  /* Extend background above (for non-Safari iOS bounce area) */
-  box-shadow: 0 -40px 0 40px var(--color-background);
 }
 
-/* Gradient fade below sticky header - masks scrolling content */
-.tab-nav-wrapper::after {
+/* Solid color block above sticky nav - covers content scrolling through the
+   header zone on non-Safari iOS browsers where sticky rendering differs */
+.tab-nav-wrapper::before {
   content: '';
   position: absolute;
-  top: 100%;
+  bottom: 100%;
   left: 0;
   right: 0;
-  height: 32px;
-  background: linear-gradient(to bottom, var(--color-background), transparent);
+  height: 500px; /* Tall enough to cover logo header + safe area + overscroll */
+  background: var(--color-background);
   pointer-events: none;
-  z-index: 1;
 }
 
 /* Tab Navigation - Unified responsive layout */

@@ -78,22 +78,19 @@ function handleSave() {
   background: var(--color-background);
   justify-content: center;
   align-items: center;
-  /* Extend background below (for non-Safari iOS bounce area) */
-  box-shadow: 0 40px 0 40px var(--color-background);
+  border-top: 1px solid rgba(234, 234, 234, 0.1);
 }
 
-/* Gradient fade above footer action bar - masks scrolling content */
-.footer-action-bar::before {
+/* Solid color block below footer - covers iOS overscroll bounce area */
+.footer-action-bar::after {
   content: '';
   position: absolute;
-  bottom: 100%;
+  top: 100%;
   left: 0;
   right: 0;
-  height: 32px;
-  background: linear-gradient(to top, var(--color-background), transparent);
+  height: 300px; /* Covers home indicator + overscroll bounce */
+  background: var(--color-background);
   pointer-events: none;
-}
-  border-top: 1px solid rgba(234, 234, 234, 0.1);
 }
 
 .action-icon-btn {

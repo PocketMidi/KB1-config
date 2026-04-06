@@ -75,6 +75,7 @@ function handleSave() {
   display: flex;
   gap: 50px; /* Increased spacing between icons (40-60px range) */
   padding: 20px 0;
+  padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px));
   background: var(--color-background);
   justify-content: center;
   align-items: center;

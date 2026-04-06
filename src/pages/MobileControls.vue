@@ -568,6 +568,8 @@ defineExpose({
   overflow-x: hidden;
   /* Ensure content doesn't hide behind sticky bars */
   padding-top: 1rem;
+  /* Clear fixed footer height (~72px) + safe area */
+  padding-bottom: calc(100px + env(safe-area-inset-bottom, 0px));
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;

@@ -26,7 +26,10 @@ dist-ssr
 # Test files
 public/test-settings.html
 
-# Ignore PNG files except animation frames
+# Ignore PNG files except animation frames and PWA icons
 *.png
 !public/to_land/*.png
 !public/to_port/*.png
+!public/icon-192.png
+!public/icon-512.png
+!public/apple-touch-icon.png

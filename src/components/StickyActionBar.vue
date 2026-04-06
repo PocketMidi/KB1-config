@@ -81,14 +81,26 @@ function handleSave() {
   border-top: 1px solid rgba(234, 234, 234, 0.1);
 }
 
-/* Solid color block below footer - covers iOS overscroll bounce area */
+/* Solid color block ABOVE footer - masks content scrolling under the bar */
+.footer-action-bar::before {
+  content: '';
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  right: 0;
+  height: 500px; /* Tall enough to cover viewport height worth of scroll */
+  background: var(--color-background);
+  pointer-events: none;
+}
+
+/* Solid color block BELOW footer - covers iOS home indicator + bounce area */
 .footer-action-bar::after {
   content: '';
   position: absolute;
   top: 100%;
   left: 0;
   right: 0;
-  height: 300px; /* Covers home indicator + overscroll bounce */
+  height: 300px;
   background: var(--color-background);
   pointer-events: none;
 }

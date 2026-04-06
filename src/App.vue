@@ -187,6 +187,15 @@ onMounted(() => {
   }
   // Apply initial theme class to html element
   document.documentElement.classList.add(isDarkMode.value ? 'theme-kb1-dark' : 'theme-kb1-light');
+
+  // Show/hide the sticky-nav top mask only after the logo header scrolls away
+  if (appHeaderRef.value) {
+    const observer = new IntersectionObserver(
+      ([entry]) => { isScrolledPastHeader.value = !(entry?.isIntersecting ?? true); },
+      { threshold: 0 }
+    );
+    observer.observe(appHeaderRef.value);
+  }
 });
 
 async function handleConnect() {
@@ -277,6 +286,8 @@ function handleMainClick(event: MouseEvent) {
 // Refs for page components
 const mobileScalesRef = ref<InstanceType<typeof MobileScales> | null>(null);
 const mobileSlidersRef = ref<InstanceType<typeof MobileSliders> | null>(null);
+const appHeaderRef = ref<HTMLElement | null>(null);
+const isScrolledPastHeader = ref(false);
 
 function handleTabClick(tabId: Tab) {
   // If clicking on sliders tab while in live mode, exit live mode
@@ -325,7 +336,7 @@ function handleTabClick(tabId: Tab) {
     />
     
     <!-- Unified Responsive Layout -->
-    <header v-if="!hideUI" class="app-header">
+    <header v-if="!hideUI" class="app-header" ref="appHeaderRef">
       <div class="header-content">
         <!-- KB1 logo - centered, no buttons -->
         <div class="logo-section logo-tap-zone" @click="handleLogoClick" @touchend.prevent="handleLogoClick">
@@ -341,7 +352,7 @@ function handleTabClick(tabId: Tab) {
     </header>
     
     <!-- Unified Tab Navigation with Bluetooth Controls -->
-    <div v-if="!hideUI" class="tab-nav-wrapper">
+    <div v-if="!hideUI" class="tab-nav-wrapper" :class="{ 'past-header': isScrolledPastHeader }">
       <nav class="app-nav">
         <!-- Theme toggle button (far left) -->
         <button 
@@ -648,9 +659,9 @@ body {
   background-color: var(--color-background);
 }
 
-/* Solid color block above sticky nav - covers content scrolling through the
-   header zone on non-Safari iOS browsers where sticky rendering differs */
-.tab-nav-wrapper::before {
+/* Solid color block above sticky nav - only activates after the logo header
+   has scrolled out of view; hidden while header is still visible */
+.tab-nav-wrapper.past-header::before {
   content: '';
   position: absolute;
   bottom: 100%;

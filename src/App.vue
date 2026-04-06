@@ -646,6 +646,21 @@ body {
   top: 0;
   z-index: 200; /* High z-index to stay above header */
   background-color: var(--color-background);
+  /* Extend background above (for non-Safari iOS bounce area) */
+  box-shadow: 0 -40px 0 40px var(--color-background);
+}
+
+/* Gradient fade below sticky header - masks scrolling content */
+.tab-nav-wrapper::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  height: 32px;
+  background: linear-gradient(to bottom, var(--color-background), transparent);
+  pointer-events: none;
+  z-index: 1;
 }
 
 /* Tab Navigation - Unified responsive layout */

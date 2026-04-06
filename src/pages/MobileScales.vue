@@ -1,14 +1,5 @@
 <template>
   <div class="mobile-scales-tab">
-    <StickyActionBar
-      :is-connected="isConnected"
-      :is-loading="isLoading"
-      :has-changes="hasChanges"
-      @load="handleLoadClick"
-      @reset-defaults="handleResetDefaults"
-      @save="handleSaveToDevice"
-    />
-    
     <!-- Settings content - dims when disconnected (except System) -->
     <div v-if="isCCMapLoaded()" class="scales-content">
       <div :class="{ 'disconnected-state': !isConnected }">
@@ -206,6 +197,8 @@
           <SystemSettings
             v-model="localSettings.system"
             @update:modelValue="markChanged"
+            @restore-from-device="handleLoadClick"
+            @reset-to-factory="handleResetDefaults"
           />
         </AccordionSection>
       </div>
@@ -219,7 +212,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, computed, onMounted, onBeforeUnmount, watchEffect } from 'vue';
+import { ref, watch, computed, onMounted, onBeforeUnmount, watchEffect, nextTick } from 'vue';
 import { useDeviceState } from '../composables/useDeviceState';
 import type { 
   DeviceSettings,
@@ -228,7 +221,7 @@ import type {
   LeverPushSettings as LeverPushSettingsType, 
   TouchSettings as TouchSettingsType 
 } from '../ble/kb1Protocol';
-import StickyActionBar from '../components/StickyActionBar.vue';
+
 import KeyboardSettings from '../components/KeyboardSettings.vue';
 import AccordionSection from '../components/AccordionSection.vue';
 import SystemSettings from '../components/SystemSettings.vue';
@@ -250,7 +243,6 @@ import {
 const {
   isConnected,
   deviceSettings,
-  isLoading,
   sendSettings,
   saveToFlash,
   handleLoad,
@@ -265,6 +257,7 @@ const { confirm } = useConfirm();
 
 const localSettings = ref<DeviceSettings>(JSON.parse(JSON.stringify(deviceSettings.value)));
 const hasChanges = ref(false);
+const isMounted = ref(false);
 
 // Active preset tracking
 const activePresetId = ref<string | null>(PresetStore.getActivePresetId());
@@ -312,6 +305,8 @@ onMounted(async () => {
   } catch (error) {
     console.error('Failed to load CC map:', error);
   }
+  await nextTick();
+  isMounted.value = true;
 });
 
 // Cleanup timeouts on unmount
@@ -757,6 +752,7 @@ watch(() => localSettings.value.chord.strumPattern, (newPattern, oldPattern) => 
 });
 
 function markChanged() {
+  if (!isMounted.value) return;
   hasChanges.value = true;
 }
 
@@ -915,7 +911,9 @@ function closeAllAccordions() {
 }
 
 defineExpose({
-  closeAllAccordions
+  closeAllAccordions,
+  hasChanges,
+  triggerSave: handleSaveToDevice
 });
 </script>
 
@@ -975,7 +973,7 @@ defineExpose({
   /* Ensure content doesn't hide behind sticky bars */
   padding-top: 1rem;
   /* Clear fixed footer height (~72px) + safe area */
-  padding-bottom: calc(100px + env(safe-area-inset-bottom, 0px));
+  padding-bottom: 1.5rem;
 }
 
 .root-note-display {

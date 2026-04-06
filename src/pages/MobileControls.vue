@@ -1,14 +1,5 @@
 <template>
   <div class="mobile-controls-tab">
-    <StickyActionBar
-      :is-connected="isConnected"
-      :is-loading="isLoading"
-      :has-changes="hasChanges"
-      @load="handleLoadClick"
-      @reset-defaults="handleResetDefaults"
-      @save="handleSaveToDevice"
-    />
-    
     <!-- Always show content, but apply disconnected styling -->
     <div v-if="isCCMapLoaded()" class="controls-accordion" :class="{ 'disconnected-state': !isConnected }">
       <AccordionSection
@@ -146,12 +137,9 @@ import type {
   TouchSettings as TouchSettingsType 
 } from '../ble/kb1Protocol';
 import AccordionSection from '../components/AccordionSection.vue';
-import StickyActionBar from '../components/StickyActionBar.vue';
 import LeverSettings from '../components/LeverSettings.vue';
 import LeverPushSettings from '../components/LeverPushSettings.vue';
 import TouchSettings from '../components/TouchSettings.vue';
-import { useToast } from '../composables/useToast';
-import { useConfirm } from '../composables/useConfirm';
 import {
   loadPolyendCCMap,
   getCCMap,
@@ -163,15 +151,7 @@ import {
 const {
   isConnected,
   deviceSettings,
-  isLoading,
-  sendSettings,
-  saveToFlash,
-  handleLoad,
-  resetToDefaults,
 } = useDeviceState();
-
-const toast = useToast();
-const { confirm } = useConfirm();
 
 const localSettings = ref<DeviceSettings>({ ...deviceSettings.value });
 const hasChanges = ref(false);
@@ -483,48 +463,6 @@ function markChanged() {
   hasChanges.value = true;
 }
 
-async function handleLoadClick() {
-  try {
-    await handleLoad();
-    localSettings.value = { ...deviceSettings.value };
-    hasChanges.value = false;
-  } catch (error) {
-    console.error('Failed to load settings:', error);
-    toast.error('Failed to load settings from device');
-  }
-}
-
-async function handleResetDefaults() {
-  if (await confirm('Reset all settings to firmware defaults? This will discard current changes.')) {
-    try {
-      resetToDefaults();
-      localSettings.value = { ...deviceSettings.value };
-      hasChanges.value = true;
-    } catch (error) {
-      console.error('Failed to reset to defaults:', error);
-      toast.error('Failed to reset to defaults');
-    }
-  }
-}
-
-async function handleSaveToDevice() {
-  try {
-    await sendSettings(localSettings.value);
-    
-    try {
-      await saveToFlash();
-      hasChanges.value = false;
-      toast.success('Settings uploaded to device');
-    } catch (flashError) {
-      console.error('Failed to save to flash:', flashError);
-      toast.warning('Settings applied but may not persist on reboot');
-    }
-  } catch (error) {
-    console.error('Failed to apply settings to device:', error);
-    toast.error('Failed to apply settings to device');
-  }
-}
-
 // Accordion refs
 const lever1Accordion = ref<InstanceType<typeof AccordionSection> | null>(null);
 const leverPush1Accordion = ref<InstanceType<typeof AccordionSection> | null>(null);
@@ -569,7 +507,7 @@ defineExpose({
   /* Ensure content doesn't hide behind sticky bars */
   padding-top: 1rem;
   /* Clear fixed footer height (~72px) + safe area */
-  padding-bottom: calc(100px + env(safe-area-inset-bottom, 0px));
+  padding-bottom: 1.5rem;
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;

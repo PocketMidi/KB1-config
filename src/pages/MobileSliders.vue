@@ -1,18 +1,8 @@
 <template>
   <div class="mobile-sliders-tab">
-    <StickyActionBar
-      v-if="!hideFooter"
-      :is-connected="isConnected"
-      :is-loading="false"
-      :has-changes="false"
-      @load="handleLoad"
-      @reset-defaults="handleResetDefaults"
-      @save="handleSave"
-    />
-    
     <!-- Always show content, but apply disconnected styling -->
     <div class="sliders-wrapper" :class="{ 'disconnected-state': !isConnected }">
-      <PerformanceSliders ref="performanceSlidersRef" />
+      <PerformanceSliders ref="performanceSlidersRef" @reset-to-zero="handleResetToZero" @reset-to-defaults="handleResetToDefaults" />
     </div>
 
     <!-- Save Preset Dialog -->
@@ -27,7 +17,6 @@
             class="input-text"
             placeholder="Enter preset name"
             @keyup.enter="confirmSave"
-            ref="saveInput"
           />
         </div>
         <div class="form-actions">
@@ -81,12 +70,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, nextTick, onMounted, computed } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useDeviceState } from '../composables/useDeviceState';
 import { useConfirm } from '../composables/useConfirm';
 import { useToast } from '../composables/useToast';
 import PerformanceSliders from '../components/PerformanceSliders.vue';
-import StickyActionBar from '../components/StickyActionBar.vue';
 import { SliderPresetStore, generateRandomSliderName, type NamedSliderPreset } from '../state/sliderPresets';
 
 const { isConnected } = useDeviceState();
@@ -94,27 +82,9 @@ const { confirm } = useConfirm();
 const toast = useToast();
 const performanceSlidersRef = ref<InstanceType<typeof PerformanceSliders> | null>(null);
 
-// Check if in live mode
-const isLiveMode = computed(() => {
-  return performanceSlidersRef.value?.viewMode === 'live';
-});
-
-// Detect if mobile device
-const isMobile = computed(() => {
-  const hasTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-  const isSmallScreen = window.innerWidth < 768;
-  return hasTouch && isSmallScreen;
-});
-
-// Only hide footer on mobile live mode
-const hideFooter = computed(() => {
-  return isMobile.value && isLiveMode.value;
-});
-
 // Save dialog
 const showSaveDialog = ref(false);
 const newPresetName = ref('');
-const saveInput = ref<HTMLInputElement | null>(null);
 
 // Load dialog
 const showLoadDialog = ref(false);
@@ -126,33 +96,6 @@ onMounted(() => {
 
 function refreshPresets() {
   presets.value = SliderPresetStore.getAllPresets();
-}
-
-// Handle reset to defaults
-function handleResetDefaults() {
-  if (performanceSlidersRef.value) {
-    // In live mode, only reset values to 0, not full reset
-    if (isInLiveMode()) {
-      performanceSlidersRef.value.resetValuesToZero();
-      toast.success('Sliders reset to zero');
-    } else {
-      performanceSlidersRef.value.resetToDefaults();
-      toast.success('Sliders reset to defaults');
-    }
-  }
-}
-
-// Handle load - show load dialog
-async function handleLoad() {
-  refreshPresets();
-  showLoadDialog.value = true;
-}
-
-// Handle save - show save dialog
-async function handleSave() {
-  showSaveDialog.value = true;
-  await nextTick();
-  saveInput.value?.focus();
 }
 
 // Generate random name for preset
@@ -217,6 +160,14 @@ function formatDate(timestamp: number): string {
   }
   
   return date.toLocaleDateString();
+}
+
+function handleResetToZero() {
+  toast.success('Sliders reset to zero');
+}
+
+function handleResetToDefaults() {
+  toast.success('Sliders reset to defaults');
 }
 
 // Helper methods for parent component

@@ -97,6 +97,45 @@
         </div>
       </div>
       <!-- Firmware update removed - use desktop firmware updater tool instead -->
+
+      <div class="input-divider"></div>
+      <div class="group">
+        <label>APPEARANCE</label>
+        <div class="theme-mode-toggle">
+          <button
+            class="theme-mode-btn"
+            :class="{ active: themeMode === 'auto' }"
+            @click="setThemeMode('auto')"
+          >AUTO</button>
+          <button
+            class="theme-mode-btn"
+            :class="{ active: themeMode === 'dark' }"
+            @click="setThemeMode('dark')"
+          >DARK</button>
+          <button
+            class="theme-mode-btn"
+            :class="{ active: themeMode === 'light' }"
+            @click="setThemeMode('light')"
+          >LIGHT</button>
+        </div>
+      </div>
+      <div class="input-divider"></div>
+
+      <div class="group">
+        <label>DEVICE</label>
+        <div class="theme-mode-toggle">
+          <button
+            class="theme-mode-btn"
+            :class="{ active: restoringFromDevice }"
+            @click="handleRestoreFromDevice"
+          >RESTORE</button>
+          <button
+            class="theme-mode-btn danger"
+            :class="{ active: resettingToFactory }"
+            @click="handleResetToFactory"
+          >RESET</button>
+        </div>
+      </div>
     </div>
   </div>
   
@@ -136,7 +175,9 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: 'update:modelValue', v: SystemModel): void
-}>()
+  (e: 'restore-from-device'): void
+  (e: 'reset-to-factory'): void
+}>()    
 
 const model = computed({
   get: () => props.modelValue,
@@ -164,7 +205,7 @@ function toggleHaptics() {
 }
 
 // UI Preferences
-const { unipolarStepSize, setUnipolarStepSize, batteryMonitoringEnabled, setBatteryMonitoringEnabled } = useUIPreferences()
+const { unipolarStepSize, setUnipolarStepSize, batteryMonitoringEnabled, setBatteryMonitoringEnabled, themeMode, setThemeMode } = useUIPreferences()
 
 // Battery Modal
 const { openBatteryModal } = useBatteryModal()
@@ -253,6 +294,27 @@ function resetHints() {
   setTimeout(() => {
     restoringHints.value = false
   }, 600)
+}
+
+// Restore from device momentary button
+const restoringFromDevice = ref(false)
+
+function handleRestoreFromDevice() {
+  restoringFromDevice.value = true
+  emit('restore-from-device')
+  snap()
+  setTimeout(() => { restoringFromDevice.value = false }, 600)
+}
+
+// Reset to factory momentary button
+const resettingToFactory = ref(false)
+
+function handleResetToFactory() {
+  if (!confirm('Reset all settings to factory defaults? This cannot be undone.')) return
+  resettingToFactory.value = true
+  emit('reset-to-factory')
+  snap()
+  setTimeout(() => { resettingToFactory.value = false }, 600)
 }
 
 // Auto-calculate deep sleep as light sleep + 90s (fixed pulsing LED warning period)
@@ -584,5 +646,64 @@ const formatTime = (seconds: number): string => {
 .toggle-switch.momentary-btn:hover .toggle-label-left,
 .toggle-switch.momentary-btn:hover .toggle-label-right {
   color: #EAEAEA;
+}
+
+/* Danger variant - muted red tint on active */
+.toggle-switch.danger-btn.active .toggle-track {
+  background: rgba(239, 68, 68, 0.3);
+  border-color: rgba(239, 68, 68, 0.5);
+}
+.toggle-switch.danger-btn.active .toggle-thumb {
+  background: #ef4444;
+}
+.toggle-switch.danger-btn.active .toggle-label-right {
+  color: #ef4444;
+}
+
+/* APPEARANCE 3-way theme toggle */
+.theme-mode-toggle {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.theme-mode-btn {
+  padding: 0.25rem 0.6rem;
+  background: transparent;
+  border: 1px solid #3A3A3A;
+  border-radius: 4px;
+  color: #848484;
+  font-family: 'Roboto Mono';
+  font-size: 0.6875rem;
+  font-weight: 400;
+  cursor: pointer;
+  transition: all 0.2s;
+  letter-spacing: 0.05em;
+}
+
+.theme-mode-btn.active {
+  background: rgba(234, 234, 234, 0.1);
+  border-color: rgba(234, 234, 234, 0.4);
+  color: #EAEAEA;
+  font-weight: 500;
+}
+
+.theme-mode-btn:hover:not(.active) {
+  color: #EAEAEA;
+  border-color: #5A5A5A;
+}
+
+.theme-mode-btn.danger {
+  color: #848484;
+}
+
+.theme-mode-btn.danger:hover:not(.active) {
+  color: #ef4444;
+  border-color: #ef4444;
+}
+
+.theme-mode-btn.danger.active {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.5);
+  color: #ef4444;
 }
 </style>

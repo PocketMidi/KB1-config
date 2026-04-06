@@ -4,6 +4,11 @@ import { Vue3Lottie } from 'vue3-lottie';
 import { bleClient } from '../ble/bleClient';
 import { SliderPresetStore, type SliderPreset } from '../state/sliderPresets';
 
+const emit = defineEmits<{
+  'reset-to-zero': [],
+  'reset-to-defaults': []
+}>();
+
 // Slider configuration
 interface SliderConfig {
   cc: number;
@@ -498,6 +503,7 @@ function resetToDefaults() {
   }
   links.value = new Array(11).fill(false);
   savePreset();
+  emit('reset-to-defaults');
 }
 
 // Reset values to zero (only values, keep colors/settings)
@@ -506,6 +512,7 @@ function resetValuesToZero() {
     slider.value = 0;
   }
   savePreset();
+  emit('reset-to-zero');
 }
 
 // Handle triple-tap on blank space in live mode
@@ -567,12 +574,15 @@ async function handleSliderChange(index: number, newValue: number, skipSave = fa
   
   slider.value = newValue;
   
-  // Send MIDI CC
-  try {
-    const ccValue = valueToCC(slider);
-    await bleClient.sendControlChange(slider.cc, ccValue);
-  } catch (e) {
-    console.error('Failed to send CC', e);
+  // Only send MIDI when connected
+  if (bleClient.isConnected()) {
+    // Send MIDI CC
+    try {
+      const ccValue = valueToCC(slider);
+      await bleClient.sendControlChange(slider.cc, ccValue);
+    } catch (e) {
+      console.error('Failed to send CC', e);
+    }
   }
   
   // Update all sliders in the same gang
@@ -582,11 +592,13 @@ async function handleSliderChange(index: number, newValue: number, skipSave = fa
   
   for (const linkedSlider of linkedSliders) {
     linkedSlider.value = newValue;
-    try {
-      const ccValue = valueToCC(linkedSlider);
-      await bleClient.sendControlChange(linkedSlider.cc, ccValue);
-    } catch (e) {
-      console.error('Failed to send linked CC', e);
+    if (bleClient.isConnected()) {
+      try {
+        const ccValue = valueToCC(linkedSlider);
+        await bleClient.sendControlChange(linkedSlider.cc, ccValue);
+      } catch (e) {
+        console.error('Failed to send linked CC', e);
+      }
     }
   }
   
@@ -1286,6 +1298,7 @@ defineExpose({
               {{ explainerText }}
             </span>
           </button>
+          <button class="btn-zero" @click="resetToDefaults">ZERO</button>
           <button class="btn-mode-toggle" @click="toggleControlMode">
             <span :class="{ active: controlMode === 'fx' }">FX</span>
             <span class="mode-divider">|</span>
@@ -1293,7 +1306,7 @@ defineExpose({
           </button>
         </div>
       </div>
-      
+
       <!-- Sliders list -->
       <div class="sliders-list">
         <template v-for="(slider, index) in sliders" :key="slider.cc">
@@ -1563,6 +1576,34 @@ defineExpose({
   flex-direction: column;
   gap: 0.5rem;
   margin-bottom: 0.75rem;
+}
+
+/* Zero all bar */
+.btn-zero {
+  flex: 0 0 auto;
+  padding: 0.25rem 0.6rem;
+  background: transparent;
+  border: 1px solid rgba(234, 234, 234, 0.15);
+  border-radius: 4px;
+  color: rgba(234, 234, 234, 0.35);
+  font-family: 'Roboto Mono', monospace;
+  font-size: 0.6875rem;
+  font-weight: 400;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+  height: 1.75rem;
+}
+
+.btn-zero:hover {
+  border-color: rgba(234, 234, 234, 0.4);
+  color: rgba(234, 234, 234, 0.8);
+}
+
+.btn-zero:active {
+  border-color: #F9AC20;
+  color: #F9AC20;
 }
 
 .setup-header h2 {

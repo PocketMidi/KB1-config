@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import MobileScales from './pages/MobileScales.vue';
 import MobileSliders from './pages/MobileSliders.vue';
 import FirstTimeOverlay from './components/FirstTimeOverlay.vue';
@@ -27,7 +27,7 @@ const {
 } = useDeviceState();
 const { dialogs, remove: removeDialog } = useConfirm();
 const { initBatteryStatus, syncBatteryStatus } = useBatteryStatus();
-const { batteryMonitoringEnabled } = useUIPreferences();
+const { batteryMonitoringEnabled, themeMode } = useUIPreferences();
 const { showBatteryModal, openBatteryModal, closeBatteryModal } = useBatteryModal();
 
 const { toasts, remove, success } = useToast();
@@ -48,9 +48,17 @@ const isHoveringStatus = ref(false);
 const showFirstTimeOverlay = ref(false);
 const showContextualModal = ref(false);
 
-// Theme state
-const THEME_KEY = 'kb1-theme-preference';
-const isDarkMode = ref(localStorage.getItem(THEME_KEY) !== 'light');
+// Theme state — driven by useUIPreferences (3-way: auto/dark/light)
+const prefersDark = ref(typeof window !== 'undefined' ? window.matchMedia('(prefers-color-scheme: dark)').matches : true);
+
+const isDarkMode = computed(() => {
+  if (themeMode.value === 'auto') return prefersDark.value;
+  return themeMode.value === 'dark';
+});
+
+// Sync button state
+const isUploading = ref(false);
+const syncHasChanges = computed(() => mobileScalesRef.value?.hasChanges ?? false);
 
 // Secret evaluation mode toggle (tap logo 5 times)
 const logoClickCount = ref(0);
@@ -100,21 +108,6 @@ function closeDevModeModal() {
   // Prevent closing if modal just opened
   if (modalJustOpened.value) return;
   showDevModeModal.value = false;
-}
-
-// Computed property for theme icon
-const themeIcon = computed(() => {
-  const baseUrl = import.meta.env.BASE_URL || '/';
-  return isDarkMode.value ? `${baseUrl}lite.svg` : `${baseUrl}dark.svg`;
-});
-
-function toggleTheme() {
-  isDarkMode.value = !isDarkMode.value;
-  localStorage.setItem(THEME_KEY, isDarkMode.value ? 'dark' : 'light');
-  // Apply theme class to html element for proper CSS variable inheritance
-  document.documentElement.classList.remove('theme-kb1-dark', 'theme-kb1-light');
-  document.documentElement.classList.add(isDarkMode.value ? 'theme-kb1-dark' : 'theme-kb1-light');
-  console.log('Theme toggled to:', isDarkMode.value ? 'dark' : 'light');
 }
 
 // Computed property for bluetooth status text
@@ -185,8 +178,10 @@ onMounted(() => {
   if (!hasSeenIntro && !isConnected.value) {
     showFirstTimeOverlay.value = true;
   }
-  // Apply initial theme class to html element
-  document.documentElement.classList.add(isDarkMode.value ? 'theme-kb1-dark' : 'theme-kb1-light');
+
+  // Watch OS preference changes for auto mode
+  const mq = window.matchMedia('(prefers-color-scheme: dark)');
+  mq.addEventListener('change', (e) => { prefersDark.value = e.matches; });
 
   // Show/hide the sticky-nav top mask only after the logo header scrolls away
   if (appHeaderRef.value) {
@@ -197,6 +192,12 @@ onMounted(() => {
     observer.observe(appHeaderRef.value);
   }
 });
+
+// Apply theme class to html element, reactive to isDarkMode computed
+watch(isDarkMode, (dark) => {
+  document.documentElement.classList.remove('theme-kb1-dark', 'theme-kb1-light');
+  document.documentElement.classList.add(dark ? 'theme-kb1-dark' : 'theme-kb1-light');
+}, { immediate: true });
 
 async function handleConnect() {
   try {
@@ -289,6 +290,17 @@ const mobileSlidersRef = ref<InstanceType<typeof MobileSliders> | null>(null);
 const appHeaderRef = ref<HTMLElement | null>(null);
 const isScrolledPastHeader = ref(false);
 
+async function handleSyncSave() {
+  if (isUploading.value || !isConnected.value || activeTab.value !== 'settings') return;
+  if (!syncHasChanges.value) return;
+  isUploading.value = true;
+  try {
+    await mobileScalesRef.value?.triggerSave();
+  } finally {
+    isUploading.value = false;
+  }
+}
+
 function handleTabClick(tabId: Tab) {
   // If clicking on sliders tab while in live mode, exit live mode
   if (tabId === 'sliders' && activeTab.value === 'sliders') {
@@ -354,16 +366,17 @@ function handleTabClick(tabId: Tab) {
     <!-- Unified Tab Navigation with Bluetooth Controls -->
     <div v-if="!hideUI" class="tab-nav-wrapper" :class="{ 'past-header': isScrolledPastHeader }">
       <nav class="app-nav">
-        <!-- Theme toggle button (far left) -->
-        <button 
-          class="theme-toggle"
-          @click="toggleTheme"
-          :title="isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'"
+        <!-- Sync/Save button (far left) -->
+        <button
+          class="save-upload-btn"
+          :class="{ 'has-changes': syncHasChanges && isConnected && activeTab === 'settings', 'uploading': isUploading, 'dimmed': !syncHasChanges || !isConnected || activeTab !== 'settings' }"
+          @click="handleSyncSave"
+          title="Upload settings to device"
         >
-          <img :src="themeIcon" :alt="isDarkMode ? 'Light Mode' : 'Dark Mode'" class="theme-icon" />
+          <img src="/save.svg" alt="Upload" class="save-upload-icon" />
         </button>
-        
-        <!-- Vertical divider after theme -->
+
+        <!-- Vertical divider after save -->
         <div class="separator"></div>
         
         <div class="nav-tabs">
@@ -755,8 +768,8 @@ body {
   border-radius: 1px;
 }
 
-/* Theme toggle button */
-.theme-toggle {
+/* Save / Upload sync button */
+.save-upload-btn {
   padding: 0.5rem 1rem;
   background: transparent;
   border: none;
@@ -764,32 +777,58 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: opacity 0.2s, transform 0.2s;
-  opacity: 0.6;
   flex-shrink: 0;
+  position: relative;
+  transition: opacity 0.2s;
 }
 
-.theme-toggle:hover {
+.save-upload-btn.dimmed {
+  opacity: 0.32;
+  cursor: default;
+}
+
+.save-upload-btn.has-changes {
   opacity: 1;
-  transform: scale(1.1);
+  cursor: pointer;
 }
 
-.theme-icon {
+.save-upload-btn.has-changes .save-upload-icon {
+  /* Orange tint matching KB1 accent #F9AC20 */
+  filter: brightness(0) saturate(100%) invert(76%) sepia(68%) saturate(700%) hue-rotate(357deg) brightness(103%) contrast(102%);
+  animation: save-pulse 2s ease-in-out infinite;
+}
+
+.save-upload-btn.uploading .save-upload-icon {
+  animation: save-spin 0.5s ease-in-out forwards;
+}
+
+.save-upload-icon {
   height: 28px;
   width: 28px;
   display: block;
-  /* Ensure icon is always visible regardless of theme */
-  filter: opacity(0.8);
+  transition: filter 0.3s;
+  filter: brightness(0) invert(1); /* white icon for dark bg */
 }
 
-.theme-kb1-light .theme-icon {
-  /* In light mode, ensure dark icon is visible */
-  filter: opacity(1);
+/* Light mode: darken icon */
+.theme-kb1-light .save-upload-icon {
+  filter: brightness(0);
 }
 
-.theme-kb1-dark .theme-icon {
-  /* In dark mode, ensure light icon is visible */
-  filter: opacity(1);
+/* Override for light mode has-changes: keep orange tint */
+.theme-kb1-light .save-upload-btn.has-changes .save-upload-icon {
+  filter: brightness(0) saturate(100%) invert(76%) sepia(68%) saturate(700%) hue-rotate(357deg) brightness(103%) contrast(102%);
+}
+
+@keyframes save-pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.18); opacity: 0.75; }
+}
+
+@keyframes save-spin {
+  0% { transform: scale(1) translateY(0); }
+  40% { transform: scale(1.15) translateY(-3px); }
+  100% { transform: scale(1) translateY(0); }
 }
 
 /* Vertical separator (divider) between theme and tabs */
@@ -922,6 +961,7 @@ body {
 
 .app-main {
   flex: 1;
+  min-height: 100dvh; /* Ensures page is always tall enough to stay scrolled past the header when switching tabs */
   background: var(--color-background);
   padding-bottom: 2rem; /* Unified padding for all screens */
   width: 100%;
@@ -961,11 +1001,11 @@ body {
     margin: 0 0.25rem;
   }
   
-  .theme-toggle {
+  .save-upload-btn {
     padding: 0.5rem 0.5rem;
   }
-  
-  .theme-icon {
+
+  .save-upload-icon {
     height: 24px;
     width: 24px;
   }

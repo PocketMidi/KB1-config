@@ -488,6 +488,8 @@ html {
   -moz-text-size-adjust: 100%;
   -ms-text-size-adjust: 100%;
   text-size-adjust: 100%;
+  /* Controls overscroll/bounce area color on non-Safari iOS browsers and Android Chrome */
+  background: var(--color-background);
 }
 
 body {
@@ -506,7 +508,7 @@ body {
 }
 
 #app {
-  min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
 }
@@ -580,7 +582,7 @@ body {
 
 <style scoped>
 .app {
-  min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
   touch-action: manipulation; /* Disable double-tap zoom */

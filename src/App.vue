@@ -366,36 +366,15 @@ function handleTabClick(tabId: Tab) {
     <!-- Unified Tab Navigation with Bluetooth Controls -->
     <div v-if="!hideUI" class="tab-nav-wrapper" :class="{ 'past-header': isScrolledPastHeader }">
       <nav class="app-nav">
-        <!-- Sync/Save button (far left) -->
-        <button
-          class="save-upload-btn"
-          :class="{ 'has-changes': syncHasChanges && isConnected && activeTab === 'settings', 'uploading': isUploading, 'dimmed': !syncHasChanges || !isConnected || activeTab !== 'settings' }"
-          @click="handleSyncSave"
-          title="Upload settings to device"
-        >
-          <img src="/save.svg" alt="Upload" class="save-upload-icon" />
-        </button>
+        <!-- Left group: Battery + Bluetooth -->
+        <div class="nav-left">
+          <!-- Battery Meter (conditionally visible based on preference) -->
+          <BatteryMeter 
+            v-if="batteryMonitoringEnabled"
+            class="battery-meter-nav"
+            @click="isConnected ? openBatteryModal() : (showContextualModal = true)"
+          />
 
-        <!-- Vertical divider after save -->
-        <div class="separator"></div>
-        
-        <div class="nav-tabs">
-          <button 
-            v-for="tab in tabs"
-            :key="tab.id"
-            class="nav-tab"
-            :class="{ active: activeTab === tab.id }"
-            @click="handleTabClick(tab.id)"
-          >
-            {{ tab.label }}
-          </button>
-        </div>
-        
-        <!-- Vertical divider before Bluetooth -->
-        <div class="separator"></div>
-        
-        <!-- Right navigation group (Bluetooth + Battery) -->
-        <div class="nav-right">
           <!-- Bluetooth status section (icon only) -->
           <div 
             class="bluetooth-status" 
@@ -409,14 +388,36 @@ function handleTabClick(tabId: Tab) {
           >
             <img src="/bluetooth-icon.svg" alt="Bluetooth" class="bluetooth-icon" />
           </div>
-          
-          <!-- Battery Meter (conditionally visible based on preference) -->
-          <BatteryMeter 
-            v-if="batteryMonitoringEnabled"
-            class="battery-meter-nav"
-            @click="isConnected ? openBatteryModal() : (showContextualModal = true)"
-          />
         </div>
+
+        <!-- Vertical divider -->
+        <div class="separator"></div>
+
+        <!-- Center: tabs -->
+        <div class="nav-tabs">
+          <button 
+            v-for="tab in tabs"
+            :key="tab.id"
+            class="nav-tab"
+            :class="{ active: activeTab === tab.id }"
+            @click="handleTabClick(tab.id)"
+          >
+            {{ tab.label }}
+          </button>
+        </div>
+
+        <!-- Vertical divider -->
+        <div class="separator"></div>
+
+        <!-- Right: Sync/Upload button -->
+        <button
+          class="save-upload-btn"
+          :class="{ 'has-changes': syncHasChanges && isConnected && activeTab === 'settings', 'uploading': isUploading, 'dimmed': !syncHasChanges || !isConnected || activeTab !== 'settings' }"
+          @click="handleSyncSave"
+          title="Upload settings to device"
+        >
+          <img src="/save.svg" alt="Upload" class="save-upload-icon" />
+        </button>
       </nav>
       
       <!-- Horizontal divider under navigation -->
@@ -695,7 +696,7 @@ body {
   max-width: 1400px;
   margin: 0 auto;
   width: 100%;
-  padding: 0 2rem;
+  padding: 0 1rem;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   
@@ -850,8 +851,8 @@ body {
   white-space: nowrap;
 }
 
-/* Right navigation group - keeps Bluetooth and Battery together */
-.nav-right {
+/* Left navigation group - Battery and Bluetooth */
+.nav-left {
   display: flex;
   align-items: center;
   gap: 0.25rem;

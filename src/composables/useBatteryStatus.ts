@@ -10,6 +10,9 @@ import type { BatteryStatus } from '../ble/kb1Protocol';
 import { bleClient } from '../ble/bleClient';
 import { useUIPreferences } from './useUIPreferences';
 
+const DEV_MODE_KEY = 'kb1-dev-mode';
+const isDevMode = () => localStorage.getItem(DEV_MODE_KEY) === 'true';
+
 // Battery state
 const batteryStatus = ref<BatteryStatus | null>(null);
 const lastSyncTime = ref<number>(0);
@@ -94,6 +97,7 @@ async function syncBatteryStatus() {
  * Estimates drain based on time elapsed since last sync
  */
 function getEstimatedPercentage(): number {
+  if (isDevMode()) return 88; // Mock battery for eval mode
   if (!batteryStatus.value) return 254;
   
   const syncedPercentage = batteryStatus.value.percentage;
@@ -308,7 +312,7 @@ export function useBatteryStatus() {
   return {
     // State
     batteryStatus,
-    isAvailable,
+    isAvailable: computed(() => isDevMode() ? true : isAvailable.value),
     showPercentage,
     lastSyncTime,
     speakerMinutes,

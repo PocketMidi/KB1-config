@@ -948,10 +948,7 @@ function handlePickerScroll(event: Event) {
     const normalizedDistance = Math.min(distance / maxDistance, 1);
     
     const opacity = 1 - (normalizedDistance * 0.7); // 1 at center, 0.3 at max distance
-    const blur = normalizedDistance * 2; // 0px at center, 2px at max distance
-    
     htmlItem.style.opacity = opacity.toString();
-    htmlItem.style.filter = `blur(${blur}px)`;
   });
 }
 
@@ -1318,7 +1315,7 @@ defineExpose({
               >
                 <div 
                   class="color-swatch"
-                  :style="{ backgroundColor: getSliderColor(slider, index) }"
+                  :style="{ backgroundColor: 'transparent', borderColor: getSliderColor(slider, index) }"
                   @click="handleColorSwatchClick(index, $event)"
                 ></div>
                 
@@ -1770,14 +1767,14 @@ defineExpose({
   width: 18px;
   height: 18px;
   border-radius: 50%;
-  border: 2px solid rgba(234, 234, 234, 0.3);
+  border: 3px solid;
+  box-sizing: border-box;
   cursor: pointer;
   transition: all 0.2s;
   user-select: none;
 }
 
 .color-swatch:hover {
-  border-color: rgba(234, 234, 234, 0.5);
   transform: scale(1.05);
 }
 
@@ -1801,19 +1798,19 @@ defineExpose({
 
 .color-picker-container {
   position: relative;
-  width: 20px;
-  height: 220px;
+  width: 12px;
+  height: 180px;
 }
 
 .color-picker-center-indicator {
   position: absolute;
-  left: -8px;
-  right: -8px;
+  left: -6px;
+  right: -6px;
   top: 50%;
-  height: 30px;
+  height: 20px;
   transform: translateY(-50%);
-  border-top: 2px solid rgba(116, 196, 255, 0.5);
-  border-bottom: 2px solid rgba(116, 196, 255, 0.5);
+  border-top: 1px solid rgba(116, 196, 255, 0.5);
+  border-bottom: 1px solid rgba(116, 196, 255, 0.5);
   pointer-events: none;
   z-index: 2;
 }
@@ -1832,28 +1829,27 @@ defineExpose({
 }
 
 .color-picker-spacer {
-  height: 95px;
+  height: 84px;
   flex-shrink: 0;
 }
 
 .color-picker-item {
-  height: 18px;
-  width: 18px;
+  height: 12px;
+  width: 12px;
   border-radius: 50%;
   cursor: pointer;
   scroll-snap-align: center;
-  transition: opacity 0.1s, filter 0.1s;
+  transition: opacity 0.1s;
   border: none;
-  margin: 2px 0;
+  margin: 3px 0;
 }
 
 .color-picker-item:hover {
   opacity: 1 !important;
-  filter: blur(0px) !important;
 }
 
 .color-picker-item.selected {
-  box-shadow: 0 0 10px rgba(116, 196, 255, 0.5);
+  box-shadow: 0 0 4px rgba(116, 196, 255, 0.6);
 }
 
 /* Picker fade transition */

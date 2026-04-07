@@ -232,7 +232,6 @@ import LeverPushSettings from '../components/LeverPushSettings.vue';
 import TouchSettings from '../components/TouchSettings.vue';
 import { PresetStore } from '../state/presets';
 import { useToast } from '../composables/useToast';
-import { useConfirm } from '../composables/useConfirm';
 import {
   loadPolyendCCMap,
   getCCMap,
@@ -254,7 +253,6 @@ const {
 } = useDeviceState();
 
 const toast = useToast();
-const { confirm } = useConfirm();
 
 const localSettings = ref<DeviceSettings>(JSON.parse(JSON.stringify(deviceSettings.value)));
 const hasChanges = ref(false);

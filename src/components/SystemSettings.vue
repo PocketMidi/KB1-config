@@ -120,18 +120,21 @@
       <div class="input-divider"></div>
 
       <div class="group">
-        <label>KB1 DEVICE</label>
+        <label>
+          CONFIG SETTINGS
+          <span class="info-icon" @click.stop="showHelp('configSettings')" title="Show help">i</span>
+        </label>
         <div class="theme-mode-toggle">
           <button
             class="theme-mode-btn"
             :class="{ active: restoringFromDevice }"
             @click="handleRestoreFromDevice"
-          >RELOAD</button>
+          >REFRESH</button>
           <button
             class="theme-mode-btn danger"
             :class="{ active: resettingToFactory }"
             @click="handleResetToFactory"
-          >FACTORY</button>
+          >DEFAULTS</button>
         </div>
       </div>
     </div>
@@ -263,6 +266,10 @@ const helpTexts = {
   hints: {
     title: 'Hints & Messages',
     description: 'This will restore all dismissed hints and messages so they appear again next time.'
+  },
+  configSettings: {
+    title: 'Config Settings',
+    description: '<strong>REFRESH</strong> loads the current settings from your connected KB1 into the app.<br><br><strong>DEFAULTS</strong> resets all parameters and settings to their initial values in the app.'
   }
 }
 
@@ -318,7 +325,7 @@ function handleRestoreFromDevice() {
 const resettingToFactory = ref(false)
 
 async function handleResetToFactory() {
-  if (!await confirm('Reset all settings to factory defaults? This cannot be undone.')) return
+  if (!await confirm('Reset all app settings to their defaults? Upload to apply the changes to KB1.')) return
   resettingToFactory.value = true
   emit('reset-to-factory')
   snap()

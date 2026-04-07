@@ -844,15 +844,13 @@ async function handleLoadClick() {
 }
 
 async function handleResetDefaults() {
-  if (await confirm('Reset all settings to firmware defaults? This will discard current changes.')) {
-    try {
-      resetToDefaults();
-      localSettings.value = JSON.parse(JSON.stringify(deviceSettings.value));
-      hasChanges.value = true;
-    } catch (error) {
-      console.error('Failed to reset to defaults:', error);
-      toast.error('Failed to reset to defaults');
-    }
+  try {
+    resetToDefaults();
+    localSettings.value = JSON.parse(JSON.stringify(deviceSettings.value));
+    hasChanges.value = true;
+  } catch (error) {
+    console.error('Failed to reset to defaults:', error);
+    toast.error('Failed to reset to defaults');
   }
 }
 

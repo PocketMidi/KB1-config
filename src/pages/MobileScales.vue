@@ -189,8 +189,9 @@
       <div class="system-settings-wrapper">
         <AccordionSection
           ref="systemAccordion"
-          title="SYSTEM v1.6"
+          title="SYSTEM"
           subtitle="Configurator Settings"
+          titleSuffix="v1.6"
           :id="'system-settings'"
           :default-open="false"
         >

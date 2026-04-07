@@ -88,13 +88,11 @@
           HINTS & MESSAGES
           <span class="info-icon" @click.stop="showHelp('hints')" title="Show help">i</span>
         </label>
-        <div class="toggle-switch momentary-btn" :class="{ active: restoringHints }" @click="resetHints">
-          <span class="toggle-label-left">RESTORE</span>
-          <div class="toggle-track">
-            <div class="toggle-thumb"></div>
-          </div>
-          <span class="toggle-label-right">↺</span>
-        </div>
+        <button 
+          class="btn-restore-hints"
+          :class="{ active: restoringHints }"
+          @click="resetHints"
+        >↺ RESTORE</button>
       </div>
       <!-- Firmware update removed - use desktop firmware updater tool instead -->
 
@@ -161,6 +159,7 @@ import { computed, ref, watch, onMounted } from 'vue'
 import { useHaptics } from '../composables/useHaptics'
 import { useUIPreferences } from '../composables/useUIPreferences'
 import { useBatteryModal } from '../composables/useBatteryModal'
+import { useToast } from '../composables/useToast'
 import ValueControl from './ValueControl.vue'
 
 type SystemModel = {
@@ -190,6 +189,9 @@ const isIOSDevice = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
 
 // Haptics
 const { enabled: hapticsEnabled, init: initHaptics, snap } = useHaptics()
+
+// Toast
+const toast = useToast()
 
 // Initialize haptics from localStorage on mount
 onMounted(() => {
@@ -289,6 +291,8 @@ function resetHints() {
   
   // Haptic feedback
   snap()
+
+  toast.success('Hints & messages restored')
   
   // Reset momentary state after brief delay
   setTimeout(() => {
@@ -636,6 +640,32 @@ const formatTime = (seconds: number): string => {
   color: #848484;
   font-weight: 400;
   font-size: 0.6875rem;
+}
+
+/* Hints restore pill button */
+.btn-restore-hints {
+  padding: 0.2rem 0.75rem;
+  background: transparent;
+  border: 1px solid rgba(234, 234, 234, 0.2);
+  border-radius: 999px;
+  color: rgba(234, 234, 234, 0.45);
+  font-family: 'Roboto Mono', monospace;
+  font-size: 0.6875rem;
+  font-weight: 400;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+
+.btn-restore-hints:hover {
+  border-color: rgba(234, 234, 234, 0.4);
+  color: rgba(234, 234, 234, 0.8);
+}
+
+.btn-restore-hints.active {
+  border-color: #0DC988;
+  color: #0DC988;
 }
 
 .toggle-switch.momentary-btn .toggle-label-right {

@@ -91,7 +91,7 @@
       <div class="group">
         <label>
           CATEGORY
-          <span class="info-icon" @click.stop="showHelp('category')" title="Show help">?</span>
+          <span class="info-icon" @click.stop="showHelp('category')" title="Show help">i</span>
         </label>
         <button 
           ref="categoryTriggerRef"
@@ -107,7 +107,7 @@
       <div class="group">
         <label>
           PARAMETER
-          <span class="info-icon" @click.stop="showHelp('parameter')" title="Show help">?</span>
+          <span class="info-icon" @click.stop="showHelp('parameter')" title="Show help">i</span>
         </label>
         <button 
           ref="parameterTriggerRef"
@@ -1581,6 +1581,7 @@ function increaseSteps() {
 
 /* Info Icon */
 .info-icon {
+  text-transform: none;
   display: inline-flex;
   align-items: center;
   justify-content: center;

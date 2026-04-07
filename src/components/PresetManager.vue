@@ -24,7 +24,7 @@
       <!-- Your Working Presets Section -->
       <div class="preset-section-header">
         Working Presets
-        <span class="info-icon" @click.stop="showHelp('workingPresets')" title="Show help">?</span>
+        <span class="info-icon" @click.stop="showHelp('workingPresets')" title="Show help">i</span>
       </div>
       
     <!-- Presets List -->
@@ -281,7 +281,7 @@
       <!-- Device Storage Section -->
       <div class="preset-section-header">
         Stored on Device
-        <span class="info-icon" @click.stop="showHelp('storedOnDevice')" title="Show help">?</span>
+        <span class="info-icon" @click.stop="showHelp('storedOnDevice')" title="Show help">i</span>
       </div>
       <div class="preset-section">
       
@@ -1697,6 +1697,7 @@ function formatDate(timestamp: number): string {
 
 /* Info Icon */
 .info-icon {
+  text-transform: none;
   display: inline-flex;
   align-items: center;
   justify-content: center;

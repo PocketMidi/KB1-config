@@ -2,24 +2,9 @@
   <div class="settings-system">
     <div class="inputs">
       <div class="group">
-        <label>
-          BATTERY MONITORING
-          <span class="info-icon" @click.stop="showHelp('batteryMonitoring')" title="Show help">?</span>
-        </label>
-        <div class="toggle-switch" @click="toggleBatteryMonitoring">
-          <span class="toggle-label-left" :class="{ active: !batteryMonitoringEnabled }">OFF</span>
-          <div class="toggle-track" :class="{ active: batteryMonitoringEnabled }">
-            <div class="toggle-thumb"></div>
-          </div>
-          <span class="toggle-label-right" :class="{ active: batteryMonitoringEnabled }">ON</span>
-        </div>
-      </div>
-      <div class="input-divider"></div>
-
-      <div class="group">
         <label for="light-sleep">
           SLEEP TIMEOUT
-          <span class="info-icon" @click.stop="showHelp('sleepTimeout')" title="Show help">?</span>
+          <span class="info-icon" @click.stop="showHelp('sleepTimeout')" title="Show help">i</span>
         </label>
         <span class="time-display">{{ formatTime(model.lightSleepTimeout) }}</span>
         <div class="time-control-wrapper">
@@ -39,7 +24,7 @@
       <div class="group">
         <label for="ble-timeout">
           BLE TIMEOUT
-          <span class="info-icon" @click.stop="showHelp('bleTimeout')" title="Show help">?</span>
+          <span class="info-icon" @click.stop="showHelp('bleTimeout')" title="Show help">i</span>
         </label>
         <span class="time-display">{{ formatTime(model.bleTimeout) }}</span>
         <div class="time-control-wrapper">
@@ -58,8 +43,23 @@
 
       <div class="group">
         <label>
+          BATTERY MONITORING
+          <span class="info-icon" @click.stop="showHelp('batteryMonitoring')" title="Show help">i</span>
+        </label>
+        <div class="toggle-switch" @click="toggleBatteryMonitoring">
+          <span class="toggle-label-left" :class="{ active: !batteryMonitoringEnabled }">OFF</span>
+          <div class="toggle-track" :class="{ active: batteryMonitoringEnabled }">
+            <div class="toggle-thumb"></div>
+          </div>
+          <span class="toggle-label-right" :class="{ active: batteryMonitoringEnabled }">ON</span>
+        </div>
+      </div>
+      <div class="input-divider"></div>
+
+      <div class="group">
+        <label>
           PARAMETER RESOLUTION
-          <span class="info-icon" @click.stop="showHelp('resolution')" title="Show help">?</span>
+          <span class="info-icon" @click.stop="showHelp('resolution')" title="Show help">i</span>
         </label>
         <div class="toggle-switch resolution-toggle" @click="toggleResolution">
           <span class="toggle-label-left" :class="{ active: unipolarStepSize === 1 }">1</span>
@@ -67,21 +67,6 @@
             <div class="toggle-thumb"></div>
           </div>
           <span class="toggle-label-right" :class="{ active: unipolarStepSize === 5 }">5</span>
-        </div>
-      </div>
-      <div v-if="!isIOSDevice" class="input-divider"></div>
-
-      <div class="group">
-        <label>
-          HINTS & MESSAGES
-          <span class="info-icon" @click.stop="showHelp('hints')" title="Show help">?</span>
-        </label>
-        <div class="toggle-switch momentary-btn" :class="{ active: restoringHints }" @click="resetHints">
-          <span class="toggle-label-left">RESTORE</span>
-          <div class="toggle-track">
-            <div class="toggle-thumb"></div>
-          </div>
-          <span class="toggle-label-right">↺</span>
         </div>
       </div>
       <div v-if="!isIOSDevice" class="input-divider"></div>
@@ -94,6 +79,21 @@
             <div class="toggle-thumb"></div>
           </div>
           <span class="toggle-label-right" :class="{ active: hapticsEnabled }">ON</span>
+        </div>
+      </div>
+      <div v-if="!isIOSDevice" class="input-divider"></div>
+
+      <div class="group">
+        <label>
+          HINTS & MESSAGES
+          <span class="info-icon" @click.stop="showHelp('hints')" title="Show help">i</span>
+        </label>
+        <div class="toggle-switch momentary-btn" :class="{ active: restoringHints }" @click="resetHints">
+          <span class="toggle-label-left">RESTORE</span>
+          <div class="toggle-track">
+            <div class="toggle-thumb"></div>
+          </div>
+          <span class="toggle-label-right">↺</span>
         </div>
       </div>
       <!-- Firmware update removed - use desktop firmware updater tool instead -->
@@ -122,18 +122,18 @@
       <div class="input-divider"></div>
 
       <div class="group">
-        <label>DEVICE</label>
+        <label>KB1 DEVICE</label>
         <div class="theme-mode-toggle">
           <button
             class="theme-mode-btn"
             :class="{ active: restoringFromDevice }"
             @click="handleRestoreFromDevice"
-          >RESTORE</button>
+          >RELOAD</button>
           <button
             class="theme-mode-btn danger"
             :class="{ active: resettingToFactory }"
             @click="handleResetToFactory"
-          >RESET</button>
+          >FACTORY</button>
         </div>
       </div>
     </div>
@@ -402,6 +402,7 @@ const formatTime = (seconds: number): string => {
 }
 
 .info-icon {
+  text-transform: none;
   display: inline-flex;
   align-items: center;
   justify-content: center;

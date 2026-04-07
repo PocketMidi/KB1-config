@@ -1293,7 +1293,7 @@ defineExpose({
       <div class="setup-header">
         <div class="header-buttons-row">
           <button class="btn-live" @click="enterLiveMode">
-            <span class="btn-live-label"><span class="plus-icon">+</span> PERFORMANCE VIEW</span>
+            <span class="btn-live-label"><span class="plus-icon">+</span> GO LIVE</span>
             <span class="explainer-text" :class="{ fading: explainerFading }">
               {{ explainerText }}
             </span>
@@ -1617,14 +1617,14 @@ defineExpose({
 .btn-live {
   width: 100%;
   padding: 0.125rem 0.5rem;
-  background: rgba(106, 104, 83, 0.35);
-  border: 1px solid rgba(106, 104, 83, 0.4);
-  color: rgba(234, 234, 234, 0.7);
+  background: transparent;
+  border: 1px solid rgba(234, 234, 234, 0.15);
+  color: rgba(234, 234, 234, 0.35);
   font-size: 0.8125rem;
   font-weight: 500;
   border-radius: 4px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.15s;
   font-family: 'Roboto Mono', monospace;
   display: flex;
   align-items: center;
@@ -1634,14 +1634,13 @@ defineExpose({
 }
 
 .btn-live:hover {
-  background: rgba(106, 104, 83, 0.6);
-  border-color: rgba(106, 104, 83, 0.7);
-  color: rgba(234, 234, 234, 1.0);
+  border-color: rgba(234, 234, 234, 0.4);
+  color: rgba(234, 234, 234, 0.8);
 }
 
 .btn-live:active {
-  background: rgba(106, 104, 83, 0.8);
-  border-color: rgba(106, 104, 83, 0.9);
+  border-color: #F9AC20;
+  color: #F9AC20;
   transform: scale(0.98);
 }
 

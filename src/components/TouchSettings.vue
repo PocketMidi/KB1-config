@@ -73,7 +73,7 @@
 
     <div class="inputs">
       <div class="group">
-        <label>CATEGORY<span class="info-icon" @click.stop="showHelp('category')">?</span></label>
+        <label>CATEGORY<span class="info-icon" @click.stop="showHelp('category')">i</span></label>
         <button 
           ref="categoryTriggerRef"
           class="picker-trigger"
@@ -86,7 +86,7 @@
       <div class="input-divider"></div>
 
       <div class="group">
-        <label>PARAMETER<span class="info-icon" @click.stop="showHelp('parameter')">?</span></label>
+        <label>PARAMETER<span class="info-icon" @click.stop="showHelp('parameter')">i</span></label>
         <button 
           ref="parameterTriggerRef"
           class="picker-trigger"
@@ -125,7 +125,7 @@
       <div class="input-divider"></div>
 
       <div class="group">
-        <label for="touch-threshold">THRESHOLD<span class="info-icon" @click.stop="showHelp('threshold')">?</span></label>
+        <label for="touch-threshold">THRESHOLD<span class="info-icon" @click.stop="showHelp('threshold')">i</span></label>
         <ValueControl
           v-model="userThreshold"
           :min="0"
@@ -876,6 +876,7 @@ function dismissHelp() {
 
 /* Help System */
 .info-icon {
+  text-transform: none;
   display: inline-flex;
   align-items: center;
   justify-content: center;

@@ -192,7 +192,7 @@
             <span v-if="isChordStyle" 
                   class="info-icon" 
                   @click.stop="showHelp('velocitySpread')">
-              ?
+              i
             </span>
           </label>
           <div class="duration-control-wrapper">
@@ -233,12 +233,12 @@
           <span v-if="playMode === 'chord'" 
                 class="info-icon" 
                 @click.stop="showHelp('voicing')">
-            ?
+            i
           </span>
           <span v-if="playMode === 'scale'" 
                 class="info-icon" 
                 @click.stop="showHelp('rootNote')">
-            ?
+            i
           </span>
         </label>
         <div class="root-range-row">
@@ -2273,6 +2273,7 @@ function handleKeyClick(midiNote: number) {
 
 /* Info icon (?) - matches existing app style */
 .info-icon {
+  text-transform: none;
   display: inline-flex;
   align-items: center;
   justify-content: center;

@@ -94,8 +94,14 @@ bleClient.setDataReceivedCallback((data) => {
   }
 });
 
-// Keep-alive state callback: update scale/root/pattern (requires firmware v1.6.3+)
-// Firmware v1.6.2 sends zeros for these fields — callback disabled until firmware updated\nbleClient.onKeepAliveState = null;
+// Keep-alive state callback: update scale/root/pattern without re-reading all characteristics
+bleClient.onKeepAliveState = (pattern, scale, root) => {
+  if (deviceSettings.value) {
+    deviceSettings.value.chord.strumPattern = pattern;
+    deviceSettings.value.scale.scaleType = scale;
+    deviceSettings.value.scale.rootNote = root;
+  }
+};
 
 /**
  * Composable for managing KB1 device state

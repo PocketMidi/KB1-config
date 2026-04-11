@@ -31,7 +31,7 @@
 </template>
 
 <script setup lang="ts">
-import { watch, onMounted } from 'vue';
+import { onMounted } from 'vue';
 import BatteryMeter from './BatteryMeter.vue';
 import BatteryModal from './BatteryModal.vue';
 import { useBatteryStatus } from '../composables/useBatteryStatus';

@@ -1156,7 +1156,7 @@ export class BLEClient {
     const battery = value.getUint8(0);        // 0-100, 254=uncalibrated, 255=charging
     const flags = value.getUint8(1);          // bit 0=USB, bit 1=touch calibrated
     const pattern = value.getUint8(2);        // 0-7 strum pattern
-    const octave = value.getUint8(3) - 128;   // Stored as 128±offset, convert to -4 to +4
+    // byte 3: octave offset (reserved, unused until v1.6.3+)
     const scale = value.getUint8(4);          // 0-19 scale type
     const root = value.getUint8(5);           // 0-11 root note
     // bytes 6-9 reserved for future use

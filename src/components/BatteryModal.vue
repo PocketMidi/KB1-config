@@ -310,7 +310,7 @@ const showSpeakerHelp = ref(false);
 
 // Dev Mode: Secret menu for manual battery % setting
 const devModeUnlocked = ref(false);
-const devBatteryPercent = ref(93);
+const devBatteryPercent = ref(80);
 const isSettingBattery = ref(false);
 const clickCount = ref(0);
 const clickTimer = ref<number | null>(null);
@@ -388,6 +388,7 @@ function handleBatteryClick() {
   // 5 clicks within 2 seconds = unlock
   if (clickCount.value >= 5) {
     devModeUnlocked.value = true;
+    devBatteryPercent.value = estimatedPercentage.value ?? 80;
     clickCount.value = 0;
     console.log('Dev mode unlocked!');
     return;

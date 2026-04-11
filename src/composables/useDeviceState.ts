@@ -8,6 +8,7 @@
 import { ref, computed, watch, readonly } from 'vue';
 import { bleClient, type BLEConnectionStatus } from '../ble/bleClient';
 import { kb1Protocol, type CCMapping, type DeviceSettings, type DevicePresetMetadata, DEVICE_PRESET } from '../ble/kb1Protocol';
+import { setDevModeInBattery } from './useBatteryStatus';
 
 // ============================================
 // EVALUATION MODE - Reactive state with localStorage persistence
@@ -20,6 +21,7 @@ const devMode = ref(localStorage.getItem(DEV_MODE_KEY) === 'true');
 function setDevMode(enabled: boolean) {
   devMode.value = enabled;
   localStorage.setItem(DEV_MODE_KEY, enabled ? 'true' : 'false');
+  setDevModeInBattery(enabled);
   
   if (enabled) {
     console.log('📋 EVALUATION MODE ENABLED: Simulating device with mock data');

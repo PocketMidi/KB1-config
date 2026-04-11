@@ -11,7 +11,16 @@ import { bleClient } from '../ble/bleClient';
 import { useUIPreferences } from './useUIPreferences';
 
 const DEV_MODE_KEY = 'kb1-dev-mode';
-const isDevMode = () => localStorage.getItem(DEV_MODE_KEY) === 'true';
+const devModeRef = ref<boolean>(localStorage.getItem(DEV_MODE_KEY) === 'true');
+const isDevMode = () => devModeRef.value;
+
+/**
+ * Called by useDeviceState when evaluation mode is toggled.
+ * Keeps battery devMode reactive so estimatedPercentage computed re-evaluates.
+ */
+export function setDevModeInBattery(enabled: boolean) {
+  devModeRef.value = enabled;
+}
 
 // Battery state
 const batteryStatus = ref<BatteryStatus | null>(null);

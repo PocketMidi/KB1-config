@@ -349,8 +349,8 @@
             <button 
               class="btn-small btn-delete" 
               @click="deleteFromDevice(slot - 1)" 
-              :disabled="!isConnected || !getDevicePreset(slot - 1).isValid"
-              title="Delete preset from this slot">
+              :disabled="!isConnected || !getDevicePreset(slot - 1).isValid || !hasDevicePresetDelete"
+              :title="hasDevicePresetDelete ? 'Delete preset from this slot' : 'Delete not available (reconnect device)'">
               Delete
             </button>
           </div>
@@ -389,6 +389,7 @@ import CommunityPresets from './CommunityPresets.vue';
 const {
   isConnected,
   hasDevicePresetSupport,
+  hasDevicePresetDelete,
   devicePresets,
   saveDevicePreset,
   loadDevicePreset,

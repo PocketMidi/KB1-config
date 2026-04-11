@@ -8,7 +8,7 @@
 import { ref, computed, watch, readonly } from 'vue';
 import { bleClient, type BLEConnectionStatus } from '../ble/bleClient';
 import { kb1Protocol, type CCMapping, type DeviceSettings, type DevicePresetMetadata, DEVICE_PRESET } from '../ble/kb1Protocol';
-import { setDevModeInBattery } from './useBatteryStatus';
+import { setDevModeInBattery, useBatteryStatus } from './useBatteryStatus';
 
 // ============================================
 // EVALUATION MODE - Reactive state with localStorage persistence
@@ -52,6 +52,7 @@ const ccMappings = ref<CCMapping[]>([]);
 const deviceSettings = ref<DeviceSettings>(kb1Protocol.createDefaultSettings());
 const isLoading = ref(false);
 const firmwareVersionRef = ref<string | null>(devMode.value ? '1.1.2' : null);
+const lastDeviceLoadTime = ref<number>(0);
 
 // Initialize mock data in evaluation mode
 if (devMode.value) {
@@ -93,6 +94,9 @@ bleClient.setDataReceivedCallback((data) => {
   }
 });
 
+// Keep-alive state callback: update scale/root/pattern (requires firmware v1.6.3+)
+// Firmware v1.6.2 sends zeros for these fields — callback disabled until firmware updated\nbleClient.onKeepAliveState = null;
+
 /**
  * Composable for managing KB1 device state
  */
@@ -133,12 +137,25 @@ export function useDeviceState() {
       await bleClient.connect();
       // On successful connection, load device state
       // Try to refresh device presets if supported
+      hasDevicePresetDelete.value = bleClient.hasDevicePresetDelete();
       try {
         if (bleClient.hasDevicePresetSupport()) {
           await refreshDevicePresets();
         }
       } catch (error) {
         console.warn('Could not refresh device presets:', error);
+      }
+      // Auto-load all settings so UI reflects current device state
+      try {
+        await handleLoad();
+      } catch (error) {
+        console.warn('Could not load settings on connect:', error);
+      }
+      // Init battery AFTER handleLoad — BLE stack is free now
+      try {
+        await useBatteryStatus().initBatteryStatus();
+      } catch (error) {
+        console.warn('Could not init battery on connect:', error);
       }
     } catch (error) {
       console.error('Connection failed:', error);
@@ -425,8 +442,7 @@ export function useDeviceState() {
       
       // Capture baseline snapshot after successful load
       captureBaseline();
-      
-      console.log('Successfully loaded from device and captured snapshot');
+      lastDeviceLoadTime.value = Date.now();
     } catch (error) {
       console.error('Failed to load from device:', error);
       throw error;
@@ -527,6 +543,7 @@ export function useDeviceState() {
   
   const devicePresets = ref<DevicePresetMetadata[]>([]);
   const hasDevicePresetSupport = ref(true); // Always show UI structure
+  const hasDevicePresetDelete = ref(true); // Separate flag for delete capability
   
   // Initialize with empty slots or mock data
   if (devMode.value) {
@@ -681,6 +698,7 @@ export function useDeviceState() {
     ccMappings,
     deviceSettings,
     isLoading,
+    lastDeviceLoadTime,
     
     // Computed
     isBluetoothAvailable,
@@ -707,6 +725,7 @@ export function useDeviceState() {
     // Device Presets
     devicePresets,
     hasDevicePresetSupport,
+    hasDevicePresetDelete,
     refreshDevicePresets,
     saveDevicePreset,
     loadDevicePreset,

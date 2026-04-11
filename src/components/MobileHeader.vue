@@ -48,23 +48,11 @@ defineEmits<{
 }>();
 
 const { showBatteryModal, openBatteryModal, closeBatteryModal } = useBatteryModal();
-const { batteryStatus, initBatteryStatus, syncBatteryStatus } = useBatteryStatus();
+const { batteryStatus } = useBatteryStatus();
 const { batteryMonitoringEnabled } = useUIPreferences();
 
-// Sync battery status when connecting (always runs in background)
-watch(() => props.isConnected, async (connected) => {
-  if (connected) {
-    // Small delay to ensure BLE is fully ready
-    setTimeout(async () => {
-      try {
-        await initBatteryStatus();  // Initialize first to set isAvailable
-        await syncBatteryStatus();   // Then sync to get current status
-      } catch (error) {
-        console.error('Failed to sync battery on connect:', error);
-      }
-    }, 1000);
-  }
-});
+// Battery init is handled by useDeviceState.connect() after settings load completes
+// No need for a timer here
 
 // Listen for battery alerts
 onMounted(() => {

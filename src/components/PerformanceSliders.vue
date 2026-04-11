@@ -2417,9 +2417,8 @@ defineExpose({
   background: transparent;
   cursor: pointer;
   z-index: 3;
-  writing-mode: bt-lr;
-  -webkit-writing-mode: bt-lr;
-  -webkit-appearance: slider-vertical;
+  writing-mode: vertical-lr;
+  direction: rtl;
   opacity: 0;
   border: none;
   outline: none;

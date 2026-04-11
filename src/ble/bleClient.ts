@@ -76,6 +76,10 @@ export class BLEClient {
   private lastMidiSendMs: number = 0;
   private midiThrottleMs: number = 8;
 
+  // Optional callback for keep-alive state updates (pattern/scale/root)
+  // Set by useDeviceState to avoid circular dependency
+  public onKeepAliveState: ((pattern: number, scale: number, root: number) => void) | null = null;
+
   /**
    * Register a callback for connection status changes
    */
@@ -167,26 +171,23 @@ export class BLEClient {
         console.log('ℹ️ Keep-alive characteristic not available (connection may timeout after 10 minutes)');
       }
 
-      // Try to get preset characteristics (optional, may not be in older firmware)
-      try {
-        console.log('🔍 Looking for preset characteristics...');
-        this.presetSaveCharacteristic = await service.getCharacteristic(PRESET_CHARACTERISTIC_UUIDS.SAVE);
-        console.log('  ✅ SAVE found:', PRESET_CHARACTERISTIC_UUIDS.SAVE);
-        this.presetLoadCharacteristic = await service.getCharacteristic(PRESET_CHARACTERISTIC_UUIDS.LOAD);
-        console.log('  ✅ LOAD found:', PRESET_CHARACTERISTIC_UUIDS.LOAD);
-        this.presetListCharacteristic = await service.getCharacteristic(PRESET_CHARACTERISTIC_UUIDS.LIST);
-        console.log('  ✅ LIST found:', PRESET_CHARACTERISTIC_UUIDS.LIST);
-        this.presetDeleteCharacteristic = await service.getCharacteristic(PRESET_CHARACTERISTIC_UUIDS.DELETE);
-        console.log('  ✅ DELETE found:', PRESET_CHARACTERISTIC_UUIDS.DELETE);
-        console.log('✅ All preset characteristics found');
-      } catch (e) {
-        console.log('ℹ️ Preset characteristics not available (requires updated firmware)');
-        console.log('   Expected UUIDs:');
-        console.log('   - SAVE:', PRESET_CHARACTERISTIC_UUIDS.SAVE);
-        console.log('   - LOAD:', PRESET_CHARACTERISTIC_UUIDS.LOAD);
-        console.log('   - LIST:', PRESET_CHARACTERISTIC_UUIDS.LIST);
-        console.log('   - DELETE:', PRESET_CHARACTERISTIC_UUIDS.DELETE);
-        console.log('   Error:', e);
+      // Try to get preset characteristics individually (DELETE may be missing from GATT cache)
+      console.log('🔍 Looking for preset characteristics...');
+      for (const [key, uuid] of Object.entries(PRESET_CHARACTERISTIC_UUIDS)) {
+        try {
+          const char = await service.getCharacteristic(uuid);
+          if (key === 'SAVE') this.presetSaveCharacteristic = char;
+          else if (key === 'LOAD') this.presetLoadCharacteristic = char;
+          else if (key === 'LIST') this.presetListCharacteristic = char;
+          else if (key === 'DELETE') this.presetDeleteCharacteristic = char;
+          console.log(`  ✅ ${key} found`);
+        } catch (e) {
+          if (key === 'DELETE') {
+            console.log(`  ⚠️ DELETE not found (GATT cache may be stale - reconnect to restore)`);
+          } else {
+            console.log(`  ❌ ${key} not found:`, e);
+          }
+        }
       }
 
       // Try to get firmware version characteristic (optional, may not be in older firmware)
@@ -908,13 +909,21 @@ export class BLEClient {
   }
 
   /**
-   * Check if device supports preset management
+   * Check if device supports preset management (save/load/list)
+   * DELETE is optional - checked separately via hasDevicePresetDelete()
    */
   hasDevicePresetSupport(): boolean {
     return this.presetSaveCharacteristic !== null &&
            this.presetLoadCharacteristic !== null &&
-           this.presetListCharacteristic !== null &&
-           this.presetDeleteCharacteristic !== null;
+           this.presetListCharacteristic !== null;
+  }
+
+  /**
+   * Check if device supports preset deletion
+   * Separate from hasDevicePresetSupport() so a stale GATT cache doesn't disable all presets
+   */
+  hasDevicePresetDelete(): boolean {
+    return this.presetDeleteCharacteristic !== null;
   }
 
   /**
@@ -1153,22 +1162,16 @@ export class BLEClient {
     // bytes 6-9 reserved for future use
     
     const usbConnected = (flags & 0x01) !== 0;
-    const touchCalibrated = (flags & 0x02) !== 0;
     
-    console.log('💓 Keep-alive status:', {
-      battery: battery === 254 ? 'uncalibrated' : battery === 255 ? 'charging' : `${battery}%`,
-      usb: usbConnected,
-      touchCalibrated,
-      pattern,
-      octave,
-      scale,
-      root
-    });
+    console.log(`💓 bat:${battery}% usb:${usbConnected} pat:${pattern} scale:${scale} root:${root}`);
     
     // Update battery status automatically (no manual sync needed!)
-    updateBatteryFromKeepAlive(battery);
+    updateBatteryFromKeepAlive(battery, usbConnected);
     
-    // TODO: Update pattern/octave/scale in device state if needed (future enhancement)
+    // Update pattern/scale/root in device state if callback is registered
+    if (this.onKeepAliveState) {
+      this.onKeepAliveState(pattern, scale, root);
+    }
   }
 
   /**

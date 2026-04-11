@@ -11,7 +11,6 @@ import ConfirmDialog from './components/ConfirmDialog.vue';
 import { useDeviceState } from './composables/useDeviceState';
 import { useToast } from './composables/useToast';
 import { useConfirm } from './composables/useConfirm';
-import { useBatteryStatus } from './composables/useBatteryStatus';
 import { useBatteryModal } from './composables/useBatteryModal';
 import { useUIPreferences } from './composables/useUIPreferences';
 import { FIRST_TIME_BLE_INTRO_KEY } from './constants';
@@ -26,7 +25,6 @@ const {
   setDevMode,
 } = useDeviceState();
 const { dialogs, remove: removeDialog } = useConfirm();
-const { initBatteryStatus, syncBatteryStatus } = useBatteryStatus();
 const { batteryMonitoringEnabled, themeMode } = useUIPreferences();
 const { showBatteryModal, openBatteryModal, closeBatteryModal } = useBatteryModal();
 
@@ -209,16 +207,6 @@ async function handleConnect() {
     
     // Show success toast with animated BLE icon
     success('Connected via Bluetooth');
-    
-    // Initialize battery status after connection (always runs in background)
-    setTimeout(async () => {
-      try {
-        await initBatteryStatus();
-        await syncBatteryStatus();
-      } catch (error) {
-        console.error('Failed to initialize battery:', error);
-      }
-    }, 1000);
   } catch (error) {
     console.error('Connection failed:', error);
   }

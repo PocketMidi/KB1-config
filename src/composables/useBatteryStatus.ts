@@ -292,20 +292,23 @@ function formatSpeakerTime(): string {
  * Update battery percentage directly (called from keep-alive notifications)
  * This provides automatic battery updates without manual sync
  */
-export function updateBatteryFromKeepAlive(percentage: number) {
+export function updateBatteryFromKeepAlive(percentage: number, usbConnected?: boolean) {
   if (!batteryStatus.value) {
-    // Initialize battery status if not yet synced
     batteryStatus.value = {
       percentage,
-      usbConnected: false, // Will be updated from flags if needed
+      usbConnected: usbConnected ?? false,
       remainingSeconds: 0,
       calibrationTimestamp: 0,
       lastUpdate: Date.now()
     };
   } else {
-    // Update existing status
     batteryStatus.value.percentage = percentage;
+    if (usbConnected !== undefined) {
+      batteryStatus.value.usbConnected = usbConnected;
+    }
   }
+  // Keep-alive delivers real battery data — mark as available so the icon renders
+  isAvailable.value = true;
   
   lastSyncTime.value = Date.now();
   
@@ -313,8 +316,6 @@ export function updateBatteryFromKeepAlive(percentage: number) {
   if (percentage !== 254 && percentage !== 255) {
     checkLowBatteryAlert(percentage);
   }
-  
-  console.log('🔋 Battery updated from keep-alive:', percentage === 254 ? 'uncalibrated' : percentage === 255 ? 'charging' : `${percentage}%`);
 }
 
 export function useBatteryStatus() {

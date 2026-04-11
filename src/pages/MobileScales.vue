@@ -250,6 +250,7 @@ const {
   devicePresets,
   hasDevicePresetSupport,
   maxScaleType,
+  lastDeviceLoadTime,
 } = useDeviceState();
 
 const toast = useToast();
@@ -697,6 +698,12 @@ watch(deviceSettings, (newSettings) => {
   }
 }, { deep: true });
 
+// When a device load completes (connect auto-load or manual sync), treat it as clean
+watch(lastDeviceLoadTime, () => {
+  localSettings.value = JSON.parse(JSON.stringify(deviceSettings.value));
+  hasChanges.value = false;
+});
+
 // Watch for SHAPE panel close - reset pattern controls when strumPattern goes to 0
 watch(() => localSettings.value.chord.strumPattern, (newPattern, oldPattern) => {
   // Detect transition from shape mode (>0) to normal chord mode (0)
@@ -831,9 +838,7 @@ function handlePresetActivated(presetId: string | null) {
 
 async function handleLoadClick() {
   try {
-    await handleLoad();
-    localSettings.value = JSON.parse(JSON.stringify(deviceSettings.value));
-    hasChanges.value = false;
+    await handleLoad(); // lastDeviceLoadTime watcher handles localSettings + hasChanges reset
     toast.success('Settings downloaded from device');
   } catch (error) {
     console.error('Failed to load settings:', error);

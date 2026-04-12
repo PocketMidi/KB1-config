@@ -57,6 +57,7 @@
           :categories="categories"
           :functionModes="leverFunctionModes"
           :valueModes="valueModes"
+          :strum-speed="localSettings.chord.strumSpeed"
           @update:modelValue="markChanged"
           @profileChanged="handleLever1ProfileChange"
           @valueModeChanged="handleLever1ValueModeChange"
@@ -109,6 +110,7 @@
           :categories="categories"
           :functionModes="leverFunctionModes"
           :valueModes="valueModes"
+          :strum-speed="localSettings.chord.strumSpeed"
           @update:modelValue="markChanged"
           @profileChanged="handleLever2ProfileChange"
           @valueModeChanged="handleLever2ValueModeChange"
@@ -191,7 +193,7 @@
           ref="systemAccordion"
           title="SYSTEM"
           subtitle="Configurator Settings"
-          titleSuffix="v1.6"
+          :titleSuffix="`v${APP_VERSION}`"
           :id="'system-settings'"
           :default-open="false"
         >
@@ -215,6 +217,7 @@
 <script setup lang="ts">
 import { ref, watch, computed, onMounted, onBeforeUnmount, watchEffect, nextTick } from 'vue';
 import { useDeviceState } from '../composables/useDeviceState';
+import { APP_VERSION } from '../constants';
 import type { 
   DeviceSettings,
   ScaleSettings,
@@ -511,7 +514,12 @@ const currentChordLabel = computed(() => {
 
 const currentRootNoteLabel = computed(() => {
   // Always use scale root note (shared for both scales and chords)
-  const rootNote = rootNotes.find(n => n.value === localSettings.value.scale.rootNote);
+  let noteValue = localSettings.value.scale.rootNote
+  // If invalid (e.g., 0 from Chromatic mode), default to C (60)
+  if (noteValue < 60 || noteValue > 71) {
+    noteValue = 60
+  }
+  const rootNote = rootNotes.find(n => n.value === noteValue);
   return rootNote ? rootNote.label : 'C';
 });
 
@@ -754,6 +762,44 @@ watch(() => localSettings.value.chord.strumPattern, (newPattern, oldPattern) => 
     
     // Mark as changed so user can upload the reset settings
     markChanged();
+  }
+});
+
+// Watch strum speed - auto-expand lever ranges to prevent jumps
+watch(() => localSettings.value.chord.strumSpeed, (newSpeed) => {
+  const magnitude = Math.abs(newSpeed);
+  
+  // Helper to convert MIDI 0-127 to strum speed magnitude 5-360ms
+  const midiToStrumSpeed = (midi: number) => Math.round(5 + (midi / 127) * 355);
+  
+  // Check and expand lever1 if configured for CC 200
+  if (localSettings.value.lever1.ccNumber === 200) {
+    const leverMin = midiToStrumSpeed(localSettings.value.lever1.minCCValue);
+    const leverMax = midiToStrumSpeed(localSettings.value.lever1.maxCCValue);
+    
+    if (magnitude < leverMin || magnitude > leverMax) {
+      console.log(`Lever 1: Expanding range to accommodate strum speed ${newSpeed}ms`);
+      localSettings.value.lever1 = {
+        ...localSettings.value.lever1,
+        minCCValue: 0,   // 5ms
+        maxCCValue: 127  // 360ms
+      };
+    }
+  }
+  
+  // Check and expand lever2 if configured for CC 200
+  if (localSettings.value.lever2.ccNumber === 200) {
+    const leverMin = midiToStrumSpeed(localSettings.value.lever2.minCCValue);
+    const leverMax = midiToStrumSpeed(localSettings.value.lever2.maxCCValue);
+    
+    if (magnitude < leverMin || magnitude > leverMax) {
+      console.log(`Lever 2: Expanding range to accommodate strum speed ${newSpeed}ms`);
+      localSettings.value.lever2 = {
+        ...localSettings.value.lever2,
+        minCCValue: 0,   // 5ms
+        maxCCValue: 127  // 360ms
+      };
+    }
   }
 });
 

@@ -4,7 +4,23 @@
  * This module handles the KB1-specific protocol for encoding and decoding
  * messages sent to/from the device. It provides a clean abstraction over
  * the raw BLE data transfer.
+ * 
+ * BLE PROTOCOL VERSION: 3
+ * Breaking changes from v2:
+ * - Scale validation allows rootNote=0 for Chromatic mode
+ * - Strum speed uses bipolar CC 200 mapping (-360 to +360)
  */
+
+export const BLE_PROTOCOL_VERSION = 3;
+
+/**
+ * Detailed validation result with error messages
+ */
+export interface ValidationResult {
+  valid: boolean;
+  errors: string[];
+  warnings: string[];
+}
 
 /**
  * MIDI CC (Continuous Controller) mapping configuration
@@ -505,7 +521,69 @@ export class KB1Protocol {
   }
 
   /**
-   * Validate device settings
+   * Validate device settings with detailed error messages
+   * NOTE: Only called before BLE send - NOT in hot paths like drag handlers
+   */
+  validateSettingsDetailed(settings: DeviceSettings): ValidationResult {
+    const errors: string[] = [];
+    const warnings: string[] = [];
+
+    // Validate chord settings (most common source of issues)
+    if (settings.chord) {
+      const c = settings.chord;
+      
+      // Strum speed validation
+      const absSpeed = Math.abs(c.strumSpeed);
+      if (absSpeed > 0 && absSpeed < 4) {
+        errors.push(`strumSpeed ${c.strumSpeed}ms is in forbidden range (-4 to +4). Use ±5 to ±360.`);
+      } else if (absSpeed > 360) {
+        errors.push(`strumSpeed ${c.strumSpeed}ms exceeds maximum (±360ms)`);
+      }
+      
+      // Chromatic mode check
+      if (settings.scale?.scaleType === 0 && settings.scale.rootNote !== 60) {
+        warnings.push(`Chromatic mode ignores rootNote (currently ${settings.scale.rootNote}). Consider setting to 60 (C) for clarity.`);
+      }
+      
+      // Voicing check
+      if (c.voicing < 1 || c.voicing > 3) {
+        errors.push(`voicing ${c.voicing} invalid. Must be 1, 2, or 3.`);
+      }
+      
+      // Velocity spread
+      if (c.velocitySpread < 0 || c.velocitySpread > 100) {
+        errors.push(`velocitySpread ${c.velocitySpread} out of range [0-100]`);
+      }
+    }
+
+    // Validate scale settings
+    if (settings.scale) {
+      const s = settings.scale;
+      
+      // Root note validation (except Chromatic mode)
+      if (s.scaleType !== 0) {
+        if (s.rootNote < 60 || s.rootNote > 71) {
+          errors.push(`rootNote ${s.rootNote} out of range [60-71] (C to B). Chromatic mode allows any value.`);
+        }
+      }
+    }
+
+    // Use existing boolean validation as fallback
+    const basicValid = this.validateSettings(settings);
+    if (!basicValid && errors.length === 0) {
+      errors.push('Settings failed basic validation. Check console for details.');
+    }
+
+    return {
+      valid: errors.length === 0,
+      errors,
+      warnings
+    };
+  }
+
+  /**
+   * Validate device settings (legacy boolean method)
+   * @deprecated Use validateSettingsDetailed() for error messages
    */
   validateSettings(settings: DeviceSettings): boolean {
     // Helper to validate lever settings
@@ -554,9 +632,14 @@ export class KB1Protocol {
 
     // Helper to validate scale settings
     const validateScale = (scale: ScaleSettings): boolean => {
+      // In Chromatic mode (scaleType 0), rootNote is not used by firmware
+      // so don't validate it - allow any value including 0
+      const rootNoteValid = scale.scaleType === 0 || 
+                           (scale.rootNote >= 48 && scale.rootNote <= 84);
+      
       return (
         scale.scaleType >= 0 &&
-        scale.rootNote >= 48 && scale.rootNote <= 84 && // MIDI note range (allow 3 octaves centered on middle C)
+        rootNoteValid &&
         (scale.keyMapping === 0 || scale.keyMapping === 1)
       );
     };

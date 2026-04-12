@@ -458,6 +458,44 @@ watch(() => localSettings.value.chord.strumPattern, (newPattern, oldPattern) => 
   }
 });
 
+// Watch strum speed - auto-expand lever ranges to prevent jumps
+watch(() => localSettings.value.chord.strumSpeed, (newSpeed) => {
+  const magnitude = Math.abs(newSpeed);
+  
+  // Helper to convert MIDI 0-127 to strum speed magnitude 5-360ms
+  const midiToStrumSpeed = (midi: number) => Math.round(5 + (midi / 127) * 355);
+  
+  // Check and expand lever1 if configured for CC 200
+  if (localSettings.value.lever1.ccNumber === 200) {
+    const leverMin = midiToStrumSpeed(localSettings.value.lever1.minCCValue);
+    const leverMax = midiToStrumSpeed(localSettings.value.lever1.maxCCValue);
+    
+    if (magnitude < leverMin || magnitude > leverMax) {
+      console.log(`Lever 1: Expanding range to accommodate strum speed ${newSpeed}ms`);
+      localSettings.value.lever1 = {
+        ...localSettings.value.lever1,
+        minCCValue: 0,   // 5ms
+        maxCCValue: 127  // 360ms
+      };
+    }
+  }
+  
+  // Check and expand lever2 if configured for CC 200
+  if (localSettings.value.lever2.ccNumber === 200) {
+    const leverMin = midiToStrumSpeed(localSettings.value.lever2.minCCValue);
+    const leverMax = midiToStrumSpeed(localSettings.value.lever2.maxCCValue);
+    
+    if (magnitude < leverMin || magnitude > leverMax) {
+      console.log(`Lever 2: Expanding range to accommodate strum speed ${newSpeed}ms`);
+      localSettings.value.lever2 = {
+        ...localSettings.value.lever2,
+        minCCValue: 0,   // 5ms
+        maxCCValue: 127  // 360ms
+      };
+    }
+  }
+});
+
 function markChanged() {
   console.log('✏️ Settings changed - hasChanges set to true');
   hasChanges.value = true;

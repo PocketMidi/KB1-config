@@ -15,12 +15,13 @@
       </button>
 
       <!-- Profile Text Selection -->
-      <div class="profile-selector">
+      <div class="profile-selector" :class="{ disabled: isStrumSpeed }">
         <button 
           class="profile-btn"
           :class="{ active: isProfileActive('lin') }"
           @click="selectProfile('lin')"
           title="Linear"
+          :disabled="isStrumSpeed"
         >
           Lin
         </button>
@@ -29,6 +30,7 @@
           :class="{ active: isProfileActive('exp') }"
           @click="selectProfile('exp')"
           title="Exponential"
+          :disabled="isStrumSpeed"
         >
           Exp
         </button>
@@ -37,6 +39,7 @@
           :class="{ active: isProfileActive('log') }"
           @click="selectProfile('log')"
           title="Logarithmic"
+          :disabled="isStrumSpeed"
         >
           Log
         </button>
@@ -45,6 +48,7 @@
           :class="{ active: isProfileActive('pd') }"
           @click="selectProfile('pd')"
           title="Peak & Decay"
+          :disabled="isStrumSpeed"
         >
           P&D
         </button>
@@ -52,7 +56,8 @@
           class="profile-btn"
           :class="{ active: isProfileActive('inc') }"
           @click="selectProfile('inc')"
-          title="Incremental"
+          :title="isStrumSpeed ? 'Strum Speed uses incremental mode for immediate tempo response' : 'Incremental'"
+          :disabled="isStrumSpeed"
         >
           Inc
         </button>
@@ -308,6 +313,7 @@ const props = defineProps<{
   categories: string[]
   functionModes: { value: number, label: string }[]
   valueModes: { value: number, label: string }[]
+  strumSpeed?: number
 }>()
 
 const emit = defineEmits<{
@@ -363,6 +369,9 @@ const isKB1Expression = computed(() => {
   const cc = model.value.ccNumber
   return cc === 200 || cc === 201 || cc === 202 || cc === 203
 })
+
+// Check if current parameter is Strum Speed (incremental only)
+const isStrumSpeed = computed(() => model.value.ccNumber === 200)
 
 // Toggle tooltip
 const toggleTooltip = computed(() => {
@@ -527,13 +536,13 @@ watch(() => model.value.ccNumber, (cc) => {
   
   // KB1 Expression parameters: Force specific modes and clamp to valid ranges
   if (cc === 200) {
-    // Strum Speed: Bipolar -100 to +100 (negative = reverse, positive = forward)
-    // MIDI: 0 = -100% (reverse max), 64 = 0% (center), 127 = +100% (forward max)
+    // Strum Speed: Unipolar 0-127, INCREMENTAL only for immediate tempo response
     model.value = {
       ...model.value,
-      valueMode: VALUE_MODE_BIPOLAR,
-      minCCValue: 0,    // -100% (full reverse)
-      maxCCValue: 127   // +100% (full forward)
+      valueMode: VALUE_MODE_UNIPOLAR,
+      functionMode: 2, // Force INCREMENTAL
+      minCCValue: 0,
+      maxCCValue: 127
     }
   } else if (cc === 202) {
     // Swing: 50-100% (UI) maps to 0-100 (firmware)
@@ -607,6 +616,12 @@ const VALUE_MODE_BIPOLAR = 1
 const minRange = computed(() => {
   const cc = model.value.ccNumber
   
+  // CC 200 (Strum Speed): Display with direction sign
+  if (cc === 200) {
+    const isReverse = (props.strumSpeed ?? 5) < 0
+    return isReverse ? -360 : 5
+  }
+  
   // Special limits for specific parameters
   if (cc === 128) {
     // Velocity: lock minimum at -80% (MIDI 13)
@@ -627,6 +642,13 @@ const minRange = computed(() => {
 
 const maxRange = computed(() => {
   const cc = model.value.ccNumber
+  
+  // CC 200 (Strum Speed): Display with direction sign
+  if (cc === 200) {
+    const isReverse = (props.strumSpeed ?? 5) < 0
+    return isReverse ? -5 : 360
+  }
+  
   if (cc === 201) return 6   // Pattern Selector: 1-6 (discrete)
   return 100  // Default maximum
 })
@@ -724,11 +746,27 @@ function midiToSwingPercent(midiValue: number): number {
   return Math.round(50 + (midiValue / 127) * 50)
 }
 
-// User-facing Min value (0-100 or -100 to +100, or 1-7 for pattern selector)
+// Special conversion for Strum Speed (CC 200): Display ±5-360ms, store MIDI 0-127
+function strumSpeedToMidi(speedMs: number): number {
+  // Map magnitude 5-360ms to MIDI 0-127 (sign is visual only, not stored)
+  return Math.round((Math.abs(speedMs) - 5) / 355 * 127)
+}
+
+function midiToStrumSpeed(midiValue: number): number {
+  // Map MIDI 0-127 to magnitude 5-360ms
+  const magnitude = Math.round(5 + (midiValue / 127) * 355)
+  // Apply sign based on current strum speed direction
+  const isReverse = (props.strumSpeed ?? 5) < 0
+  return isReverse ? -magnitude : magnitude
+}
+
+// User-facing Min value (0-100 or -100 to +100, or special ranges)
 const userMin = computed({
   get: () => {
     let value: number
-    if (model.value.ccNumber === 201) {
+    if (model.value.ccNumber === 200) {
+      value = midiToStrumSpeed(model.value.minCCValue)
+    } else if (model.value.ccNumber === 201) {
       value = midiToPattern(model.value.minCCValue)
     } else if (model.value.ccNumber === 202) {
       value = midiToSwingPercent(model.value.minCCValue)
@@ -743,7 +781,9 @@ const userMin = computed({
   },
   set: (userValue: number) => {
     const snappedValue = snapToStepIncrement(userValue)
-    if (model.value.ccNumber === 201) {
+    if (model.value.ccNumber === 200) {
+      model.value = { ...model.value, minCCValue: strumSpeedToMidi(snappedValue) }
+    } else if (model.value.ccNumber === 201) {
       model.value = { ...model.value, minCCValue: patternToMidi(snappedValue) }
     } else if (model.value.ccNumber === 202) {
       model.value = { ...model.value, minCCValue: swingPercentToMidi(snappedValue) }
@@ -755,11 +795,13 @@ const userMin = computed({
   }
 })
 
-// User-facing Max value (0-100 or -100 to +100, or 1-7 for pattern selector)
+// User-facing Max value (0-100 or -100 to +100, or special ranges)
 const userMax = computed({
   get: () => {
     let value: number
-    if (model.value.ccNumber === 201) {
+    if (model.value.ccNumber === 200) {
+      value = midiToStrumSpeed(model.value.maxCCValue)
+    } else if (model.value.ccNumber === 201) {
       value = midiToPattern(model.value.maxCCValue)
     } else if (model.value.ccNumber === 202) {
       value = midiToSwingPercent(model.value.maxCCValue)
@@ -774,7 +816,9 @@ const userMax = computed({
   },
   set: (userValue: number) => {
     const snappedValue = snapToStepIncrement(userValue)
-    if (model.value.ccNumber === 201) {
+    if (model.value.ccNumber === 200) {
+      model.value = { ...model.value, maxCCValue: strumSpeedToMidi(snappedValue) }
+    } else if (model.value.ccNumber === 201) {
       model.value = { ...model.value, maxCCValue: patternToMidi(snappedValue) }
     } else if (model.value.ccNumber === 202) {
       model.value = { ...model.value, maxCCValue: swingPercentToMidi(snappedValue) }
@@ -1107,6 +1151,11 @@ function increaseSteps() {
   flex-shrink: 1; /* Allow buttons to shrink if needed */
 }
 
+.profile-selector.disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
 .profile-btn {
   background: none;
   border: none;
@@ -1120,7 +1169,12 @@ function increaseSteps() {
   font-family: 'Roboto Mono';
 }
 
-.profile-btn:hover {
+.profile-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.profile-btn:hover:not(:disabled) {
   color: #CDCDCD;
 }
 

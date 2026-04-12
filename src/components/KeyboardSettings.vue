@@ -132,7 +132,7 @@
           <span :class="{ active: !isChordStyle }">STRUM</span>
         </button>
         
-        <!-- Interactive Visual: gradient bar for chord, dynamic dots for strum -->
+        <!-- Interactive Visual: gradient bar for chord, adaptive dots for strum -->
         <div 
           class="chord-visualization-interactive"
           @mousedown="handleVisualizationMouseDown"
@@ -147,39 +147,22 @@
             <div class="velocity-indicator-right" :style="{ left: `${50 + visualSpread / 2}%` }"></div>
           </div>
           
-          <!-- Strum: Bidirectional Dots with Draggable Bar -->
-          <div v-else class="strum-bidirectional-dots">
-            <!-- Left side: Purple dots (reverse) -->
-            <div class="dots-side dots-left">
-              <div 
-                v-for="i in 7" 
-                :key="`left-${i}`" 
-                class="dot purple"
-                :class="{ active: isStrumReversed }"
-                :style="{ left: `${leftDotPositions[i-1]}%` }"
-              ></div>
-            </div>
-            
-            <!-- Draggable bar -->
+          <!-- Strum: Single Adaptive Dot Row (spacing = timing) -->
+          <div v-else class="strum-adaptive-dots"
+               @mousedown="handleDotsMouseDown"
+               @touchstart="handleDotsTouchStart">
+            <!-- Single row of 8 dots with adaptive spacing -->
             <div 
-              class="strum-bar"
-              :style="{ left: `${barPosition}%` }"
-              @mousedown="handleBarMouseDown"
-              @touchstart.prevent="handleBarTouchStart"
-              @dblclick="handleBarDoubleClick"
-              title="Drag to adjust speed | Double-click to reset to 80ms"
+              v-for="i in 8" 
+              :key="`dot-${i}`" 
+              class="dot"
+              :class="{ 
+                active: true,
+                purple: isStrumReversed,
+                yellow: !isStrumReversed
+              }"
+              :style="{ left: `${adaptiveDotPositions[i-1]}%` }"
             ></div>
-            
-            <!-- Right side: Yellow dots (forward) -->
-            <div class="dots-side dots-right">
-              <div 
-                v-for="i in 7" 
-                :key="`right-${i}`" 
-                class="dot yellow"
-                :class="{ active: !isStrumReversed }"
-                :style="{ left: `${rightDotPositions[i-1]}%` }"
-              ></div>
-            </div>
           </div>
         </div>
       </div>
@@ -194,6 +177,14 @@
                   @click.stop="showHelp('velocitySpread')">
               i
             </span>
+            <!-- FWD/REV toggle for strum mode (positioned after label) -->
+            <div v-if="!isChordStyle" class="direction-toggle-wrapper">
+              <button class="direction-toggle" @click="toggleStrumDirection" :class="{ reverse: isStrumReversed }">
+                <span>REV</span>
+                <span class="toggle-divider">|</span>
+                <span>FWD</span>
+              </button>
+            </div>
           </label>
           <div class="duration-control-wrapper">
             <ValueControl
@@ -678,7 +669,14 @@ const typeValue = computed({
 })
 
 const rootNoteValue = computed({
-  get: () => model.value.scale.rootNote, // Always use scale.rootNote (shared for both modes)
+  get: () => {
+    const rootNote = model.value.scale.rootNote
+    // If rootNote is invalid (e.g., 0 from Chromatic mode), default to C (60)
+    if (rootNote < 60 || rootNote > 71) {
+      return 60
+    }
+    return rootNote
+  },
   set: (v: number) => {
     const updated = { ...model.value }
     updated.scale = { ...updated.scale, rootNote: v }
@@ -737,8 +735,16 @@ onMounted(() => {
   })
 })
 
-// Watch for Chromatic scale on mount/change - enforce C root and Natural mapping
-// Only apply these restrictions in SCALE mode, not in CHORD mode
+// ═══ CHROMATIC MODE INVARIANTS ═══
+// CRITICAL: Chromatic scale (scaleType=0) requires special handling
+// WHY: Firmware ignores rootNote in Chromatic mode, but UI needs valid display value
+//
+// INVARIANT: When scaleType=0 in SCALE mode:
+//   1. rootNote SHOULD be 60 (C) for UI consistency (but firmware accepts any value)
+//   2. keyMapping MUST be 0 (Natural) - Compact makes no sense in Chromatic
+//
+// NOTE: In CHORD mode, these restrictions don't apply (chords can use any root)
+// CONTRACT: BLE validates rootNote=0 as valid for Chromatic, UI displays as C if outside 60-71
 watch(() => [model.value.scale.scaleType, model.value.mode] as const, ([newScaleType, mode]) => {
   if (newScaleType === 0 && mode === 'scale') {
     const updated = { ...model.value }
@@ -821,6 +827,14 @@ const handleChordToggleClick = () => {
   
   const updated = { ...model.value }
   updated.chord = { ...updated.chord, strumEnabled: isCurrentlyChord }
+  
+  // When switching TO CHORD mode (from strum), close shape panel and reset pattern
+  if (!isCurrentlyChord) {
+    advancedStrumOpen.value = false
+    updated.chord.strumPattern = 0
+    latestChord.value.strumPattern = 0
+  }
+  
   emit('update:modelValue', updated)
 }
 
@@ -833,7 +847,8 @@ const smartSliderValue = computed({
     if (isChordStyle.value) {
       return model.value.chord.velocitySpread
     } else {
-      return model.value.chord.strumSpeed
+      // Return absolute value for unipolar display (5-360)
+      return Math.abs(model.value.chord.strumSpeed)
     }
   },
   set: (v: number) => {
@@ -841,19 +856,16 @@ const smartSliderValue = computed({
     if (isChordStyle.value) {
       updated.chord = { ...updated.chord, velocitySpread: v }
     } else {
-      // Ensure value skips the -4 to 4 range
-      let strumSpeed = v
-      if (v > -5 && v < 5) {
-        // Snap to nearest valid value (-5 or 5)
-        strumSpeed = v < 0 ? -5 : 5
-      }
+      // Set with correct sign based on current direction
+      const isReversed = model.value.chord.strumSpeed < 0
+      const strumSpeed = isReversed ? -Math.abs(v) : Math.abs(v)
       updated.chord = { ...updated.chord, strumSpeed }
     }
     emit('update:modelValue', updated)
   }
 })
 
-const smartSliderMin = computed(() => isChordStyle.value ? 10 : -360)
+const smartSliderMin = computed(() => isChordStyle.value ? 10 : 5)
 const smartSliderMax = computed(() => isChordStyle.value ? 100 : 360)
 
 const smartSliderLabel = computed(() => {
@@ -864,41 +876,40 @@ const smartSliderUnit = computed(() => {
   return isChordStyle.value ? '' : 'ms'
 })
 
-// Display formatter for strum speed - show "CTR" at center (±360)
+// Display formatter for strum speed - always show positive value (direction shown by toggle)
 const strumDisplayFormatter = (value: number): string => {
-  if (Math.abs(value) === 360) return 'CTR'
-  return String(value)
+  return `${value}`
 }
 
-// Disable arrows at actual extremes (±5)
+// Disable arrows at actual extremes (5-360)
 const strumLeftDisabled = computed(() => {
   if (isChordStyle.value) return false
-  return smartSliderValue.value === -5
+  return smartSliderValue.value === 360 // Slow (max)
 })
 
 const strumRightDisabled = computed(() => {
   if (isChordStyle.value) return false
-  return smartSliderValue.value === 5
+  return smartSliderValue.value === 5 // Fast (min)
 })
 
-// Drag mapper for strum speed - inverted mapping (edges fast, center slow)
+// Drag mapper for strum speed - center fast (±5ms), extremes slow (±360ms)
 const strumSpeedDragMapper = (percentage: number): number => {
-  // Snap to center (±360) if within 5% of midpoint
+  // Snap to center (±5ms) if within 5% of midpoint
   if (percentage >= 45 && percentage <= 55) {
     // Determine which side based on exact percentage
-    return percentage < 50 ? -360 : 360
+    return percentage < 50 ? -5 : 5
   }
   
-  // Map edges (fast) to center (slow): 0% = -5ms, 50% = ±360ms, 100% = 5ms
+  // Map center (fast) to edges (slow): 0% = -360ms, 50% = ±5ms, 100% = 360ms
   let newValue: number
   if (percentage < 50) {
-    // Left side: 0% = -5ms, approaching 50% = -360ms
+    // Left side: 0% = -360ms (slow reverse), approaching 50% = -5ms (fast reverse)
     const t = percentage / 50 // 0 to 1
-    newValue = Math.round(-5 - t * 355) // -5 to -360
+    newValue = Math.round(-360 + t * 355) // -360 to -5
   } else {
-    // Right side: 50% = 360ms, 100% = 5ms
+    // Right side: 50% = 5ms (fast forward), 100% = 360ms (slow forward)
     const t = (percentage - 50) / 50 // 0 to 1
-    newValue = Math.round(360 - t * 355) // 360 to 5
+    newValue = Math.round(5 + t * 355) // 5 to 360
   }
   // Snap to step of 5
   const snapped = Math.round(newValue / 5) * 5
@@ -914,7 +925,7 @@ const smartSliderReset = computed(() => {
   return isChordStyle.value ? 80 : 80
 })
 
-// Dynamic arrow labels for strum speed - always single arrows
+// Dynamic arrow labels for strum speed - left=slower, right=faster
 const strumLeftLabel = computed(() => {
   return isChordStyle.value ? '−' : '<'
 })
@@ -923,43 +934,19 @@ const strumRightLabel = computed(() => {
   return isChordStyle.value ? '+' : '>'
 })
 
-// Custom button handlers for strum mode (inverted mapping: edges fast, center slow)
+// Custom button handlers for strum mode (< = slower, > = faster)
 function handleStrumLeftClick() {
-  // Left (<) moves bar LEFT on screen
+  // Left (<) = slower (increase time from 5 toward 360)
   const current = smartSliderValue.value
-  
-  if (current >= 5) {
-    // Positive side: LEFT = toward center (slower), increase value
-    if (current >= 360) {
-      // At center, cross to negative side
-      smartSliderValue.value = -360
-      return
-    }
-    smartSliderValue.value = Math.min(360, current + 5)
-  } else {
-    // Negative side: LEFT = toward edge (faster), increase toward -5
-    if (current >= -5) return // Already at edge
-    smartSliderValue.value = Math.min(-5, current + 5) // -165 + 5 = -160 ✓
-  }
+  if (current >= 360) return // Already at slowest
+  smartSliderValue.value = Math.min(360, current + 5)
 }
 
 function handleStrumRightClick() {
-  // Right (>) moves bar RIGHT on screen
+  // Right (>) = faster (decrease time from 360 toward 5)
   const current = smartSliderValue.value
-  
-  if (current >= 5) {
-    // Positive side: RIGHT = toward edge (faster), decrease to 5
-    if (current <= 5) return // Already at edge
-    smartSliderValue.value = Math.max(5, current - 5) // Stop at 5, don't cross
-  } else {
-    // Negative side: RIGHT = toward center (slower), decrease value
-    if (current <= -360) {
-      // At center, cross to positive side
-      smartSliderValue.value = 360
-      return
-    }
-    smartSliderValue.value = Math.max(-360, current - 5) // -165 - 5 = -170 ✓
-  }
+  if (current <= 5) return // Already at fastest
+  smartSliderValue.value = Math.max(5, current - 5)
 }
 
 const sliderPercentage = computed(() => {
@@ -973,75 +960,37 @@ const isStrumReversed = computed(() => {
   return !isChordStyle.value && model.value.chord.strumSpeed < 0
 })
 
-// Bar position for bidirectional strum (15% = -4ms fast, 50% = ±360ms slow, 85% = 4ms fast)
-// Constrained to 15-85% to leave 15% space for dots on both sides
-const barPosition = computed(() => {
-  if (isChordStyle.value) return 50
-  const value = smartSliderValue.value
-  // Map inverted: edges=fast(5ms), center=slow(360ms)
-  let normalized: number
-  if (value < 0) {
-    // Left side: -5 (0%) to -360 (50%)
-    const absValue = Math.abs(value)
-    normalized = (absValue - 5) / 355 * 0.5 // 0.0 to 0.5
-  } else {
-    // Right side: 360 (50%) to 5 (100%)
-    normalized = 0.5 + (360 - value) / 355 * 0.5 // 0.5 to 1.0
-  }
-  return 15 + normalized * 70 // 15% to 85%
-})
+// Toggle strum direction (flip sign in model, keep absolute value same)
+function toggleStrumDirection() {
+  const updated = { ...model.value }
+  const currentSpeed = model.value.chord.strumSpeed
+  updated.chord = { ...updated.chord, strumSpeed: -currentSpeed }
+  emit('update:modelValue', updated)
+}
 
-// Left dot positions (purple, reverse) - EXPAND as bar moves right (inactive side)
-const leftDotPositions = computed(() => {
-  const barPos = barPosition.value // 10% to 90%
+// Adaptive dot positions - spacing reflects timing (5ms=tight, 360ms=wide)
+const adaptiveDotPositions = computed(() => {
+  const speed = smartSliderValue.value // 5 to 360 (always positive)
   const positions: number[] = []
   
-  // Available space: 0% to barPos (always at least 15%)
-  const availableSpace = barPos
+  // Map speed to spacing:
+  // 5ms (fast) = very tight spacing (~20% width, ~10px center-to-center)
+  // 360ms (slow) = wide spacing (use ~95% of width)
+  const minUsage = 0.20  // Very tight at 5ms (2x dot diameter spacing)
+  const maxUsage = 0.95  // Wide at 360ms
+  const speedNormalized = (speed - 5) / 355 // 0.0 to 1.0
+  const usage = minUsage + speedNormalized * (maxUsage - minUsage)
   
-  // Compression factor: 0.0 (compressed) when bar at 15%, 1.0 (expanded) when bar at 85%
-  const expansion = (barPos - 15) / 70 // 0.0 to 1.0
+  const totalWidth = 100 // percentage
+  const usedWidth = totalWidth * usage
+  const margin = (totalWidth - usedWidth) / 2
   
-  // Use 90% of space when compressed (tight but all visible), 70% when expanded
-  const minUsage = 0.90
-  const maxUsage = 0.70
-  const usage = minUsage + expansion * (maxUsage - minUsage)
-  const visualRange = availableSpace * usage
-  
-  // Spread 7 dots with quadratic easing (easeOutQuad) for better visual distribution
-  const startPos = barPos - visualRange
-  for (let i = 0; i < 7; i++) {
-    const t = i / 6 // 0.0 to 1.0 linear
-    const eased = 1 - Math.pow(1 - t, 2) // easeOutQuad: spreads more at edges
-    positions.push(startPos + eased * visualRange)
+  // Distribute 8 dots evenly across usedWidth
+  for (let i = 0; i < 8; i++) {
+    const t = i / 7 // 0.0 to 1.0 (7 gaps for 8 dots)
+    positions.push(margin + t * usedWidth)
   }
-  return positions
-})
-
-// Right dot positions (yellow, forward) - COMPRESS as bar moves right (active side)
-const rightDotPositions = computed(() => {
-  const barPos = barPosition.value // 10% to 90%
-  const positions: number[] = []
   
-  // Available space: barPos to 100% (always at least 15%)
-  const availableSpace = 100 - barPos
-  
-  // Compression factor: 1.0 (expanded) when bar at 15%, 0.0 (compressed) when bar at 85%
-  const expansion = (85 - barPos) / 70 // 1.0 to 0.0
-  
-  // Use 90% of space when compressed (tight but all visible), 70% when expanded
-  const minUsage = 0.90
-  const maxUsage = 0.70
-  const usage = minUsage + expansion * (maxUsage - minUsage)
-  const visualRange = availableSpace * usage
-  
-  // Spread 7 dots with quadratic easing (easeInQuad) - compressed near bar, spread at edge
-  const startPos = barPos
-  for (let i = 0; i < 7; i++) {
-    const t = i / 6 // 0.0 to 1.0 linear
-    const eased = Math.pow(t, 2) // easeInQuad: compressed at start, spreads toward end
-    positions.push(startPos + eased * visualRange)
-  }
   return positions
 })
 
@@ -1124,6 +1073,8 @@ function getDotOpacity(dotIndex: number): number {
 }
 
 // Direct visualization interaction handlers
+// PERFORMANCE CRITICAL: Called on every pixel during drag
+// INVARIANT: Must only emit updates when value actually changes to avoid redundant renders
 const updateValueFromPosition = (clientX: number, rect: DOMRect) => {
   const percentage = Math.max(0, Math.min(100, ((clientX - rect.left) / rect.width) * 100))
   
@@ -1142,13 +1093,25 @@ const updateValueFromPosition = (clientX: number, rect: DOMRect) => {
     // Convert slider percentage to actual slider value
     const range = smartSliderMax.value - smartSliderMin.value
     const newValue = Math.round(smartSliderMin.value + (sliderPerc / 100) * range)
-    smartSliderValue.value = Math.max(smartSliderMin.value, Math.min(smartSliderMax.value, newValue))
+    const clampedValue = Math.max(smartSliderMin.value, Math.min(smartSliderMax.value, newValue))
+    
+    // CRITICAL: Only update if value changed - prevents 100+ redundant updates during drag
+    if (clampedValue !== smartSliderValue.value) {
+      smartSliderValue.value = clampedValue
+    }
   } else {
-    // Strum mode: inverted mapping (left = fast/tight, right = slow/wide)
-    // This matches the visual where dots bunch on the left when tight
+    // Strum mode: left = 5ms (fast, tight dots), right = 360ms (slow, wide dots)
     const range = smartSliderMax.value - smartSliderMin.value
-    const newValue = Math.round(smartSliderMax.value - (percentage / 100) * range)
-    smartSliderValue.value = Math.max(smartSliderMin.value, Math.min(smartSliderMax.value, newValue))
+    const rawValue = smartSliderMin.value + (percentage / 100) * range
+    
+    // INVARIANT: Strum speed must snap to multiples of 5ms (firmware requirement)
+    const snappedValue = Math.round(rawValue / 5) * 5
+    const clampedValue = Math.max(smartSliderMin.value, Math.min(smartSliderMax.value, snappedValue))
+    
+    // CRITICAL: Only update if value changed - prevents up to 100 updates per drag becoming ~7
+    if (clampedValue !== smartSliderValue.value) {
+      smartSliderValue.value = clampedValue
+    }
   }
 }
 
@@ -1202,25 +1165,15 @@ const handleVisualizationTouchStart = (e: TouchEvent) => {
   document.addEventListener('touchend', handleTouchEnd)
 }
 
-// ===== BAR DRAG HANDLERS (for bidirectional strum) =====
-
-const handleBarMouseDown = (e: MouseEvent) => {
+// Dots drag handlers for strum mode
+const handleDotsMouseDown = (e: MouseEvent) => {
   e.preventDefault()
-  e.stopPropagation()
-  
-  const visualContainer = (e.currentTarget as HTMLElement).parentElement
-  if (!visualContainer) return
-  const rect = visualContainer.getBoundingClientRect()
-  
-  const updateFromBarDrag = (clientX: number) => {
-    const percentage = Math.max(0, Math.min(100, ((clientX - rect.left) / rect.width) * 100))
-    smartSliderValue.value = strumSpeedDragMapper(percentage)
-  }
-  
-  // Don't update on initial click - only on drag (mousemove)
+  const target = e.currentTarget as HTMLElement
+  const rect = target.getBoundingClientRect()
+  updateValueFromPosition(e.clientX, rect)
   
   const handleMouseMove = (e: MouseEvent) => {
-    updateFromBarDrag(e.clientX)
+    updateValueFromPosition(e.clientX, rect)
   }
   
   const handleMouseUp = () => {
@@ -1232,28 +1185,20 @@ const handleBarMouseDown = (e: MouseEvent) => {
   document.addEventListener('mouseup', handleMouseUp)
 }
 
-const handleBarTouchStart = (e: TouchEvent) => {
-  e.stopPropagation()
-  
-  const visualContainer = (e.currentTarget as HTMLElement).parentElement
-  if (!visualContainer || e.touches.length !== 1) return
+const handleDotsTouchStart = (e: TouchEvent) => {
+  if (e.touches.length !== 1) return
+  const target = e.currentTarget as HTMLElement
+  const rect = target.getBoundingClientRect()
   const touch = e.touches[0]
   if (!touch) return
-  
-  const updateFromBarDrag = (clientX: number) => {
-    const rect = visualContainer.getBoundingClientRect()
-    const percentage = Math.max(0, Math.min(100, ((clientX - rect.left) / rect.width) * 100))
-    smartSliderValue.value = strumSpeedDragMapper(percentage)
-  }
-  
-  // Don't update on initial touch - only on drag (touchmove)
+  updateValueFromPosition(touch.clientX, rect)
   
   const handleTouchMove = (e: TouchEvent) => {
     if (e.touches.length !== 1) return
     const touch = e.touches[0]
     if (!touch) return
     e.preventDefault()
-    updateFromBarDrag(touch.clientX)
+    updateValueFromPosition(touch.clientX, rect)
   }
   
   const handleTouchEnd = () => {
@@ -1263,10 +1208,6 @@ const handleBarTouchStart = (e: TouchEvent) => {
   
   document.addEventListener('touchmove', handleTouchMove, { passive: false })
   document.addEventListener('touchend', handleTouchEnd)
-}
-
-const handleBarDoubleClick = () => {
-  smartSliderValue.value = 80
 }
 
 // ===== KEYBOARD VISUALIZATION =====
@@ -1769,11 +1710,11 @@ function handleKeyClick(midiNote: number) {
 
 .toggle-btn {
   flex: 0 0 auto;
-  padding: 0.15rem 0.375rem;
+  padding: 0.25rem 0.6rem;
   background: rgba(106, 104, 83, 0.35);
   border: 1px solid rgba(106, 104, 83, 0.4);
   color: var(--kb1-text-primary, #EAEAEA);
-  font-size: 0.65rem;
+  font-size: 0.6875rem;
   font-weight: 500;
   border-radius: 4px;
   cursor: pointer;
@@ -1781,7 +1722,7 @@ function handleKeyClick(midiNote: number) {
   font-family: 'Roboto Mono', monospace;
   white-space: nowrap;
   display: flex;
-  gap: 0.2rem;
+  gap: 0.25rem;
   align-items: center;
   justify-content: center;
 }
@@ -1931,98 +1872,108 @@ function handleKeyClick(midiNote: number) {
   background: rgb(138, 104, 218);
 }
 
-/* Strum: Bidirectional Dots with Draggable Bar */
-.strum-bidirectional-dots {
+/* Strum: Single Adaptive Dot Row (spacing = timing) */
+.strum-adaptive-dots {
   position: relative;
   width: 100%;
   height: 100%;
   display: flex;
   align-items: center;
-  pointer-events: none;
+  cursor: ew-resize;
 }
 
-.dots-side {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 100%;
-  height: 5px;
-  pointer-events: none;
-}
-
-.strum-bidirectional-dots .dot {
+.strum-adaptive-dots .dot {
   position: absolute;
   width: 5px;
   height: 5px;
   border-radius: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
-  transition: left 0.15s ease;
-  opacity: 0.5;
+  transition: left 0.3s ease;
   pointer-events: none;
 }
 
-.strum-bidirectional-dots .dot.purple {
+.strum-adaptive-dots .dot.purple {
   background-color: #C084FC;
 }
 
-.strum-bidirectional-dots .dot.yellow {
+.strum-adaptive-dots .dot.yellow {
   background-color: var(--accent-highlight);
 }
 
-/* Pulse animation only on active side */
-.strum-bidirectional-dots .dot.active {
+/* Pulse animation on all dots */
+.strum-adaptive-dots .dot.active {
   animation: strum-cascade 1.8s ease-in-out infinite;
 }
 
-/* Staggered delays for left side (purple, reverse order when active) */
-.dots-left .dot.active:nth-child(1) { animation-delay: 1.2s; }
-.dots-left .dot.active:nth-child(2) { animation-delay: 1.0s; }
-.dots-left .dot.active:nth-child(3) { animation-delay: 0.8s; }
-.dots-left .dot.active:nth-child(4) { animation-delay: 0.6s; }
-.dots-left .dot.active:nth-child(5) { animation-delay: 0.4s; }
-.dots-left .dot.active:nth-child(6) { animation-delay: 0.2s; }
-.dots-left .dot.active:nth-child(7) { animation-delay: 0s; }
+/* Staggered animation delays for 8 dots - forward (yellow) */
+.strum-adaptive-dots .dot.yellow:nth-child(1) { animation-delay: 0s; }
+.strum-adaptive-dots .dot.yellow:nth-child(2) { animation-delay: 0.15s; }
+.strum-adaptive-dots .dot.yellow:nth-child(3) { animation-delay: 0.3s; }
+.strum-adaptive-dots .dot.yellow:nth-child(4) { animation-delay: 0.45s; }
+.strum-adaptive-dots .dot.yellow:nth-child(5) { animation-delay: 0.6s; }
+.strum-adaptive-dots .dot.yellow:nth-child(6) { animation-delay: 0.75s; }
+.strum-adaptive-dots .dot.yellow:nth-child(7) { animation-delay: 0.9s; }
+.strum-adaptive-dots .dot.yellow:nth-child(8) { animation-delay: 1.05s; }
 
-/* Staggered delays for right side (yellow, forward order when active) */
-.dots-right .dot.active:nth-child(1) { animation-delay: 0s; }
-.dots-right .dot.active:nth-child(2) { animation-delay: 0.2s; }
-.dots-right .dot.active:nth-child(3) { animation-delay: 0.4s; }
-.dots-right .dot.active:nth-child(4) { animation-delay: 0.6s; }
-.dots-right .dot.active:nth-child(5) { animation-delay: 0.8s; }
-.dots-right .dot.active:nth-child(6) { animation-delay: 1.0s; }
-.dots-right .dot.active:nth-child(7) { animation-delay: 1.2s; }
+/* Reversed animation delays for reverse (purple) - cascades right-to-left */
+.strum-adaptive-dots .dot.purple:nth-child(1) { animation-delay: 1.05s; }
+.strum-adaptive-dots .dot.purple:nth-child(2) { animation-delay: 0.9s; }
+.strum-adaptive-dots .dot.purple:nth-child(3) { animation-delay: 0.75s; }
+.strum-adaptive-dots .dot.purple:nth-child(4) { animation-delay: 0.6s; }
+.strum-adaptive-dots .dot.purple:nth-child(5) { animation-delay: 0.45s; }
+.strum-adaptive-dots .dot.purple:nth-child(6) { animation-delay: 0.3s; }
+.strum-adaptive-dots .dot.purple:nth-child(7) { animation-delay: 0.15s; }
+.strum-adaptive-dots .dot.purple:nth-child(8) { animation-delay: 0s; }
 
-/* Draggable bar */
-.strum-bar {
-  position: absolute;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  width: 6px;
-  height: 20px;
-  background: var(--accent-highlight);
-  border-radius: 10px;
-  cursor: grab;
-  transition: left 0.1s ease;
-  z-index: 10;
-  pointer-events: auto;
+/* REV/FWD direction toggle */
+.direction-toggle-wrapper {
+  display: inline-block;
+  margin-left: 1.5rem;
 }
 
-/* Larger touch target for mobile */
-.strum-bar::before {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 44px;
-  height: 60px;
-  /* Uncomment to visualize touch area during development */
-  /* background: rgba(255, 0, 0, 0.2); */
+.direction-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.6rem;
+  background: transparent;
+  border: 1px solid #3A3A3A;
+  border-radius: 4px;
+  font-family: 'Roboto Mono', monospace;
+  font-size: 0.6875rem;
+  font-weight: 400;
+  color: #848484;
+  cursor: pointer;
+  transition: all 0.2s;
+  letter-spacing: 0.05em;
 }
 
-.strum-bar:active {
-  cursor: grabbing;
+.direction-toggle:hover {
+  color: #EAEAEA;
+  border-color: #5A5A5A;
+}
+
+.direction-toggle span {
+  transition: color 0.2s;
+  color: #848484;
+}
+
+.direction-toggle .toggle-divider {
+  color: #3A3A3A;
+  margin: 0 0.125rem;
+}
+
+/* Active state - purple for reverse */
+.direction-toggle.reverse span:first-child {
+  color: #C084FC;
+  font-weight: 500;
+}
+
+/* Active state - yellow for forward */
+.direction-toggle:not(.reverse) span:last-child {
+  color: var(--accent-highlight);
+  font-weight: 500;
 }
 
 @keyframes strum-cascade {
@@ -2304,7 +2255,7 @@ function handleKeyClick(midiNote: number) {
 /* Voicing dots container */
 .voicing-dots {
   display: flex;
-  gap: 0.2rem;
+  gap: calc(0.2rem + 2px);
   align-items: center;
   user-select: none;
 }
@@ -2319,16 +2270,16 @@ function handleKeyClick(midiNote: number) {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 9px;
-  height: 9px;
+  width: 5px;
+  height: 22px;
   flex-shrink: 0;
 }
 
-/* The actual dot */
+/* The actual dot (now vertical line) */
 .dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
+  width: 5px;
+  height: 20px;
+  border-radius: 2.5px;
   background: #6a6853;
   transition: all 0.2s ease;
 }
@@ -2339,10 +2290,10 @@ function handleKeyClick(midiNote: number) {
   box-shadow: 0 0 6px rgba(249, 172, 32, 0.4);
 }
 
-/* Hovered dot (grows) */
+/* Hovered dot (grows slightly) */
 .dot.hovered {
-  width: 9px;
-  height: 9px;
+  width: 6px;
+  height: 22px;
 }
 
 /* Octave meter bars */
@@ -2351,7 +2302,7 @@ function handleKeyClick(midiNote: number) {
   top: 5px;
   right: 12px;
   display: flex;
-  flex-direction: column;
+  flex-direction: column-reverse;
   gap: 7px;
   padding: 0;
   width: 23px;

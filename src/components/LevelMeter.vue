@@ -217,8 +217,16 @@ const markers = computed<Marker[]>(() => {
     // Standard mode: Show dots at regular intervals
     // For bipolar: -100, -95, -90... 0... 95, 100 (41 dots, interval=5)
     // For unipolar: 0, 2.5, 5, 7.5... 97.5, 100 (41 dots, interval=2.5)
-    // This gives both modes the same visual density
-    const dotInterval = props.isBipolar ? 5 : 2.5
+    // For strum speed (5-360 or -360 to -5): interval=10 (≈36 dots)
+    let dotInterval: number
+    if (rangeSpan >= 300) {
+      // Strum speed range (355): use interval of 10 for ~35-40 dots
+      dotInterval = 10
+    } else if (props.isBipolar) {
+      dotInterval = 5
+    } else {
+      dotInterval = 2.5
+    }
     const startValue = Math.ceil(rangeMin / dotInterval) * dotInterval
     
     for (let value = startValue; value <= rangeMax; value += dotInterval) {
@@ -281,11 +289,14 @@ const labels = computed<Label[]>(() => {
     }
     
     // For normal ranges, show 0/25/50/75/100 (or custom min/max)
+    // For large ranges (strum speed), round to nearest 5
+    const roundValue = rangeSpan >= 300 ? (v: number) => Math.round(v / 5) * 5 : Math.round
+    
     return [
       { value: rangeMin, position: 0, text: String(rangeMin) },
-      { value: Math.round(rangeMin + rangeSpan * 0.25), position: 25, text: String(Math.round(rangeMin + rangeSpan * 0.25)) },
-      { value: Math.round(rangeMin + rangeSpan * 0.5), position: 50, text: String(Math.round(rangeMin + rangeSpan * 0.5)) },
-      { value: Math.round(rangeMin + rangeSpan * 0.75), position: 75, text: String(Math.round(rangeMin + rangeSpan * 0.75)) },
+      { value: roundValue(rangeMin + rangeSpan * 0.25), position: 25, text: String(roundValue(rangeMin + rangeSpan * 0.25)) },
+      { value: roundValue(rangeMin + rangeSpan * 0.5), position: 50, text: String(roundValue(rangeMin + rangeSpan * 0.5)) },
+      { value: roundValue(rangeMin + rangeSpan * 0.75), position: 75, text: String(roundValue(rangeMin + rangeSpan * 0.75)) },
       { value: rangeMax, position: 100, text: String(rangeMax) }
     ]
   }

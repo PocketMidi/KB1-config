@@ -272,8 +272,8 @@
         </button>
       </div>
 
-      <!-- Static Mood Description Bar (for CHORD mode only) -->
-      <div class="static-mood-bar" v-if="isChordStyle && currentMood">
+      <!-- Static Mood Description Bar (for SCALE mode and CHORD style) -->
+      <div class="static-mood-bar" v-if="(playMode === 'scale' || isChordStyle) && currentMood">
         <span class="mood-text" v-html="currentMood"></span>
       </div>
     </div>

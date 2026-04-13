@@ -179,27 +179,11 @@
       </div>
     </div>
   </div>
-  
-  <!-- Help Guide Modal -->
-  <div v-if="showHelpModal" class="help-modal-overlay" @click.stop="dismissHelp">
-    <div class="help-modal" @click.stop>
-      <div class="help-modal-header">
-        <h3>{{ helpContent.title }}</h3>
-        <button class="close-btn" @click="dismissHelp">×</button>
-      </div>
-      <div class="help-modal-body">
-        <p v-html="helpContent.description"></p>
-      </div>
-      <div class="help-modal-footer">
-        <button class="btn-primary" @click="dismissHelp">Got it</button>
-      </div>
-    </div>
-  </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted, nextTick, watch, computed } from 'vue';
-import { PresetStore, generateRandomName, type Preset } from '../state/presets';
+import { PresetStore, generateRandomName } from '../state/presets';
 import type { DeviceSettings } from '../ble/kb1Protocol';
 import { useDeviceState } from '../composables/useDeviceState';
 import { useToast } from '../composables/useToast';
@@ -209,8 +193,6 @@ import CommunityPresets from './CommunityPresets.vue';
 
 const {
   isConnected,
-  hasDevicePresetSupport,
-  hasDevicePresetDelete,
   devicePresets,
   saveDevicePreset,
   loadDevicePreset,

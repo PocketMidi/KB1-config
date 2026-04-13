@@ -1488,12 +1488,12 @@ function handleKeyClick(midiNote: number) {
 }
 
 .key {
-  background-color: #1A1A1A;
-  color: rgba(255, 255, 255, 0.3);
+  background-color: #222222;
+  color: rgba(255, 255, 255, 0.4);
 }
 
 .key.active {
-  background-color: #0BA873;
+  background-color: #4b736a;
   color: #0F0F0F;
 }
 
@@ -1545,18 +1545,19 @@ function handleKeyClick(midiNote: number) {
 }
 
 .key.clickable.active:hover {
-  background-color: #0DC988;
+  background-color: #568073;
   color: #0F0F0F;
 }
 
 .key.clickable.active.chromatic-disabled {
-  background-color: rgba(13, 201, 136, 0.4);
-  color: rgba(15, 15, 15, 0.6);
+  background-color: rgba(75, 115, 106, 0.25);
+  color: rgba(255, 255, 255, 0.85);
+  animation: chromatic-key-pulse 4s ease-in-out infinite;
 }
 
 .key.clickable.active.chromatic-disabled:hover {
-  background-color: rgba(13, 201, 136, 0.4);
-  color: rgba(15, 15, 15, 0.6);
+  background-color: rgba(75, 115, 106, 0.25);
+  color: rgba(255, 255, 255, 0.85);
   transform: none;
 }
 
@@ -1572,6 +1573,81 @@ function handleKeyClick(midiNote: number) {
   line-height: 1;
   font-size: 0.625rem;
 }
+
+/* Chromatic Mode: Center-out pulse animation on text */
+.chromatic-mode .key.active.chromatic-disabled .note-label,
+.chromatic-mode .key.active.chromatic-disabled .note-label-alt {
+  animation: chromatic-text-pulse 4s ease-in-out infinite;
+}
+
+@keyframes chromatic-text-pulse {
+  0%, 100% {
+    opacity: 0.85;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.15);
+  }
+}
+
+@keyframes chromatic-key-pulse {
+  0%, 100% {
+    background-color: rgba(75, 115, 106, 0.25);
+  }
+  50% {
+    background-color: rgba(75, 115, 106, 0.65);
+  }
+}
+
+/* Center-out timing: Bottom row (12 keys, center at G = index 6) */
+.chromatic-mode .bottom-row .key:nth-child(6) .note-label,
+.chromatic-mode .bottom-row .key:nth-child(6) { animation-delay: 0s; } /* G - center */
+.chromatic-mode .bottom-row .key:nth-child(5) .note-label,
+.chromatic-mode .bottom-row .key:nth-child(5),
+.chromatic-mode .bottom-row .key:nth-child(7) .note-label,
+.chromatic-mode .bottom-row .key:nth-child(7) { animation-delay: 0.3s; }
+.chromatic-mode .bottom-row .key:nth-child(4) .note-label,
+.chromatic-mode .bottom-row .key:nth-child(4),
+.chromatic-mode .bottom-row .key:nth-child(8) .note-label,
+.chromatic-mode .bottom-row .key:nth-child(8) { animation-delay: 0.6s; }
+.chromatic-mode .bottom-row .key:nth-child(3) .note-label,
+.chromatic-mode .bottom-row .key:nth-child(3),
+.chromatic-mode .bottom-row .key:nth-child(9) .note-label,
+.chromatic-mode .bottom-row .key:nth-child(9) { animation-delay: 0.9s; }
+.chromatic-mode .bottom-row .key:nth-child(2) .note-label,
+.chromatic-mode .bottom-row .key:nth-child(2),
+.chromatic-mode .bottom-row .key:nth-child(10) .note-label,
+.chromatic-mode .bottom-row .key:nth-child(10) { animation-delay: 1.2s; }
+.chromatic-mode .bottom-row .key:nth-child(1) .note-label,
+.chromatic-mode .bottom-row .key:nth-child(1),
+.chromatic-mode .bottom-row .key:nth-child(11) .note-label,
+.chromatic-mode .bottom-row .key:nth-child(11) { animation-delay: 1.5s; }
+.chromatic-mode .bottom-row .key:nth-child(12) .note-label,
+.chromatic-mode .bottom-row .key:nth-child(12) { animation-delay: 1.8s; }
+
+/* Center-out timing: Top row (7 keys, center at G# = index 4) */
+.chromatic-mode .top-row .key:nth-child(4) .note-label,
+.chromatic-mode .top-row .key:nth-child(4) .note-label-alt,
+.chromatic-mode .top-row .key:nth-child(4) { animation-delay: 0.15s; } /* G# - center, offset slightly from bottom row */
+.chromatic-mode .top-row .key:nth-child(3) .note-label,
+.chromatic-mode .top-row .key:nth-child(3) .note-label-alt,
+.chromatic-mode .top-row .key:nth-child(3),
+.chromatic-mode .top-row .key:nth-child(5) .note-label,
+.chromatic-mode .top-row .key:nth-child(5) .note-label-alt,
+.chromatic-mode .top-row .key:nth-child(5) { animation-delay: 0.45s; }
+.chromatic-mode .top-row .key:nth-child(2) .note-label,
+.chromatic-mode .top-row .key:nth-child(2) .note-label-alt,
+.chromatic-mode .top-row .key:nth-child(2),
+.chromatic-mode .top-row .key:nth-child(6) .note-label,
+.chromatic-mode .top-row .key:nth-child(6) .note-label-alt,
+.chromatic-mode .top-row .key:nth-child(6) { animation-delay: 0.75s; }
+.chromatic-mode .top-row .key:nth-child(1) .note-label,
+.chromatic-mode .top-row .key:nth-child(1) .note-label-alt,
+.chromatic-mode .top-row .key:nth-child(1),
+.chromatic-mode .top-row .key:nth-child(7) .note-label,
+.chromatic-mode .top-row .key:nth-child(7) .note-label-alt,
+.chromatic-mode .top-row .key:nth-child(7) { animation-delay: 1.05s; }
 
 /* Inactive Keys Hint Banner */
 .inactive-keys-hint {
@@ -1643,7 +1719,7 @@ function handleKeyClick(midiNote: number) {
 .hint-btn-primary {
   width: 100%;
   padding: 0.625rem 1.25rem;
-  background: #0DC988;
+  background: #568073;
   color: #1A1A1A;
   border: none;
   border-radius: 4px;
@@ -1655,7 +1731,7 @@ function handleKeyClick(midiNote: number) {
 }
 
 .hint-btn-primary:hover {
-  background: #0BA872;
+  background: #618D7E;
 }
 
 .hint-btn-secondary {
@@ -1809,7 +1885,7 @@ function handleKeyClick(midiNote: number) {
 .chord-gradient-bar {
   display: flex;
   width: 100%;
-  height: 12px;
+  height: 8px;
   border-radius: 4px;
   overflow: visible;
   position: relative;
@@ -2207,8 +2283,8 @@ function handleKeyClick(midiNote: number) {
 }
 
 .info-icon:hover {
-  color: #0DC988;
-  border-color: #0DC988;
+  color: #568073;
+  border-color: #568073;
 }
 
 /* Root & Range row wrapper */
@@ -2386,7 +2462,7 @@ function handleKeyClick(midiNote: number) {
 
 .help-modal-footer .btn-primary {
   padding: 0.5rem 1.5rem;
-  background: #0DC988;
+  background: #568073;
   color: #1A1A1A;
   border: none;
   border-radius: 4px;
@@ -2398,6 +2474,6 @@ function handleKeyClick(midiNote: number) {
 }
 
 .help-modal-footer .btn-primary:hover {
-  background: #0BA872;
+  background: #618D7E;
 }
 </style>

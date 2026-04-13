@@ -7,7 +7,7 @@
     
     <div v-else-if="error" class="error-state">
       <p>{{ error }}</p>
-      <button class="btn-secondary" @click="loadPresets">Retry</button>
+      <button class="btn-secondary" @click="() => loadPresets()">Retry</button>
     </div>
     
     <div v-else-if="communityPresets.length === 0" class="empty-state">

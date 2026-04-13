@@ -368,8 +368,7 @@ async function deleteSelected() {
   
   const count = selectedSlots.value.size;
   const confirmed = await confirm(
-    `Delete ${count} selected preset${count > 1 ? 's' : ''}?`,
-    { top: '40%', left: '50%' }
+    `Delete ${count} selected preset${count > 1 ? 's' : ''}?`
   );
   
   if (!confirmed) return;
@@ -462,11 +461,6 @@ function activateSlot(slot: number) {
   toast.success(`Activated: "${preset.name}"`);
 }
 
-function openNVSDialog(slot: number) {
-  // Deprecated - using direct sync now
-  syncNVSSlot(slot);
-}
-
 async function syncNVSSlot(slot: number) {
   if (!isConnected.value) return;
   
@@ -491,7 +485,7 @@ async function syncNVSSlot(slot: number) {
   // Case 3: Local has data → Save to device (overwrite)
   if (localPreset) {
     try {
-      await saveDevicePreset(slot, localPreset.name, localPreset.settings);
+      await saveDevicePreset(slot, localPreset.name);
       toast.success(`Saved to device: "${localPreset.name}"`);
       
       // Refresh to update NVS indicator
@@ -539,25 +533,6 @@ function openCloudDialog(slot: number) {
   showCloudDialog.value = true;
 }
 
-async function exportToCloud() {
-  if (exportingSlot.value === null) return;
-  
-  const preset = getSlotPreset(exportingSlot.value);
-  if (!preset) {
-    toast.error('No preset to export');
-    return;
-  }
-  
-  // Pre-fill export metadata with preset name
-  exportMetadata.value.name = preset.name;
-  exportMetadata.value.author = '';
-  exportMetadata.value.description = '';
-  exportMetadata.value.tags = '';
-  
-  showCloudDialog.value = false;
-  showExportDialog.value = true;
-}
-
 async function handleCloudPresetLoad(preset: { id: string; metadata?: { name?: string; author?: string; description?: string; tags?: string[] }; settings: DeviceSettings }) {
   if (exportingSlot.value === null) {
     showCloudDialog.value = false;
@@ -571,8 +546,7 @@ async function handleCloudPresetLoad(preset: { id: string; metadata?: { name?: s
   // If slot is occupied, ask for confirmation
   if (existingPreset) {
     const confirmed = await confirm(
-      `Replace "${existingPreset.name}" with "${presetName}"?`,
-      { top: '40%', left: '50%' }
+      `Replace "${existingPreset.name}" with "${presetName}"?`
     );
     if (!confirmed) {
       return;
@@ -608,36 +582,6 @@ function getDevicePreset(slot: number) {
     isValid: false 
   };
   return preset;
-}
-
-// Device preset operations
-async function saveToDevice(slot: number) {
-  const preset = getDevicePreset(slot);
-  console.log(`💾 Save to device slot ${slot}:`, { isValid: preset.isValid, name: preset.name });
-  
-  // Warn if slot is filled
-  if (preset.isValid) {
-    const overwrite = await confirm(`Slot ${slot + 1} contains "${preset.name}".\n\nDo you want to overwrite it?\n\nClick Cancel to choose a different slot.`);
-    if (!overwrite) {
-      // Find next empty slot
-      const emptySlot = devicePresets.value.findIndex(p => !p.isValid);
-      if (emptySlot >= 0) {
-        const useEmpty = await confirm(`Use empty slot ${emptySlot + 1} instead?`);
-        if (useEmpty) {
-          saveToDevice(emptySlot);
-          return;
-        }
-      }
-      return; // User cancelled
-    }
-    // User chose to overwrite - pre-fill with existing name
-    newPresetName.value = preset.name;
-  } else {
-    newPresetName.value = generateRandomName();
-  }
-  
-  savingDeviceSlot.value = slot;
-  showCreateDialog.value = true;
 }
 
 async function loadFromDevice(slot: number) {

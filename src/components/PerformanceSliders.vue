@@ -129,6 +129,11 @@ const showResetHint = ref(false);
 const RESET_HINT_SEEN_KEY = 'kb1-reset-hint-seen';
 const RESET_HINT_DISABLED_KEY = 'kb1-reset-hint-disabled';
 
+// Level meter animation state
+const barHeights = ref<number[]>(new Array(12).fill(0.3));
+let animationFrameId: number | null = null;
+const animationStartTime = Date.now();
+
 
 
 // Toggle control mode between FX and MIX
@@ -311,9 +316,29 @@ function getSliderColor(slider: SliderConfig, _sliderIndex: number): string {
 
 // === END UTILITY FUNCTIONS ===
 
+// Level meter animation loop
+function animateMeterBars() {
+  const elapsed = (Date.now() - animationStartTime) / 1000; // seconds
+  const duration = 3; // 3 second cycle
+  
+  barHeights.value = barHeights.value.map((_, index) => {
+    const offset = index * 0.15; // Wave offset
+    const phase = ((elapsed + offset) % duration) / duration; // 0 to 1
+    
+    // Ease in-out wave: goes from 0.3 to 1.0
+    const wave = Math.sin(phase * Math.PI * 2) * 0.5 + 0.5; // 0 to 1
+    return 0.3 + (wave * 0.7); // 0.3 to 1.0
+  });
+  
+  animationFrameId = requestAnimationFrame(animateMeterBars);
+}
+
 // Load animation data and initialize sliders on mount
 onMounted(() => {
   initializeSliders();
+  
+  // Start level meter animation
+  animateMeterBars();
   
   // Load Lottie animation data
   loadAnimationData();
@@ -329,6 +354,11 @@ onMounted(() => {
 });
 
 onUnmounted(() => {
+  // Stop level meter animation
+  if (animationFrameId !== null) {
+    cancelAnimationFrame(animationFrameId);
+  }
+  
   // Remove global listeners
   document.removeEventListener('mousemove', handleColorSwatchMove);
   document.removeEventListener('mouseup', handleColorSwatchEnd);
@@ -1292,10 +1322,13 @@ defineExpose({
                 v-for="(slider, index) in sliders" 
                 :key="index"
                 class="meter-bar-wrapper" 
-                :style="{ '--bar-index': index, '--bar-color': getSliderColor(slider, index) }"
+                :style="{ '--bar-color': getSliderColor(slider, index) }"
               >
                 <div class="meter-bar-base"></div>
-                <div class="meter-bar-active"></div>
+                <div 
+                  class="meter-bar-active"
+                  :style="{ transform: `scaleY(${barHeights[index]})` }"
+                ></div>
               </div>
             </div>
           </button>
@@ -1731,6 +1764,7 @@ defineExpose({
   height: 100%;
   display: flex;
   align-items: flex-end;
+  contain: layout style paint;
 }
 
 .meter-bar-base {
@@ -1752,8 +1786,8 @@ defineExpose({
   border-radius: 1.5px;
   opacity: 1;
   transform-origin: bottom;
-  animation: level-pulse 3s ease-in-out infinite;
-  animation-delay: calc(var(--bar-index) * 0.15s);
+  will-change: transform;
+  backface-visibility: hidden;
 }
 
 /* Add larger gap after each group of 3 bars */
@@ -1761,15 +1795,6 @@ defineExpose({
 .meter-bar-wrapper:nth-child(6),
 .meter-bar-wrapper:nth-child(9) {
   margin-right: 3px;
-}
-
-@keyframes level-pulse {
-  0%, 100% {
-    transform: scaleY(0.3);
-  }
-  50% {
-    transform: scaleY(1);
-  }
 }
 
 .sliders-list {

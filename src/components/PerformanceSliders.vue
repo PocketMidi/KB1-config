@@ -1719,15 +1719,15 @@ defineExpose({
 /* Level meter bars */
 .level-meter-bars {
   display: flex;
-  gap: 6px;
+  gap: 4.5px;
   align-items: center;
   height: 100%;
   padding: 4px 0;
-  margin-left: 16px;
+  margin-left: 8px;
 }
 
 .meter-bar {
-  width: 5px;
+  width: 3.75px;
   height: 100%;
   background-color: var(--bar-color);
   border-radius: 1.5px;
@@ -1739,7 +1739,7 @@ defineExpose({
 .meter-bar:nth-child(3),
 .meter-bar:nth-child(6),
 .meter-bar:nth-child(9) {
-  margin-right: 4px;
+  margin-right: 3px;
 }
 
 @keyframes wave-pulse {

@@ -584,44 +584,7 @@ function getDevicePreset(slot: number) {
   return preset;
 }
 
-async function loadFromDevice(slot: number) {
-  const preset = getDevicePreset(slot);
-  console.log(`📥 Load from device slot ${slot}:`, { isValid: preset.isValid, name: preset.name });
-  
-  if (!preset.isValid) {
-    toast.info('Slot is empty');
-    return;
-  }
-  
-  try {
-    await loadDevicePreset(slot);
-    activeDeviceSlot.value = slot;
-    // Clear browser preset active state
-    activePresetId.value = null;
-    emit('presetActivated', null);
-    console.log(`✅ Successfully loaded from slot ${slot + 1}:`, preset.name);
-    toast.success(`Loaded from device slot ${slot + 1}: "${preset.name}"`);
-  } catch (error) {
-    console.error('❌ Failed to load device preset:', error);
-    toast.error('Failed to load from device');
-  }
-}
-
-async function deleteFromDevice(slot: number) {
-  const preset = getDevicePreset(slot);
-  if (!await confirm(`Delete "${preset.name}" from slot ${slot + 1}?`)) return;
-  
-  try {
-    await deleteDevicePreset(slot);
-    if (activeDeviceSlot.value === slot) {
-      activeDeviceSlot.value = null;
-    }
-    toast.success(`Deleted from device slot ${slot + 1}`);
-  } catch (error) {
-    console.error('Failed to delete device preset:', error);
-    toast.error('Failed to delete device preset');
-  }
-}
+// Device preset functions removed - functionality handled by syncNVSSlot
 
 // Load presets on mount
 
@@ -683,14 +646,7 @@ watch(isConnected, (connected) => {
   }
 });
 
-function cancelExport() {
-  exportMetadata.value = {
-    name: '',
-    description: ''
-  };
-  exportingSlot.value = null;
-  showCloudDialog.value = false;
-}
+
 
 function refreshCommunityPresets() {
   // Force refresh with cache-busting
@@ -805,71 +761,7 @@ function downloadJSON(json: string, filename: string) {
   URL.revokeObjectURL(url);
 }
 
-
-function importPresetDialog() {
-  fileInput.value?.click();
-}
-
-async function handleFileImport(event: Event) {
-  const input = event.target as HTMLInputElement;
-  const file = input.files?.[0];
-  if (!file) return;
-
-  try {
-    const text = await file.text();
-    const json = JSON.parse(text);
-    
-    // Check if it's a single preset or array
-    if (Array.isArray(json)) {
-      const count = PresetStore.importAllPresets(text);
-      toast.success(`Successfully imported ${count} preset(s)`);
-    } else {
-      const preset = PresetStore.importPreset(text);
-      if (preset) {
-        toast.success(`Successfully imported preset "${preset.name}"`);
-      } else {
-        toast.error('Failed to import preset. Invalid format.');
-      }
-    }
-    
-    refreshPresets();
-  } catch (error) {
-    toast.error('Failed to import preset file. Please check the file format.');
-  }
-  
-  // Reset input
-  input.value = '';
-}
-
-function formatDate(timestamp: number): string {
-  const date = new Date(timestamp);
-  const now = new Date();
-  const diff = now.getTime() - date.getTime();
-  
-  // Less than 1 minute
-  if (diff < 60000) return 'Just now';
-  
-  // Less than 1 hour
-  if (diff < 3600000) {
-    const mins = Math.floor(diff / 60000);
-    return `${mins} min${mins > 1 ? 's' : ''} ago`;
-  }
-  
-  // Less than 24 hours
-  if (diff < 86400000) {
-    const hours = Math.floor(diff / 3600000);
-    return `${hours} hour${hours > 1 ? 's' : ''} ago`;
-  }
-  
-  // Less than 7 days
-  if (diff < 604800000) {
-    const days = Math.floor(diff / 86400000);
-    return `${days} day${days > 1 ? 's' : ''} ago`;
-  }
-  
-  // Format as date
-  return date.toLocaleDateString();
-}
+// Import/export functions removed - functionality handled by cloud dialog
 </script>
 
 <style scoped>

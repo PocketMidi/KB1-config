@@ -252,8 +252,6 @@ const {
   saveToFlash,
   handleLoad,
   resetToDefaults,
-  devicePresets,
-  hasDevicePresetSupport,
   maxScaleType,
   lastDeviceLoadTime,
 } = useDeviceState();

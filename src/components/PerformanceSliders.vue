@@ -25,36 +25,32 @@ interface Preset {
   links: boolean[]; // 11 booleans for links between adjacent sliders
 }
 
-// 12 rainbow colors for grouping
+// 8 color palette for grouping
 const RAINBOW_COLORS = [
-  { id: 1, color: '#FF0000', name: 'Red' },
-  { id: 2, color: '#FF7F00', name: 'Orange' },
-  { id: 3, color: '#FFFF00', name: 'Yellow' },
-  { id: 4, color: '#7FFF00', name: 'Chartreuse' },
-  { id: 5, color: '#00FF00', name: 'Green' },
-  { id: 6, color: '#00FF7F', name: 'Spring Green' },
-  { id: 7, color: '#00FFFF', name: 'Cyan' },
-  { id: 8, color: '#007FFF', name: 'Azure' },
-  { id: 9, color: '#0000FF', name: 'Blue' },
-  { id: 10, color: '#7F00FF', name: 'Violet' },
-  { id: 11, color: '#FF00FF', name: 'Magenta' },
-  { id: 12, color: '#FF007F', name: 'Rose' },
+  { id: 1, color: '#ad4137', name: 'Red' },
+  { id: 2, color: '#ad6c37', name: 'Orange' },
+  { id: 3, color: '#8ba793', name: 'Green' },
+  { id: 4, color: '#8ba793', name: 'Green 2' },
+  { id: 5, color: '#806847', name: 'Brown' },
+  { id: 6, color: '#807d47', name: 'Olive' },
+  { id: 7, color: '#485f81', name: 'Blue' },
+  { id: 8, color: '#484a81', name: 'Indigo' },
 ];
 
-// Default colors: 4 sets of 3 (Red, Chartreuse, Cyan, Violet)
+// Default colors: 4 sets of 3 (Red, Green, Brown, Blue)
 const DEFAULT_COLORS = [
-  '#FF0000', // Red 1
-  '#FF0000', // Red 2
-  '#FF0000', // Red 3
-  '#7FFF00', // Chartreuse 1
-  '#7FFF00', // Chartreuse 2
-  '#7FFF00', // Chartreuse 3
-  '#00FFFF', // Cyan 1
-  '#00FFFF', // Cyan 2
-  '#00FFFF', // Cyan 3
-  '#7F00FF', // Violet 1
-  '#7F00FF', // Violet 2
-  '#7F00FF', // Violet 3
+  '#ad4137', // Red 1
+  '#ad4137', // Red 2
+  '#ad4137', // Red 3
+  '#8ba793', // Green 1
+  '#8ba793', // Green 2
+  '#8ba793', // Green 3
+  '#806847', // Brown 1
+  '#806847', // Brown 2
+  '#806847', // Brown 3
+  '#485f81', // Blue 1
+  '#485f81', // Blue 2
+  '#485f81', // Blue 3
 ];
 
 // View mode
@@ -77,7 +73,7 @@ const MODE_CONFIG = {
     ccs: [79, 80, 81, 82, 71, 72, 73, 74, 75, 76, 77, 78],
     labels: ['Delay', 'Reverb', 'Dry Mix', 'Line In', 'Trk 1', 'Trk 2', 'Trk 3', 'Trk 4', 'Trk 5', 'Trk 6', 'Trk 7', 'Trk 8'],
     liveLabels: ['Del', 'Rev', 'Dry', 'LnIn', '1', '2', '3', '4', '5', '6', '7', '8'],
-    colors: ['#FF7F00', '#FF7F00', '#FF7F00', '#FF7F00', '#FF0000', '#FF0000', '#00FF00', '#00FF00', '#00FFFF', '#00FFFF', '#7F00FF', '#7F00FF'], // Orange for global (4), then red (2), green (2), cyan (2), violet (2)
+    colors: ['#ad6c37', '#ad6c37', '#ad6c37', '#ad6c37', '#ad4137', '#ad4137', '#8ba793', '#8ba793', '#806847', '#806847', '#485f81', '#485f81'], // Orange for global (4), then red (2), green (2), brown (2), blue (2)
     description: 'Master Mixer'
   }
 };
@@ -1295,9 +1291,12 @@ defineExpose({
               <div 
                 v-for="(slider, index) in sliders" 
                 :key="index"
-                class="meter-bar" 
+                class="meter-bar-wrapper" 
                 :style="{ '--bar-index': index, '--bar-color': getSliderColor(slider, index) }"
-              ></div>
+              >
+                <div class="meter-bar-base"></div>
+                <div class="meter-bar-active"></div>
+              </div>
             </div>
           </button>
           <button class="btn-zero" @click="resetToDefaults">ZERO</button>
@@ -1726,28 +1725,50 @@ defineExpose({
   margin-left: 8px;
 }
 
-.meter-bar {
+.meter-bar-wrapper {
+  position: relative;
   width: 3.75px;
+  height: 100%;
+  display: flex;
+  align-items: flex-end;
+}
+
+.meter-bar-base {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
   height: 100%;
   background-color: var(--bar-color);
   border-radius: 1.5px;
-  animation: wave-pulse 2.5s ease-in-out infinite;
-  animation-delay: calc(var(--bar-index) * 0.08s);
+  opacity: 0.4;
+}
+
+.meter-bar-active {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
+  background-color: var(--bar-color);
+  border-radius: 1.5px;
+  opacity: 1;
+  transform-origin: bottom;
+  animation: level-pulse 3s ease-in-out infinite;
+  animation-delay: calc(var(--bar-index) * 0.15s);
 }
 
 /* Add larger gap after each group of 3 bars */
-.meter-bar:nth-child(3),
-.meter-bar:nth-child(6),
-.meter-bar:nth-child(9) {
+.meter-bar-wrapper:nth-child(3),
+.meter-bar-wrapper:nth-child(6),
+.meter-bar-wrapper:nth-child(9) {
   margin-right: 3px;
 }
 
-@keyframes wave-pulse {
+@keyframes level-pulse {
   0%, 100% {
-    opacity: 0.3;
+    transform: scaleY(0.3);
   }
   50% {
-    opacity: 1;
+    transform: scaleY(1);
   }
 }
 

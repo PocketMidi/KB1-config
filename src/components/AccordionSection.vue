@@ -222,33 +222,4 @@ defineExpose({
     margin-left: 0.5rem;
   }
 }
-
-/* ===== LIGHT MODE OVERRIDES ===== */
-:global(html.theme-kb1-light .accordion-header) {
-  background: rgba(180, 180, 188, 0.85) !important;
-}
-
-:global(html.theme-kb1-light .accordion-header:hover) {
-  background: rgba(158, 159, 175, 0.95) !important;
-}
-
-:global(html.theme-kb1-light .accordion-header:active) {
-  background: rgba(158, 159, 175, 1.0) !important;
-}
-
-:global(html.theme-kb1-light .accordion-section.is-open .accordion-header) {
-  background: rgba(158, 159, 175, 1.0) !important;
-}
-
-:global(html.theme-kb1-light .accordion-title-text) {
-  color: #2f2f2f !important;
-}
-
-:global(html.theme-kb1-light .accordion-header:hover .accordion-title-text) {
-  color: #ffffff !important;
-}
-
-:global(html.theme-kb1-light .midi-cc-display) {
-  color: #2f2f2f !important;
-}
 </style>

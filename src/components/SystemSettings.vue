@@ -97,43 +97,22 @@
       <!-- Firmware update removed - use desktop firmware updater tool instead -->
 
       <div class="input-divider"></div>
-      <div class="group">
-        <label>APPEARANCE</label>
-        <div class="theme-mode-toggle">
-          <button
-            class="theme-mode-btn"
-            :class="{ active: themeMode === 'auto' }"
-            @click="setThemeMode('auto')"
-          >AUTO</button>
-          <button
-            class="theme-mode-btn"
-            :class="{ active: themeMode === 'dark' }"
-            @click="setThemeMode('dark')"
-          >DARK</button>
-          <button
-            class="theme-mode-btn"
-            :class="{ active: themeMode === 'light' }"
-            @click="setThemeMode('light')"
-          >LIGHT</button>
-        </div>
-      </div>
-      <div class="input-divider"></div>
 
       <div class="group">
         <label>
           CONFIG SETTINGS
           <span class="info-icon" @click.stop="showHelp('configSettings')" title="Show help">i</span>
         </label>
-        <div class="theme-mode-toggle">
+        <div class="button-group">
           <button
-            class="theme-mode-btn"
+            class="config-btn"
             :class="{ active: restoringFromDevice }"
             :disabled="!props.isConnected"
             @click="handleRestoreFromDevice"
             :title="props.isConnected ? 'Load current settings from KB1' : 'Connect to KB1 to refresh settings'"
           >REFRESH</button>
           <button
-            class="theme-mode-btn danger"
+            class="config-btn danger"
             :class="{ active: resettingToFactory }"
             @click="handleResetToFactory"
           >DEFAULTS</button>
@@ -217,7 +196,7 @@ function toggleHaptics() {
 }
 
 // UI Preferences
-const { unipolarStepSize, setUnipolarStepSize, batteryMonitoringEnabled, setBatteryMonitoringEnabled, themeMode, setThemeMode } = useUIPreferences()
+const { unipolarStepSize, setUnipolarStepSize, batteryMonitoringEnabled, setBatteryMonitoringEnabled } = useUIPreferences()
 
 // Battery Modal
 const { openBatteryModal } = useBatteryModal()
@@ -705,13 +684,13 @@ const formatTime = (seconds: number): string => {
   color: #ef4444;
 }
 
-/* APPEARANCE 3-way theme toggle */
-.theme-mode-toggle {
+/* CONFIG SETTINGS button group */
+.button-group {
   display: flex;
   gap: 0.25rem;
 }
 
-.theme-mode-btn {
+.config-btn {
   padding: 0.25rem 0.6rem;
   background: transparent;
   border: 1px solid #3A3A3A;
@@ -725,39 +704,39 @@ const formatTime = (seconds: number): string => {
   letter-spacing: 0.05em;
 }
 
-.theme-mode-btn.active {
+.config-btn.active {
   background: rgba(234, 234, 234, 0.1);
   border-color: rgba(234, 234, 234, 0.4);
   color: #EAEAEA;
   font-weight: 500;
 }
 
-.theme-mode-btn:hover:not(.active) {
+.config-btn:hover:not(.active) {
   color: #EAEAEA;
   border-color: #5A5A5A;
 }
 
-.theme-mode-btn:disabled {
+.config-btn:disabled {
   opacity: 0.4;
   cursor: not-allowed;
   color: #5A5A5A;
 }
 
-.theme-mode-btn:disabled:hover {
+.config-btn:disabled:hover {
   border-color: #3A3A3A;
   color: #5A5A5A;
 }
 
-.theme-mode-btn.danger {
+.config-btn.danger {
   color: #848484;
 }
 
-.theme-mode-btn.danger:hover:not(.active) {
+.config-btn.danger:hover:not(.active) {
   color: #ef4444;
   border-color: #ef4444;
 }
 
-.theme-mode-btn.danger.active {
+.config-btn.danger.active {
   background: rgba(239, 68, 68, 0.15);
   border-color: rgba(239, 68, 68, 0.5);
   color: #ef4444;

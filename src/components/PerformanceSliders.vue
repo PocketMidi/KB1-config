@@ -1651,9 +1651,9 @@ defineExpose({
 .btn-live {
   width: 100%;
   padding: 0.125rem 0.5rem;
-  background: rgba(234, 234, 234, 0.02);
-  border: 1px solid rgba(234, 234, 234, 0.15);
-  color: rgba(234, 234, 234, 0.35);
+  background: rgba(234, 234, 234, 0.05);
+  border: 1px solid rgba(234, 234, 234, 0.4);
+  color: rgba(234, 234, 234, 0.8);
   font-size: 0.8125rem;
   font-weight: 500;
   border-radius: 4px;
@@ -1668,9 +1668,9 @@ defineExpose({
 }
 
 .btn-live:hover {
-  background: rgba(234, 234, 234, 0.04);
-  border-color: rgba(234, 234, 234, 0.4);
-  color: rgba(234, 234, 234, 0.8);
+  background: rgba(234, 234, 234, 0.08);
+  border-color: rgba(234, 234, 234, 0.5);
+  color: rgba(234, 234, 234, 0.9);
 }
 
 .btn-live:active {

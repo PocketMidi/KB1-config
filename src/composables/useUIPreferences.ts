@@ -1,47 +1,35 @@
 import { ref, watch, computed } from 'vue'
 
 export type UnipolarStepSize = 1 | 5
-export type ThemeMode = 'auto' | 'dark' | 'light'
 
 interface UIPreferences {
   unipolarStepSize: UnipolarStepSize
   batteryMonitoringEnabled: boolean
-  themeMode: ThemeMode
 }
 
 const STORAGE_KEY = 'kb1-ui-preferences'
-const LEGACY_THEME_KEY = 'kb1-theme-preference'
 
 // Default preferences
 const defaultPreferences: UIPreferences = {
   unipolarStepSize: 5,
-  batteryMonitoringEnabled: false,
-  themeMode: 'dark'
+  batteryMonitoringEnabled: false
 }
 
 // Load from localStorage or use defaults
 function loadPreferences(): UIPreferences {
-  // Migrate legacy theme key for existing users
-  let migratedTheme: ThemeMode = 'dark'
-  try {
-    const legacy = localStorage.getItem(LEGACY_THEME_KEY)
-    if (legacy === 'light') migratedTheme = 'light'
-  } catch {}
-
   try {
     const stored = localStorage.getItem(STORAGE_KEY)
     if (stored) {
       const parsed = JSON.parse(stored)
       return {
         ...defaultPreferences,
-        themeMode: migratedTheme, // migrate if not already saved
         ...parsed
       }
     }
   } catch (error) {
     console.warn('Failed to load UI preferences:', error)
   }
-  return { ...defaultPreferences, themeMode: migratedTheme }
+  return { ...defaultPreferences }
 }
 
 // Save to localStorage
@@ -76,18 +64,10 @@ export function useUIPreferences() {
     }
   })
 
-  const themeMode = computed({
-    get: () => preferences.value.themeMode,
-    set: (value: ThemeMode) => {
-      preferences.value.themeMode = value
-    }
-  })
-
   return {
     preferences,
     unipolarStepSize,
     batteryMonitoringEnabled,
-    themeMode,
 
     // Setters
     setUnipolarStepSize(size: UnipolarStepSize) {
@@ -96,10 +76,6 @@ export function useUIPreferences() {
 
     setBatteryMonitoringEnabled(enabled: boolean) {
       preferences.value.batteryMonitoringEnabled = enabled
-    },
-
-    setThemeMode(mode: ThemeMode) {
-      preferences.value.themeMode = mode
     },
 
     // Reset to defaults

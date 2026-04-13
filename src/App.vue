@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import MobileScales from './pages/MobileScales.vue';
 import MobileSliders from './pages/MobileSliders.vue';
 import FirstTimeOverlay from './components/FirstTimeOverlay.vue';
@@ -25,7 +25,7 @@ const {
   setDevMode,
 } = useDeviceState();
 const { dialogs, remove: removeDialog } = useConfirm();
-const { batteryMonitoringEnabled, themeMode } = useUIPreferences();
+const { batteryMonitoringEnabled } = useUIPreferences();
 const { showBatteryModal, openBatteryModal, closeBatteryModal } = useBatteryModal();
 
 const { toasts, remove, success } = useToast();
@@ -45,14 +45,6 @@ const isHoveringStatus = ref(false);
 // Modal states
 const showFirstTimeOverlay = ref(false);
 const showContextualModal = ref(false);
-
-// Theme state — driven by useUIPreferences (3-way: auto/dark/light)
-const prefersDark = ref(typeof window !== 'undefined' ? window.matchMedia('(prefers-color-scheme: dark)').matches : true);
-
-const isDarkMode = computed(() => {
-  if (themeMode.value === 'auto') return prefersDark.value;
-  return themeMode.value === 'dark';
-});
 
 // Sync button state
 const isUploading = ref(false);
@@ -170,16 +162,27 @@ const hideUI = computed(() => {
   return isMobile.value && isInLiveMode.value;
 });
 
+// Wake Lock - prevents screen auto-dimming during use
+let wakeLock: WakeLockSentinel | null = null;
+
+async function requestWakeLock() {
+  try {
+    if ('wakeLock' in navigator) {
+      wakeLock = await (navigator as any).wakeLock.request('screen');
+      console.log('Wake Lock active - screen will not auto-dim');
+    }
+  } catch (err) {
+    // Silently fail if Wake Lock is not supported or permission denied
+    console.warn('Wake Lock not available:', err);
+  }
+}
+
 // Check if first-time overlay should be shown
 onMounted(() => {
   const hasSeenIntro = localStorage.getItem(FIRST_TIME_BLE_INTRO_KEY);
   if (!hasSeenIntro && !isConnected.value) {
     showFirstTimeOverlay.value = true;
   }
-
-  // Watch OS preference changes for auto mode
-  const mq = window.matchMedia('(prefers-color-scheme: dark)');
-  mq.addEventListener('change', (e) => { prefersDark.value = e.matches; });
 
   // Show/hide the sticky-nav top mask only after the logo header scrolls away
   if (appHeaderRef.value) {
@@ -189,13 +192,20 @@ onMounted(() => {
     );
     observer.observe(appHeaderRef.value);
   }
-});
 
-// Apply theme class to html element, reactive to isDarkMode computed
-watch(isDarkMode, (dark) => {
-  document.documentElement.classList.remove('theme-kb1-dark', 'theme-kb1-light');
-  document.documentElement.classList.add(dark ? 'theme-kb1-dark' : 'theme-kb1-light');
-}, { immediate: true });
+  // Apply dark theme permanently
+  document.documentElement.classList.add('theme-kb1-dark');
+
+  // Request Wake Lock to prevent screen auto-dimming
+  requestWakeLock();
+
+  // Re-acquire Wake Lock when page becomes visible again
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible' && wakeLock === null) {
+      requestWakeLock();
+    }
+  });
+});
 
 async function handleConnect() {
   try {
@@ -318,7 +328,7 @@ function handleTabClick(tabId: Tab) {
 </script>
 
 <template>
-  <div class="app" :class="isDarkMode ? 'theme-kb1-dark' : 'theme-kb1-light'">
+  <div class="app theme-kb1-dark">
     <!-- First-Time Overlay -->
     <FirstTimeOverlay
       :show="showFirstTimeOverlay"
@@ -484,7 +494,7 @@ function handleTabClick(tabId: Tab) {
 @import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&display=swap');
 
 /* ===== NOTE: Theme-specific color variables are defined in /src/styles/themes/kb1.css ===== */
-/* The .theme-kb1-dark and .theme-kb1-light classes contain all color definitions */
+/* The .theme-kb1-dark class contains all color definitions */
 
 :root {
   /* Default to dark mode colors for fallback */
@@ -644,12 +654,6 @@ body {
   height: 40px;
 }
 
-/* Invert logo for light mode for better visibility */
-.theme-kb1-light .header-logo {
-  filter: brightness(0) saturate(100%) invert(45%) sepia(18%) saturate(651%) hue-rotate(10deg) brightness(94%) contrast(87%);
-  opacity: 1;
-}
-
 .warning-banner {
   padding: 1rem 2rem;
   background: rgba(239, 68, 68, 0.1);
@@ -803,16 +807,6 @@ body {
   display: block;
   transition: filter 0.3s;
   filter: brightness(0) invert(1); /* white icon for dark bg */
-}
-
-/* Light mode: darken icon */
-.theme-kb1-light .save-upload-icon {
-  filter: brightness(0);
-}
-
-/* Override for light mode has-changes: keep orange tint */
-.theme-kb1-light .save-upload-btn.has-changes .save-upload-icon {
-  filter: brightness(0) saturate(100%) invert(76%) sepia(68%) saturate(700%) hue-rotate(357deg) brightness(103%) contrast(102%);
 }
 
 @keyframes save-pulse {

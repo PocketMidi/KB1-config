@@ -1008,9 +1008,7 @@ const visualSpread = computed(() => {
 
 // Create banded velocity visualization (center-out)
 function createVelocityBands(spreadPercent: number): string {
-  // Check if light theme is active
-  const isLightTheme = document.documentElement.classList.contains('theme-kb1-light')
-  const baseColor = isLightTheme ? '138, 104, 218' : '249, 172, 32' // Purple for light, Yellow for dark
+  const baseColor = '249, 172, 32' // Yellow accent for dark mode
   
   // Calculate indicator positions
   const leftIndicator = 50 - spreadPercent / 2
@@ -1494,19 +1492,9 @@ function handleKeyClick(midiNote: number) {
   color: rgba(255, 255, 255, 0.3);
 }
 
-:global(html.theme-kb1-light) .key {
-  background-color: #c8c8ce !important;
-  color: rgba(0, 0, 0, 0.45) !important;
-}
-
 .key.active {
   background-color: #0BA873;
   color: #0F0F0F;
-}
-
-:global(html.theme-kb1-light) .key.active {
-  background-color: #389265;
-  color: #ffffff;
 }
 
 .key.root-note {
@@ -1514,13 +1502,6 @@ function handleKeyClick(midiNote: number) {
     inset 0 0 0 2px #0F0F0F,
     0 0 0 1px var(--accent-highlight);
   animation: root-note-pulse 2s ease-in-out infinite;
-}
-
-:global(html.theme-kb1-light) .key.root-note {
-  box-shadow:
-    inset 0 0 0 2px #e0e0e5,
-    0 0 0 1px var(--accent-highlight);
-  animation: root-note-pulse-light 2s ease-in-out infinite;
 }
 
 @keyframes root-note-pulse {
@@ -1867,11 +1848,6 @@ function handleKeyClick(midiNote: number) {
   border-radius: 2px;
 }
 
-:global(html.theme-kb1-light) .velocity-indicator-left,
-:global(html.theme-kb1-light) .velocity-indicator-right {
-  background: rgb(138, 104, 218);
-}
-
 /* Strum: Single Adaptive Dot Row (spacing = timing) */
 .strum-adaptive-dots {
   position: relative;
@@ -2208,16 +2184,6 @@ function handleKeyClick(midiNote: number) {
   letter-spacing: 0.02em;
   line-height: 1.4;
   display: block;
-}
-
-/* ===== LIGHT MODE OVERRIDES ===== */
-:global(html.theme-kb1-light .static-mood-bar) {
-  background: rgba(149, 151, 172, 0.2) !important;
-}
-
-:global(html.theme-kb1-light .static-mood-bar .mood-text) {
-  color: #2f2f2f;
-  opacity: 1;
 }
 
 /* ===== VOICING CONTROLS ===== */

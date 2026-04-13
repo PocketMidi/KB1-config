@@ -353,7 +353,7 @@ function isRootNote(midiNote: number): boolean {
 .key.root-note {
   box-shadow:
     inset 0 0 0 2px #0F0F0F,  /* Inner dark outline - 2px */
-    0 0 0 1px var(--accent-highlight);         /* Outer accent outline */
+    0 0 0 1px var(--ui-highlight);         /* Outer accent outline */
 }
 
 /* Add gap after certain keys to mimic piano layout */
@@ -431,7 +431,7 @@ function isRootNote(midiNote: number): boolean {
   width: 5px;
   height: 5px;
   border-radius: 50%;
-  background-color: var(--accent-highlight);
+  background-color: var(--ui-highlight);
   flex-shrink: 0;
 }
 

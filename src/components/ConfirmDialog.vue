@@ -112,15 +112,15 @@ function handleCancel() {
 }
 
 .btn-confirm {
-  background: rgba(249, 172, 32, 0.2);
-  border: 1px solid rgba(249, 172, 32, 0.4);
+  background: rgba(var(--ui-highlight-rgb), 0.2);
+  border: 1px solid rgba(var(--ui-highlight-rgb), 0.4);
   color: var(--color-text);
 }
 
 .btn-confirm:hover {
-  background: rgba(249, 172, 32, 0.3);
-  border-color: rgba(249, 172, 32, 0.6);
-  box-shadow: 0 0 8px rgba(249, 172, 32, 0.3);
+  background: rgba(var(--ui-highlight-rgb), 0.3);
+  border-color: rgba(var(--ui-highlight-rgb), 0.6);
+  box-shadow: 0 0 8px rgba(var(--ui-highlight-rgb), 0.3);
 }
 
 .btn-cancel:active,

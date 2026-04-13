@@ -1636,8 +1636,8 @@ defineExpose({
 }
 
 .btn-zero:active {
-  border-color: #F9AC20;
-  color: #F9AC20;
+  border-color: var(--ui-highlight);
+  color: var(--ui-highlight);
 }
 
 .setup-header h2 {
@@ -1674,8 +1674,8 @@ defineExpose({
 }
 
 .btn-live:active {
-  border-color: #F9AC20;
-  color: #F9AC20;
+  border-color: var(--ui-highlight);
+  color: var(--ui-highlight);
   transform: scale(0.98);
 }
 
@@ -1953,7 +1953,7 @@ defineExpose({
 .cc-label {
   font-size: 0.8125rem;
   font-family: 'Roboto Mono';
-  color: var(--accent-highlight);
+  color: var(--ui-highlight);
   font-weight: 600;
 }
 
@@ -2093,7 +2093,7 @@ defineExpose({
   padding: 0.5rem;
   text-align: center;
   background: rgba(116, 196, 255, 0.1);
-  color: #74C4FF;
+  color: var(--bluetooth-status-active);
   font-size: 0.75rem;
   font-family: 'Roboto Mono';
   z-index: 10;
@@ -2149,7 +2149,7 @@ defineExpose({
 .prompt-text {
   font-family: 'Roboto Mono';
   font-size: 0.8125rem;
-  color: #74C4FF;
+  color: var(--bluetooth-status-active);
   font-weight: 600;
   margin-bottom: 0.5rem;
 }
@@ -2186,7 +2186,7 @@ defineExpose({
 
 .mobile-exit-button:active {
   background: rgba(15, 15, 15, 0.9);
-  color: #74C4FF;
+  color: var(--bluetooth-status-active);
   transform: scale(1.1);
 }
 

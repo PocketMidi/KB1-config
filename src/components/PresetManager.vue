@@ -1036,7 +1036,7 @@ function downloadJSON(json: string, filename: string) {
 .btn-refresh {
   background: none;
   border: none;
-  color: #74C4FF;
+  color: var(--bluetooth-status-active);
   width: 28px;
   height: 28px;
   cursor: pointer;
@@ -1120,7 +1120,7 @@ function downloadJSON(json: string, filename: string) {
   top: -1.5rem;
   left: 50%;
   transform: translateX(-50%);
-  color: #F9AC20;
+  color: var(--ui-highlight);
   font-size: 0.75rem;
   font-weight: 500;
   white-space: nowrap;
@@ -1162,12 +1162,12 @@ function downloadJSON(json: string, filename: string) {
 }
 
 .slot-box.active {
-  background: rgba(249, 172, 32, 0.3);
-  border: 1px solid #F9AC20;
+  background: rgba(var(--ui-highlight-rgb), 0.3);
+  border: 1px solid var(--ui-highlight);
 }
 
 .slot-box.active:hover {
-  background: rgba(249, 172, 32, 0.4);
+  background: rgba(var(--ui-highlight-rgb), 0.4);
 }
 
 .slot-box.empty {
@@ -1175,7 +1175,7 @@ function downloadJSON(json: string, filename: string) {
 }
 
 .slot-box:hover .slot-number {
-  color: #F9AC20;
+  color: var(--ui-highlight);
 }
 
 .slot-number {
@@ -1240,7 +1240,7 @@ function downloadJSON(json: string, filename: string) {
   width: 16px;
   height: 16px;
   cursor: pointer;
-  accent-color: var(--accent-highlight);
+  accent-color: var(--ui-highlight);
 }
 
 .preset-info {
@@ -1632,7 +1632,7 @@ textarea.input-text {
 }
 
 .device-preset-slot.active {
-  border-color: var(--accent-highlight);
+  border-color: var(--ui-highlight);
   background: rgba(106, 104, 83, 0.1);
 }
 
@@ -1688,16 +1688,16 @@ textarea.input-text {
 }
 
 .btn-create:hover {
-  background: rgba(249, 172, 32, 0.3) !important;
-  border-color: rgba(249, 172, 32, 0.6) !important;
-  box-shadow: 0 0 10px rgba(249, 172, 32, 0.35) !important;
-  color: #F9AC20 !important;
+  background: rgba(var(--ui-highlight-rgb), 0.3) !important;
+  border-color: rgba(var(--ui-highlight-rgb), 0.6) !important;
+  box-shadow: 0 0 10px rgba(var(--ui-highlight-rgb), 0.35) !important;
+  color: var(--ui-highlight) !important;
 }
 
 .btn-create:active {
-  background: rgba(249, 172, 32, 0.4) !important;
-  border-color: #F9AC20 !important;
-  box-shadow: 0 0 14px rgba(249, 172, 32, 0.45) !important;
+  background: rgba(var(--ui-highlight-rgb), 0.4) !important;
+  border-color: var(--ui-highlight) !important;
+  box-shadow: 0 0 14px rgba(var(--ui-highlight-rgb), 0.45) !important;
   transform: scale(0.98) !important;
 }
 

@@ -136,7 +136,7 @@ defineExpose({
 }
 
 .title-suffix {
-  color: var(--accent-highlight);
+  color: var(--ui-highlight);
   margin-left: 0.5rem;
   font-weight: 500;
   text-transform: none;
@@ -175,7 +175,7 @@ defineExpose({
 }
 
 .midi-cc-number {
-  color: var(--accent-highlight);
+  color: var(--ui-highlight);
   font-weight: 600;
 }
 

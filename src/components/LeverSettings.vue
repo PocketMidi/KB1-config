@@ -1298,7 +1298,7 @@ function increaseSteps() {
 /* Base bars at 40% opacity */
 .blue-bar-base {
   width: 100%;
-  background: #1F498E;
+  background: var(--kb1-color-primary);
   opacity: 0.4;
   /* Left edge rounded (outer), right edge flat (meets divider) */
   border-top-left-radius: 4.5px;
@@ -1309,7 +1309,7 @@ function increaseSteps() {
 
 .pink-bar-base {
   width: 100%;
-  background: #B638B4;
+  background: var(--kb1-color-accent);
   opacity: 0.4;
   /* Left edge flat (meets divider), right edge rounded (outer) */
   border-top-right-radius: 4.5px;
@@ -1320,7 +1320,7 @@ function increaseSteps() {
 
 /* Active bars at 100% opacity */
 .blue-bar-active {
-  background: #1F498E;
+  background: var(--kb1-color-primary);
   opacity: 1;
   z-index: 1;
   left: auto;
@@ -1333,7 +1333,7 @@ function increaseSteps() {
 }
 
 .pink-bar-active {
-  background: #B638B4;
+  background: var(--kb1-color-accent);
   opacity: 1;
   z-index: 1;
   /* Left edge flat (meets divider), right edge rounded (outer) */
@@ -1346,7 +1346,7 @@ function increaseSteps() {
 .meter-divider {
   width: 5px;
   height: 17px;
-  background: var(--accent-highlight);
+  background: var(--ui-highlight);
   flex-shrink: 0;
   border-radius: 2.5px;
 }

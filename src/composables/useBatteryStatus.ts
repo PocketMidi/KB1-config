@@ -181,11 +181,11 @@ const batteryLevel = computed(() => {
  */
 const batteryColor = computed(() => {
   switch (batteryLevel.value) {
-    case 'uncalibrated': return '#6b7280'; // Gray for uncalibrated
-    case 'good': return '#4ade80'; // Green
-    case 'warning': return '#fbbf24'; // Yellow
-    case 'critical': return '#ef4444'; // Red
-    default: return '#9ca3af'; // Gray
+    case 'uncalibrated': return 'var(--battery-uncalibrated)';
+    case 'good': return 'var(--battery-good)';
+    case 'warning': return 'var(--battery-warning)';
+    case 'critical': return 'var(--battery-critical)';
+    default: return 'var(--battery-disconnected)';
   }
 });
 

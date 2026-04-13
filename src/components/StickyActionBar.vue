@@ -112,7 +112,7 @@ function handleSave() {
 
 .action-icon-btn:focus-visible {
   opacity: 1.0;
-  outline: 2px solid #74C4FF;
+  outline: 2px solid var(--bluetooth-status-active);
   outline-offset: 2px;
   border-radius: 2px;
 }

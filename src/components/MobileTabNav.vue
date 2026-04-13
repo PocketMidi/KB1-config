@@ -173,7 +173,7 @@ const isHovering = ref(false);
 
 .bluetooth-status.hoverable:hover .status-text,
 .bluetooth-status.hoverable:active .status-text {
-  color: #74C4FF;
+  color: var(--bluetooth-status-active);
   opacity: 1;
   transform: scale(1.1);
   font-weight: 700;
@@ -222,7 +222,7 @@ const isHovering = ref(false);
   }
   50% {
     opacity: 1;
-    color: #74C4FF;
+    color: var(--bluetooth-status-active);
     font-weight: 700;
     text-shadow: 0 0 20px rgba(116, 196, 255, 1), 0 0 40px rgba(116, 196, 255, 0.8), 0 0 60px rgba(116, 196, 255, 0.5);
   }

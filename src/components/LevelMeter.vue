@@ -323,7 +323,7 @@ const labels = computed<Label[]>(() => {
   position: absolute;
   width: 5px;
   height: 5px;
-  background: var(--accent-highlight);
+  background: var(--ui-highlight);
   border-radius: 50%;
   transform: translateX(-50%) translateY(4px);
   transition: opacity 0.2s ease;
@@ -341,7 +341,7 @@ const labels = computed<Label[]>(() => {
 }
 
 .triangle.highlighted {
-  border-bottom-color: var(--accent-highlight);
+  border-bottom-color: var(--ui-highlight);
   opacity: 1;
 }
 

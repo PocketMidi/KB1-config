@@ -44,8 +44,8 @@
   
   /* ===== Button States ===== */
   /* Primary buttons (Apply, Save, etc.) */
-  --btn-primary-bg: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-  --btn-primary-bg-hover: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  --btn-primary-bg: linear-gradient(135deg, #3d4f77 0%, #2f3d5c 100%);
+  --btn-primary-bg-hover: linear-gradient(135deg, #4a5c8a 0%, #3d4f77 100%);
   --btn-primary-bg-disabled: #1e3a5f;
   --btn-primary-color: #ffffff;
   --btn-primary-color-disabled: #94a3b8;
@@ -59,12 +59,16 @@
   --btn-secondary-border: 1px solid transparent;
   
   /* ===== Color Tokens (from design system) ===== */
-  --kb1-color-primary: #3b82f6;
-  --kb1-color-primary-hover: #2563eb;
-  --kb1-color-primary-active: #1d4ed8;
+  --kb1-color-primary: #3d4f77; /* Muted blue for primary actions */
+  --kb1-color-primary-hover: #4a5c8a;
+  --kb1-color-primary-active: #2f3d5c;
   
-  --kb1-color-accent: #8b5cf6;
-  --kb1-color-accent-hover: #7c3aed;
+  --kb1-color-secondary: #734379; /* Muted purple for secondary elements */
+  --kb1-color-secondary-hover: #5f365f;
+  --kb1-color-secondary-active: #4d2d4d;
+  
+  --kb1-color-accent: #955799; /* Muted violet for accents */
+  --kb1-color-accent-hover: #7d4880;
   
   --kb1-color-success: #10b981;
   --kb1-color-warning: #f59e0b;
@@ -72,12 +76,36 @@
   
   /* ===== Bluetooth Status Colors ===== */
   --bluetooth-status-inactive: #47708E;
-  --bluetooth-status-active: #74C4FF;
+  --bluetooth-status-active: #3d4f77; /* Muted blue */
   --bluetooth-icon-filter-active: brightness(0) saturate(100%) invert(65%) sepia(45%) saturate(1154%) hue-rotate(174deg) brightness(101%) contrast(101%);
   --bluetooth-icon-filter-inactive: none;
   
   /* ===== UI Accent Colors (dark mode defaults) ===== */
-  --accent-highlight: #F9AC20; /* Original orange/yellow */
+  --ui-highlight: #b9aa5f; /* Primary accent - bronze/gold */
+  --ui-highlight-rgb: 185, 170, 95; /* RGB version for rgba() usage */
+  --ui-highlight-hover: #c4b56d; /* Lighter version for hovers */
+  --ui-highlight-active: #a89954; /* Darker version for active states */
+  
+  /* ===== Battery Colors ===== */
+  --battery-good: #5dad6b; /* Healthy battery level - muted green */
+  --battery-warning: var(--ui-highlight-hover); /* Low battery warning - uses UI highlight */
+  --battery-critical: #ef4444; /* Critical battery level - red */
+  --battery-disconnected: #6b7280; /* Disconnected/unavailable - gray */
+  --battery-uncalibrated: #6b7280; /* Uncalibrated battery - gray */
+  
+  /* ===== Strum & Pattern Colors ===== */
+  --strum-reverse: #955799; /* Reverse strum direction - muted violet */
+  --strum-forward: var(--ui-highlight); /* Forward strum direction - uses UI highlight */
+  
+  /* ===== Key Colors (keyboard visualization) ===== */
+  --key-active: #4b736a; /* Active key background - muted teal */
+  --key-active-rgb: 75, 115, 106; /* RGB version for rgba() usage */
+  --key-active-hover: #568073; /* Hover state */
+  --key-inactive: #222222; /* Inactive key background */
+  --key-inactive-rgb: 34, 34, 34; /* RGB version for rgba() usage */
+  --key-text-active: #0F0F0F; /* Text on active keys */
+  --key-text-inactive: rgba(255, 255, 255, 0.4); /* Text on inactive keys */
+  
   --label-gray: #848484; /* Original gray */
   
   /* ===== SVG Icon Filters (dark mode) ===== */

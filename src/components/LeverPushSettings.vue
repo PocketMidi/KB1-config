@@ -1102,7 +1102,7 @@ function dismissHelp() {
 .cycle-text {
   font-size: 0.875rem;
   font-weight: 500;
-  color: #F9AC20;
+  color: var(--ui-highlight);
   font-family: 'Roboto Mono';
   text-align: center;
   opacity: 1;
@@ -1189,7 +1189,7 @@ function dismissHelp() {
 /* Base bar at 40% opacity */
 .pink-bar-base {
   width: 100%;
-  background: #1F498E;
+  background: var(--kb1-color-primary);
   opacity: 0.4;
   /* Left edge flat (meets divider), right edge rounded */
   border-top-right-radius: 4.5px;
@@ -1200,7 +1200,7 @@ function dismissHelp() {
 
 /* Active bar at 100% opacity */
 .pink-bar-active {
-  background: #1F498E;
+  background: var(--kb1-color-primary);
   opacity: 1;
   z-index: 1;
   /* Left edge flat (meets divider), right edge rounded */
@@ -1213,7 +1213,7 @@ function dismissHelp() {
 .meter-divider {
   width: 4px;
   height: 17px;
-  background: var(--accent-highlight);
+  background: var(--ui-highlight);
   flex-shrink: 0;
   border-radius: 2px;
 }
@@ -1225,7 +1225,7 @@ function dismissHelp() {
 .latch-indicator {
   width: 4px;
   height: 17px;
-  background: var(--accent-highlight);
+  background: var(--ui-highlight);
   flex-shrink: 0;
   margin-left: 4px;
   border-radius: 2px;
@@ -1236,7 +1236,7 @@ function dismissHelp() {
   top: -4px;
   width: 4px;
   height: 17px;
-  background: var(--accent-highlight);
+  background: var(--ui-highlight);
   z-index: 2;
   border-radius: 2px;
 }

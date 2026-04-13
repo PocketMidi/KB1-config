@@ -418,12 +418,12 @@ async function handleSaveToDevice() {
 }
 
 .btn-primary {
-  background: var(--btn-primary-bg, #3b82f6);
+  background: var(--btn-primary-bg, var(--kb1-color-primary));
   color: var(--btn-primary-color, white);
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: var(--btn-primary-bg-hover, #2563eb);
+  background: var(--btn-primary-bg-hover, var(--kb1-color-primary-hover));
 }
 
 .btn-secondary {

@@ -25,7 +25,7 @@ const DEFAULT_PARAMETERS: Parameter[] = [
   { id: 'delay', label: 'Delay', cc: 12, min: 0, max: 100, defaultValue: 25, color: '#7C3AED', valueMode: 'unipolar', morphAmount: 0.6 },
   { id: 'reverb', label: 'Reverb', cc: 91, min: 0, max: 100, defaultValue: 40, color: '#8B5CF6', valueMode: 'unipolar', morphAmount: 0.7 },
   { id: 'position', label: 'Position', cc: 16, min: 0, max: 100, defaultValue: 15, color: '#A78BFA', valueMode: 'unipolar', morphAmount: 0.4 },
-  { id: 'playback', label: 'Playback', cc: 17, min: 0, max: 100, defaultValue: 50, color: '#C084FC', valueMode: 'unipolar', morphAmount: 0.6 },
+  { id: 'playback', label: 'Playback', cc: 17, min: 0, max: 100, defaultValue: 50, color: '#955799', valueMode: 'unipolar', morphAmount: 0.6 },
   { id: 'volLfo', label: 'Volume LFO', cc: 18, min: 0, max: 100, defaultValue: 20, color: '#D946EF', valueMode: 'unipolar', morphAmount: 0.5 },
 ];
 

@@ -117,7 +117,7 @@ const ariaLabel = computed(() => {
 }
 
 .battery-disconnected .battery-icon {
-  --battery-color: #6b7280; /* Gray for offline */
+  --battery-color: var(--battery-disconnected);
 }
 
 .battery-meter:hover {
@@ -136,19 +136,19 @@ const ariaLabel = computed(() => {
 
 /* Battery level colors */
 .battery-good {
-  --battery-color: #4ade80;
+  --battery-color: var(--battery-good);
 }
 
 .battery-warning {
-  --battery-color: #fbbf24;
+  --battery-color: var(--battery-warning);
 }
 
 .battery-critical {
-  --battery-color: #ef4444;
+  --battery-color: var(--battery-critical);
 }
 
 .battery-uncalibrated {
-  --battery-color: #6b7280;
+  --battery-color: var(--battery-uncalibrated);
   opacity: 0.7;
 }
 

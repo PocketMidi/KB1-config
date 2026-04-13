@@ -1008,7 +1008,7 @@ const visualSpread = computed(() => {
 
 // Create banded velocity visualization (center-out)
 function createVelocityBands(spreadPercent: number): string {
-  const baseColor = '249, 172, 32' // Yellow accent for dark mode
+  const baseColor = 'var(--ui-highlight-rgb)' // Accent color for velocity gradient
   
   // Calculate indicator positions
   const leftIndicator = 50 - spreadPercent / 2
@@ -1488,19 +1488,19 @@ function handleKeyClick(midiNote: number) {
 }
 
 .key {
-  background-color: #222222;
-  color: rgba(255, 255, 255, 0.4);
+  background-color: var(--key-inactive);
+  color: var(--key-text-inactive);
 }
 
 .key.active {
-  background-color: #4b736a;
-  color: #0F0F0F;
+  background-color: var(--key-active);
+  color: var(--key-text-active);
 }
 
 .key.root-note {
   box-shadow:
     inset 0 0 0 2px #0F0F0F,
-    0 0 0 1px var(--accent-highlight);
+    0 0 0 1px var(--ui-highlight);
   animation: root-note-pulse 2s ease-in-out infinite;
 }
 
@@ -1508,12 +1508,12 @@ function handleKeyClick(midiNote: number) {
   0%, 100% {
     box-shadow:
       inset 0 0 0 2px #0F0F0F,
-      0 0 0 1px var(--accent-highlight);
+      0 0 0 1px var(--ui-highlight);
   }
   50% {
     box-shadow:
       inset 0 0 0 2px #0F0F0F,
-      0 0 0 1px var(--accent-highlight),
+      0 0 0 1px var(--ui-highlight),
       0 0 8px 2px rgba(106, 104, 83, 0.4);
   }
 }
@@ -1545,18 +1545,18 @@ function handleKeyClick(midiNote: number) {
 }
 
 .key.clickable.active:hover {
-  background-color: #568073;
-  color: #0F0F0F;
+  background-color: var(--key-active-hover);
+  color: var(--key-text-active);
 }
 
 .key.clickable.active.chromatic-disabled {
-  background-color: rgba(75, 115, 106, 0.25);
+  background-color: rgba(var(--key-active-rgb), 0.25);
   color: rgba(255, 255, 255, 0.85);
   animation: chromatic-key-pulse 4s ease-in-out infinite;
 }
 
 .key.clickable.active.chromatic-disabled:hover {
-  background-color: rgba(75, 115, 106, 0.25);
+  background-color: rgba(var(--key-active-rgb), 0.25);
   color: rgba(255, 255, 255, 0.85);
   transform: none;
 }
@@ -1593,10 +1593,10 @@ function handleKeyClick(midiNote: number) {
 
 @keyframes chromatic-key-pulse {
   0%, 100% {
-    background-color: rgba(75, 115, 106, 0.25);
+    background-color: rgba(var(--key-active-rgb), 0.25);
   }
   50% {
-    background-color: rgba(75, 115, 106, 0.65);
+    background-color: rgba(var(--key-active-rgb), 0.65);
   }
 }
 
@@ -1719,7 +1719,7 @@ function handleKeyClick(midiNote: number) {
 .hint-btn-primary {
   width: 100%;
   padding: 0.625rem 1.25rem;
-  background: #568073;
+  background: var(--key-active-hover);
   color: #1A1A1A;
   border: none;
   border-radius: 4px;
@@ -1838,7 +1838,7 @@ function handleKeyClick(midiNote: number) {
   width: 5px;
   height: 5px;
   border-radius: 50%;
-  background-color: var(--accent-highlight);
+  background-color: var(--ui-highlight);
   flex-shrink: 0;
 }
 
@@ -1897,7 +1897,7 @@ function handleKeyClick(midiNote: number) {
     filter: brightness(1) drop-shadow(0 0 0 transparent);
   }
   50% {
-    filter: brightness(1.3) drop-shadow(0 0 4px rgba(249, 172, 32, 0.6));
+    filter: brightness(1.3) drop-shadow(0 0 4px rgba(var(--ui-highlight-rgb), 0.6));
   }
 }
 
@@ -1915,7 +1915,7 @@ function handleKeyClick(midiNote: number) {
   top: -4px;
   width: 4px;
   height: calc(100% + 8px);
-  background: var(--accent-highlight);
+  background: var(--ui-highlight);
   opacity: 1;
   transform: translateX(-2px);
   pointer-events: none;
@@ -1946,11 +1946,11 @@ function handleKeyClick(midiNote: number) {
 }
 
 .strum-adaptive-dots .dot.purple {
-  background-color: #C084FC;
+  background-color: var(--strum-reverse);
 }
 
 .strum-adaptive-dots .dot.yellow {
-  background-color: var(--accent-highlight);
+  background-color: var(--ui-highlight);
 }
 
 /* Pulse animation on all dots */
@@ -2018,13 +2018,13 @@ function handleKeyClick(midiNote: number) {
 
 /* Active state - purple for reverse */
 .direction-toggle.reverse span:first-child {
-  color: #C084FC;
+  color: var(--strum-reverse);
   font-weight: 500;
 }
 
 /* Active state - yellow for forward */
 .direction-toggle:not(.reverse) span:last-child {
-  color: var(--accent-highlight);
+  color: var(--ui-highlight);
   font-weight: 500;
 }
 
@@ -2146,7 +2146,7 @@ function handleKeyClick(midiNote: number) {
   font-size: 1.25rem;
   font-weight: 300;
   line-height: 1;
-  color: var(--accent-highlight);
+  color: var(--ui-highlight);
 }
 
 .advanced-strum-content {
@@ -2283,8 +2283,8 @@ function handleKeyClick(midiNote: number) {
 }
 
 .info-icon:hover {
-  color: #568073;
-  border-color: #568073;
+  color: var(--key-active-hover);
+  border-color: var(--key-active-hover);
 }
 
 /* Root & Range row wrapper */
@@ -2326,10 +2326,10 @@ function handleKeyClick(midiNote: number) {
   transition: all 0.2s ease;
 }
 
-/* Active dot (yellow) */
+/* Active dot (accent color) */
 .dot-btn.active .dot {
-  background: #f9ac20;
-  box-shadow: 0 0 6px rgba(249, 172, 32, 0.4);
+  background: var(--ui-highlight);
+  box-shadow: 0 0 6px rgba(var(--ui-highlight-rgb), 0.4);
 }
 
 /* Hovered dot (grows slightly) */
@@ -2371,12 +2371,12 @@ function handleKeyClick(midiNote: number) {
 }
 
 .meter-bar.active {
-  background: #f9ac20;
-  box-shadow: 0 0 4px rgba(249, 172, 32, 0.3);
+  background: var(--ui-highlight);
+  box-shadow: 0 0 4px rgba(var(--ui-highlight-rgb), 0.3);
 }
 
 .meter-bar.active:hover {
-  background: #fbbf24;
+  background: var(--ui-highlight-hover);
 }
 
 /* Help Modal */
@@ -2462,7 +2462,7 @@ function handleKeyClick(midiNote: number) {
 
 .help-modal-footer .btn-primary {
   padding: 0.5rem 1.5rem;
-  background: #568073;
+  background: var(--key-active-hover);
   color: #1A1A1A;
   border: none;
   border-radius: 4px;

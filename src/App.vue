@@ -420,7 +420,12 @@ function handleTabClick(tabId: Tab) {
           @click="handleSyncSave"
           title="Upload settings to device"
         >
-          <img src="/save.svg" alt="Upload" class="save-upload-icon" />
+          <svg class="save-upload-icon" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="14" cy="14" r="12.5" stroke="currentColor" stroke-width="1.75"/>
+            <line x1="14" y1="20" x2="14" y2="10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            <line x1="14" y1="9.5" x2="9.5" y2="14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            <line x1="14" y1="9.5" x2="18.5" y2="14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
         </button>
       </nav>
       
@@ -792,8 +797,7 @@ body {
 }
 
 .save-upload-btn.has-changes .save-upload-icon {
-  /* Orange tint matching KB1 accent #F9AC20 */
-  filter: brightness(0) saturate(100%) invert(76%) sepia(68%) saturate(700%) hue-rotate(357deg) brightness(103%) contrast(102%);
+  color: var(--ui-highlight);
   animation: save-pulse 2s ease-in-out infinite;
 }
 
@@ -805,8 +809,8 @@ body {
   height: 28px;
   width: 28px;
   display: block;
-  transition: filter 0.3s;
-  filter: brightness(0) invert(1); /* white icon for dark bg */
+  transition: color 0.3s;
+  color: #EAEAEA; /* Default light gray */
 }
 
 @keyframes save-pulse {
@@ -1036,7 +1040,7 @@ body {
   position: absolute;
   top: -8px;
   right: -8px;
-  background: #F9AC20;
+  background: var(--ui-highlight);
   color: #0F0F0F;
   font-size: 0.75rem;
   font-weight: 700;
@@ -1049,7 +1053,7 @@ body {
   align-items: center;
   justify-content: center;
   animation: bounce-in 0.2s ease-out;
-  box-shadow: 0 2px 8px rgba(249, 172, 32, 0.4);
+  box-shadow: 0 2px 8px rgba(var(--ui-highlight-rgb), 0.4);
 }
 
 @keyframes bounce-in {
@@ -1231,8 +1235,8 @@ body {
 }
 
 input:checked + .toggle-slider {
-  background-color: #0DC988;
-  border-color: #0DC988;
+  background-color: var(--battery-good);
+  border-color: var(--battery-good);
 }
 
 input:checked + .toggle-slider:before {

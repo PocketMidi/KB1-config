@@ -228,12 +228,12 @@ async function handleSave() {
 }
 
 .btn-primary {
-  background: #3b82f6;
+  background: var(--kb1-color-primary);
   color: white;
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: #2563eb;
+  background: var(--kb1-color-primary-hover);
 }
 
 .btn-secondary {

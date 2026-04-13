@@ -846,7 +846,7 @@ function dismissSpeakerHelp() {
 }
 
 .sync-button-primary {
-  background: linear-gradient(135deg, #4a9eff 0%, #3b82f6 100%);
+  background: linear-gradient(135deg, var(--kb1-color-primary) 0%, var(--kb1-color-primary) 100%);
   border: none;
   color: #fff;
   font-weight: 700;
@@ -903,7 +903,7 @@ function dismissSpeakerHelp() {
 }
 
 .calibrate-button {
-  background: linear-gradient(135deg, #4a9eff 0%, #3b82f6 100%);
+  background: linear-gradient(135deg, var(--kb1-color-primary) 0%, var(--kb1-color-primary) 100%);
   color: #fff;
   font-weight: 700;
 }
@@ -919,7 +919,7 @@ function dismissSpeakerHelp() {
 }
 
 .recalibrate-button {
-  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+  background: linear-gradient(135deg, var(--ui-highlight-hover) 0%, var(--ui-highlight) 100%);
   color: #000;
   font-weight: 700;
 }
@@ -1006,8 +1006,8 @@ function dismissSpeakerHelp() {
 }
 
 input:checked + .toggle-slider {
-  background-color: #0DC988;
-  border-color: #0DC988;
+  background-color: var(--battery-good);
+  border-color: var(--battery-good);
 }
 
 input:checked + .toggle-slider:before {
@@ -1093,7 +1093,7 @@ input:checked + .toggle-slider:before {
 .instruction-header {
   font-size: 0.8125rem;
   font-weight: 600;
-  color: #4ade80;
+  color: var(--battery-good);
   margin-bottom: 12px;
 }
 
@@ -1152,7 +1152,7 @@ input:checked + .toggle-slider:before {
 .charging-title {
   font-size: 0.9375rem;
   font-weight: 600;
-  color: #60a5fa;
+  color: var(--kb1-color-primary);
   margin-bottom: 4px;
 }
 
@@ -1174,7 +1174,7 @@ input:checked + .toggle-slider:before {
   background: rgba(239, 68, 68, 0.1);
   border: 1px solid rgba(239, 68, 68, 0.3);
   border-radius: 8px;
-  color: #ef4444;
+  color: var(--battery-critical);
   font-size: 0.8125rem;
   font-weight: 500;
   cursor: pointer;
@@ -1188,7 +1188,7 @@ input:checked + .toggle-slider:before {
 
 .charging-cancel-description {
   font-size: 0.75rem;
-  color: #6b7280;
+  color: var(--battery-disconnected);
   text-align: center;
   font-style: italic;
 }
@@ -1209,7 +1209,7 @@ input:checked + .toggle-slider:before {
 .warning-header {
   font-size: 0.8125rem;
   font-weight: 600;
-  color: #fbbf24;
+  color: var(--ui-highlight-hover);
   margin-bottom: 8px;
 }
 
@@ -1271,7 +1271,7 @@ input:checked + .toggle-slider:before {
 
 .resetting-state .sync-icon {
   font-size: 2rem;
-  color: #4a9eff;
+  color: var(--kb1-color-primary);
 }
 
 .resetting-state h3 {

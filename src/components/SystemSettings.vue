@@ -464,8 +464,8 @@ const formatTime = (seconds: number): string => {
 }
 
 .toggle-track.active {
-  background: #0DC988;
-  border-color: #0DC988;
+  background: var(--battery-good);
+  border-color: var(--battery-good);
 }
 
 .toggle-thumb {
@@ -507,7 +507,7 @@ const formatTime = (seconds: number): string => {
 
 .resolution-toggle .toggle-label-left.active,
 .resolution-toggle .toggle-label-right.active {
-  color: #FFD700;
+  color: var(--ui-highlight);
   font-weight: 500;
 }
 

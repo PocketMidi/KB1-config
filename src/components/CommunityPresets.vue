@@ -164,7 +164,7 @@ defineExpose({
   width: 32px;
   height: 32px;
   border: 3px solid rgba(116, 196, 255, 0.2);
-  border-top-color: #74C4FF;
+  border-top-color: var(--bluetooth-status-active);
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
@@ -228,7 +228,7 @@ defineExpose({
   padding: 0.25rem 0.625rem;
   font-size: 0.75rem;
   background: rgba(116, 196, 255, 0.15);
-  color: #74C4FF;
+  color: var(--bluetooth-status-active);
   border: 1px solid rgba(116, 196, 255, 0.3);
   border-radius: 4px;
   cursor: pointer;

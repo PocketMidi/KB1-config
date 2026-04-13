@@ -135,7 +135,7 @@ function handleBackdropClick() {
 
 .contextual-modal {
   background: #1A1A1A;
-  border: 1px solid #74C4FF;
+  border: 1px solid var(--bluetooth-status-active);
   border-radius: 6px;
   padding: 24px;
   max-width: 360px;
@@ -173,7 +173,7 @@ function handleBackdropClick() {
 
 .close-button:focus-visible {
   opacity: 1;
-  outline: 2px solid #74C4FF;
+  outline: 2px solid var(--bluetooth-status-active);
   outline-offset: 2px;
   border-radius: 4px;
 }
@@ -210,7 +210,7 @@ function handleBackdropClick() {
 
 .connect-button {
   flex: 1;
-  background: #74C4FF;
+  background: var(--bluetooth-status-active);
   color: #0F0F0F;
   border: none;
   border-radius: 6px;
@@ -230,7 +230,7 @@ function handleBackdropClick() {
 }
 
 .connect-button:focus-visible {
-  outline: 2px solid #74C4FF;
+  outline: 2px solid var(--bluetooth-status-active);
   outline-offset: 4px;
 }
 
@@ -259,7 +259,7 @@ function handleBackdropClick() {
 
 .cancel-button:focus-visible {
   color: rgba(234, 234, 234, 0.8);
-  outline: 2px solid #74C4FF;
+  outline: 2px solid var(--bluetooth-status-active);
   outline-offset: 2px;
 }
 

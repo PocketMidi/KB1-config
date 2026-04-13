@@ -183,7 +183,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, nextTick, watch, computed } from 'vue';
-import { PresetStore, generateRandomName } from '../state/presets';
+import { generateRandomName } from '../state/presets';
 import type { DeviceSettings } from '../ble/kb1Protocol';
 import { useDeviceState } from '../composables/useDeviceState';
 import { useToast } from '../composables/useToast';
@@ -196,7 +196,6 @@ const {
   devicePresets,
   saveDevicePreset,
   loadDevicePreset,
-  deleteDevicePreset,
   refreshDevicePresets,
 } = useDeviceState();
 

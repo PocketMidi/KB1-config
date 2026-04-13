@@ -686,7 +686,7 @@ function handleSlotNameDisplay(name: string) {
   }, 2500);
 }
 
-function handleSlotCount(count: number, total: number) {
+function handleSlotCount(count: number) {
   presetSlotCount.value = count;
 }
 

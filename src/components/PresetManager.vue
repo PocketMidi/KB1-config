@@ -109,6 +109,10 @@
           </button>
         </div>
         <div class="form-group">
+          <label>Settings Snapshot</label>
+          <div class="settings-snapshot">{{ generateSettingsSnapshot(props.currentSettings) }}</div>
+        </div>
+        <div class="form-group">
           <label>Description (Optional)</label>
           <textarea
             v-model="slotDescription"
@@ -218,6 +222,7 @@ const emit = defineEmits<{
 interface SlotPreset {
   name: string;
   description?: string; // Optional description for community sharing
+  snapshot?: string; // Auto-generated settings snapshot for quick reference
   settings: DeviceSettings;
   modifiedAt: number;
   exportedToCloud?: boolean; // Track if preset has been exported
@@ -286,6 +291,118 @@ onMounted(() => {
   console.log('📊 Initial device presets:', JSON.parse(JSON.stringify(devicePresets.value)));
   refreshDevicePresets();
 });
+
+// ========================================
+// Settings Snapshot Generator
+// ========================================
+
+const scaleNames: Record<number, string> = {
+  0: 'Chr', 1: 'Maj', 2: 'Min', 3: 'HMin', 4: 'MMin', 5: 'PMaj', 6: 'PMin',
+  7: 'Blu', 8: 'Dor', 9: 'Phr', 10: 'Lyd', 11: 'Mix', 12: 'Loc', 13: 'PhD',
+  14: 'WTn', 15: 'Dim', 16: 'BMaj', 17: 'Hir', 18: 'InS', 19: 'DHm', 20: 'SLc'
+};
+
+const chordNames: Record<number, string> = {
+  0: 'Maj', 1: 'Min', 2: 'Dim', 3: 'Aug', 4: 'Sus2', 5: 'Sus4', 6: 'Pow',
+  7: 'Maj7', 8: 'Min7', 9: 'Dom7', 10: 'M+9', 11: 'm+9', 12: 'Maj6', 13: 'Min6', 14: 'Maj9'
+};
+
+const rootNotes: Record<number, string> = {
+  60: 'C', 61: 'C#', 62: 'D', 63: 'D#', 64: 'E', 65: 'F',
+  66: 'F#', 67: 'G', 68: 'G#', 69: 'A', 70: 'A#', 71: 'B'
+};
+
+const leverModes: Record<number, string> = {
+  0: 'Smooth', 1: 'Peak', 2: 'Step'
+};
+
+const pushModes: Record<number, string> = {
+  0: 'Smooth', 1: 'Peak', 3: 'Reset'
+};
+
+const touchModes: Record<number, string> = {
+  0: 'Gate', 1: 'Toggle', 2: 'Smooth'
+};
+
+const valueModeNames: Record<number, string> = {
+  0: 'Uni', 1: 'Bi'
+};
+
+const keyMappingNames: Record<number, string> = {
+  0: 'Natural', 1: 'Compact'
+};
+
+const patternNames: Record<number, string> = {
+  0: '', // No pattern (use chord)
+  1: 'Up', 2: 'Down', 3: 'Bounce', 4: 'Incl', 5: 'Excl', 6: 'Rand', 7: 'Cust'
+};
+
+function generateSettingsSnapshot(settings: DeviceSettings): string {
+  const lines: string[] = [];
+  
+  // Line 1: Keyboard mode with detailed info
+  const isChordMode = settings.chord.playMode === 1;
+  const scaleType = scaleNames[settings.scale.scaleType] || '?';
+  const rootNote = rootNotes[settings.scale.rootNote] || '?';
+  const chordType = chordNames[settings.chord.chordType] || '?';
+  const keyMapping = keyMappingNames[settings.scale.keyMapping] || 'Nat';
+  
+  let strumState = 'Chord';
+  if (settings.chord.strumEnabled) {
+    const direction = settings.chord.strumSpeed < 0 ? 'Rev' : 'Fwd';
+    // Only show pattern if strumPattern > 0 (pattern 0 = use chord type)
+    const pattern = settings.chord.strumPattern > 0 ? (patternNames[settings.chord.strumPattern] || '') : '';
+    strumState = pattern ? `Strum/${direction}/${pattern}` : `Strum/${direction}`;
+  }
+  
+  if (isChordMode) {
+    lines.push(`KB: ${chordType}/${rootNote} • ${strumState}`);
+  } else {
+    lines.push(`KB: ${scaleType}/${rootNote} • ${keyMapping}`);
+  }
+  
+  // Line 2: Lever 1 + Push 1 (same physical control)
+  if (settings.lever1.ccNumber >= 0) {
+    const l1mode = leverModes[settings.lever1.functionMode] || '?';
+    const l1value = valueModeNames[settings.lever1.valueMode] || 'Uni';
+    const p1mode = settings.leverPush1.ccNumber >= 0 ? pushModes[settings.leverPush1.functionMode] || '?' : 'Off';
+    lines.push(`L1: ${l1mode}/${l1value} • P1: ${p1mode}`);
+  } else {
+    const p1mode = settings.leverPush1.ccNumber >= 0 ? pushModes[settings.leverPush1.functionMode] || '?' : 'Off';
+    lines.push(`L1: Off • P1: ${p1mode}`);
+  }
+  
+  // Line 3: Lever 2 + Push 2 + Touch
+  const l2parts: string[] = [];
+  const p2parts: string[] = [];
+  const tparts: string[] = [];
+  
+  if (settings.lever2.ccNumber >= 0) {
+    const l2mode = leverModes[settings.lever2.functionMode] || '?';
+    const l2value = valueModeNames[settings.lever2.valueMode] || 'Uni';
+    l2parts.push(`L2: ${l2mode}/${l2value}`);
+  } else {
+    l2parts.push('L2: Off');
+  }
+  
+  if (settings.leverPush2.ccNumber >= 0) {
+    const p2mode = pushModes[settings.leverPush2.functionMode] || '?';
+    p2parts.push(`P2: ${p2mode}`);
+  } else {
+    p2parts.push('P2: Off');
+  }
+  
+  if (settings.touch.ccNumber >= 0) {
+    const tmode = touchModes[settings.touch.functionMode] || '?';
+    tparts.push(`Touch: ${tmode}`);
+  } else {
+    tparts.push('Touch: Off');
+  }
+  
+  lines.push([...l2parts, ...p2parts, ...tparts].join(' • '));
+  
+  return lines.join('\n');
+}
 
 // ========================================
 // 8-Slot System Functions
@@ -435,6 +552,7 @@ function confirmSlotSave() {
   newSlots[editingSlot.value] = {
     name,
     description: slotDescription.value.trim() || undefined,
+    snapshot: generateSettingsSnapshot(props.currentSettings),
     settings: props.currentSettings,
     modifiedAt: Date.now(),
     exportedToCloud: existingPreset?.exportedToCloud // Preserve cloud export status
@@ -532,7 +650,7 @@ function openCloudDialog(slot: number) {
   showCloudDialog.value = true;
 }
 
-async function handleCloudPresetLoad(preset: { id: string; metadata?: { name?: string; author?: string; description?: string; tags?: string[] }; settings: DeviceSettings }) {
+async function handleCloudPresetLoad(preset: { id: string; metadata?: { name?: string; author?: string; description?: string; snapshot?: string; tags?: string[] }; settings: DeviceSettings }) {
   if (exportingSlot.value === null) {
     showCloudDialog.value = false;
     return;
@@ -556,6 +674,7 @@ async function handleCloudPresetLoad(preset: { id: string; metadata?: { name?: s
   newSlots[slotIndex] = {
     name: presetName,
     description: preset.metadata?.description,
+    snapshot: preset.metadata?.snapshot || generateSettingsSnapshot(preset.settings),
     settings: preset.settings,
     modifiedAt: Date.now()
   };
@@ -664,7 +783,8 @@ async function confirmExport() {
   // Build metadata
   const metadata: any = {
     name: exportMetadata.value.name,
-    date: new Date().toISOString().split('T')[0]
+    date: new Date().toISOString().split('T')[0],
+    snapshot: preset.snapshot || generateSettingsSnapshot(preset.settings)
   };
   
   if (exportMetadata.value.description) {
@@ -1450,6 +1570,19 @@ function downloadJSON(json: string, filename: string) {
   font-size: 0.75rem;
   color: #848484;
   text-transform: uppercase;
+}
+
+.settings-snapshot {
+  background: rgba(234, 234, 234, 0.05);
+  border: 1px solid rgba(234, 234, 234, 0.1);
+  border-radius: 4px;
+  padding: 0.75rem;
+  font-size: 0.75rem;
+  font-family: 'Roboto Mono', monospace;
+  color: #EAEAEA;
+  line-height: 1.6;
+  white-space: pre-line;
+  word-break: break-word;
 }
 
 .input-text {

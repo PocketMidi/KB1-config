@@ -1,5 +1,5 @@
 <template>
-  <div v-if="isOpen" class="battery-modal-overlay" @click="handleOverlayClick">
+  <div v-if="isOpen" class="battery-modal-overlay" @click.stop="handleOverlayClick">
     <div class="battery-modal" @click.stop>
       <!-- Header -->
       <div class="modal-header">
@@ -222,7 +222,7 @@
       </div>
 
       <!-- Confirmation Dialog -->
-      <div v-if="showConfirmation" class="confirmation-overlay" @click="isRecalibrating ? null : cancelRecalibrate">
+      <div v-if="showConfirmation" class="confirmation-overlay" @click.stop="isRecalibrating ? null : cancelRecalibrate">
         <div class="confirmation-dialog" @click.stop>
           <template v-if="!isRecalibrating">
             <h3>Reset Battery Calibration?</h3>
@@ -245,7 +245,7 @@
       </div>
       
       <!-- Speaker Help Modal -->
-      <div v-if="showSpeakerHelp" class="help-modal-overlay" @click="dismissSpeakerHelp">
+      <div v-if="showSpeakerHelp" class="help-modal-overlay" @click.stop="dismissSpeakerHelp">
         <div class="help-modal" @click.stop>
           <div class="help-modal-header">
             <h3>SPEAKER COMPENSATION</h3>

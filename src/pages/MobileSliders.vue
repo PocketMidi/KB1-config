@@ -6,7 +6,7 @@
     </div>
 
     <!-- Save Preset Dialog -->
-    <div v-if="showSaveDialog" class="modal-overlay" @click.self="showSaveDialog = false">
+    <div v-if="showSaveDialog" class="modal-overlay" @click.self.stop="showSaveDialog = false">
       <div class="modal-dialog">
         <h3>Save Slider Preset</h3>
         <div class="form-group">
@@ -34,7 +34,7 @@
     </div>
 
     <!-- Load Preset Dialog -->
-    <div v-if="showLoadDialog" class="modal-overlay" @click.self="showLoadDialog = false">
+    <div v-if="showLoadDialog" class="modal-overlay" @click.self.stop="showLoadDialog = false">
       <div class="modal-dialog">
         <h3>Load Slider Preset</h3>
         

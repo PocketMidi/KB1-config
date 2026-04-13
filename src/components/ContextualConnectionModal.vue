@@ -4,7 +4,7 @@
       <div 
         v-if="show"
         class="contextual-modal-overlay"
-        @click.self="handleBackdropClick"
+        @click.self.stop="handleBackdropClick"
       >
         <div 
           class="contextual-modal"

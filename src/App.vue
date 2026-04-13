@@ -257,7 +257,13 @@ function isDisabledControlClick(target: HTMLElement): boolean {
   // Don't trigger for accordion headers (they should still work when disconnected)
   const isAccordionHeader = target.closest('.accordion-header');
   
-  return (isBasicControl || Boolean(isCustomControl)) && !isAccordionHeader;
+  // Don't trigger for System Settings (always accessible)
+  const isSystemSettings = target.closest('.system-settings-wrapper') || target.closest('.settings-system');
+  
+  // Don't trigger for Preset Manager (always accessible for local presets)
+  const isPresetManager = target.closest('.preset-manager');
+  
+  return (isBasicControl || Boolean(isCustomControl)) && !isAccordionHeader && !isSystemSettings && !isPresetManager;
 }
 
 function handleMainClick(event: MouseEvent) {
@@ -423,7 +429,7 @@ function handleTabClick(tabId: Tab) {
     </div>
     
     <!-- Secret Evaluation Mode Modal -->
-    <div v-if="showDevModeModal" class="dev-mode-modal-overlay" @click.self="closeDevModeModal">
+    <div v-if="showDevModeModal" class="dev-mode-modal-overlay" @click.self.stop="closeDevModeModal">
       <div class="dev-mode-modal">
         <h2>Evaluation Mode</h2>
         <div class="modal-content">

@@ -128,7 +128,9 @@
           <button
             class="theme-mode-btn"
             :class="{ active: restoringFromDevice }"
+            :disabled="!props.isConnected"
             @click="handleRestoreFromDevice"
+            :title="props.isConnected ? 'Load current settings from KB1' : 'Connect to KB1 to refresh settings'"
           >REFRESH</button>
           <button
             class="theme-mode-btn danger"
@@ -141,7 +143,7 @@
   </div>
   
   <!-- Help Guide Modal -->
-  <div v-if="showHelpModal" class="help-modal-overlay" @click="dismissHelp">
+  <div v-if="showHelpModal" class="help-modal-overlay" @click.stop="dismissHelp">
     <div class="help-modal" @click.stop>
       <div class="help-modal-header">
         <h3>{{ helpContent.title }}</h3>
@@ -174,6 +176,7 @@ type SystemModel = {
 
 const props = defineProps<{
   modelValue: SystemModel
+  isConnected?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -732,6 +735,17 @@ const formatTime = (seconds: number): string => {
 .theme-mode-btn:hover:not(.active) {
   color: #EAEAEA;
   border-color: #5A5A5A;
+}
+
+.theme-mode-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  color: #5A5A5A;
+}
+
+.theme-mode-btn:disabled:hover {
+  border-color: #3A3A3A;
+  color: #5A5A5A;
 }
 
 .theme-mode-btn.danger {

@@ -1,25 +1,11 @@
 <template>
   <div class="preset-manager">
-    <!-- Selection Mode Header -->
-    <div class="selection-header" v-if="selectionMode">
-      <button class="btn-select-action" @click="toggleSelectAll">
-        {{ allSelected ? 'Deselect All' : 'Select All' }}
+    <!-- Header with Cloud Button -->
+    <div class="preset-header">
+      <h3 class="preset-title">Presets</h3>
+      <button class="btn-cloud" @click.stop="showCloudDialog = true">
+        ☁ Cloud
       </button>
-      <div class="selection-actions">
-        <button 
-          class="btn-delete-selected" 
-          @click="deleteSelected"
-          :disabled="selectedSlots.size === 0"
-        >
-          Delete {{ selectedSlots.size > 0 ? `(${selectedSlots.size})` : '' }}
-        </button>
-        <button class="btn-select-action" @click="exitSelectionMode">Cancel</button>
-      </div>
-    </div>
-
-    <!-- Normal Mode Header -->
-    <div class="normal-header" v-if="!selectionMode">
-      <button class="btn-select-action" @click="enterSelectionMode">Select</button>
     </div>
 
     <!-- 8-Slot Preset System -->
@@ -30,58 +16,39 @@
         class="preset-slot"
         :class="{ 
           empty: !getSlotPreset(slot - 1),
-          active: activeSlot === (slot - 1),
-          'selection-mode': selectionMode
+          active: activeSlot === (slot - 1)
         }"
       >
-        <!-- Selection Checkbox (when in selection mode) -->
-        <div v-if="selectionMode" class="selection-checkbox" @click.stop="toggleSelection(slot - 1)">
-          <input 
-            type="checkbox" 
-            :checked="selectedSlots.has(slot - 1)"
-            @click.stop
-          />
-        </div>
-
-        <!-- Slot Info (click to edit) -->
-        <div class="slot-info" @click.stop="selectionMode ? toggleSelection(slot - 1) : openSlotDialog(slot - 1)">
-          <div class="slot-label-wrapper">
-            <div class="slot-label">SLOT {{ slot }}</div>
-            <div class="slot-name">{{ getSlotPreset(slot - 1)?.name || '(Empty)' }}</div>
+        <!-- Slot Header - Click to Edit/Create -->
+        <div class="slot-header" @click.stop="openSlotDialog(slot - 1)">
+          <div class="slot-info">
+            <span class="slot-number">{{ slot }}</span>
+            <span class="slot-name">{{ getSlotPreset(slot - 1)?.name || '(empty)' }}</span>
+            <span v-if="isSlotSavedToNVS(slot - 1)" class="nvs-indicator" title="Saved to KB1 NVS">●</span>
           </div>
-          <button 
-            v-if="getSlotPreset(slot - 1) && !selectionMode"
-            class="btn-clear"
-            @click.stop="clearSlot(slot - 1)"
-            title="Delete preset"
-          >×</button>
         </div>
 
-        <!-- Slot Actions (hidden in selection mode) -->
-        <div class="slot-actions" v-if="!selectionMode">
+        <!-- Slot Actions (only show if slot has preset) -->
+        <div v-if="getSlotPreset(slot - 1)" class="slot-actions">
           <button 
             class="btn-action" 
             @click.stop="activateSlot(slot - 1)"
             :class="{ active: activeSlot === (slot - 1) }"
-            :disabled="!getSlotPreset(slot - 1)"
             title="Load into web app">
             Activate
           </button>
           <button 
-            class="btn-action btn-with-indicator" 
-            @click.stop="syncNVSSlot(slot - 1)"
+            class="btn-action" 
+            @click.stop="openNVSDialog(slot - 1)"
             :disabled="!isConnected"
-            title="Sync with device NVS slot">
+            title="Load from or save to device NVS">
             NVS
-            <span v-if="isSlotSavedToNVS(slot - 1)" class="button-indicator" title="Synced with device">●</span>
           </button>
           <button 
-            class="btn-action btn-with-indicator" 
+            class="btn-action" 
             @click.stop="openCloudDialog(slot - 1)"
-            :disabled="!getSlotPreset(slot - 1)"
             title="Load from or save to cloud">
             Cloud
-            <span v-if="isSlotExportedToCloud(slot - 1)" class="button-indicator button-indicator-cloud" title="Exported to cloud">●</span>
           </button>
         </div>
       </div>
@@ -108,15 +75,6 @@
             Random Name
           </button>
         </div>
-        <div class="form-group">
-          <label>Description (Optional)</label>
-          <textarea
-            v-model="slotDescription"
-            class="input-text"
-            rows="2"
-            placeholder="Brief description for community sharing"
-          ></textarea>
-        </div>
         <div class="modal-buttons">
           <button class="btn-secondary" @click.stop="showSlotDialog = false">Cancel</button>
           <button class="btn-primary" @click.stop="confirmSlotSave" :disabled="!slotName.trim()">
@@ -126,56 +84,214 @@
       </div>
     </div>
 
-    <!-- Cloud Dialog (Export + Import) -->
+    <!-- NVS Dialog -->
+    <div v-if="showNVSDialog" class="modal-overlay" @click.self.stop="showNVSDialog = false">
+      <div class="modal-dialog nvs-dialog" @click.stop>
+        <div class="modal-header">
+          <h3>KB1 Device NVS</h3>
+          <button class="close-btn" @click.stop="showNVSDialog = false">×</button>
+        </div>
+        <div class="modal-body">
+          <div class="dialog-intro">
+            <p>Manage presets stored in your KB1's NVS flash memory.</p>
+          </div>
+          
+          <!-- NVS Slots Grid -->
+          <div class="nvs-slots-grid">
+            <div
+              v-for="slot in 8"
+              :key="`nvs-${slot - 1}`"
+              class="nvs-slot-item"
+              :class="{ 
+                filled: getDevicePreset(slot - 1).isValid,
+                active: nvsDialogSlot === (slot - 1)
+              }"
+            >
+              <div class="nvs-slot-info">
+                <span class="nvs-slot-number">{{ slot }}</span>
+                <span class="nvs-slot-name">
+                  {{ getDevicePreset(slot - 1).isValid ? getDevicePreset(slot - 1).name : '(empty)' }}
+                </span>
+              </div>
+              <div class="nvs-slot-actions">
+                <button 
+                  class="btn-small" 
+                  @click.stop="loadFromNVS(slot - 1)"
+                  :disabled="!getDevicePreset(slot - 1).isValid"
+                  title="Load from this NVS slot">
+                  Load
+                </button>
+                <button 
+                  class="btn-small" 
+                  @click.stop="saveToNVS(slot - 1)"
+                  title="Save current preset to this NVS slot">
+                  Save
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cloud Dialog -->
     <div v-if="showCloudDialog" class="modal-overlay" @click.self.stop="showCloudDialog = false">
       <div class="modal-dialog cloud-dialog" @click.stop>
         <div class="modal-header">
-          <h3>Cloud Presets</h3>
-          <div class="header-actions">
-            <button class="btn-refresh" @click.stop="refreshCommunityPresets" title="Refresh presets">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
-              </svg>
-            </button>
-            <button class="close-btn" @click.stop="showCloudDialog = false">×</button>
-          </div>
+          <h3>☁ Cloud Presets</h3>
+          <button class="close-btn" @click.stop="showCloudDialog = false">×</button>
         </div>
         <div class="modal-body">
-          
-          <!-- Export Form (Compact) -->
-          <div class="export-section">
-            <div class="section-label">Share Your Preset</div>
-            <div class="export-form-compact">
-              <input
-                v-model="exportMetadata.name"
-                type="text"
-                class="input-text"
-                placeholder="Preset name (required)"
-              />
-              <textarea
-                v-model="exportMetadata.description"
-                class="input-text"
-                rows="2"
-                placeholder="Brief description (optional)"
-              ></textarea>
-              <button 
-                class="btn-primary btn-export" 
-                @click.stop="confirmExport"
-                :disabled="!exportMetadata.name.trim()">
-                Upload to Community
-              </button>
-            </div>
+          <div class="cloud-actions">
+            <button class="btn-primary btn-export-cloud" @click.stop="exportToCloud">
+              Export Current Preset to Cloud
+            </button>
           </div>
+          <div class="dialog-intro">
+            <p>Browse and load community presets:</p>
+          </div>
+          <CommunityPresets @load="handleCloudPresetLoad" />
+        </div>
+      </div>
+    </div>
 
-          <!-- Divider -->
-          <div class="section-divider"></div>
+    <!-- Export Dialog -->
+    <div v-if="showExportDialog" class="modal-overlay" @click.self.stop="cancelExport">
+      <div class="modal-dialog export-dialog">
+        <h3>Export for Community Sharing</h3>
+        <p class="export-intro">Downloads a JSON file for sharing with the KB1 community. Add details below to help others discover your preset.</p>
+        
+        <!-- Metadata Form -->
+        <div class="metadata-form">
+          <div class="form-group">
+            <label>Preset Name</label>
+            <input
+              v-model="exportMetadata.name"
+              type="text"
+              class="input-text"
+              placeholder="e.g., Ambient Lead"
+            />
+          </div>
           
-          <!-- Browse/Import Section -->
-          <div class="import-section">
-            <div class="section-label">Browse Community Presets</div>
-            <CommunityPresets ref="communityPresetsRef" @load="handleCloudPresetLoad" />
+          <div class="form-group">
+            <label>Author (Optional)</label>
+            <input
+              v-model="exportMetadata.author"
+              type="text"
+              class="input-text"
+              placeholder="Your name or username"
+            />
+          </div>
+          
+          <div class="form-group">
+            <label>Description (Optional)</label>
+            <textarea
+              v-model="exportMetadata.description"
+              class="input-text"
+              rows="2"
+              placeholder="Configuration details, use cases, sound characteristics..."
+            ></textarea>
+          </div>
+          
+          <div class="form-group">
+            <label>Tags (Optional)</label>
+            <input
+              v-model="exportMetadata.tags"
+              type="text"
+              class="input-text"
+              placeholder="ambient, lead, synth (comma-separated)"
+            />
           </div>
         </div>
+        
+        <div class="modal-buttons">
+          <button class="btn-secondary" @click.stop="cancelExport">Cancel</button>
+          <button class="btn-primary" @click.stop="confirmExport">Export</button>
+        </div>
+      </div>
+    </div>
+    </div>
+    
+    <!-- Device Presets Tab Content -->
+    <div v-show="activeTab === 'device-presets'" class="tab-content">
+      <!-- Device Storage Section -->
+      <div class="preset-section-header">
+        Stored in NVS
+        <span class="info-icon" @click.stop="showHelp('storedOnDevice')" title="Show help">i</span>
+      </div>
+      <div class="preset-section">
+      
+      <!-- Slot Indicator -->
+      <div class="slot-indicator">
+        <button class="btn-refresh" @click="refreshSlots" title="Refresh device slots" :disabled="!isConnected">
+          ↻
+        </button>
+        <div class="slot-boxes">
+          <template v-for="slot in 8" :key="`indicator-${slot - 1}`">
+            <div
+              class="slot-box"
+              :class="{
+                filled: getDevicePreset(slot - 1).isValid,
+                active: activeDeviceSlot === (slot - 1),
+                empty: !getDevicePreset(slot - 1).isValid
+              }"
+              :title="getDevicePreset(slot - 1).isValid ? getDevicePreset(slot - 1).name : `Slot ${slot} (Empty)`"
+              @click="isConnected && getDevicePreset(slot - 1).isValid && loadFromDevice(slot - 1)"
+              :style="{ cursor: isConnected ? (getDevicePreset(slot - 1).isValid ? 'pointer' : 'default') : 'not-allowed' }"
+            >
+              <span class="slot-number">{{ slot }}</span>
+            </div>
+            <div class="slot-divider" v-if="slot < 8"></div>
+          </template>
+        </div>
+      </div>
+      
+      <div class="presets-list">
+        <div
+          v-for="slot in 8"
+          :key="`device-${slot - 1}`"
+          class="preset-item device-slot"
+          :class="{ 
+            empty: !getDevicePreset(slot - 1).isValid,
+            active: activeDeviceSlot === (slot - 1)
+          }"
+        >
+          <div class="preset-info">
+            <div class="preset-name">
+              <span class="active-indicator" v-if="activeDeviceSlot === (slot - 1)">●</span>
+              <span>Slot {{ slot }}</span>
+            </div>
+            <div class="preset-meta">
+              <span v-if="getDevicePreset(slot - 1).isValid">{{ getDevicePreset(slot - 1).name }}</span>
+              <span v-else>(Empty)</span>
+            </div>
+          </div>
+          
+          <div class="preset-actions">
+            <button 
+              class="btn-small" 
+              @click="loadFromDevice(slot - 1)" 
+              :disabled="!isConnected || !getDevicePreset(slot - 1).isValid"
+              title="Load preset from device">
+              Load
+            </button>
+            <button 
+              class="btn-small" 
+              @click="saveToDevice(slot - 1)" 
+              :disabled="!isConnected"
+              :title="getDevicePreset(slot - 1).isValid ? 'Overwrite with current settings' : 'Save current settings to this slot'">
+              Save
+            </button>
+            <button 
+              class="btn-small btn-delete" 
+              @click="deleteFromDevice(slot - 1)" 
+              :disabled="!isConnected || !getDevicePreset(slot - 1).isValid || !hasDevicePresetDelete"
+              :title="hasDevicePresetDelete ? 'Delete preset from this slot' : 'Delete not available (reconnect device)'">
+              Delete
+            </button>
+          </div>
+        </div>
+      </div>
       </div>
     </div>
   </div>
@@ -198,13 +314,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, nextTick, watch, computed } from 'vue';
+import { ref, onMounted, nextTick, watch } from 'vue';
 import { PresetStore, generateRandomName, type Preset } from '../state/presets';
 import type { DeviceSettings } from '../ble/kb1Protocol';
 import { useDeviceState } from '../composables/useDeviceState';
 import { useToast } from '../composables/useToast';
 import { useConfirm } from '../composables/useConfirm';
-import { PRESET_UPLOAD_ENDPOINT } from '../constants';
 import CommunityPresets from './CommunityPresets.vue';
 
 const {
@@ -230,16 +345,13 @@ const emit = defineEmits<{
   (e: 'load', settings: DeviceSettings): void;
   (e: 'presetActivated', presetId: string | null): void;
   (e: 'slotNameDisplay', name: string): void;
-  (e: 'slotCount', count: number, total: number): void;
 }>();
 
 // 8-Slot Preset System (localStorage)
 interface SlotPreset {
   name: string;
-  description?: string; // Optional description for community sharing
   settings: DeviceSettings;
   modifiedAt: number;
-  exportedToCloud?: boolean; // Track if preset has been exported
 }
 
 const SLOTS_KEY = 'kb1_preset_slots';
@@ -268,30 +380,26 @@ function saveSlotsToStorage(slots: (SlotPreset | null)[]) {
 
 const slots = ref<(SlotPreset | null)[]>(loadSlotsFromStorage());
 const activeSlot = ref<number | null>(null);
-const hasAutoSynced = ref(false); // Track if we've done initial auto-sync
 
 // Dialog states
 const showSlotDialog = ref(false);
+const showNVSDialog = ref(false);
 const showCloudDialog = ref(false);
-
-// Selection mode
-const selectionMode = ref(false);
-const selectedSlots = ref(new Set<number>());
+const showExportDialog = ref(false);
 
 // Editing state
 const editingSlot = ref<number>(0);
 const slotName = ref('');
-const slotDescription = ref('');
+const nvsDialogSlot = ref<number | null>(null);
 const exportingSlot = ref<number | null>(null);
 
-// Export metadata (simplified)
+// Export metadata
 const exportMetadata = ref({
   name: '',
-  description: ''
+  author: '',
+  description: '',
+  tags: ''
 });
-
-// Community presets reference
-const communityPresetsRef = ref<InstanceType<typeof CommunityPresets> | null>(null);
 
 // Legacy refs (keep for device preset functions)
 const nameInput = ref<HTMLInputElement | null>(null);
@@ -323,116 +431,10 @@ function isSlotSavedToNVS(slot: number): boolean {
   return devicePreset.isValid && devicePreset.name === slotPreset.name;
 }
 
-function isSlotExportedToCloud(slot: number): boolean {
-  const slotPreset = getSlotPreset(slot);
-  return slotPreset?.exportedToCloud === true;
-}
-
-function clearSlot(slot: number) {
-  const preset = getSlotPreset(slot);
-  if (!preset) return;
-  
-  // Simple confirmation
-  if (!window.confirm(`Delete "${preset.name}"?`)) return;
-  
-  const newSlots = [...slots.value];
-  newSlots[slot] = null;
-  
-  slots.value = newSlots;
-  saveSlotsToStorage(newSlots);
-  
-  // Clear active state if this was active
-  if (activeSlot.value === slot) {
-    activeSlot.value = null;
-  }
-  
-  toast.success(`Deleted "${preset.name}"`);
-}
-
-// ========================================
-// Selection Mode Functions
-// ========================================
-
-const allSelected = computed(() => {
-  const filledSlots = slots.value.filter(s => s !== null).length;
-  return filledSlots > 0 && selectedSlots.value.size === filledSlots;
-});
-
-function toggleSelection(slot: number) {
-  if (selectedSlots.value.has(slot)) {
-    selectedSlots.value.delete(slot);
-  } else {
-    selectedSlots.value.add(slot);
-  }
-  // Trigger reactivity
-  selectedSlots.value = new Set(selectedSlots.value);
-}
-
-function toggleSelectAll() {
-  if (allSelected.value) {
-    selectedSlots.value.clear();
-    selectedSlots.value = new Set();
-  } else {
-    const filledSlotIndices: number[] = [];
-    slots.value.forEach((preset, index) => {
-      if (preset !== null) filledSlotIndices.push(index);
-    });
-    selectedSlots.value = new Set(filledSlotIndices);
-  }
-}
-
-async function deleteSelected() {
-  if (selectedSlots.value.size === 0) return;
-  
-  const count = selectedSlots.value.size;
-  const confirmed = await confirm(
-    `Delete ${count} selected preset${count > 1 ? 's' : ''}?`,
-    { top: '40%', left: '50%' }
-  );
-  
-  if (!confirmed) return;
-  
-  const newSlots = [...slots.value];
-  selectedSlots.value.forEach(slot => {
-    newSlots[slot] = null;
-    if (activeSlot.value === slot) {
-      activeSlot.value = null;
-    }
-  });
-  
-  slots.value = newSlots;
-  saveSlotsToStorage(newSlots);
-  
-  toast.success(`Deleted ${count} preset${count > 1 ? 's' : ''}`);
-  
-  // Exit selection mode
-  exitSelectionMode();
-}
-
-function enterSelectionMode() {
-  selectionMode.value = true;
-  selectedSlots.value.clear();
-  selectedSlots.value = new Set();
-}
-
-function exitSelectionMode() {
-  selectionMode.value = false;
-  selectedSlots.value.clear();
-  selectedSlots.value = new Set();
-}
-
-// Expose for parent to toggle
-defineExpose({
-  enterSelectionMode,
-  exitSelectionMode,
-  selectionMode
-});
-
 function openSlotDialog(slot: number) {
   editingSlot.value = slot;
   const existing = getSlotPreset(slot);
-  slotName.value = existing?.name || '';
-  slotDescription.value = existing?.description || '';
+  slotName.value = existing?.name || generateRandomName();
   showSlotDialog.value = true;
   
   nextTick(() => {
@@ -449,15 +451,12 @@ function confirmSlotSave() {
   const name = slotName.value.trim();
   if (!name) return;
   
-  // Save current settings to slot (preserve exportedToCloud flag if editing)
-  const existingPreset = getSlotPreset(editingSlot.value);
+  // Save current settings to slot
   const newSlots = [...slots.value];
   newSlots[editingSlot.value] = {
     name,
-    description: slotDescription.value.trim() || undefined,
     settings: props.currentSettings,
-    modifiedAt: Date.now(),
-    exportedToCloud: existingPreset?.exportedToCloud // Preserve cloud export status
+    modifiedAt: Date.now()
   };
   
   slots.value = newSlots;
@@ -466,7 +465,6 @@ function confirmSlotSave() {
   toast.success(`Saved to slot ${editingSlot.value + 1}: "${name}"`);
   showSlotDialog.value = false;
   slotName.value = '';
-  slotDescription.value = '';
 }
 
 function activateSlot(slot: number) {
@@ -481,54 +479,35 @@ function activateSlot(slot: number) {
 }
 
 function openNVSDialog(slot: number) {
-  // Deprecated - using direct sync now
-  syncNVSSlot(slot);
+  nvsDialogSlot.value = slot;
+  showNVSDialog.value = true;
+  
+  // Refresh device presets when opening
+  if (isConnected.value) {
+    refreshDevicePresets();
+  }
 }
 
-async function syncNVSSlot(slot: number) {
-  if (!isConnected.value) return;
-  
-  // Refresh device presets to ensure we have latest data
-  await refreshDevicePresets();
-  
-  const localPreset = getSlotPreset(slot);
-  const devicePreset = getDevicePreset(slot);
-  
-  // Case 1: Both empty
-  if (!localPreset && !devicePreset.isValid) {
-    toast.info(`Slot ${slot + 1} is empty on both device and browser`);
+function openCloudDialog(slot: number) {
+  exportingSlot.value = slot;
+  showCloudDialog.value = true;
+}
+
+async function loadFromNVS(nvsSlot: number) {
+  const preset = getDevicePreset(nvsSlot);
+  if (!preset.isValid) {
+    toast.info('NVS slot is empty');
     return;
   }
   
-  // Case 2: Already in sync (same name)
-  if (localPreset && devicePreset.isValid && localPreset.name === devicePreset.name) {
-    toast.success(`Slot ${slot + 1} already synced: "${localPreset.name}"`);
-    return;
-  }
-  
-  // Case 3: Local has data → Save to device (overwrite)
-  if (localPreset) {
-    try {
-      await saveDevicePreset(slot, localPreset.name, localPreset.settings);
-      toast.success(`Saved to device: "${localPreset.name}"`);
-      
-      // Refresh to update NVS indicator
-      await refreshDevicePresets();
-    } catch (error) {
-      console.error('Failed to save to device:', error);
-      toast.error('Failed to save to device');
-    }
-    return;
-  }
-  
-  // Case 4: Local empty, device has data → Load from device
-  if (devicePreset.isValid) {
-    try {
-      await loadDevicePreset(slot);
-      
+  try {
+    await loadDevicePreset(nvsSlot);
+    
+    // Save loaded preset to current editing slot
+    if (nvsDialogSlot.value !== null) {
       const newSlots = [...slots.value];
-      newSlots[slot] = {
-        name: devicePreset.name,
+      newSlots[nvsDialogSlot.value] = {
+        name: preset.name,
         settings: props.currentSettings,
         modifiedAt: Date.now()
       };
@@ -536,25 +515,43 @@ async function syncNVSSlot(slot: number) {
       slots.value = newSlots;
       saveSlotsToStorage(newSlots);
       
-      toast.success(`Loaded from device: "${devicePreset.name}"`);
-    } catch (error) {
-      console.error('Failed to load from device:', error);
-      toast.error('Failed to load from device');
+      toast.success(`Loaded from NVS slot ${nvsSlot + 1}: "${preset.name}"`);
     }
+    
+    showNVSDialog.value = false;
+  } catch (error) {
+    console.error('Failed to load from NVS:', error);
+    toast.error('Failed to load from device');
   }
 }
 
-function openCloudDialog(slot: number) {
-  exportingSlot.value = slot;
+async function saveToNVS(nvsSlot: number) {
+  if (!nvsDialogSlot.value && nvsDialogSlot.value !== 0) return;
   
-  // Pre-fill export form with current preset name and description
-  const preset = getSlotPreset(slot);
-  if (preset) {
-    exportMetadata.value.name = preset.name;
-    exportMetadata.value.description = preset.description || '';
+  const preset = getSlotPreset(nvsDialogSlot.value);
+  if (!preset) {
+    toast.error('No preset in this slot to save');
+    return;
   }
   
-  showCloudDialog.value = true;
+  const devicePreset = getDevicePreset(nvsSlot);
+  
+  // Confirm overwrite if slot is occupied
+  if (devicePreset.isValid) {
+    const overwrite = await confirm(`NVS slot ${nvsSlot + 1} contains "${devicePreset.name}".\n\nOverwrite it with "${preset.name}"?`);
+    if (!overwrite) return;
+  }
+  
+  try {
+    await saveDevicePreset(nvsSlot, preset.name, preset.settings);
+    toast.success(`Saved "${preset.name}" to NVS slot ${nvsSlot + 1}`);
+    
+    // Refresh to get updated NVS indicator
+    await refreshDevicePresets();
+  } catch (error) {
+    console.error('Failed to save to NVS:', error);
+    toast.error('Failed to save to device');
+  }
 }
 
 async function exportToCloud() {
@@ -576,39 +573,26 @@ async function exportToCloud() {
   showExportDialog.value = true;
 }
 
-async function handleCloudPresetLoad(preset: { id: string; metadata?: { name?: string; author?: string; description?: string; tags?: string[] }; settings: DeviceSettings }) {
+function handleCloudPresetLoad(settings: DeviceSettings) {
   if (exportingSlot.value === null) {
     showCloudDialog.value = false;
     return;
   }
   
-  const slotIndex = exportingSlot.value;
-  const presetName = preset.metadata?.name || 'Imported Preset';
-  const existingPreset = slots.value[slotIndex];
-  
-  // If slot is occupied, ask for confirmation
-  if (existingPreset) {
-    const confirmed = await confirm(
-      `Replace "${existingPreset.name}" with "${presetName}"?`,
-      { top: '40%', left: '50%' }
-    );
-    if (!confirmed) {
-      return;
-    }
-  }
+  // Ask for a name for this preset
+  const name = prompt('Name for this preset:', 'Imported Preset') || 'Imported Preset';
   
   const newSlots = [...slots.value];
-  newSlots[slotIndex] = {
-    name: presetName,
-    description: preset.metadata?.description,
-    settings: preset.settings,
+  newSlots[exportingSlot.value] = {
+    name,
+    settings,
     modifiedAt: Date.now()
   };
   
   slots.value = newSlots;
   saveSlotsToStorage(newSlots);
   
-  toast.success(`Imported to slot ${slotIndex + 1}: "${presetName}"`);
+  toast.success(`Imported to slot ${exportingSlot.value + 1}: "${name}"`);
   showCloudDialog.value = false;
   exportingSlot.value = null;
 }
@@ -699,79 +683,145 @@ async function deleteFromDevice(slot: number) {
 
 // Load presets on mount
 
-// Debug: Watch devicePresets for changes & auto-sync on connect
-watch(devicePresets, async (newPresets) => {
+// Debug: Watch devicePresets for changes
+watch(devicePresets, (newPresets) => {
   console.log('🔄 Device presets changed:', JSON.parse(JSON.stringify(newPresets)));
-  
-  // Auto-sync device presets to empty browser slots on initial connect
-  if (!hasAutoSynced.value && isConnected.value && newPresets.length > 0) {
-    hasAutoSynced.value = true;
-    
-    let syncedCount = 0;
-    
-    // Load each device preset into empty browser slots (sequentially to avoid BLE conflicts)
-    for (let i = 0; i < 8; i++) {
-      const devicePreset = newPresets[i];
-      const browserSlot = slots.value[i];
-      
-      // Only auto-load if browser slot is empty and device has data
-      if (!browserSlot && devicePreset?.isValid) {
-        try {
-          // Load preset from device (updates active settings)
-          await loadDevicePreset(i);
-          
-          // Save to browser slot
-          const newSlots = [...slots.value];
-          newSlots[i] = {
-            name: devicePreset.name,
-            settings: props.currentSettings,
-            modifiedAt: Date.now()
-          };
-          slots.value = newSlots;
-          saveSlotsToStorage(newSlots);
-          
-          syncedCount++;
-          console.log(`Auto-synced slot ${i + 1}: "${devicePreset.name}"`);
-        } catch (error) {
-          console.error(`Failed to auto-sync slot ${i + 1}:`, error);
-        }
-      }
-    }
-    
-    if (syncedCount > 0) {
-      toast.success(`Auto-synced ${syncedCount} preset${syncedCount > 1 ? 's' : ''} from device`);
-    }
-  }
 }, { deep: true });
 
-// Watch slots and emit count changes
-watch(slots, (newSlots) => {
-  const usedCount = newSlots.filter(s => s !== null).length;
-  emit('slotCount', usedCount, 8);
-}, { immediate: true, deep: true });
-
-// Reset auto-sync flag on disconnect
-watch(isConnected, (connected) => {
-  if (!connected) {
-    hasAutoSynced.value = false;
+// Auto-focus inputs when dialogs open
+watch(showCreateDialog, async (show) => {
+  if (show) {
+    await nextTick();
+    nameInput.value?.focus();
   }
 });
 
+watch(showRenameDialog, async (show) => {
+  if (show) {
+    await nextTick();
+    renameInput.value?.focus();
+  }
+});
+
+// ========================================
+// Legacy Functions (can be removed if unused)
+// ========================================
+
+async function updatePreset(id: string) {
+  if (!await confirm('Update this preset with current settings?')) return;
+
+  PresetStore.updatePreset(id, { settings: props.currentSettings });
+  refreshPresets();
+  openMenuId.value = null;
+}
+
+function toggleMenu(id: string) {
+  openMenuId.value = openMenuId.value === id ? null : id;
+}
+
+function renamePreset(id: string) {
+  const preset = PresetStore.getPreset(id);
+  if (!preset) return;
+
+  renamingId.value = id;
+  renameValue.value = preset.name;
+  showRenameDialog.value = true;
+  openMenuId.value = null;
+}
+
+function confirmRename() {
+  const name = renameValue.value.trim();
+  if (!name) return;
+
+  if (renamingId.value) {
+    // Renaming cache preset
+    PresetStore.updatePreset(renamingId.value, { name });
+    refreshPresets();
+  }
+
+  showRenameDialog.value = false;
+  renamingId.value = null;
+  renameValue.value = '';
+}
+
+function duplicatePreset(id: string) {
+  const preset = PresetStore.getPreset(id);
+  if (!preset) return;
+
+  PresetStore.duplicatePreset(id);
+  refreshPresets();
+  openMenuId.value = null;
+}
+
+async function deletePreset(id: string) {
+  const preset = PresetStore.getPreset(id);
+  if (!preset) return;
+
+  if (!await confirm(`Delete preset "${preset.name}"? This cannot be undone.`)) return;
+
+  PresetStore.deletePreset(id);
+  
+  if (activePresetId.value === id) {
+    activePresetId.value = null;
+    emit('presetActivated', null);
+  }
+  
+  refreshPresets();
+  openMenuId.value = null;
+}
+
+function exportPreset(id: string) {
+  // Show export dialog for single preset
+  exportingIds.value = [id];
+  exportingSelectedCount.value = 1;
+  
+  // Auto-fill name with preset's actual name
+  const preset = PresetStore.getPreset(id);
+  if (preset) {
+    exportMetadata.value.name = preset.name;
+  }
+  
+  showExportDialog.value = true;
+  openMenuId.value = null;
+}
+
+function exportAllPresets() {
+  // Show export dialog for all presets
+  exportingIds.value = presets.value.map(p => p.id);
+  exportingSelectedCount.value = presets.value.length;
+  showExportDialog.value = true;
+}
+
+function exportSelectedPresets() {
+  if (selectedPresets.value.size === 0) return;
+  
+  // If only one preset selected, export with its name
+  if (selectedPresets.value.size === 1) {
+    const id = Array.from(selectedPresets.value)[0];
+    if (id) {
+      exportPreset(id);
+    }
+    return;
+  }
+  
+  // Show export dialog for selected presets
+  exportingIds.value = Array.from(selectedPresets.value);
+  exportingSelectedCount.value = selectedPresets.value.size;
+  showExportDialog.value = true;
+}
+
 function cancelExport() {
+  showExportDialog.value = false;
   exportMetadata.value = {
     name: '',
-    description: ''
+    author: '',
+    description: '',
+    tags: ''
   };
   exportingSlot.value = null;
-  showCloudDialog.value = false;
 }
 
-function refreshCommunityPresets() {
-  // Force refresh with cache-busting
-  communityPresetsRef.value?.loadPresets(true);
-}
-
-async function confirmExport() {
+function confirmExport() {
   if (exportingSlot.value === null) return;
   
   const preset = getSlotPreset(exportingSlot.value);
@@ -782,12 +832,14 @@ async function confirmExport() {
   
   // Build metadata
   const metadata: any = {
-    name: exportMetadata.value.name,
     date: new Date().toISOString().split('T')[0]
   };
   
-  if (exportMetadata.value.description) {
-    metadata.description = exportMetadata.value.description;
+  if (exportMetadata.value.name) metadata.name = exportMetadata.value.name;
+  if (exportMetadata.value.author) metadata.author = exportMetadata.value.author;
+  if (exportMetadata.value.description) metadata.description = exportMetadata.value.description;
+  if (exportMetadata.value.tags) {
+    metadata.tags = exportMetadata.value.tags.split(',').map(t => t.trim()).filter(t => t);
   }
   
   const presetData = {
@@ -796,75 +848,32 @@ async function confirmExport() {
     settings: preset.settings
   };
   
-  // Upload to server or download locally
-  if (PRESET_UPLOAD_ENDPOINT) {
-    try {
-      const response = await fetch(PRESET_UPLOAD_ENDPOINT, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          // Uncomment if using API key authentication:
-          // 'X-API-Key': 'your-api-key-here'
-        },
-        body: JSON.stringify(presetData)
-      });
-      
-      if (!response.ok) {
-        const error = await response.json().catch(() => ({ error: 'Upload failed' }));
-        throw new Error(error.error || `HTTP ${response.status}`);
-      }
-      
-      const result = await response.json();
-      console.log('✅ Preset uploaded:', result);
-      
-      // Mark slot as exported to cloud
-      if (exportingSlot.value !== null) {
-        const newSlots = [...slots.value];
-        const slotPreset = newSlots[exportingSlot.value];
-        if (slotPreset) {
-          slotPreset.exportedToCloud = true;
-          slots.value = newSlots;
-          saveSlotsToStorage(newSlots);
-        }
-      }
-      
-      toast.success(`Preset uploaded to community library!`, 5000);
-      
-      // Reset form but keep dialog open
-      exportMetadata.value = { name: '', description: '' };
-      exportingSlot.value = null;
-    } catch (error) {
-      console.error('❌ Upload failed:', error);
-      toast.error(`Upload failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    }
-  } else {
-    // Development mode: Download locally
-    const json = JSON.stringify(presetData, null, 2);
-    const filename = `${presetId}.json`;
-    
-    downloadJSON(json, filename);
-    
-    // Show dev testing instructions
-    const indexEntry = {
-      id: presetId,
-      filename: filename,
-      metadata: presetData.metadata
-    };
-    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    console.log('COMMUNITY PRESET EXPORT - DEV TESTING');
-    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    console.log('1. File downloaded:', filename);
-    console.log('2. Upload to: https://pocketmidi.com/upload-preset.php');
-    console.log('3. Or add to public/community-presets/presets/ and index.json:');
-    console.log(JSON.stringify(indexEntry, null, 2));
-    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    
-    toast.success(`Downloaded ${filename}`);
-    
-    // Reset form but keep dialog open
-    exportMetadata.value = { name: '', description: '' };
-    exportingSlot.value = null;
-  }
+  const json = JSON.stringify(presetData, null, 2);
+  const filename = `${presetId}.json`;
+  
+  downloadJSON(json, filename);
+  
+  // Show dev testing instructions and console log index entry
+  const indexEntry = {
+    id: presetId,
+    filename: filename,
+    metadata: presetData.metadata
+  };
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  console.log('COMMUNITY PRESET EXPORT - DEV TESTING');
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  console.log('1. File downloaded:', filename);
+  console.log('2. Move to: public/community-presets/presets/');
+  console.log('3. Add this to index.json presets array:');
+  console.log(JSON.stringify(indexEntry, null, 2));
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  
+  toast.success(`Exported ${filename}`, { duration: 5000 });
+  setTimeout(() => {
+    toast.info(`Check console for testing instructions`, { duration: 8000 });
+  }, 500);
+  
+  cancelExport();
 }
 
 function downloadJSON(json: string, filename: string) {
@@ -878,7 +887,34 @@ function downloadJSON(json: string, filename: string) {
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
 }
+  
+  // Force reactivity
+  selectedPresets.value = new Set(selectedPresets.value);
+  
+  // Hide checkboxes if all deselected
+  if (selectedPresets.value.size === 0) {
+    showCheckboxes.value = false;
+  }
+}
 
+function clearSelection() {
+  selectedPresets.value.clear();
+  showCheckboxes.value = false;
+}
+
+function selectAll() {
+  selectedPresets.value = new Set(presets.value.map(p => p.id));
+}
+
+function downloadJSON(json: string, filename: string) {
+  const blob = new Blob([json], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
 
 function importPresetDialog() {
   fileInput.value?.click();
@@ -952,8 +988,16 @@ function formatDate(timestamp: number): string {
   font-family: 'Roboto Mono', monospace;
 }
 
+/* Header */
+.preset-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
 .preset-title {
-  margin: 0 0 1rem 0;
+  margin: 0;
   font-size: 0.9375rem;
   font-weight: 600;
   color: #EAEAEA;
@@ -961,22 +1005,36 @@ function formatDate(timestamp: number): string {
   letter-spacing: 0.05em;
 }
 
+.btn-cloud {
+  background: linear-gradient(135deg, #4A90E2 0%, #357ABD 100%);
+  border: none;
+  padding: 0.5rem 1rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: #FFFFFF;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.2s;
+  font-family: 'Roboto Mono', monospace;
+}
+
+.btn-cloud:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3);
+}
+
 /* Slot System */
 .preset-slots {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.75rem;
 }
 
 .preset-slot {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
   background: rgba(29, 29, 29, 0.5);
   border: 1px solid rgba(205, 205, 205, 0.1);
   border-radius: 4px;
-  padding: 0.5rem 0.75rem;
-  gap: 1rem;
+  padding: 0.75rem;
   transition: all 0.2s;
 }
 
@@ -994,36 +1052,34 @@ function formatDate(timestamp: number): string {
   opacity: 0.6;
 }
 
+.slot-header {
+  cursor: pointer;
+  margin-bottom: 0.5rem;
+}
+
 .slot-info {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  flex: 1;
-  cursor: pointer;
-  min-width: 0;
 }
 
-.slot-label-wrapper {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-  flex: 1;
-  min-width: 0;
-}
-
-.slot-label {
-  font-size: 0.8125rem;
-  font-weight: 400;
-  color: #EAEAEA;
-  letter-spacing: 0.05em;
+.slot-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  background: rgba(132, 132, 132, 0.2);
+  border-radius: 50%;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #CDCDCD;
 }
 
 .slot-name {
-  font-size: 0.8125rem;
-  color: #CDCDCD;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  font-size: 0.875rem;
+  color: #EAEAEA;
+  flex: 1;
 }
 
 .preset-slot.empty .slot-name {
@@ -1031,40 +1087,32 @@ function formatDate(timestamp: number): string {
   font-style: italic;
 }
 
-.btn-clear {
-  background: transparent;
-  border: none;
-  color: #848484;
-  font-size: 1.25rem;
-  line-height: 1;
-  cursor: pointer;
-  padding: 0;
-  width: 24px;
-  height: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  transition: all 0.2s;
-  border-radius: 4px;
+.nvs-indicator {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  background: #4CAF50;
+  border-radius: 50%;
+  margin-left: auto;
+  animation: pulse 2s ease-in-out infinite;
 }
 
-.btn-clear:hover {
-  background: rgba(205, 205, 205, 0.1);
-  color: #E57373;
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
 }
 
 .slot-actions {
   display: flex;
   gap: 0.5rem;
-  flex-shrink: 0;
+  margin-top: 0.5rem;
 }
 
 .btn-action {
-  position: relative;
+  flex: 1;
   background: rgba(132, 132, 132, 0.1);
   border: 1px solid rgba(205, 205, 205, 0.2);
-  padding: 0.5rem 0.875rem;
+  padding: 0.5rem;
   font-size: 0.75rem;
   font-weight: 500;
   color: #CDCDCD;
@@ -1072,7 +1120,6 @@ function formatDate(timestamp: number): string {
   border-radius: 4px;
   transition: all 0.2s;
   font-family: 'Roboto Mono', monospace;
-  white-space: nowrap;
 }
 
 .btn-action:hover:not(:disabled) {
@@ -1092,33 +1139,8 @@ function formatDate(timestamp: number): string {
   color: #4A90E2;
 }
 
-.btn-with-indicator {
-  padding-right: 0.5rem;
-}
-
-.button-indicator {
-  position: absolute;
-  top: 4px;
-  right: 4px;
-  width: 6px;
-  height: 6px;
-  background: #4CAF50;
-  border-radius: 50%;
-  font-size: 0;
-  animation: pulse 2s ease-in-out infinite;
-}
-
-.button-indicator-cloud {
-  background: #4A90E2;
-}
-
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
-}
-
-/* Cloud Dialog */
-.cloud-dialog {
+/* NVS Dialog */
+.nvs-dialog, .cloud-dialog {
   max-width: 600px;
   max-height: 80vh;
   display: flex;
@@ -1143,14 +1165,8 @@ function formatDate(timestamp: number): string {
   letter-spacing: 0.05em;
 }
 
-.header-actions {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
 .modal-body {
-  padding: 1rem;
+  padding: 1.5rem;
   overflow-y: auto;
   flex: 1;
 }
@@ -1166,82 +1182,78 @@ function formatDate(timestamp: number): string {
   line-height: 1.5;
 }
 
-/* Cloud Dialog - Export + Import Unified */
-.export-section {
-  margin-bottom: 0.5rem;
-}
-
-.section-label {
-  font-size: 0.75rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: #848484;
-  margin-bottom: 0.5rem;
-}
-
-.export-form-compact {
+/* NVS Slots Grid */
+.nvs-slots-grid {
   display: flex;
   flex-direction: column;
-  gap: 0.375rem;
+  gap: 0.5rem;
 }
 
-.export-form-compact input,
-.export-form-compact textarea {
-  font-size: 0.8125rem;
-}
-
-.export-form-compact textarea {
-  resize: vertical;
-  min-height: 60px;
-}
-
-.btn-export {
-  padding: 0.625rem;
-  font-size: 0.8125rem;
-}
-
-.btn-export:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
-.section-divider {
-  height: 1px;
-  background: var(--color-border);
-  margin: 1rem 0;
-}
-
-.import-section {
-  /* Community presets list below */
-}
-
-.btn-refresh {
-  background: none;
-  border: none;
-  color: #74C4FF;
-  width: 28px;
-  height: 28px;
-  cursor: pointer;
+.nvs-slot-item {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: space-between;
+  padding: 0.75rem;
+  background: rgba(29, 29, 29, 0.3);
+  border: 1px solid rgba(205, 205, 205, 0.1);
+  border-radius: 4px;
   transition: all 0.2s;
-  padding: 4px;
 }
 
-.btn-refresh svg {
+.nvs-slot-item:hover {
+  background: rgba(29, 29, 29, 0.5);
+  border-color: rgba(205, 205, 205, 0.2);
+}
+
+.nvs-slot-item.filled {
+  background: rgba(76, 175, 80, 0.05);
+  border-color: rgba(76, 175, 80, 0.2);
+}
+
+.nvs-slot-info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex: 1;
+}
+
+.nvs-slot-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  background: rgba(132, 132, 132, 0.2);
+  border-radius: 50%;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #CDCDCD;
+}
+
+.nvs-slot-name {
+  font-size: 0.875rem;
+  color: #EAEAEA;
+}
+
+.nvs-slot-item:not(.filled) .nvs-slot-name {
+  color: #848484;
+  font-style: italic;
+}
+
+.nvs-slot-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+/* Cloud Actions */
+.cloud-actions {
+  margin-bottom: 1.5rem;
+}
+
+.btn-export-cloud {
   width: 100%;
-  height: 100%;
-  display: block;
-}
-
-.btn-refresh:hover {
-  transform: rotate(180deg);
-}
-
-.btn-refresh:active {
-  transform: rotate(180deg) scale(0.95);
+  padding: 0.75rem;
+  font-size: 0.8125rem;
 }
 
 /* Tab Navigation (Legacy - can be removed if unused) */
@@ -1374,6 +1386,27 @@ function formatDate(timestamp: number): string {
   height: 16px;
   background: rgba(234, 234, 234, 0.2);
   margin: 0 0.5rem;
+}
+
+.btn-refresh {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  background: rgba(106, 104, 83, 0.2);
+  border: none;
+  border-radius: 4px;
+  color: #EAEAEA;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.btn-refresh:hover {
+  background: rgba(106, 104, 83, 0.3);
+  transform: rotate(90deg);
 }
 
 .presets-list {
@@ -1647,11 +1680,6 @@ function formatDate(timestamp: number): string {
   box-sizing: border-box;
 }
 
-textarea.input-text {
-  resize: vertical;
-  min-height: 60px;
-}
-
 .input-text:focus {
   outline: none;
   background: rgba(234, 234, 234, 0.08);
@@ -1707,7 +1735,11 @@ textarea.input-text {
   cursor: not-allowed;
 }
 
-/* Import Dialog (standalone if needed) */
+/* Export Dialog Specific Styles */
+.export-dialog {
+  max-width: 500px;
+}
+
 .import-dialog {
   max-width: 600px;
   max-height: 80vh;
@@ -2035,100 +2067,6 @@ textarea.input-text {
 
 .help-modal-footer .btn-primary:hover {
   background: #0BA872;
-}
-
-/* ========================================
-   Selection Mode Styles
-   ======================================== */
-
-.selection-header,
-.normal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0.75rem 0;
-  margin-bottom: 0.75rem;
-  border-bottom: 1px solid rgba(205, 205, 205, 0.1);
-}
-
-.normal-header {
-  justify-content: flex-end;
-}
-
-.selection-actions {
-  display: flex;
-  gap: 0.5rem;
-  align-items: center;
-}
-
-.btn-select-action {
-  padding: 0.5rem 1rem;
-  font-size: 0.8125rem;
-  font-family: 'Roboto Mono', monospace;
-  font-weight: 400;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: all 0.2s;
-  background: rgba(29, 29, 29, 0.5);
-  color: #CDCDCD;
-  border: 1px solid rgba(205, 205, 205, 0.2);
-}
-
-.btn-select-action:hover {
-  background: rgba(29, 29, 29, 0.7);
-  border-color: rgba(205, 205, 205, 0.3);
-}
-
-.btn-delete-selected {
-  padding: 0.5rem 1rem;
-  font-size: 0.8125rem;
-  font-family: 'Roboto Mono', monospace;
-  font-weight: 400;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: all 0.2s;
-  background: rgba(244, 67, 54, 0.15);
-  color: #F44336;
-  border: 1px solid rgba(244, 67, 54, 0.3);
-}
-
-.btn-delete-selected:hover:not(:disabled) {
-  background: rgba(244, 67, 54, 0.25);
-  border-color: rgba(244, 67, 54, 0.5);
-}
-
-.btn-delete-selected:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
-.preset-slot.selection-mode {
-  cursor: pointer;
-}
-
-.preset-slot.selection-mode .slot-info {
-  padding-left: 2.5rem; /* Make room for checkbox */
-}
-
-.selection-checkbox {
-  position: absolute;
-  left: 0.75rem;
-  top: 50%;
-  transform: translateY(-50%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.selection-checkbox input[type="checkbox"] {
-  width: 18px;
-  height: 18px;
-  cursor: pointer;
-  accent-color: #0DC988;
-}
-
-.preset-slot {
-  position: relative; /* For absolute positioning of checkbox */
 }
 </style>
 

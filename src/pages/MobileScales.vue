@@ -166,8 +166,9 @@
           @behaviourChanged="handleTouchBehaviourChange"
         />
       </AccordionSection>
+      </div>
       
-      <!-- Presets -->
+      <!-- Presets - OUTSIDE disconnected-state (always accessible for local preset management) -->
       <AccordionSection
         ref="presetsAccordion"
         title="PRESETS"
@@ -183,9 +184,9 @@
           @load="handlePresetLoad"
           @preset-activated="handlePresetActivated"
           @slot-name-display="handleSlotNameDisplay"
+          @slot-count="handleSlotCount"
         />
       </AccordionSection>
-      </div>
       
       <!-- System Settings - OUTSIDE disconnected-state (always accessible) -->
       <div class="system-settings-wrapper">
@@ -199,6 +200,7 @@
         >
           <SystemSettings
             v-model="localSettings.system"
+            :is-connected="isConnected"
             @update:modelValue="markChanged"
             @restore-from-device="handleLoadClick"
             @reset-to-factory="handleResetDefaults"
@@ -274,6 +276,7 @@ let keyboardClearTimeoutId: number | null = null;
 
 const presetsSuffix = ref<string>('');
 const presetsSuffixFading = ref<boolean>(false);
+const presetSlotCount = ref<number>(0);
 let presetsFadeTimeoutId: ReturnType<typeof setTimeout> | null = null;
 let presetsClearTimeoutId: ReturnType<typeof setTimeout> | null = null;
 
@@ -532,23 +535,9 @@ const keyboardSubtitle = computed(() => {
 });
 
 const presetsSubtitle = computed(() => {
-  const browserPresets = PresetStore.getAllPresets();
-  const workingCount = browserPresets.length;
-  
-  // Count valid device presets
-  const archiveCount = devicePresets.value.filter(p => p.isValid).length;
-  
-  const parts = [];
-  
-  // Always show working count first
-  parts.push(`Working: ${workingCount}`);
-  
-  // Show archive count if device is connected and supports presets
-  if (isConnected.value && hasDevicePresetSupport.value) {
-    parts.push(`Archive: ${archiveCount}`);
-  }
-  
-  return parts.join(' | ');
+  // Show slot usage: "3 of 8 slots"
+  const slotText = presetSlotCount.value === 1 ? 'slot' : 'slots';
+  return `${presetSlotCount.value} of 8 ${slotText}`;
 });
 
 // Helper functions to generate subtitles for lever accordion headers
@@ -697,6 +686,10 @@ function handleSlotNameDisplay(name: string) {
     presetsSuffixFading.value = false;
     presetsClearTimeoutId = null;
   }, 2500);
+}
+
+function handleSlotCount(count: number, total: number) {
+  presetSlotCount.value = count;
 }
 
 // Watch for device settings changes

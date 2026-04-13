@@ -1,6 +1,6 @@
 <template>
   <Transition name="dialog-fade">
-    <div v-if="visible" class="confirm-overlay" @click.self="handleCancel">
+    <div v-if="visible" class="confirm-overlay" @click.self.stop="handleCancel">
       <div 
         class="confirm-dialog" 
         :style="dialogStyle"

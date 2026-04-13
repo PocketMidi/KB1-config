@@ -23,23 +23,14 @@
       >
         <div class="preset-info">
           <div class="preset-name">{{ preset.metadata?.name || 'Unnamed Preset' }}</div>
-          <div class="preset-meta">
-            <span v-if="preset.metadata?.author" class="author">by {{ preset.metadata.author }}</span>
-            <span v-if="preset.metadata?.description" class="description">{{ preset.metadata.description }}</span>
-            <div v-if="preset.metadata?.tags && preset.metadata.tags.length > 0" class="tags">
-              <span v-for="tag in preset.metadata.tags" :key="tag" class="tag">{{ tag }}</span>
-            </div>
-          </div>
+          <div class="preset-description" v-if="preset.metadata?.description">{{ preset.metadata.description }}</div>
         </div>
-        
-        <div class="preset-actions">
-          <button 
-            class="btn-small" 
-            @click="loadCommunityPreset(preset)"
-            title="Load this preset">
-            Load
-          </button>
-        </div>
+        <button 
+          class="btn-load" 
+          @click="loadCommunityPreset(preset)"
+          title="Load this preset">
+          Load
+        </button>
       </div>
     </div>
   </div>
@@ -48,6 +39,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import type { DeviceSettings } from '../ble/kb1Protocol';
+import { PRESET_BASE_URL } from '../constants';
 
 interface PresetMetadata {
   name?: string;
@@ -74,21 +66,25 @@ interface PresetIndex {
 }
 
 const emit = defineEmits<{
-  (e: 'load', settings: DeviceSettings): void;
+  (e: 'load', preset: CommunityPreset): void;
 }>();
 
 const loading = ref(true);
 const error = ref<string | null>(null);
 const communityPresets = ref<CommunityPreset[]>([]);
 
-async function loadPresets() {
+async function loadPresets(forceRefresh = false) {
   loading.value = true;
   error.value = null;
   
   try {
-    // Load index file from GitHub
-    const baseUrl = import.meta.env.BASE_URL || '/';
-    const indexResponse = await fetch(`${baseUrl}community-presets/index.json`);
+    // Load index file from pocketmidi.com
+    // Only use cache-busting when explicitly refreshing
+    const cacheBuster = forceRefresh ? `?_=${Date.now()}` : '';
+    const cacheMode = forceRefresh ? 'no-cache' : 'default';
+    const indexResponse = await fetch(`${PRESET_BASE_URL}index.json${cacheBuster}`, {
+      cache: cacheMode
+    });
     
     if (!indexResponse.ok) {
       throw new Error('Failed to load community presets index');
@@ -99,7 +95,9 @@ async function loadPresets() {
     // Load each preset file
     const presetPromises = index.presets.map(async (presetInfo) => {
       try {
-        const presetResponse = await fetch(`${baseUrl}community-presets/presets/${presetInfo.filename}`);
+        const presetResponse = await fetch(`${PRESET_BASE_URL}${presetInfo.filename}${cacheBuster}`, {
+          cache: cacheMode
+        });
         if (!presetResponse.ok) {
           console.error(`Failed to load preset ${presetInfo.filename}`);
           return null;
@@ -128,11 +126,16 @@ async function loadPresets() {
 }
 
 function loadCommunityPreset(preset: CommunityPreset) {
-  emit('load', preset.settings);
+  emit('load', preset);
 }
 
 onMounted(() => {
   loadPresets();
+});
+
+// Expose loadPresets for parent component to call
+defineExpose({
+  loadPresets
 });
 </script>
 
@@ -182,102 +185,61 @@ onMounted(() => {
 .presets-list {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.75rem;
 }
 
 .preset-item {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
+  justify-content: space-between;
   gap: 1rem;
-  padding: 0.75rem;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 6px;
-  transition: all 0.2s;
+  transition: opacity 0.2s;
 }
 
 .preset-item:hover {
-  background: rgba(255, 255, 255, 0.05);
-  border-color: rgba(255, 255, 255, 0.12);
+  opacity: 0.8;
 }
 
 .preset-info {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: 0.125rem;
   min-width: 0;
 }
 
 .preset-name {
-  font-size: 0.9375rem;
+  font-size: 0.8125rem;
   font-weight: 500;
   color: #EAEAEA;
   font-family: 'Roboto Mono', monospace;
 }
 
-.preset-meta {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-  font-size: 0.8125rem;
-}
-
-.author {
-  color: #74C4FF;
-  font-weight: 400;
-}
-
-.description {
-  color: #B0B0B0;
-  line-height: 1.4;
-}
-
-.tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.25rem;
-  margin-top: 0.25rem;
-}
-
-.tag {
-  padding: 0.125rem 0.5rem;
-  background: rgba(106, 104, 83, 0.3);
-  border: 1px solid rgba(106, 104, 83, 0.5);
-  border-radius: 12px;
+.preset-description {
   font-size: 0.75rem;
-  color: #C0C0C0;
-  font-family: 'Roboto Mono', monospace;
-}
-
-.preset-actions {
-  display: flex;
-  gap: 0.5rem;
-  flex-shrink: 0;
-}
-
-.btn-small {
-  padding: 0.375rem 0.75rem;
-  background: rgba(116, 196, 255, 0.15);
-  border: 1px solid rgba(116, 196, 255, 0.3);
-  color: #74C4FF;
-  font-size: 0.8125rem;
-  font-weight: 500;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: all 0.2s;
-  font-family: 'Roboto Mono', monospace;
+  color: #848484;
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.btn-small:hover {
-  background: rgba(116, 196, 255, 0.25);
-  border-color: rgba(116, 196, 255, 0.5);
+.btn-load {
+  padding: 0.25rem 0.625rem;
+  font-size: 0.75rem;
+  background: rgba(116, 196, 255, 0.15);
+  color: #74C4FF;
+  border: 1px solid rgba(116, 196, 255, 0.3);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+  flex-shrink: 0;
+  font-family: 'Roboto Mono', monospace;
 }
 
-.btn-small:active {
-  background: rgba(116, 196, 255, 0.35);
-  transform: scale(0.98);
+.btn-load:hover {
+  background: rgba(116, 196, 255, 0.25);
+  border-color: rgba(116, 196, 255, 0.5);
 }
 
 .btn-secondary {

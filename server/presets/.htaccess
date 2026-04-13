@@ -1,0 +1,32 @@
+# Enable CORS for all JSON files in the presets folder
+# This allows the KB1 web app (hosted on GitHub Pages) to fetch community presets
+
+<IfModule mod_headers.c>
+    # Allow requests from any origin
+    Header set Access-Control-Allow-Origin "*"
+    
+    # Allow specific HTTP methods
+    Header set Access-Control-Allow-Methods "GET, OPTIONS"
+    
+    # Allow specific headers
+    Header set Access-Control-Allow-Headers "Content-Type"
+    
+    # Cache preflight requests for 1 hour
+    Header set Access-Control-Max-Age "3600"
+</IfModule>
+
+# Set proper MIME type for JSON files
+<IfModule mod_mime.c>
+    AddType application/json .json
+</IfModule>
+
+# Enable compression for JSON files (optional, improves performance)
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE application/json
+</IfModule>
+
+# Disable directory browsing (security)
+Options -Indexes
+
+# Allow .htaccess to override
+AllowOverride All

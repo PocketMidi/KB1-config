@@ -7,7 +7,7 @@
         role="dialog"
         aria-labelledby="first-time-title"
         aria-describedby="first-time-description"
-        @click.self="handleBackdropClick"
+        @click.self.stop="handleBackdropClick"
       >
         <div class="modal-card" @click.stop>
           <button 

@@ -49,6 +49,10 @@ export function useToast() {
     }
   }
 
+  function clearAll() {
+    toasts.value = [];
+  }
+
   return {
     toasts,
     show,
@@ -56,6 +60,7 @@ export function useToast() {
     error,
     warning,
     info,
-    remove
+    remove,
+    clearAll
   };
 }

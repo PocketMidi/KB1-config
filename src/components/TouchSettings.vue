@@ -154,7 +154,7 @@
     />
 
     <!-- Help Modal -->
-    <div v-if="showHelpModal" class="help-modal-overlay" @click="dismissHelp">
+    <div v-if="showHelpModal" class="help-modal-overlay" @click.stop="dismissHelp">
       <div class="help-modal" @click.stop>
         <div class="help-modal-header">
           <h3>{{ helpContent.title }}</h3>

@@ -1,6 +1,6 @@
 <template>
   <Teleport to="body">
-    <div v-if="isOpen" class="wheel-picker-overlay" @click="handleOverlayClick">
+    <div v-if="isOpen" class="wheel-picker-overlay" @click.stop="handleOverlayClick">
       <div class="wheel-picker-container" @click.stop>
         <div class="wheel-picker-header">
           <button class="picker-btn" @click="cancel">Cancel</button>

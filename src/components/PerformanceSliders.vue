@@ -1291,9 +1291,14 @@ defineExpose({
         <div class="header-buttons-row">
           <button class="btn-live" @click="enterLiveMode">
             <span class="btn-live-label"><span class="plus-icon">+</span> GO LIVE</span>
-            <span class="explainer-text" :class="{ fading: explainerFading }">
-              {{ explainerText }}
-            </span>
+            <div class="level-meter-bars">
+              <div 
+                v-for="(slider, index) in sliders" 
+                :key="index"
+                class="meter-bar" 
+                :style="{ '--bar-index': index, '--bar-color': getSliderColor(slider, index) }"
+              ></div>
+            </div>
           </button>
           <button class="btn-zero" @click="resetToDefaults">ZERO</button>
           <button class="btn-mode-toggle" @click="toggleControlMode">
@@ -1614,7 +1619,7 @@ defineExpose({
 .btn-live {
   width: 100%;
   padding: 0.125rem 0.5rem;
-  background: transparent;
+  background: rgba(234, 234, 234, 0.02);
   border: 1px solid rgba(234, 234, 234, 0.15);
   color: rgba(234, 234, 234, 0.35);
   font-size: 0.8125rem;
@@ -1631,6 +1636,7 @@ defineExpose({
 }
 
 .btn-live:hover {
+  background: rgba(234, 234, 234, 0.04);
   border-color: rgba(234, 234, 234, 0.4);
   color: rgba(234, 234, 234, 0.8);
 }
@@ -1710,22 +1716,39 @@ defineExpose({
   color: #F4C542;
 }
 
-.btn-live .explainer-text {
-  color: var(--accent-highlight);
-  font-size: 0.8125rem;
-  font-family: 'Roboto Mono';
-  font-weight: 500;
-  opacity: 1;
-  transition: opacity 2s ease-out;
-  flex: 1;
-  text-align: left;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+/* Level meter bars */
+.level-meter-bars {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  height: 100%;
+  padding: 4px 0;
+  margin-left: 16px;
 }
 
-.btn-live .explainer-text.fading {
-  opacity: 0;
+.meter-bar {
+  width: 5px;
+  height: 100%;
+  background-color: var(--bar-color);
+  border-radius: 1.5px;
+  animation: wave-pulse 2.5s ease-in-out infinite;
+  animation-delay: calc(var(--bar-index) * 0.08s);
+}
+
+/* Add larger gap after each group of 3 bars */
+.meter-bar:nth-child(3),
+.meter-bar:nth-child(6),
+.meter-bar:nth-child(9) {
+  margin-right: 4px;
+}
+
+@keyframes wave-pulse {
+  0%, 100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 1;
+  }
 }
 
 .sliders-list {

@@ -1642,6 +1642,7 @@ function increaseSteps() {
   width: 16px;
   height: 16px;
   font-size: 0.625rem;
+  font-family: 'Roboto Mono', monospace;
   color: #999;
   border: 1px solid #999;
   border-radius: 50%;
@@ -1651,8 +1652,8 @@ function increaseSteps() {
 }
 
 .info-icon:hover {
-  color: #0DC988;
-  border-color: #0DC988;
+  color: #5dad6b;
+  border-color: #5dad6b;
 }
 
 /* Help Modal */
@@ -1742,7 +1743,7 @@ function increaseSteps() {
 
 .help-modal-footer .btn-primary {
   padding: 0.5rem 1.5rem;
-  background: #0DC988;
+  background: #5dad6b;
   color: #1A1A1A;
   border: none;
   border-radius: 4px;
@@ -1754,6 +1755,6 @@ function increaseSteps() {
 }
 
 .help-modal-footer .btn-primary:hover {
-  background: #0BA872;
+  opacity: 0.9;
 }
 </style>

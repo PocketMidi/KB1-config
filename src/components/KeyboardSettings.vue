@@ -2273,6 +2273,7 @@ function handleKeyClick(midiNote: number) {
   width: 16px;
   height: 16px;
   font-size: 0.625rem;
+  font-family: 'Roboto Mono', monospace;
   color: #848484;
   border: 1px solid #848484;
   border-radius: 50%;

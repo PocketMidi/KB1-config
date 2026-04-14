@@ -2349,7 +2349,7 @@ defineExpose({
 .hint-btn-primary {
   width: 100%;
   padding: 0.625rem 1.25rem;
-  background: #0DC988;
+  background: #5dad6b;
   color: #1A1A1A;
   border: none;
   border-radius: 4px;
@@ -2363,7 +2363,7 @@ defineExpose({
 }
 
 .hint-btn-primary:hover {
-  background: #0BA872;
+  opacity: 0.9;
 }
 
 .hint-btn-secondary {

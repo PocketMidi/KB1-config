@@ -105,8 +105,8 @@ if (!isset($data['id']) || !isset($data['metadata']) || !isset($data['settings']
     exit;
 }
 
-// Validate ID format (preset_timestamp_random)
-if (!preg_match('/^preset_\d+_[a-z0-9]+$/', $data['id'])) {
+// Validate ID format (preset_timestamp_name_random)
+if (!preg_match('/^preset_\d+_[a-z0-9-]+_[a-z0-9]+$/', $data['id'])) {
     http_response_code(400);
     echo json_encode(['error' => 'Invalid preset ID format']);
     exit;

@@ -15,7 +15,7 @@
       <p class="help-text">Be the first to share your KB1 configuration!</p>
     </div>
     
-    <div v-else class="presets-list">
+    <div v-else class="presets-list" :class="{ 'presets-list-full': props.fullHeight }">
       <div
         v-for="preset in communityPresets"
         :key="preset.id"
@@ -23,6 +23,7 @@
       >
         <div class="preset-info">
           <div class="preset-name">{{ preset.metadata?.name || 'Unnamed Preset' }}</div>
+          <div class="preset-snapshot" v-if="preset.metadata?.snapshot">{{ preset.metadata.snapshot }}</div>
           <div class="preset-description" v-if="preset.metadata?.description">{{ preset.metadata.description }}</div>
         </div>
         <button 
@@ -37,14 +38,23 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref } from 'vue';
 import type { DeviceSettings } from '../ble/kb1Protocol';
 import { PRESET_BASE_URL } from '../constants';
+
+interface Props {
+  fullHeight?: boolean; // Show taller list when export section is hidden
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  fullHeight: false
+});
 
 interface PresetMetadata {
   name?: string;
   author?: string;
   description?: string;
+  snapshot?: string;
   tags?: string[];
   date?: string;
 }
@@ -69,7 +79,7 @@ const emit = defineEmits<{
   (e: 'load', preset: CommunityPreset): void;
 }>();
 
-const loading = ref(true);
+const loading = ref(false);
 const error = ref<string | null>(null);
 const communityPresets = ref<CommunityPreset[]>([]);
 
@@ -99,7 +109,7 @@ async function loadPresets(forceRefresh = false) {
           cache: cacheMode
         });
         if (!presetResponse.ok) {
-          console.error(`Failed to load preset ${presetInfo.filename}`);
+          // Silently skip missing presets (they're filtered out below)
           return null;
         }
         const presetData = await presetResponse.json();
@@ -109,7 +119,7 @@ async function loadPresets(forceRefresh = false) {
           settings: presetData.settings
         } as CommunityPreset;
       } catch (err) {
-        console.error(`Error loading preset ${presetInfo.filename}:`, err);
+        // Silently skip failed presets (CORS, network errors, etc.)
         return null;
       }
     });
@@ -118,7 +128,7 @@ async function loadPresets(forceRefresh = false) {
     communityPresets.value = loadedPresets.filter((p) => p !== null) as CommunityPreset[];
     
   } catch (err) {
-    console.error('Error loading community presets:', err);
+    // Only show error for index.json failures (not individual preset failures)
     error.value = 'Failed to load community presets. Please check your internet connection.';
   } finally {
     loading.value = false;
@@ -129,13 +139,15 @@ function loadCommunityPreset(preset: CommunityPreset) {
   emit('load', preset);
 }
 
-onMounted(() => {
-  loadPresets();
-});
+// Don't auto-load on mount - wait for parent to trigger via refresh or dialog open
+// onMounted(() => {
+//   loadPresets();
+// });
 
-// Expose loadPresets for parent component to call
+// Expose loadPresets and communityPresets for parent component
 defineExpose({
-  loadPresets
+  loadPresets,
+  communityPresets
 });
 </script>
 
@@ -186,14 +198,40 @@ defineExpose({
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
+  max-height: 200px;
+  overflow-y: auto;
+  padding-right: 0.5rem;
+}
+
+.presets-list-full {
+  max-height: 450px;
+}
+
+.presets-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.presets-list::-webkit-scrollbar-track {
+  background: rgba(234, 234, 234, 0.08);
+  border-radius: 4px;
+}
+
+.presets-list::-webkit-scrollbar-thumb {
+  background: rgba(234, 234, 234, 0.3);
+  border-radius: 4px;
+}
+
+.presets-list::-webkit-scrollbar-thumb:hover {
+  background: rgba(234, 234, 234, 0.3);
 }
 
 .preset-item {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 1rem;
   transition: opacity 0.2s;
+  padding: 0.5rem 0;
 }
 
 .preset-item:hover {
@@ -215,6 +253,16 @@ defineExpose({
   font-family: 'Roboto Mono', monospace;
 }
 
+.preset-snapshot {
+  font-size: 0.6875rem;
+  color: #6B6B6B;
+  font-family: 'Roboto Mono', monospace;
+  line-height: 1.4;
+  white-space: pre-line;
+  margin: 0.25rem 0;
+  opacity: 0.8;
+}
+
 .preset-description {
   font-size: 0.75rem;
   color: #848484;
@@ -227,9 +275,9 @@ defineExpose({
 .btn-load {
   padding: 0.25rem 0.625rem;
   font-size: 0.75rem;
-  background: rgba(116, 196, 255, 0.15);
-  color: var(--bluetooth-status-active);
-  border: 1px solid rgba(116, 196, 255, 0.3);
+  background: rgba(132, 132, 132, 0.1);
+  color: #EAEAEA;
+  border: 1px solid rgba(205, 205, 205, 0.2);
   border-radius: 4px;
   cursor: pointer;
   transition: all 0.2s;
@@ -238,8 +286,9 @@ defineExpose({
 }
 
 .btn-load:hover {
-  background: rgba(116, 196, 255, 0.25);
-  border-color: rgba(116, 196, 255, 0.5);
+  background: rgba(132, 132, 132, 0.2);
+  border-color: rgba(205, 205, 205, 0.3);
+  color: #FFFFFF;
 }
 
 .btn-secondary {

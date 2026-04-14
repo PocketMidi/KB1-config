@@ -25,4 +25,4 @@ export const PRESET_UPLOAD_ENDPOINT = 'https://pocketmidi.com/upload-preset.php'
  * Where community presets are loaded from
  */
 export const PRESET_BASE_URL = 'https://pocketmidi.com/presets/';
-// export const PRESET_BASE_URL = `${import.meta.env.BASE_URL}community-presets/`; // For local testing
+// export const PRESET_BASE_URL = `${import.meta.env.BASE_URL}community-presets/`; // For local testing only

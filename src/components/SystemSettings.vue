@@ -406,6 +406,7 @@ const formatTime = (seconds: number): string => {
   width: 16px;
   height: 16px;
   font-size: 0.625rem;
+  font-family: 'Roboto Mono', monospace;
   color: #848484;
   border: 1px solid #848484;
   border-radius: 50%;
@@ -415,8 +416,8 @@ const formatTime = (seconds: number): string => {
 }
 
 .info-icon:hover {
-  color: #0DC988;
-  border-color: #0DC988;
+  color: #5dad6b;
+  border-color: #5dad6b;
 }
 
 .time-display {
@@ -594,7 +595,7 @@ const formatTime = (seconds: number): string => {
 
 .help-modal-footer .btn-primary {
   padding: 0.5rem 1.5rem;
-  background: #0DC988;
+  background: #5dad6b;
   color: #1A1A1A;
   border: none;
   border-radius: 4px;
@@ -606,7 +607,7 @@ const formatTime = (seconds: number): string => {
 }
 
 .help-modal-footer .btn-primary:hover {
-  background: #0BA872;
+  opacity: 0.9;
 }
 
 /* Momentary button (looks like toggle, acts momentarily) */
@@ -615,17 +616,17 @@ const formatTime = (seconds: number): string => {
 }
 
 .toggle-switch.momentary-btn.active .toggle-track {
-  background: rgba(13, 201, 136, 0.35);
-  border-color: rgba(13, 201, 136, 0.5);
+  background: rgba(93, 173, 107, 0.35);
+  border-color: rgba(93, 173, 107, 0.5);
 }
 
 .toggle-switch.momentary-btn.active .toggle-thumb {
   transform: translateX(22px);
-  background: #0DC988;
+  background: #5dad6b;
 }
 
 .toggle-switch.momentary-btn.active .toggle-label-right {
-  color: #0DC988;
+  color: #5dad6b;
   font-weight: 500;
 }
 
@@ -657,8 +658,8 @@ const formatTime = (seconds: number): string => {
 }
 
 .btn-restore-hints.active {
-  border-color: #0DC988;
-  color: #0DC988;
+  border-color: #5dad6b;
+  color: #5dad6b;
 }
 
 .toggle-switch.momentary-btn .toggle-label-right {

@@ -19,6 +19,7 @@
 
     <!-- Normal Mode Header -->
     <div class="normal-header" v-if="!selectionMode">
+      <span class="info-icon" @click="showHelpDialog = true" title="How to use presets">i</span>
       <button class="btn-select-action" @click="enterSelectionMode">Select</button>
     </div>
 
@@ -77,9 +78,9 @@
           </button>
           <button 
             class="btn-action btn-with-indicator" 
+            :class="{ 'btn-cloud-empty': !getSlotPreset(slot - 1) }"
             @click.stop="openCloudDialog(slot - 1)"
-            :disabled="!getSlotPreset(slot - 1)"
-            title="Load from or save to cloud">
+            :title="getSlotPreset(slot - 1) ? 'Load from or save to cloud' : 'Load preset from cloud'">
             Cloud
             <span v-if="isSlotExportedToCloud(slot - 1)" class="button-indicator button-indicator-cloud" title="Exported to cloud">●</span>
           </button>
@@ -146,8 +147,8 @@
         </div>
         <div class="modal-body">
           
-          <!-- Export Form (Compact) -->
-          <div class="export-section">
+          <!-- Export Form (Compact) - Only show if slot has content -->
+          <div class="export-section" v-if="exportingSlot !== null && getSlotPreset(exportingSlot)">
             <div class="section-label">Share Your Preset</div>
             <div class="export-form-compact">
               <input
@@ -156,6 +157,7 @@
                 class="input-text"
                 placeholder="Preset name (required)"
               />
+              <div class="settings-snapshot" v-if="exportingSlot !== null && getSlotPreset(exportingSlot)">{{ getSlotPreset(exportingSlot)?.snapshot || generateSettingsSnapshot(getSlotPreset(exportingSlot)?.settings || props.currentSettings) }}</div>
               <textarea
                 v-model="exportMetadata.description"
                 class="input-text"
@@ -171,14 +173,49 @@
             </div>
           </div>
 
-          <!-- Divider -->
-          <div class="section-divider"></div>
+          <!-- Divider - Only show if export section is visible -->
+          <div class="section-divider" v-if="exportingSlot !== null && getSlotPreset(exportingSlot)"></div>
           
           <!-- Browse/Import Section -->
           <div class="import-section">
             <div class="section-label">Browse Community Presets</div>
-            <CommunityPresets ref="communityPresetsRef" @load="handleCloudPresetLoad" />
+            <CommunityPresets 
+              ref="communityPresetsRef" 
+              :fullHeight="exportingSlot !== null && !getSlotPreset(exportingSlot)"
+              @load="handleCloudPresetLoad" 
+            />
           </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Help/Info Dialog -->
+    <div v-if="showHelpDialog" class="help-modal-overlay" @click.stop="showHelpDialog = false">
+      <div class="help-modal" @click.stop>
+        <div class="help-modal-header">
+          <h3>Preset Manager Guide</h3>
+          <button class="close-btn" @click.stop="showHelpDialog = false">×</button>
+        </div>
+        <div class="help-modal-body">
+          <div class="help-section">
+            <h4>Save a Preset</h4>
+            <p>Click any slot to save current settings with a name for easy reference.</p>
+          </div>
+          <div class="help-section">
+            <h4>Activate</h4>
+            <p>Loads the preset into config app ready to send to <em>KB1</em>.</p>
+          </div>
+          <div class="help-section">
+            <h4>NVS (Device Storage)</h4>
+            <p>Syncs a preset to the same slot number on the <em>KB1</em> device. Settings persist even when disconnected.</p>
+          </div>
+          <div class="help-section">
+            <h4>Cloud Presets</h4>
+            <p>Share presets with the community or browse and load presets created by other <em>KB1</em> users.</p>
+          </div>
+        </div>
+        <div class="help-modal-footer">
+          <button class="btn-primary" @click="showHelpDialog = false">Got it</button>
         </div>
       </div>
     </div>
@@ -259,6 +296,7 @@ const hasAutoSynced = ref(false); // Track if we've done initial auto-sync
 // Dialog states
 const showSlotDialog = ref(false);
 const showCloudDialog = ref(false);
+const showHelpDialog = ref(false);
 
 // Selection mode
 const selectionMode = ref(false);
@@ -648,6 +686,13 @@ function openCloudDialog(slot: number) {
   }
   
   showCloudDialog.value = true;
+  
+  // Auto-load community presets when dialog opens (always force refresh to avoid cache)
+  nextTick(() => {
+    if (communityPresetsRef.value) {
+      communityPresetsRef.value.loadPresets(true);
+    }
+  });
 }
 
 async function handleCloudPresetLoad(preset: { id: string; metadata?: { name?: string; author?: string; description?: string; snapshot?: string; tags?: string[] }; settings: DeviceSettings }) {
@@ -663,7 +708,7 @@ async function handleCloudPresetLoad(preset: { id: string; metadata?: { name?: s
   // If slot is occupied, ask for confirmation
   if (existingPreset) {
     const confirmed = await confirm(
-      `Replace "${existingPreset.name}" with "${presetName}"?`
+      `Slot ${slotIndex + 1} contains "${existingPreset.name}".\n\nReplace with "${presetName}" from the cloud?`
     );
     if (!confirmed) {
       return;
@@ -676,13 +721,14 @@ async function handleCloudPresetLoad(preset: { id: string; metadata?: { name?: s
     description: preset.metadata?.description,
     snapshot: preset.metadata?.snapshot || generateSettingsSnapshot(preset.settings),
     settings: preset.settings,
-    modifiedAt: Date.now()
+    modifiedAt: Date.now(),
+    exportedToCloud: false // Reset cloud sync flag for imported presets
   };
   
   slots.value = newSlots;
   saveSlotsToStorage(newSlots);
   
-  toast.success(`Imported to slot ${slotIndex + 1}: "${presetName}"`);
+  toast.success(`Loaded "${presetName}" into slot ${slotIndex + 1}`);
   showCloudDialog.value = false;
   exportingSlot.value = null;
 }
@@ -777,8 +823,32 @@ async function confirmExport() {
   const preset = getSlotPreset(exportingSlot.value);
   if (!preset) return;
   
-  // Generate unique preset ID for community sharing
-  const presetId = `preset_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  // Check if preset with same name already exists in cloud
+  const existingCloudPreset = communityPresetsRef.value?.communityPresets?.find(
+    p => p.metadata?.name === exportMetadata.value.name
+  );
+  
+  if (existingCloudPreset) {
+    const confirmed = await confirm(
+      `A preset named "${exportMetadata.value.name}" already exists in the cloud.\n\nOverwrite it with your version?`
+    );
+    if (!confirmed) {
+      return;
+    }
+  }
+  
+  // Sanitize preset name for filename (remove special chars, limit length)
+  const sanitizedName = exportMetadata.value.name
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-') // Replace non-alphanumeric with hyphens
+    .replace(/^-+|-+$/g, '') // Remove leading/trailing hyphens
+    .substring(0, 40); // Max 40 chars
+  
+  // Generate unique preset ID with readable name: preset_timestamp_name_random
+  const timestamp = Date.now();
+  const randomId = Math.random().toString(36).substr(2, 9);
+  const presetId = `preset_${timestamp}_${sanitizedName}_${randomId}`;
   
   // Build metadata
   const metadata: any = {
@@ -819,9 +889,10 @@ async function confirmExport() {
       console.log('✅ Preset uploaded:', result);
       
       // Mark slot as exported to cloud
-      if (exportingSlot.value !== null) {
+      const uploadedSlot = exportingSlot.value;
+      if (uploadedSlot !== null) {
         const newSlots = [...slots.value];
-        const slotPreset = newSlots[exportingSlot.value];
+        const slotPreset = newSlots[uploadedSlot];
         if (slotPreset) {
           slotPreset.exportedToCloud = true;
           slots.value = newSlots;
@@ -829,9 +900,13 @@ async function confirmExport() {
         }
       }
       
+      // Refresh community presets list to show newly uploaded preset
+      refreshCommunityPresets();
+      
       toast.success(`Preset uploaded to community library!`, 5000);
       
-      // Reset form but keep dialog open
+      // Close dialog and reset form
+      showCloudDialog.value = false;
       exportMetadata.value = { name: '', description: '' };
       exportingSlot.value = null;
     } catch (error) {
@@ -1026,7 +1101,48 @@ function downloadJSON(json: string, filename: string) {
 .btn-action.active {
   background: rgba(74, 144, 226, 0.2);
   border-color: #4A90E2;
-  color: #4A90E2;
+}
+
+.btn-cloud-empty {
+  background: rgba(93, 173, 107, 0.15);
+  border-color: rgba(93, 173, 107, 0.3);
+  color: #5dad6b;
+}
+
+.btn-cloud-empty:hover {
+  background: rgba(93, 173, 107, 0.25);
+  border-color: rgba(93, 173, 107, 0.5);
+  color: #6fc280;
+}
+
+/* Help Section (inside help-modal-body) */
+.help-section {
+  margin-bottom: 1.5rem;
+}
+
+.help-section:last-child {
+  margin-bottom: 0;
+}
+
+.help-section h4 {
+  margin: 0 0 0.5rem 0;
+  font-size: 0.875rem;
+  color: #EAEAEA;
+  font-weight: 500;
+  font-family: 'Roboto Mono', monospace;
+}
+
+.help-section p {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: #CDCDCD;
+  font-family: 'Roboto Mono', monospace;
+}
+
+.help-section strong {
+  color: #EAEAEA;
+  font-weight: 500;
 }
 
 .btn-with-indicator {
@@ -1088,7 +1204,6 @@ function downloadJSON(json: string, filename: string) {
 
 .modal-body {
   padding: 1rem;
-  overflow-y: auto;
   flex: 1;
 }
 
@@ -1156,7 +1271,7 @@ function downloadJSON(json: string, filename: string) {
 .btn-refresh {
   background: none;
   border: none;
-  color: var(--bluetooth-status-active);
+  color: #EAEAEA;
   width: 28px;
   height: 28px;
   cursor: pointer;
@@ -1165,6 +1280,7 @@ function downloadJSON(json: string, filename: string) {
   justify-content: center;
   transition: all 0.2s;
   padding: 4px;
+  opacity: 0.6;
 }
 
 .btn-refresh svg {
@@ -1174,10 +1290,12 @@ function downloadJSON(json: string, filename: string) {
 }
 
 .btn-refresh:hover {
+  opacity: 1;
   transform: rotate(180deg);
 }
 
 .btn-refresh:active {
+  opacity: 0.8;
   transform: rotate(180deg) scale(0.95);
 }
 
@@ -1875,6 +1993,7 @@ textarea.input-text {
   width: 16px;
   height: 16px;
   font-size: 0.625rem;
+  font-family: 'Roboto Mono', monospace;
   color: #848484;
   border: 1px solid #848484;
   border-radius: 50%;
@@ -1885,8 +2004,8 @@ textarea.input-text {
 }
 
 .info-icon:hover {
-  color: #0DC988;
-  border-color: #0DC988;
+  color: #5dad6b;
+  border-color: #5dad6b;
 }
 
 /* Help Modal */
@@ -1972,7 +2091,7 @@ textarea.input-text {
 
 .help-modal-footer .btn-primary {
   padding: 0.5rem 1.5rem;
-  background: #0DC988;
+  background: #5dad6b;
   color: #1A1A1A;
   border: none;
   border-radius: 4px;
@@ -1984,7 +2103,7 @@ textarea.input-text {
 }
 
 .help-modal-footer .btn-primary:hover {
-  background: #0BA872;
+  opacity: 0.9;
 }
 
 /* ========================================
@@ -2002,7 +2121,7 @@ textarea.input-text {
 }
 
 .normal-header {
-  justify-content: flex-end;
+  justify-content: space-between;
 }
 
 .selection-actions {
@@ -2023,6 +2142,8 @@ textarea.input-text {
   color: #CDCDCD;
   border: 1px solid rgba(205, 205, 205, 0.2);
 }
+
+
 
 .btn-select-action:hover {
   background: rgba(29, 29, 29, 0.7);
@@ -2074,7 +2195,7 @@ textarea.input-text {
   width: 18px;
   height: 18px;
   cursor: pointer;
-  accent-color: #0DC988;
+  accent-color: #5dad6b;
 }
 
 .preset-slot {

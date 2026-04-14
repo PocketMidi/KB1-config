@@ -885,6 +885,7 @@ function dismissHelp() {
   border: 1px solid #999;
   border-radius: 50%;
   font-size: 11px;
+  font-family: 'Roboto Mono', monospace;
   margin-left: 4px;
   cursor: pointer;
   transition: all 0.2s;
@@ -892,8 +893,8 @@ function dismissHelp() {
 }
 
 .info-icon:hover {
-  border-color: #0DC988;
-  color: #0DC988;
+  border-color: #5dad6b;
+  color: #5dad6b;
 }
 
 .help-modal-overlay {
@@ -953,7 +954,7 @@ function dismissHelp() {
 }
 
 .help-modal-header .close-btn:hover {
-  color: #0DC988;
+  color: #5dad6b;
 }
 
 .help-modal-body {
@@ -977,8 +978,8 @@ function dismissHelp() {
 }
 
 .help-modal-footer .got-it-btn {
-  background: #0DC988;
-  color: white;
+  background: #5dad6b;
+  color: #1A1A1A;
   border: none;
   padding: 0.5rem 1.5rem;
   border-radius: 4px;

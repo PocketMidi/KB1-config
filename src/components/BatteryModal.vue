@@ -795,7 +795,7 @@ function dismissSpeakerHelp() {
 
 .help-modal-footer .btn-primary {
   padding: 0.5rem 1.5rem;
-  background: #0DC988;
+  background: #5dad6b;
   color: #1A1A1A;
   border: none;
   border-radius: 4px;
@@ -807,7 +807,7 @@ function dismissSpeakerHelp() {
 }
 
 .help-modal-footer .btn-primary:hover {
-  background: #0BA872;
+  opacity: 0.9;
 }
 
 .modal-actions {
@@ -1078,7 +1078,7 @@ input:checked + .toggle-slider:before {
 }
 
 .charging-steps li strong {
-  color: #0DC988;
+  color: #5dad6b;
   font-weight: 600;
 }
 

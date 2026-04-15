@@ -95,30 +95,30 @@ const controlMode = ref<ControlMode>('fx');
 // CC Options for COMBO mode (24 total)
 const CC_OPTIONS = [
   // Performance FX (51-62)
-  { cc: 51, label: 'CC51 FX Slot 1' },
-  { cc: 52, label: 'CC52 FX Slot 2' },
-  { cc: 53, label: 'CC53 FX Slot 3' },
-  { cc: 54, label: 'CC54 FX Slot 4' },
-  { cc: 55, label: 'CC55 FX Slot 5' },
-  { cc: 56, label: 'CC56 FX Slot 6' },
-  { cc: 57, label: 'CC57 FX Slot 7' },
-  { cc: 58, label: 'CC58 FX Slot 8' },
-  { cc: 59, label: 'CC59 FX Slot 9' },
-  { cc: 60, label: 'CC60 FX Slot 10' },
-  { cc: 61, label: 'CC61 FX Slot 11' },
-  { cc: 62, label: 'CC62 FX Slot 12' },
+  { cc: 51, label: 'CC51 FX 1' },
+  { cc: 52, label: 'CC52 FX 2' },
+  { cc: 53, label: 'CC53 FX 3' },
+  { cc: 54, label: 'CC54 FX 4' },
+  { cc: 55, label: 'CC55 FX 5' },
+  { cc: 56, label: 'CC56 FX 6' },
+  { cc: 57, label: 'CC57 FX 7' },
+  { cc: 58, label: 'CC58 FX 8' },
+  { cc: 59, label: 'CC59 FX 9' },
+  { cc: 60, label: 'CC60 FX 10' },
+  { cc: 61, label: 'CC61 FX 11' },
+  { cc: 62, label: 'CC62 FX 12' },
   // Track Volumes (71-78)
-  { cc: 71, label: 'CC71 Track 1' },
-  { cc: 72, label: 'CC72 Track 2' },
-  { cc: 73, label: 'CC73 Track 3' },
-  { cc: 74, label: 'CC74 Track 4' },
-  { cc: 75, label: 'CC75 Track 5' },
-  { cc: 76, label: 'CC76 Track 6' },
-  { cc: 77, label: 'CC77 Track 7' },
-  { cc: 78, label: 'CC78 Track 8' },
+  { cc: 71, label: 'CC71 Trk 1' },
+  { cc: 72, label: 'CC72 Trk 2' },
+  { cc: 73, label: 'CC73 Trk 3' },
+  { cc: 74, label: 'CC74 Trk 4' },
+  { cc: 75, label: 'CC75 Trk 5' },
+  { cc: 76, label: 'CC76 Trk 6' },
+  { cc: 77, label: 'CC77 Trk 7' },
+  { cc: 78, label: 'CC78 Trk 8' },
   // Master Mix (79-82)
-  { cc: 79, label: 'CC79 Delay Snd' },
-  { cc: 80, label: 'CC80 Reverb Snd' },
+  { cc: 79, label: 'CC79 Delay' },
+  { cc: 80, label: 'CC80 Reverb' },
   { cc: 81, label: 'CC81 Dry Mix' },
   { cc: 82, label: 'CC82 Line In' },
 ];
@@ -1603,7 +1603,7 @@ defineExpose({
       <!-- Sliders list -->
       <div class="sliders-list">
         <template v-for="(slider, index) in sliders" :key="slider.cc">
-          <div class="slider-row" :class="{ 'mix-mode-row': controlMode === 'mix' }">
+          <div class="slider-row" :class="{ 'mix-mode-row': controlMode === 'mix', 'combo-mode-row': controlMode === 'combo' }">
             <!-- Color swatch (clickable) -->
             <div class="color-section">
               <div 
@@ -1645,7 +1645,7 @@ defineExpose({
             </div>
             
             <!-- CC Number -->
-            <div class="cc-section" :class="{ 'expanded': controlMode === 'mix' && index < 4, 'mix-mode': controlMode === 'mix' }">
+            <div class="cc-section" :class="{ 'expanded': controlMode === 'mix' && index < 4, 'mix-mode': controlMode === 'mix', 'combo-mode': controlMode === 'combo' }">
               <template v-if="controlMode === 'mix'">
                 <template v-if="index < 4">
                   <span class="cc-label-text">{{ MODE_CONFIG.mix.labels[index] }}</span>
@@ -1659,6 +1659,7 @@ defineExpose({
                 <CustomCCDropdown
                   :model-value="slider.cc"
                   :options="CC_OPTIONS"
+                  :min-width="'110px'"
                   @update:model-value="handleCCChange(index, $event)"
                 />
               </template>
@@ -1668,7 +1669,7 @@ defineExpose({
             </div>
             
             <!-- FX Parameter Dropdown (FX and COMBO modes) -->
-            <div v-if="controlMode === 'fx' || controlMode === 'combo'" class="fx-param-section">
+            <div v-if="controlMode === 'fx' || controlMode === 'combo'" class="fx-param-section" :class="{ 'combo-mode': controlMode === 'combo' }">
               <CustomCCDropdown
                 :model-value="getFxParamDisplayValue(slider)"
                 :options="FX_PARAMS.map(p => ({ cc: p.id, label: `${p.abbr}` }))"
@@ -1679,7 +1680,7 @@ defineExpose({
             </div>
             
             <!-- Inline toggles -->
-            <div class="slider-toggle-inline">
+            <div class="slider-toggle-inline" :class="{ 'combo-mode-toggles': controlMode === 'combo' }">
               <!-- Mom/Lat toggle -->
               <button class="slider-toggle-btn" @click="toggleMomentary(index)">
                 <span :class="{ active: slider.momentary }">MOM</span>
@@ -2172,10 +2173,15 @@ defineExpose({
   background: rgba(106, 104, 83, 0.2);
   border-radius: 6px;
   transition: background 0.2s;
+  position: relative;
 }
 
 .slider-row.mix-mode-row {
   padding: 0.125rem 1rem;
+}
+
+.slider-row.combo-mode-row {
+  gap: 0; /* Remove flex gap for absolute positioning */
 }
 
 .slider-row:hover {
@@ -2185,7 +2191,8 @@ defineExpose({
 .color-section {
   display: flex;
   align-items: center;
-  min-width: 60px;
+  min-width: 48px;
+  margin-left: -8px;
 }
 
 .color-swatch-wrapper {
@@ -2309,6 +2316,12 @@ defineExpose({
   min-width: 140px;
 }
 
+.cc-section.combo-mode {
+  position: absolute;
+  left: 70px;
+  width: 110px;
+}
+
 .cc-label-text {
   font-size: 0.8125rem;
   font-family: 'Roboto Mono';
@@ -2364,6 +2377,13 @@ defineExpose({
   margin-right: 0.35rem;
 }
 
+.fx-param-section.combo-mode {
+  position: absolute;
+  left: 188px;
+  width: 100px;
+  margin-right: 0;
+}
+
 .fx-param-dropdown {
   padding: 0.15rem 0.3rem;
   background: rgba(106, 104, 83, 0.35);
@@ -2404,6 +2424,12 @@ defineExpose({
   justify-content: flex-start;
   min-height: 26px; /* Match button height to prevent collapse */
   align-items: center;
+}
+
+.slider-toggle-inline.combo-mode-toggles {
+  position: absolute;
+  left: 296px;
+  margin-left: 0;
 }
 
 .slider-toggle-btn {
@@ -2472,7 +2498,7 @@ defineExpose({
   justify-content: flex-start;
   align-items: center;
   padding: 0;
-  margin-left: 2.25rem;
+  margin-left: 1.5rem;
   margin-top: -0.5rem;
   margin-bottom: -0.5rem;
   height: 16px;
@@ -2483,7 +2509,7 @@ defineExpose({
 .link-spacer {
   width: 28px;
   height: 16px;
-  margin-left: 2.25rem;
+  margin-left: 1.5rem;
   margin-top: -0.5rem;
   margin-bottom: -0.5rem;
 }

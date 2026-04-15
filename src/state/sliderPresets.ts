@@ -9,6 +9,7 @@ export interface SliderConfig {
   momentary: boolean;
   gangId: number;
   value: number;
+  fxParam?: number; // Effect parameter (1-21), optional for backwards compatibility
 }
 
 export interface SliderPreset {

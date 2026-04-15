@@ -1,8 +1,10 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, nextTick, watch } from 'vue';
+import { ref, onMounted, onUnmounted, nextTick, watch, computed } from 'vue';
 import { Vue3Lottie } from 'vue3-lottie';
 import { bleClient } from '../ble/bleClient';
-import { SliderPresetStore, type SliderPreset } from '../state/sliderPresets';
+import { SliderPresetStore, type SliderPreset, type NamedSliderPreset } from '../state/sliderPresets';
+import { generateRandomName } from '../state/presets';
+import CustomCCDropdown from './CustomCCDropdown.vue';
 
 const emit = defineEmits<{
   'reset-to-zero': [],
@@ -17,6 +19,7 @@ interface SliderConfig {
   momentary: boolean;
   gangId: number; // Each slider belongs to a gang (solo = unique ID, linked = shared ID)
   value: number;
+  fxParam?: number; // Effect parameter (1-21), optional for backwards compatibility
 }
 
 // Preset structure
@@ -53,13 +56,72 @@ const DEFAULT_COLORS = [
   '#485f81', // Blue 3
 ];
 
+// FX Parameters for Polyend Tracker Mini (Effect Slots 1-12)
+// Each of 12 effect slots can be mapped to any of these 21 parameters
+const FX_PARAMS = [
+  { id: 0, name: '—', abbr: '—' }, // No parameter selected
+  { id: 1, name: 'Volume', abbr: 'Volume' },
+  { id: 2, name: 'Panning', abbr: 'Panning' },
+  { id: 3, name: 'Tune', abbr: 'Tune' },
+  { id: 4, name: 'Low-Pass Cutoff', abbr: 'LP Cut' },
+  { id: 5, name: 'High-Pass Cutoff', abbr: 'HP Cut' },
+  { id: 6, name: 'Band-Pass Cutoff', abbr: 'BP Cut' },
+  { id: 7, name: 'Reverb Send', abbr: 'Reverb' },
+  { id: 8, name: 'Delay Send', abbr: 'Delay' },
+  { id: 9, name: 'Sample Position', abbr: 'Smp Pos' },
+  { id: 10, name: 'Sample End', abbr: 'Smp End' },
+  { id: 11, name: 'Sample Playback', abbr: 'Smp Play' },
+  { id: 12, name: 'Volume LFO Speed', abbr: 'Vol LFO' },
+  { id: 13, name: 'Panning LFO Speed', abbr: 'Pan LFO' },
+  { id: 14, name: 'Finetune LFO Speed', abbr: 'Fine LFO' },
+  { id: 15, name: 'Filter LFO Speed', abbr: 'Filt LFO' },
+  { id: 16, name: 'Grain/WT LFO Speed', abbr: 'Grn LFO' },
+  { id: 17, name: 'Step Repeater', abbr: 'StepRpt' },
+  { id: 18, name: 'Pattern Play Mode', abbr: 'Ptn Mode' },
+  { id: 19, name: 'Pattern Length', abbr: 'Ptn Len' },
+  { id: 20, name: 'Bit Depth', abbr: 'BitDepth' },
+  { id: 21, name: 'Overdrive', abbr: 'Overdrive' },
+  { id: 22, name: 'Volume Level', abbr: 'Volume Lvl' }, // For track volumes
+];
+
 // View mode
 type ViewMode = 'setup' | 'live';
 const viewMode = ref<ViewMode>('setup');
 
-// Control mode (Performance FX vs Mixer)
-type ControlMode = 'fx' | 'mix';
+// Control mode (Performance FX vs Mixer vs Combo)
+type ControlMode = 'fx' | 'mix' | 'combo';
 const controlMode = ref<ControlMode>('fx');
+
+// CC Options for COMBO mode (24 total)
+const CC_OPTIONS = [
+  // Performance FX (51-62)
+  { cc: 51, label: 'CC51 FX Slot 1' },
+  { cc: 52, label: 'CC52 FX Slot 2' },
+  { cc: 53, label: 'CC53 FX Slot 3' },
+  { cc: 54, label: 'CC54 FX Slot 4' },
+  { cc: 55, label: 'CC55 FX Slot 5' },
+  { cc: 56, label: 'CC56 FX Slot 6' },
+  { cc: 57, label: 'CC57 FX Slot 7' },
+  { cc: 58, label: 'CC58 FX Slot 8' },
+  { cc: 59, label: 'CC59 FX Slot 9' },
+  { cc: 60, label: 'CC60 FX Slot 10' },
+  { cc: 61, label: 'CC61 FX Slot 11' },
+  { cc: 62, label: 'CC62 FX Slot 12' },
+  // Track Volumes (71-78)
+  { cc: 71, label: 'CC71 Track 1' },
+  { cc: 72, label: 'CC72 Track 2' },
+  { cc: 73, label: 'CC73 Track 3' },
+  { cc: 74, label: 'CC74 Track 4' },
+  { cc: 75, label: 'CC75 Track 5' },
+  { cc: 76, label: 'CC76 Track 6' },
+  { cc: 77, label: 'CC77 Track 7' },
+  { cc: 78, label: 'CC78 Track 8' },
+  // Master Mix (79-82)
+  { cc: 79, label: 'CC79 Delay Snd' },
+  { cc: 80, label: 'CC80 Reverb Snd' },
+  { cc: 81, label: 'CC81 Dry Mix' },
+  { cc: 82, label: 'CC82 Line In' },
+];
 
 // Mode configuration
 const MODE_CONFIG = {
@@ -71,10 +133,16 @@ const MODE_CONFIG = {
   },
   mix: {
     ccs: [79, 80, 81, 82, 71, 72, 73, 74, 75, 76, 77, 78],
-    labels: ['Delay', 'Reverb', 'Dry Mix', 'Line In', 'Trk 1', 'Trk 2', 'Trk 3', 'Trk 4', 'Trk 5', 'Trk 6', 'Trk 7', 'Trk 8'],
+    labels: ['Delay Send', 'Reverb Send', 'Dry Mix Lvl', 'Line In Lvl', 'Trk 1', 'Trk 2', 'Trk 3', 'Trk 4', 'Trk 5', 'Trk 6', 'Trk 7', 'Trk 8'],
     liveLabels: ['Del', 'Rev', 'Dry', 'LnIn', '1', '2', '3', '4', '5', '6', '7', '8'],
     colors: ['#ad6c37', '#ad6c37', '#ad6c37', '#ad6c37', '#ad4137', '#ad4137', '#8ba793', '#8ba793', '#806847', '#806847', '#485f81', '#485f81'], // Orange for global (4), then red (2), green (2), brown (2), blue (2)
     description: 'Master Mixer'
+  },
+  combo: {
+    ccs: [51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62], // Default to FX CCs
+    labels: ['CC51', 'CC52', 'CC53', 'CC54', 'CC55', 'CC56', 'CC57', 'CC58', 'CC59', 'CC60', 'CC61', 'CC62'],
+    colors: DEFAULT_COLORS,
+    description: 'Custom Combo'
   }
 };
 
@@ -134,22 +202,57 @@ const barHeights = ref<number[]>(new Array(12).fill(0.3));
 let animationFrameId: number | null = null;
 const animationStartTime = Date.now();
 
+// Preset management state
+const showPresetModal = ref(false);
+const editingPreset = ref<NamedSliderPreset | null>(null);
+const savedPresets = ref<NamedSliderPreset[]>([]);
+const activePresetId = ref<string | null>(null);
+const presetName = ref('');
+const presetDescription = ref('');
+const initialPresetSnapshot = ref<string | null>(null);
+
+// Track if current state has unsaved changes
+const hasUnsavedChanges = computed(() => {
+  const currentSnapshot = JSON.stringify({
+    sliders: sliders.value,
+    links: links.value,
+    mode: controlMode.value
+  });
+  return currentSnapshot !== initialPresetSnapshot.value;
+});
+
+// Update the baseline snapshot (after load/save)
+function updatePresetSnapshot() {
+  initialPresetSnapshot.value = JSON.stringify({
+    sliders: sliders.value,
+    links: links.value,
+    mode: controlMode.value
+  });
+}
+
+// Generate random preset name
+function generatePresetName() {
+  presetName.value = generateRandomName();
+}
 
 
-// Toggle control mode between FX and MIX
-function toggleControlMode() {
-  const newMode = controlMode.value === 'fx' ? 'mix' : 'fx';
-  controlMode.value = newMode;
+
+// Set control mode (direct selection, not cycling)
+function setControlMode(mode: ControlMode) {
+  controlMode.value = mode;
   
-  const config = MODE_CONFIG[newMode];
+  const config = MODE_CONFIG[mode];
   
   // Update all slider CCs and colors based on mode
   sliders.value.forEach((slider, i) => {
-    slider.cc = config.ccs[i] ?? 51;
+    // In COMBO mode, preserve existing CCs; otherwise use mode defaults
+    if (mode !== 'combo') {
+      slider.cc = config.ccs[i] ?? 51;
+    }
     slider.color = config.colors[i] ?? '#FF0000';
     
     // Force unipolar in mixer mode (all Polyend mixer CCs are 0-127)
-    if (newMode === 'mix') {
+    if (mode === 'mix') {
       slider.bipolar = false;
       // Reset value to 0 to avoid confusion
       slider.value = 0;
@@ -166,7 +269,7 @@ function toggleControlMode() {
   });
   
   // Save mode preference and preset
-  localStorage.setItem('kb1-control-mode', newMode);
+  localStorage.setItem('kb1-control-mode', mode);
   savePreset();
   showExplainerText(config.description);
 }
@@ -197,6 +300,11 @@ function initializeSliders() {
       slider.cc = config.ccs[i] ?? 51;
       slider.color = config.colors[i] ?? '#FF0000';
       
+      // Add fxParam if missing (backwards compatibility)
+      if (slider.fxParam === undefined) {
+        slider.fxParam = 0;
+      }
+      
       // In mixer mode, ensure first 4 sliders are ungrouped
       if (controlMode.value === 'mix' && i < 4) {
         slider.gangId = i;
@@ -220,6 +328,7 @@ function initializeSliders() {
       momentary: false,
       gangId: i, // Each starts in its own gang
       value: 0,
+      fxParam: 0, // No parameter selected by default
     });
   }
   links.value = new Array(11).fill(false);
@@ -336,6 +445,12 @@ function animateMeterBars() {
 // Load animation data and initialize sliders on mount
 onMounted(() => {
   initializeSliders();
+  
+  // Set initial snapshot after loading saved state
+  updatePresetSnapshot();
+  
+  // Load saved presets
+  loadSavedPresets();
   
   // Start level meter animation
   animateMeterBars();
@@ -721,6 +836,55 @@ function toggleMomentary(index: number) {
   
   // Show explainer text
   showExplainerText(slider.momentary ? 'Momentary' : 'Latched');
+  
+  savePreset();
+}
+
+// Get the FX parameter value to display (handles special cases for track volumes and mix CCs)
+function getFxParamDisplayValue(slider: SliderConfig): number {
+  // In COMBO mode with non-FX CCs, show special values
+  if (controlMode.value === 'combo') {
+    // Track volumes (71-78): show "Volume Lvl" (id 22)
+    if (slider.cc >= 71 && slider.cc <= 78) {
+      return 22;
+    }
+    // Master mix (79-82): show "—" (id 0)
+    if (slider.cc >= 79 && slider.cc <= 82) {
+      return 0;
+    }
+  }
+  // Otherwise show the actual fxParam value
+  return slider.fxParam ?? 0;
+}
+
+// Handle FX parameter selection
+function handleFxParamChange(index: number, fxParamId: number) {
+  const slider = sliders.value[index];
+  if (!slider) return;
+  
+  slider.fxParam = fxParamId;
+  
+  // Show explainer text with parameter name 
+  const param = FX_PARAMS.find(p => p.id === fxParamId);
+  if (param && param.id > 0) {
+    showExplainerText(param.name);
+  }
+  
+  savePreset();
+}
+
+// Handle CC number change (COMBO mode)
+function handleCCChange(index: number, newCC: number) {
+  const slider = sliders.value[index];
+  if (!slider) return;
+  
+  slider.cc = newCC;
+  
+  // Show explainer text with CC info
+  const option = CC_OPTIONS.find(opt => opt.cc === newCC);
+  if (option) {
+    showExplainerText(option.label);
+  }
   
   savePreset();
 }
@@ -1287,11 +1451,104 @@ function getCurrentPreset(): SliderPreset {
 }
 
 // Load preset from external source
-function loadPreset(preset: SliderPreset) {
+function loadPresetData(preset: SliderPreset) {
   sliders.value = JSON.parse(JSON.stringify(preset.sliders)); // Deep clone
   links.value = [...preset.links];
   savePreset();
+  updatePresetSnapshot();
   showExplainerText('Preset Loaded');
+}
+
+// Load preset by ID (from dropdown)
+function loadPreset(id: string) {
+  if (!id) {
+    activePresetId.value = null;
+    return;
+  }
+  
+  const preset = SliderPresetStore.getPreset(id);
+  if (preset) {
+    loadPresetData(preset.preset);
+    activePresetId.value = id;
+    SliderPresetStore.setActivePresetId(id);
+    showExplainerText(`Loaded: ${preset.name}`);
+  }
+}
+
+// Open preset modal for saving/editing
+function openPresetModal() {
+  editingPreset.value = null;
+  presetName.value = '';
+  presetDescription.value = '';
+  showPresetModal.value = true;
+}
+
+// Close preset modal
+function closePresetModal() {
+  showPresetModal.value = false;
+  presetName.value = '';
+  presetDescription.value = '';
+}
+
+// Handle save from modal
+function handleSavePreset() {
+  if (!presetName.value.trim()) {
+    showExplainerText('Please enter a preset name');
+    return;
+  }
+  
+  saveCurrentAsPreset(presetName.value.trim(), presetDescription.value.trim() || undefined);
+  closePresetModal();
+}
+
+// Save current state as a new or updated preset
+function saveCurrentAsPreset(name: string, description?: string) {
+  const currentState: SliderPreset = {
+    sliders: JSON.parse(JSON.stringify(sliders.value)),
+    links: [...links.value],
+  };
+  
+  let preset: NamedSliderPreset;
+  
+  if (editingPreset.value) {
+    // Update existing preset
+    preset = SliderPresetStore.updatePreset(editingPreset.value.id, {
+      name,
+      preset: currentState,
+    })!;
+  } else {
+    // Create new preset
+    preset = SliderPresetStore.createPreset(name, currentState);
+  }
+  
+  activePresetId.value = preset.id;
+  SliderPresetStore.setActivePresetId(preset.id);
+  loadSavedPresets();
+  updatePresetSnapshot();
+  showExplainerText(`Saved: ${name}`);
+}
+
+// Load all saved presets from storage
+function loadSavedPresets() {
+  savedPresets.value = SliderPresetStore.getAllPresets();
+  activePresetId.value = SliderPresetStore.getActivePresetId();
+}
+
+// Delete active preset with confirmation
+function deleteActivePreset() {
+  if (!activePresetId.value) return;
+  
+  const preset = savedPresets.value.find(p => p.id === activePresetId.value);
+  if (!preset) return;
+  
+  const confirmed = confirm(`Delete preset "${preset.name}"?\n\nThis cannot be undone.`);
+  if (!confirmed) return;
+  
+  SliderPresetStore.deletePreset(activePresetId.value);
+  activePresetId.value = null;
+  SliderPresetStore.setActivePresetId(null);
+  loadSavedPresets();
+  showExplainerText('Preset deleted');
 }
 
 // Expose functions for parent component
@@ -1299,7 +1556,7 @@ defineExpose({
   resetToDefaults,
   resetValuesToZero,
   getCurrentPreset,
-  loadPreset,
+  loadPresetData,
   viewMode,
   exitLiveMode,
 });
@@ -1332,11 +1589,12 @@ defineExpose({
               </div>
             </div>
           </button>
-          <button class="btn-zero" @click="resetToDefaults">ZERO</button>
-          <button class="btn-mode-toggle" @click="toggleControlMode">
-            <span :class="{ active: controlMode === 'fx' }">FX</span>
+          <button class="btn-mode-toggle">
+            <span :class="{ active: controlMode === 'fx' }" @click="setControlMode('fx')">FX</span>
             <span class="mode-divider">|</span>
-            <span :class="{ active: controlMode === 'mix' }">MIX</span>
+            <span :class="{ active: controlMode === 'mix' }" @click="setControlMode('mix')">MIX</span>
+            <span class="mode-divider">|</span>
+            <span :class="{ active: controlMode === 'combo' }" @click="setControlMode('combo')">COMBO</span>
           </button>
         </div>
       </div>
@@ -1344,9 +1602,9 @@ defineExpose({
       <!-- Sliders list -->
       <div class="sliders-list">
         <template v-for="(slider, index) in sliders" :key="slider.cc">
-          <div class="slider-row">
+          <div class="slider-row" :class="{ 'mix-mode-row': controlMode === 'mix' }">
             <!-- Color swatch (clickable) -->
-            <div class="color-section" :class="{ 'compact': controlMode === 'mix' && index < 4 }">
+            <div class="color-section">
               <div 
                 class="color-swatch-wrapper"
               >
@@ -1386,18 +1644,37 @@ defineExpose({
             </div>
             
             <!-- CC Number -->
-            <div class="cc-section" :class="{ 'expanded': controlMode === 'mix' && index < 4 }">
+            <div class="cc-section" :class="{ 'expanded': controlMode === 'mix' && index < 4, 'mix-mode': controlMode === 'mix' }">
               <template v-if="controlMode === 'mix'">
                 <template v-if="index < 4">
                   <span class="cc-label-text">{{ MODE_CONFIG.mix.labels[index] }}</span>
                 </template>
                 <template v-else>
-                  <span class="cc-label-text">Trk </span><span class="cc-label">{{ index - 3 }}</span>
+                  <span class="cc-label-text">Trk {{ index - 3 }} Vol Lvl</span>
                 </template>
               </template>
-              <template v-else>
-                <span class="cc-label-text">CC </span><span class="cc-label">{{ slider.cc }}</span>
+              <template v-else-if="controlMode === 'combo'">
+                <!-- CC selector dropdown for COMBO mode -->
+                <CustomCCDropdown
+                  :model-value="slider.cc"
+                  :options="CC_OPTIONS"
+                  @update:model-value="handleCCChange(index, $event)"
+                />
               </template>
+              <template v-else>
+                <span class="cc-label-text">CC</span><span class="cc-label">{{ slider.cc }}</span>
+              </template>
+            </div>
+            
+            <!-- FX Parameter Dropdown (FX and COMBO modes) -->
+            <div v-if="controlMode === 'fx' || controlMode === 'combo'" class="fx-param-section">
+              <CustomCCDropdown
+                :model-value="getFxParamDisplayValue(slider)"
+                :options="FX_PARAMS.map(p => ({ cc: p.id, label: `${p.abbr}` }))"
+                :min-width="'100px'"
+                :disabled="controlMode === 'combo' && !(slider.cc >= 51 && slider.cc <= 62)"
+                @update:model-value="handleFxParamChange(index, $event)"
+              />
             </div>
             
             <!-- Inline toggles -->
@@ -1409,10 +1686,10 @@ defineExpose({
                 <span :class="{ active: !slider.momentary }">LAT</span>
               </button>
               
-              <!-- Polarity toggle (disabled in mixer mode) -->
+              <!-- Polarity toggle (hidden in mixer mode) -->
               <button 
+                v-if="controlMode === 'fx'"
                 class="slider-toggle-btn"
-                :class="{ disabled: controlMode === 'mix' }"
                 @click="toggleBipolar(index)"
               >
                 <span :class="{ active: !slider.bipolar }">UNI</span>
@@ -1446,6 +1723,52 @@ defineExpose({
             class="link-spacer"
           ></div>
         </template>
+      </div>
+      
+      <!-- Preset Bar -->
+      <div class="preset-bar">
+        <!-- Preset Selector Dropdown -->
+        <select 
+          class="preset-dropdown"
+          :value="activePresetId ?? ''"
+          @change="loadPreset(($event.target as HTMLSelectElement).value)"
+        >
+          <option value="">(Unsaved)</option>
+          <option 
+            v-for="preset in savedPresets" 
+            :key="preset.id" 
+            :value="preset.id"
+          >
+            {{ preset.name }}
+          </option>
+        </select>
+        
+        <!-- Delete Preset Button (only shows when preset is loaded) -->
+        <button 
+          v-if="activePresetId" 
+          class="btn-delete-preset" 
+          @click="deleteActivePreset"
+          title="Delete preset"
+        >×</button>
+        
+        <!-- CLEAR Button -->
+        <button class="btn-zero-preset" @click="resetToDefaults">CLEAR</button>
+        
+        <!-- Camera Icon (Save Snapshot) -->
+        <button 
+          class="btn-camera" 
+          :class="{ 'has-changes': hasUnsavedChanges }"
+          :disabled="!hasUnsavedChanges"
+          @click="openPresetModal" 
+          title="Save Snapshot"
+        >
+          <svg class="camera-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <rect class="camera-body" x="2" y="7" width="20" height="13" rx="2" />
+            <circle class="camera-lens" cx="12" cy="13.5" r="3.5" />
+            <rect class="camera-viewfinder" x="7" y="4" width="10" height="3" rx="1" />
+            <circle class="camera-flash" cx="18" cy="9.5" r="1" />
+          </svg>
+        </button>
       </div>
     </div>
     
@@ -1580,6 +1903,43 @@ defineExpose({
           </div>
         </div>
         
+      </div>
+    </div>
+  </div>
+
+  <!-- Preset Save Modal -->
+  <div v-if="showPresetModal" class="preset-modal-overlay" @click="closePresetModal">
+    <div class="preset-modal-dialog" @click.stop>
+      <h3>{{ editingPreset ? 'Edit Preset' : 'Save Preset' }}</h3>
+      
+      <div class="form-group">
+        <label>Preset Name</label>
+        <input 
+          v-model="presetName" 
+          type="text" 
+          class="input-text"
+          placeholder="Enter preset name"
+          @keyup.enter="handleSavePreset"
+        />
+      </div>
+      
+      <div class="form-actions">
+        <button class="btn-secondary" @click="generatePresetName">Random Name</button>
+      </div>
+      
+      <div class="form-group">
+        <label>Description (Optional)</label>
+        <textarea 
+          v-model="presetDescription" 
+          class="input-text"
+          rows="2"
+          placeholder="Brief description"
+        ></textarea>
+      </div>
+      
+      <div class="modal-buttons">
+        <button class="btn-secondary" @click="closePresetModal">Cancel</button>
+        <button class="btn-primary" @click="handleSavePreset" :disabled="!presetName.trim()">Save</button>
       </div>
     </div>
   </div>
@@ -1813,6 +2173,10 @@ defineExpose({
   transition: background 0.2s;
 }
 
+.slider-row.mix-mode-row {
+  padding: 0.125rem 1rem;
+}
+
 .slider-row:hover {
   background: rgba(106, 104, 83, 0.3);
 }
@@ -1821,10 +2185,6 @@ defineExpose({
   display: flex;
   align-items: center;
   min-width: 60px;
-}
-
-.color-section.compact {
-  min-width: 40px;
 }
 
 .color-swatch-wrapper {
@@ -1933,14 +2293,19 @@ defineExpose({
 }
 
 .cc-section {
-  min-width: 80px;
+  min-width: 48px;
   display: flex;
   align-items: center;
   gap: 0;
 }
 
+.cc-section.mix-mode {
+  min-width: 140px;
+  margin-right: 0.55rem;
+}
+
 .cc-section.expanded {
-  min-width: 100px;
+  min-width: 140px;
 }
 
 .cc-label-text {
@@ -1953,16 +2318,91 @@ defineExpose({
 .cc-label {
   font-size: 0.8125rem;
   font-family: 'Roboto Mono';
-  color: var(--ui-highlight);
+  color: #b9aa5f;
   font-weight: 600;
+  margin-left: 2px;
+}
+
+.cc-dropdown {
+  padding: 0.15rem 0.3rem;
+  background: rgba(106, 104, 83, 0.35);
+  border: 1px solid rgba(106, 104, 83, 0.4);
+  color: #b9aa5f !important;
+  font-size: 0.7rem;
+  font-weight: 500;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: 'Roboto Mono', monospace;
+  width: fit-content;
+  max-width: 100%;
+  outline: none;
+}
+
+.cc-dropdown:hover {
+  background: rgba(106, 104, 83, 0.5);
+  border-color: rgba(106, 104, 83, 0.6);
+}
+
+.cc-dropdown:focus {
+  background: rgba(106, 104, 83, 0.6);
+  border-color: var(--ui-highlight);
+  box-shadow: 0 0 0 1px rgba(116, 196, 255, 0.3);
+}
+
+.cc-dropdown option {
+  background: #1a1a1a;
+  color: #b9aa5f !important;
+  padding: 0.25rem;
+}
+
+.fx-param-section {
+  display: flex;
+  align-items: center;
+  margin-left: 0.2rem;
+  margin-right: 0.35rem;
+}
+
+.fx-param-dropdown {
+  padding: 0.15rem 0.3rem;
+  background: rgba(106, 104, 83, 0.35);
+  border: 1px solid rgba(106, 104, 83, 0.4);
+  color: var(--kb1-text-primary);
+  font-size: 0.7rem;
+  font-weight: 500;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: 'Roboto Mono', monospace;
+  min-width: 68px;
+  outline: none;
+}
+
+.fx-param-dropdown:hover {
+  background: rgba(106, 104, 83, 0.5);
+  border-color: rgba(106, 104, 83, 0.6);
+}
+
+.fx-param-dropdown:focus {
+  background: rgba(106, 104, 83, 0.6);
+  border-color: var(--ui-highlight);
+  box-shadow: 0 0 0 1px rgba(116, 196, 255, 0.3);
+}
+
+.fx-param-dropdown option {
+  background: #1a1a1a;
+  color: #EAEAEA;
+  padding: 0.25rem;
 }
 
 .slider-toggle-inline {
   display: flex;
   flex-direction: row;
-  gap: 1rem;
+  gap: 0.5rem;
   flex: 1; /* Allow container to grow proportionally */
   justify-content: flex-start;
+  min-height: 26px; /* Match button height to prevent collapse */
+  align-items: center;
 }
 
 .slider-toggle-btn {
@@ -2040,7 +2480,9 @@ defineExpose({
 }
 
 .link-spacer {
+  width: 28px;
   height: 16px;
+  margin-left: 2.25rem;
   margin-top: -0.5rem;
   margin-bottom: -0.5rem;
 }
@@ -2538,6 +2980,284 @@ defineExpose({
   .live-slider-track {
     min-height: 150px;
   }
+}
+
+/* === PRESET BAR === */
+.preset-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 1rem;
+  background: rgba(106, 104, 83, 0.15);
+  border-top: 1px solid rgba(106, 104, 83, 0.3);
+  border-radius: 6px;
+  margin-top: 0.5rem;
+}
+
+/* Camera Button with Pulse Animation */
+.btn-camera {
+  flex: 0 0 auto;
+  padding: 0;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-camera:hover {
+  opacity: 0.8;
+}
+
+.btn-camera:active {
+  transform: scale(0.95);
+}
+
+.btn-camera:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.btn-camera:disabled:hover {
+  opacity: 0.3;
+  transform: none;
+}
+
+.camera-icon {
+  width: 24px;
+  height: 24px;
+  fill: none;
+  stroke: #848484;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: stroke 0.3s ease;
+}
+
+.btn-camera.has-changes .camera-icon {
+  stroke: var(--ui-highlight);
+}
+
+.camera-body,
+.camera-lens,
+.camera-viewfinder,
+.camera-flash {
+  stroke: inherit;
+}
+
+.camera-lens {
+  fill: rgba(106, 104, 83, 0.2);
+}
+
+/* Preset Dropdown */
+.preset-dropdown {
+  flex: 1;
+  padding: 0.3rem 0.5rem;
+  background: rgba(106, 104, 83, 0.2);
+  border: 1px solid rgba(106, 104, 83, 0.25);
+  color: var(--kb1-text-primary);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: 'Roboto Mono', monospace;
+  outline: none;
+}
+
+.preset-dropdown:hover {
+  background: rgba(106, 104, 83, 0.35);
+  border-color: rgba(106, 104, 83, 0.4);
+}
+
+.preset-dropdown:focus {
+  background: rgba(106, 104, 83, 0.4);
+  border-color: var(--ui-highlight);
+  box-shadow: 0 0 0 1px rgba(116, 196, 255, 0.3);
+}
+
+.preset-dropdown option {
+  background: #1a1a1a;
+  color: #EAEAEA;
+  padding: 0.25rem;
+}
+
+/* Delete Preset Button */
+.btn-delete-preset {
+  flex: 0 0 auto;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  background: rgba(106, 104, 83, 0.2);
+  border: 1px solid rgba(106, 104, 83, 0.25);
+  color: var(--kb1-text-primary);
+  font-size: 1.25rem;
+  font-weight: 400;
+  line-height: 1;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-delete-preset:hover {
+  background: rgba(106, 104, 83, 0.35);
+  border-color: rgba(106, 104, 83, 0.4);
+}
+
+.btn-delete-preset:active {
+  background: rgba(106, 104, 83, 0.5);
+  transform: scale(0.95);
+}
+
+/* RESET Button in Preset Bar */
+.btn-zero-preset {
+  flex: 0 0 auto;
+  padding: 0.3rem 0.75rem;
+  background: rgba(106, 104, 83, 0.2);
+  border: 1px solid rgba(106, 104, 83, 0.25);
+  color: var(--kb1-text-primary);
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: 'Roboto Mono', monospace;
+  letter-spacing: 0.5px;
+}
+
+.btn-zero-preset:hover {
+  background: rgba(106, 104, 83, 0.35);
+  border-color: rgba(106, 104, 83, 0.4);
+}
+
+.btn-zero-preset:active {
+  background: rgba(106, 104, 83, 0.5);
+  transform: scale(0.98);
+}
+
+/* Preset Modal */
+.preset-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 20px;
+  backdrop-filter: blur(4px);
+}
+
+.preset-modal-dialog {
+  background: #1D1D1D;
+  border: 1px solid rgba(234, 234, 234, 0.2);
+  border-radius: 8px;
+  padding: 1.5rem;
+  max-width: 400px;
+  width: 100%;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.8);
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.preset-modal-dialog h3 {
+  margin: 0 0 1rem 0;
+  font-size: 1rem;
+  color: #EAEAEA;
+  font-weight: 500;
+}
+
+.form-group {
+  margin-bottom: 1rem;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-size: 0.75rem;
+  color: #848484;
+  text-transform: uppercase;
+}
+
+.input-text {
+  width: 100%;
+  padding: 0.25rem 1rem;
+  background: rgba(234, 234, 234, 0.05);
+  border: none;
+  border-radius: 4px;
+  color: #EAEAEA;
+  font-size: 0.8125rem;
+  font-family: 'Roboto Mono', monospace;
+  box-sizing: border-box;
+}
+
+textarea.input-text {
+  resize: vertical;
+  min-height: 60px;
+}
+
+.input-text:focus {
+  outline: none;
+  background: rgba(234, 234, 234, 0.08);
+}
+
+.form-actions {
+  margin-bottom: 1rem;
+}
+
+.modal-buttons {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+.btn-secondary {
+  padding: 0.25rem 1rem;
+  background: rgba(106, 104, 83, 0.2);
+  border: 1px solid rgba(106, 104, 83, 0.3);
+  color: var(--kb1-text-primary);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: 'Roboto Mono', monospace;
+}
+
+.btn-secondary:hover {
+  background: rgba(106, 104, 83, 0.35);
+  border-color: rgba(106, 104, 83, 0.4);
+}
+
+.btn-primary {
+  padding: 0.25rem 1rem;
+  background: #6A6853;
+  border: none;
+  color: #EAEAEA;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: 'Roboto Mono', monospace;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: #7A7863;
+}
+
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 </style>
 

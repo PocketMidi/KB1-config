@@ -2182,6 +2182,7 @@ defineExpose({
 
 .slider-row.combo-mode-row {
   gap: 0; /* Remove flex gap for absolute positioning */
+  min-height: 30px; /* Match height of FX/MIX modes */
 }
 
 .slider-row:hover {
@@ -2429,6 +2430,8 @@ defineExpose({
 .slider-toggle-inline.combo-mode-toggles {
   position: absolute;
   left: 296px;
+  top: 50%;
+  transform: translateY(-50%);
   margin-left: 0;
 }
 

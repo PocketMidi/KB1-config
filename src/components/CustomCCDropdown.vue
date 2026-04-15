@@ -60,11 +60,11 @@ const selectedOption = computed(() => {
   if (option) {
     // Check if it's a CC option (starts with "CC") or FX param (no CC prefix)
     const ccMatch = option.label.match(/CC(\d+)\s+(.*)/);
-    if (ccMatch) {
+    if (ccMatch && ccMatch[1]) {
       // CC option: "CC51 FX Slot 1"
       return {
         cc: parseInt(ccMatch[1]),
-        description: ccMatch[2]
+        description: ccMatch[2] || ''
       };
     } else {
       // FX param: just the name (e.g., "Volume", "Panning")
@@ -85,7 +85,7 @@ const toggleOpen = () => {
 const selectOption = (option: CCOption) => {
   // For CC options, extract the number; for FX params, use the cc value directly
   const ccMatch = option.label.match(/CC(\d+)/);
-  if (ccMatch) {
+  if (ccMatch && ccMatch[1]) {
     emit('update:modelValue', parseInt(ccMatch[1]));
   } else {
     emit('update:modelValue', option.cc);

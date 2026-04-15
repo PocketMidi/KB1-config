@@ -1502,7 +1502,7 @@ function handleSavePreset() {
 }
 
 // Save current state as a new or updated preset
-function saveCurrentAsPreset(name: string, description?: string) {
+function saveCurrentAsPreset(name: string, _description?: string) {
   const currentState: SliderPreset = {
     sliders: JSON.parse(JSON.stringify(sliders.value)),
     links: [...links.value],
@@ -1557,6 +1557,7 @@ defineExpose({
   resetValuesToZero,
   getCurrentPreset,
   loadPresetData,
+  loadPreset,
   viewMode,
   exitLiveMode,
 });

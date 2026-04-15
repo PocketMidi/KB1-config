@@ -120,11 +120,9 @@ function confirmSave() {
 
 // Load preset
 function loadPreset(id: string) {
-  const preset = SliderPresetStore.getPreset(id);
-  if (!preset || !performanceSlidersRef.value) return;
+  if (!performanceSlidersRef.value) return;
 
-  performanceSlidersRef.value.loadPreset(preset.preset);
-  SliderPresetStore.setActivePresetId(id);
+  performanceSlidersRef.value.loadPreset(id);
   showLoadDialog.value = false;
 }
 

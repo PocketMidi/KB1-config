@@ -204,6 +204,7 @@ const animationStartTime = Date.now();
 
 // Preset management state
 const showPresetModal = ref(false);
+const showModeInfoModal = ref(false);
 const editingPreset = ref<NamedSliderPreset | null>(null);
 const savedPresets = ref<NamedSliderPreset[]>([]);
 const activePresetId = ref<string | null>(null);
@@ -1729,6 +1730,15 @@ defineExpose({
       
       <!-- Preset Bar -->
       <div class="preset-bar">
+        <!-- Mode Info Button -->
+        <button class="btn-mode-info" @click="showModeInfoModal = true" title="Mode information">
+          <svg class="info-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2"/>
+            <path d="M12 16v-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            <circle cx="12" cy="8" r="1" fill="currentColor"/>
+          </svg>
+        </button>
+        
         <!-- Preset Selector Dropdown -->
         <select 
           class="preset-dropdown"
@@ -1745,10 +1755,10 @@ defineExpose({
           </option>
         </select>
         
-        <!-- Delete Preset Button (only shows when preset is loaded) -->
+        <!-- Delete Preset Button (always visible, disabled when no preset) -->
         <button 
-          v-if="activePresetId" 
           class="btn-delete-preset" 
+          :disabled="!activePresetId"
           @click="deleteActivePreset"
           title="Delete preset"
         >×</button>
@@ -1943,6 +1953,43 @@ defineExpose({
         <button class="btn-secondary" @click="closePresetModal">Cancel</button>
         <button class="btn-primary" @click="handleSavePreset" :disabled="!presetName.trim()">Save</button>
       </div>
+    </div>
+  </div>
+
+  <!-- Mode Info Modal -->
+  <div v-if="showModeInfoModal" class="mode-info-overlay" @click="showModeInfoModal = false">
+    <div class="mode-info-dialog" @click.stop>
+      <button class="mode-info-close" @click="showModeInfoModal = false">×</button>
+      
+      <h3 class="mode-info-title">{{ controlMode.toUpperCase() }} MODE</h3>
+      
+      <div class="mode-info-content">
+        <template v-if="controlMode === 'fx'">
+          <div class="mode-info-section">
+            <p>Tracker Mini has 21 Performance Effects that can be assigned to 12 sliders. The same effect can be applied to multiple slots. The labels are for user reference to help keep track of which fx occupy the 12 slots.</p>
+          </div>
+        </template>
+        
+        <template v-else-if="controlMode === 'mix'">
+          <div class="mode-info-section">
+            <p>Tracker Mini Master and individual Track levels</p>
+          </div>
+        </template>
+        
+        <template v-else-if="controlMode === 'combo'">
+          <div class="mode-info-section">
+            <p>Flexible assignment mode. Each slider can control any of 24 available MIDI CC values (51-62, 71-82).</p>
+          </div>
+        </template>
+        
+        <!-- Common section for all modes -->
+        <div class="mode-info-section">
+          <h4>Save a Preset</h4>
+          <p>Click camera icon to save a snapshot of current settings with a name for easy reference.</p>
+        </div>
+      </div>
+      
+      <button class="btn-got-it" @click="showModeInfoModal = false">Got it</button>
     </div>
   </div>
 </template>
@@ -3095,6 +3142,7 @@ defineExpose({
   transition: all 0.2s ease;
   font-family: 'Roboto Mono', monospace;
   outline: none;
+  max-width: calc(100% - 130px); /* Reduced to make room for info icon */
 }
 
 .preset-dropdown:hover {
@@ -3142,6 +3190,38 @@ defineExpose({
 .btn-delete-preset:active {
   background: rgba(106, 104, 83, 0.5);
   transform: scale(0.95);
+}
+
+.btn-delete-preset:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* Mode Info Button */
+.btn-mode-info {
+  flex: 0 0 auto;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #848484;
+  margin-left: -8px;
+}
+
+.btn-mode-info:hover {
+  color: var(--ui-highlight);
+}
+
+.info-icon {
+  width: 18px;
+  height: 18px;
 }
 
 /* RESET Button in Preset Bar */
@@ -3288,6 +3368,122 @@ textarea.input-text {
 .btn-primary:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+/* Mode Info Modal */
+.mode-info-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 20px;
+}
+
+.mode-info-dialog {
+  background: #1a1a1a;
+  border: 1px solid rgba(234, 234, 234, 0.2);
+  border-radius: 8px;
+  padding: 2rem;
+  max-width: 500px;
+  width: 100%;
+  position: relative;
+}
+
+.mode-info-close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: transparent;
+  border: none;
+  color: #848484;
+  font-size: 2rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: color 0.2s ease;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mode-info-close:hover {
+  color: #EAEAEA;
+}
+
+.mode-info-title {
+  font-family: 'Roboto Mono', monospace;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #EAEAEA;
+  margin: 0 0 1.5rem 0;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.mode-info-content {
+  color: #EAEAEA;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  margin-bottom: 2rem;
+}
+
+.mode-info-section {
+  margin-bottom: 1.5rem;
+}
+
+.mode-info-section:last-child {
+  margin-bottom: 0;
+}
+
+.mode-info-section h4 {
+  font-family: 'Roboto Mono', monospace;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #b9aa5f;
+  margin: 0 0 0.5rem 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.mode-info-content p {
+  margin: 0 0 1rem 0;
+}
+
+.mode-info-content p:last-child {
+  margin-bottom: 0;
+}
+
+.btn-got-it {
+  background: #4a6741;
+  border: 1px solid #5a7751;
+  color: #EAEAEA;
+  padding: 0.75rem 2rem;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  font-family: 'Roboto Mono', monospace;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: 100%;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.btn-got-it:hover {
+  background: #5a7751;
+  border-color: #6a8761;
+}
+
+.btn-got-it:active {
+  transform: scale(0.98);
 }
 </style>
 

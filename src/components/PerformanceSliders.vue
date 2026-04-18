@@ -1800,9 +1800,6 @@ defineExpose({
             :autoPlay="true"
             class="rotate-icon-img"
           />
-          <div class="prompt-subtext" style="margin-top: 1rem; font-size: 0.7rem; opacity: 0.6;">
-            {{ isIOS ? 'Swipe left or right to exit' : 'Rotate device or tap anywhere to skip' }}
-          </div>
         </div>
       </div>
       
@@ -2548,7 +2545,7 @@ defineExpose({
   justify-content: flex-start;
   align-items: center;
   padding: 0;
-  margin-left: 1.5rem;
+  margin-left: 1.7rem;
   margin-top: -0.5rem;
   margin-bottom: -0.5rem;
   height: 16px;
@@ -2557,16 +2554,16 @@ defineExpose({
 }
 
 .link-spacer {
-  width: 28px;
+  width: 25px;
   height: 16px;
-  margin-left: 1.5rem;
+  margin-left: 1.7rem;
   margin-top: -0.5rem;
   margin-bottom: -0.5rem;
 }
 
 .link-icon {
-  width: 28px;
-  height: 28px;
+  width: 25px;
+  height: 25px;
   opacity: 0.4;
   cursor: pointer;
   transition: all 0.2s;
@@ -2575,7 +2572,7 @@ defineExpose({
 
 .link-icon:hover {
   opacity: 0.6;
-  transform: scale(1.1);
+  transform: scale(1.0);
 }
 
 .link-icon:active {

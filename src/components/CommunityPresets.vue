@@ -288,7 +288,7 @@ defineExpose({
 .btn-load:hover {
   background: rgba(132, 132, 132, 0.2);
   border-color: rgba(205, 205, 205, 0.3);
-  color: #FFFFFF;
+  color: #EAEAEA;
 }
 
 .btn-secondary {

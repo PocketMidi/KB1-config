@@ -229,7 +229,7 @@ async function handleSave() {
 
 .btn-primary {
   background: var(--kb1-color-primary);
-  color: white;
+  color: #EAEAEA;
 }
 
 .btn-primary:hover:not(:disabled) {

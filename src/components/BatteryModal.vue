@@ -518,7 +518,7 @@ function dismissSpeakerHelp() {
   margin: 0;
   font-size: 0.8125rem;
   font-weight: 600;
-  color: #fff;
+  color: #EAEAEA;
 }
 
 .battery-visual {
@@ -551,7 +551,7 @@ function dismissSpeakerHelp() {
 
 .close-button:hover {
   background-color: rgba(255, 255, 255, 0.1);
-  color: #fff;
+  color: #EAEAEA;
 }
 
 .modal-content {
@@ -583,7 +583,7 @@ function dismissSpeakerHelp() {
 }
 
 .detail-value {
-  color: #fff;
+  color: #EAEAEA;
   font-weight: 600;
   font-family: 'Roboto Mono', monospace;
 }
@@ -689,7 +689,7 @@ function dismissSpeakerHelp() {
 .help-icon:hover {
   background: rgba(156, 163, 175, 0.3);
   border-color: rgba(156, 163, 175, 0.5);
-  color: #fff;
+  color: #EAEAEA;
 }
 
 .duration-control-wrapper {
@@ -848,7 +848,7 @@ function dismissSpeakerHelp() {
 .sync-button-primary {
   background: linear-gradient(135deg, var(--kb1-color-primary) 0%, var(--kb1-color-primary) 100%);
   border: none;
-  color: #fff;
+  color: #EAEAEA;
   font-weight: 700;
 }
 
@@ -904,7 +904,7 @@ function dismissSpeakerHelp() {
 
 .calibrate-button {
   background: linear-gradient(135deg, var(--kb1-color-primary) 0%, var(--kb1-color-primary) 100%);
-  color: #fff;
+  color: #EAEAEA;
   font-weight: 700;
 }
 
@@ -1110,7 +1110,7 @@ input:checked + .toggle-slider:before {
 }
 
 .instruction-list strong {
-  color: #fff;
+  color: #EAEAEA;
   font-weight: 600;
 }
 
@@ -1220,7 +1220,7 @@ input:checked + .toggle-slider:before {
 }
 
 .warning-text strong {
-  color: #fff;
+  color: #EAEAEA;
   font-weight: 600;
 }
 
@@ -1251,7 +1251,7 @@ input:checked + .toggle-slider:before {
 .confirmation-dialog h3 {
   margin: 0 0 12px 0;
   font-size: 0.8125rem;
-  color: #fff;
+  color: #EAEAEA;
 }
 
 .confirmation-dialog p {
@@ -1277,7 +1277,7 @@ input:checked + .toggle-slider:before {
 .resetting-state h3 {
   margin: 0;
   font-size: 0.8125rem;
-  color: #fff;
+  color: #EAEAEA;
 }
 
 .resetting-state p {
@@ -1304,7 +1304,7 @@ input:checked + .toggle-slider:before {
 
 .cancel-btn {
   background-color: rgba(255, 255, 255, 0.1);
-  color: #fff;
+  color: #EAEAEA;
 }
 
 .cancel-btn:hover {
@@ -1313,7 +1313,7 @@ input:checked + .toggle-slider:before {
 
 .reset-btn {
   background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-  color: #fff;
+  color: #EAEAEA;
 }
 
 .reset-btn:hover {
@@ -1357,7 +1357,7 @@ input:checked + .toggle-slider:before {
 
 .dev-close:hover {
   background: rgba(255, 255, 255, 0.2);
-  color: #fff;
+  color: #EAEAEA;
 }
 
 .dev-button {

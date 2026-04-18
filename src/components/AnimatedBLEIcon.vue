@@ -30,7 +30,7 @@ const animationData = ref<any>(null);
 // Load Lottie animation data
 onMounted(async () => {
   try {
-    const response = await fetch(`${import.meta.env.BASE_URL}ble/data.json`);
+    const response = await fetch(`${import.meta.env.BASE_URL}ble_connect.json`);
     if (!response.ok) {
       console.error('Failed to load Lottie animation:', response.status);
       return;

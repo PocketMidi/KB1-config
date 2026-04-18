@@ -1553,7 +1553,7 @@ function dismissHelp() {
 
 .help-modal-footer .got-it-btn {
   background: #5dad6b;
-  color: white;
+  color: #1A1A1A;
   border: none;
   padding: 0.5rem 1.5rem;
   border-radius: 4px;

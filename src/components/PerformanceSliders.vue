@@ -3462,9 +3462,9 @@ textarea.input-text {
 }
 
 .btn-got-it {
-  background: #4a6741;
-  border: 1px solid #5a7751;
-  color: #EAEAEA;
+  background: #5dad6b;
+  border: none;
+  color: #1A1A1A;
   padding: 0.75rem 2rem;
   border-radius: 4px;
   font-size: 0.875rem;
@@ -3478,8 +3478,7 @@ textarea.input-text {
 }
 
 .btn-got-it:hover {
-  background: #5a7751;
-  border-color: #6a8761;
+  opacity: 0.9;
 }
 
 .btn-got-it:active {

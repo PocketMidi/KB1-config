@@ -1719,7 +1719,7 @@ function handleKeyClick(midiNote: number) {
 .hint-btn-primary {
   width: 100%;
   padding: 0.625rem 1.25rem;
-  background: var(--key-active-hover);
+  background: #5dad6b;
   color: #1A1A1A;
   border: none;
   border-radius: 4px;
@@ -1731,7 +1731,7 @@ function handleKeyClick(midiNote: number) {
 }
 
 .hint-btn-primary:hover {
-  background: #618D7E;
+  opacity: 0.9;
 }
 
 .hint-btn-secondary {
@@ -2463,7 +2463,7 @@ function handleKeyClick(midiNote: number) {
 
 .help-modal-footer .btn-primary {
   padding: 0.5rem 1.5rem;
-  background: var(--key-active-hover);
+  background: #5dad6b;
   color: #1A1A1A;
   border: none;
   border-radius: 4px;
@@ -2475,6 +2475,6 @@ function handleKeyClick(midiNote: number) {
 }
 
 .help-modal-footer .btn-primary:hover {
-  background: #618D7E;
+  opacity: 0.9;
 }
 </style>

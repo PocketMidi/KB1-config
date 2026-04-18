@@ -2209,7 +2209,7 @@ defineExpose({
 .sliders-list {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: 0.175rem;
 }
 
 .slider-row {
@@ -2366,7 +2366,7 @@ defineExpose({
 
 .cc-section.combo-mode {
   position: absolute;
-  left: 70px;
+  left: 60px;
   width: 110px;
 }
 
@@ -2427,7 +2427,7 @@ defineExpose({
 
 .fx-param-section.combo-mode {
   position: absolute;
-  left: 188px;
+  left: 175px;
   width: 100px;
   margin-right: 0;
 }
@@ -2476,7 +2476,7 @@ defineExpose({
 
 .slider-toggle-inline.combo-mode-toggles {
   position: absolute;
-  left: 296px;
+  left: 288px;
   top: 50%;
   transform: translateY(-50%);
   margin-left: 0;

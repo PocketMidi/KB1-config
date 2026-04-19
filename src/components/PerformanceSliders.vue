@@ -1759,11 +1759,7 @@ defineExpose({
       <div class="preset-bar">
         <!-- Mode Info Button -->
         <button class="btn-mode-info" @click="showModeInfoModal = true" title="Mode information">
-          <svg class="info-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2"/>
-            <path d="M12 16v-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-            <circle cx="12" cy="8" r="1" fill="currentColor"/>
-          </svg>
+          <span class="info-icon">i</span>
         </button>
         
         <!-- Preset Selector Dropdown -->
@@ -2589,12 +2585,25 @@ defineExpose({
 }
 
 .link-icon {
+  position: relative; /* For pseudo-element positioning */
   width: 25px; /* Icon size */
   height: 25px; /* Icon size */
   opacity: 0.4; /* Dimmed when unlinked */
   cursor: pointer;
   transition: all 0.2s;
   user-select: none;
+}
+
+/* Expanded invisible touch area */
+.link-icon::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 44px; /* iOS minimum touch target */
+  height: 44px;
+  /* Invisible but interactive */
 }
 
 .link-icon:hover {
@@ -3239,13 +3248,26 @@ defineExpose({
   margin-left: -8px;
 }
 
-.btn-mode-info:hover {
-  color: var(--ui-highlight);
+.info-icon {
+  text-transform: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  font-size: 0.625rem;
+  font-family: 'Roboto Mono', monospace;
+  color: #848484;
+  border: 1px solid #848484;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.2s;
+  user-select: none;
 }
 
-.info-icon {
-  width: 18px;
-  height: 18px;
+.info-icon:hover {
+  color: #5dad6b;
+  border-color: #5dad6b;
 }
 
 /* RESET Button in Preset Bar */

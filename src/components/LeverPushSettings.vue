@@ -499,10 +499,14 @@ const activeProfileName = computed(() => {
 const selectProfile = (profile: ProfileType) => {
   if (isSupported.value) snap()
   
+  // Calculate profile name for emission BEFORE updating model
+  let profileName = 'Linear'
   if (profile === 'inc') {
     model.value = { ...model.value, functionMode: 2 } // STATIC
+    profileName = 'Static'
   } else if (profile === 'pd') {
     model.value = { ...model.value, functionMode: 1 } // PEAK_DECAY
+    profileName = 'Peak & Decay'
   } else {
     // Set onsetType and offsetType based on profile
     if (profile === 'exp') {
@@ -512,6 +516,7 @@ const selectProfile = (profile: ProfileType) => {
         onsetType: 1,
         offsetType: 1
       }
+      profileName = 'Exponential'
     } else if (profile === 'log') {
       model.value = {
         ...model.value,
@@ -519,6 +524,7 @@ const selectProfile = (profile: ProfileType) => {
         onsetType: 2,
         offsetType: 2
       }
+      profileName = 'Logarithmic'
     } else {
       // lin
       model.value = {
@@ -527,11 +533,12 @@ const selectProfile = (profile: ProfileType) => {
         onsetType: 0,
         offsetType: 0
       }
+      profileName = 'Linear'
     }
   }
   
-  // Emit profile change event
-  emit('profileChanged', activeProfileName.value)
+  // Emit profile change event with calculated name
+  emit('profileChanged', profileName)
 }
 
 // Profile visualization
@@ -1552,10 +1559,10 @@ function dismissHelp() {
 }
 
 .help-modal-footer .got-it-btn {
-  background: #5dad6b;
-  color: #1A1A1A;
+  background: #5dad6b; /* Standardized green for all modals */
+  color: #1A1A1A; /* Dark text on green button */
   border: none;
-  padding: 0.5rem 1.5rem;
+  padding: 0.5rem 1.5rem; /* 8px top/bottom, 24px left/right */
   border-radius: 4px;
   cursor: pointer;
   font-family: 'Roboto Mono', monospace;
@@ -1564,6 +1571,6 @@ function dismissHelp() {
 }
 
 .help-modal-footer .got-it-btn:hover {
-  opacity: 0.9;
+  opacity: 0.9; /* Slight dim on hover */
 }
 </style>

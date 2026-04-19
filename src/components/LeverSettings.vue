@@ -433,24 +433,31 @@ const activeProfileName = computed(() => {
 const selectProfile = (profile: ProfileType) => {
   if (isSupported.value) snap()
   
+  // Calculate profile name for emission BEFORE updating model
+  let profileName = 'Linear'
   if (profile === 'inc') {
     model.value = { ...model.value, functionMode: 2 }
+    profileName = 'Incremental'
   } else if (profile === 'pd') {
     model.value = { ...model.value, functionMode: 1 }
+    profileName = 'Peak & Decay'
   } else {
     // Set onsetType and offsetType based on profile
     if (profile === 'exp') {
       model.value = { ...model.value, functionMode: 0, onsetType: 1, offsetType: 1 }
+      profileName = 'Exponential'
     } else if (profile === 'log') {
       model.value = { ...model.value, functionMode: 0, onsetType: 2, offsetType: 2 }
+      profileName = 'Logarithmic'
     } else {
       // lin
       model.value = { ...model.value, functionMode: 0, onsetType: 0, offsetType: 0 }
+      profileName = 'Linear'
     }
   }
   
-  // Emit profile change event
-  emit('profileChanged', activeProfileName.value)
+  // Emit profile change event with calculated name
+  emit('profileChanged', profileName)
 }
 
 // Profile visualization
@@ -1742,9 +1749,9 @@ function increaseSteps() {
 }
 
 .help-modal-footer .btn-primary {
-  padding: 0.5rem 1.5rem;
-  background: #5dad6b;
-  color: #1A1A1A;
+  padding: 0.5rem 1.5rem; /* 8px top/bottom, 24px left/right */
+  background: #5dad6b; /* Standardized green for all modals */
+  color: #1A1A1A; /* Dark text on green button */
   border: none;
   border-radius: 4px;
   font-family: 'Roboto Mono';
@@ -1755,6 +1762,6 @@ function increaseSteps() {
 }
 
 .help-modal-footer .btn-primary:hover {
-  opacity: 0.9;
+  opacity: 0.9; /* Slight dim on hover */
 }
 </style>

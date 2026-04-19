@@ -2090,9 +2090,9 @@ textarea.input-text {
 }
 
 .help-modal-footer .btn-primary {
-  padding: 0.5rem 1.5rem;
-  background: #5dad6b;
-  color: #1A1A1A;
+  padding: 0.5rem 1.5rem; /* 8px top/bottom, 24px left/right */
+  background: #5dad6b; /* Standardized green for all modals */
+  color: #1A1A1A; /* Dark text on green button */
   border: none;
   border-radius: 4px;
   font-family: 'Roboto Mono';
@@ -2103,7 +2103,7 @@ textarea.input-text {
 }
 
 .help-modal-footer .btn-primary:hover {
-  opacity: 0.9;
+  opacity: 0.9; /* Slight dim on hover */
 }
 
 /* ========================================

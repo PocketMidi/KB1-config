@@ -978,10 +978,10 @@ function dismissHelp() {
 }
 
 .help-modal-footer .got-it-btn {
-  background: #5dad6b;
-  color: #1A1A1A;
+  background: #5dad6b; /* Standardized green for all modals */
+  color: #1A1A1A; /* Dark text on green button */
   border: none;
-  padding: 0.5rem 1.5rem;
+  padding: 0.5rem 1.5rem; /* 8px top/bottom, 24px left/right */
   border-radius: 4px;
   cursor: pointer;
   font-family: 'Roboto Mono', monospace;
@@ -990,6 +990,6 @@ function dismissHelp() {
 }
 
 .help-modal-footer .got-it-btn:hover {
-  opacity: 0.9;
+  opacity: 0.9; /* Slight dim on hover */
 }
 </style>

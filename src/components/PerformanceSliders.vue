@@ -2545,7 +2545,7 @@ defineExpose({
   justify-content: flex-start;
   align-items: center;
   padding: 0;
-  margin-left: 1.7rem;
+  margin-left: 1.7rem; /* Spacing from slider (27.2px) */
   margin-top: -0.5rem;
   margin-bottom: -0.5rem;
   height: 16px;
@@ -2554,34 +2554,34 @@ defineExpose({
 }
 
 .link-spacer {
-  width: 25px;
+  width: 25px; /* Matches link icon width */
   height: 16px;
-  margin-left: 1.7rem;
+  margin-left: 1.7rem; /* Spacing for hidden links (matches container) */
   margin-top: -0.5rem;
   margin-bottom: -0.5rem;
 }
 
 .link-icon {
-  width: 25px;
-  height: 25px;
-  opacity: 0.4;
+  width: 25px; /* Icon size */
+  height: 25px; /* Icon size */
+  opacity: 0.4; /* Dimmed when unlinked */
   cursor: pointer;
   transition: all 0.2s;
   user-select: none;
 }
 
 .link-icon:hover {
-  opacity: 0.6;
-  transform: scale(1.0);
+  opacity: 0.6; /* Slightly brighter on hover */
+  transform: scale(1.0); /* No scale on hover */
 }
 
 .link-icon:active {
-  opacity: 0.8;
-  transform: scale(1.2);
+  opacity: 0.8; /* Brighter when clicked */
+  transform: scale(1.2); /* Grows to ~30px when clicked */
 }
 
 .link-icon.linked {
-  opacity: 1;
+  opacity: 1; /* Full brightness when linked */
 }
 
 /* === LIVE MODE === */
@@ -2864,9 +2864,9 @@ defineExpose({
 
 .hint-btn-primary {
   width: 100%;
-  padding: 0.625rem 1.25rem;
-  background: #5dad6b;
-  color: #1A1A1A;
+  padding: 0.625rem 1.25rem; /* 10px top/bottom, 20px left/right */
+  background: #5dad6b; /* Standardized green for all modals */
+  color: #1A1A1A; /* Dark text on green button */
   border: none;
   border-radius: 4px;
   font-family: 'Roboto Mono';
@@ -2879,7 +2879,7 @@ defineExpose({
 }
 
 .hint-btn-primary:hover {
-  opacity: 0.9;
+  opacity: 0.9; /* Slight dim on hover */
 }
 
 .hint-btn-secondary {
@@ -3459,10 +3459,10 @@ textarea.input-text {
 }
 
 .btn-got-it {
-  background: #5dad6b;
+  background: #5dad6b; /* Standardized green for all modals */
   border: none;
-  color: #1A1A1A;
-  padding: 0.75rem 2rem;
+  color: #1A1A1A; /* Dark text on green button */
+  padding: 0.75rem 2rem; /* 12px top/bottom, 32px left/right */
   border-radius: 4px;
   font-size: 0.875rem;
   font-weight: 600;
@@ -3475,11 +3475,11 @@ textarea.input-text {
 }
 
 .btn-got-it:hover {
-  opacity: 0.9;
+  opacity: 0.9; /* Slight dim on hover */
 }
 
 .btn-got-it:active {
-  transform: scale(0.98);
+  transform: scale(0.98); /* Subtle press effect */
 }
 </style>
 

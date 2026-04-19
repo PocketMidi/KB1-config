@@ -28,7 +28,11 @@
         <span class="status-text">
           {{ isConnected ? 'CONNECTED' : (isHovering ? 'CONNECT' : 'DISCONNECTED') }}
         </span>
-        <img src="/bluetooth-icon.svg" alt="Bluetooth" class="bluetooth-icon" />
+        <svg class="bluetooth-icon" viewBox="0 0 23 26" xmlns="http://www.w3.org/2000/svg">
+          <path d="M3.63159 4.90753L17.1295 19.1835L11.2655 25V1L17.0505 6.73819L3.63159 20.9374" stroke="#47708E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          <path d="M1.65541 14.1527C2.56966 14.1527 3.31081 13.4116 3.31081 12.4974C3.31081 11.5832 2.56966 10.842 1.65541 10.842C0.741151 10.842 0 11.5832 0 12.4974C0 13.4116 0.741151 14.1527 1.65541 14.1527Z" fill="#47708E"/>
+          <path d="M20.7212 14.1527C21.6355 14.1527 22.3766 13.4116 22.3766 12.4974C22.3766 11.5832 21.6355 10.842 20.7212 10.842C19.8069 10.842 19.0658 11.5832 19.0658 12.4974C19.0658 13.4116 19.8069 14.1527 20.7212 14.1527Z" fill="#47708E"/>
+        </svg>
       </div>
     </nav>
     <!-- Horizontal divider -->

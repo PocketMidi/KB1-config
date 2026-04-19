@@ -1708,16 +1708,43 @@ defineExpose({
             class="link-icon-container"
             :data-link-index="index"
           >
-            <img 
-              :src="`/KB1-config/${links[index] ? 'link' : 'unlink'}.svg`"
-              :alt="links[index] ? 'Linked' : 'Unlinked'"
-              class="link-icon"
-              :class="{ linked: links[index] }"
+            <!-- Linked state -->
+            <svg 
+              v-if="links[index]"
+              class="link-icon linked"
+              viewBox="0 0 18 21"
+              xmlns="http://www.w3.org/2000/svg"
               @mousedown="handleLinkMouseDown($event, index)"
               @touchstart="handleLinkTouchStart($event, index)"
               @touchmove="handleLinkTouchMove"
               @touchend="handleLinkTouchEnd"
-            />
+            >
+              <path d="M11.9731 14.6856L12.0327 16.5832C12.0813 18.1871 10.8112 19.5418 9.20727 19.5904L8.34945 19.622C6.74549 19.6706 5.39084 18.4005 5.34223 16.7965L5.17075 11.5794C5.12214 9.97544 6.39223 8.62079 7.9962 8.57219L8.85401 8.54058" stroke="#EAEAEA" stroke-width="2.17628" stroke-miterlimit="10" stroke-linecap="round" fill="none"/>
+              <path d="M5.29236 6.3122L5.22519 4.20593C5.17658 2.60197 6.44667 1.24732 8.05064 1.19871L8.90845 1.16711C10.5124 1.1185 11.8671 2.38859 11.9157 3.99256L12.0872 9.20968C12.1358 10.8136 10.8657 12.1683 9.26171 12.2169L8.40389 12.2485" stroke="#EAEAEA" stroke-width="2.17628" stroke-miterlimit="10" stroke-linecap="round" fill="none"/>
+              <path d="M12.0245 14.6878L12.0056 15.3553" stroke="#EAEAEA" stroke-width="2.17628" stroke-miterlimit="10" stroke-linecap="round" fill="none"/>
+              <path d="M9.17352 12.2321L8.40316 12.2655" stroke="#EAEAEA" stroke-width="1.45085" stroke-miterlimit="10" stroke-linecap="round" fill="none"/>
+              <path d="M5.25157 4.85896L5.29071 6.48059" stroke="#EAEAEA" stroke-width="1.45085" stroke-miterlimit="10" stroke-linecap="round" fill="none"/>
+              <path d="M7.65854 8.60923L7.65845 8.60927" stroke="#EAEAEA" stroke-width="1.45085" stroke-miterlimit="10" stroke-linecap="round" fill="none"/>
+            </svg>
+            
+            <!-- Unlinked state -->
+            <svg 
+              v-else
+              class="link-icon"
+              viewBox="0 0 25 26"
+              xmlns="http://www.w3.org/2000/svg"
+              @mousedown="handleLinkMouseDown($event, index)"
+              @touchstart="handleLinkTouchStart($event, index)"
+              @touchmove="handleLinkTouchMove"
+              @touchend="handleLinkTouchEnd"
+            >
+              <path d="M13.3779 18.5022L13.6983 20.2576C13.9675 21.7416 12.9762 23.178 11.4922 23.4472L10.6993 23.5964C9.21525 23.8656 7.77879 22.8743 7.50961 21.3902L6.62163 16.5651C6.35245 15.0811 7.34376 13.6446 8.82778 13.3755L9.62067 13.2263" stroke="#EAEAEA" stroke-width="2.04545" stroke-miterlimit="10" stroke-linecap="round" fill="none"/>
+              <path d="M10.9887 7.61063L11.3128 5.65668C11.562 4.16918 12.9812 3.15322 14.4687 3.40243L15.2652 3.53054C16.7528 3.77975 17.7687 5.19889 17.5195 6.68639L16.7212 11.5272C16.472 13.0147 15.0529 14.0306 13.5654 13.7814L12.7688 13.6533" stroke="#EAEAEA" stroke-width="2.04545" stroke-miterlimit="10" stroke-linecap="round" fill="none"/>
+              <path d="M16.5613 18.4286L18.0297 21.5128" stroke="#EAEAEA" stroke-width="1.36364" stroke-miterlimit="10" stroke-linecap="round" fill="none"/>
+              <path d="M18.1445 15.4094L21.547 15.1488" stroke="#EAEAEA" stroke-width="1.36364" stroke-miterlimit="10" stroke-linecap="round" fill="none"/>
+              <path d="M8.09324 7.31949L6.15613 4.50376" stroke="#EAEAEA" stroke-width="1.36364" stroke-miterlimit="10" stroke-linecap="round" fill="none"/>
+              <path d="M6.60091 10.371L3.28284 11.1578" stroke="#EAEAEA" stroke-width="1.36364" stroke-miterlimit="10" stroke-linecap="round" fill="none"/>
+            </svg>
           </div>
           
           <!-- Spacer for hidden links in MIX mode to maintain consistent spacing -->

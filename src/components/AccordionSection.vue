@@ -20,18 +20,18 @@
         </svg>
         
         <!-- Lever icon - active version (when open) - used by both Lever 1 and Lever 2 -->
-        <svg v-if="(showLever1Icon || showLever2Icon) && isOpen" class="accordion-icon-img accordion-icon-lever1 is-open" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 252.31 161.04">
-          <path fill="#eaeaea" d="M98.78,99.76l-15.94-16.08c-1.41-1.42-3.77-1.08-4.76.66-4.92,8.64-7.73,18.63-7.73,29.29v4.12c0,2.21,1.79,4,4,4h20.39c2.21,0,4-1.79,4-4v-8.19c0-2.43.29-4.78.84-7.04.24-.99-.08-2.04-.79-2.76Z"/>
-          <path fill="#eaeaea" d="M119.88,55.11c-4.68.78-9.18,2.11-13.42,3.92-1.96.84-2.49,3.37-.98,4.89l15.18,15.3c.68.69,1.66,1.02,2.61.85,3.52-.65,7.25-.7,11.09.03,14.27,2.71,24.37,15.56,24.37,30.08,0,3.61,0,6.48,0,6.48,0,3.3,1.79,5.09,4,5.09h22.26c2.21,0,4-1.79,4-4v-3.04c0-38.43-31.21-65.92-69.11-59.6Z"/>
-          <circle fill="#eaeaea" cx="129.26" cy="109.76" r="15.91"/>
-          <line stroke="#eaeaea" stroke-linecap="round" stroke-miterlimit="10" stroke-width="15" x1="66.36" y1="45.77" x2="129.16" y2="109.1" fill="none"/>
+        <svg v-if="(showLever1Icon || showLever2Icon) && isOpen" class="accordion-icon-img accordion-icon-lever1 is-open" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 232.57 161.95">
+          <path fill="#eaeaea" d="M97.45,79.9c0,1.1-.65,2.1-1.65,2.57-9.16,4.33-14.34,15.85-14.34,26.38,0,3.16,0,5.68,0,5.68,0,2.9-1.57,4.47-3.51,4.47h-19.52c-1.94,0-3.51-1.57-3.51-3.51v-2.67c0-26.37,15.88-48.86,39.09-53.88,1.79-.39,3.49.97,3.48,2.8l-.06,18.15Z"/>
+          <path fill="#eaeaea" d="M127.15,79.9c0,1.1.65,2.1,1.65,2.57,9.16,4.33,14.34,15.85,14.34,26.38,0,3.16,0,5.68,0,5.68,0,2.9,1.57,4.47,3.51,4.47h19.52c1.94,0,3.51-1.57,3.51-3.51v-2.67c0-26.37-15.88-48.86-39.09-53.88-1.79-.39-3.49.97-3.48,2.8l.06,18.15Z"/>
+          <circle fill="#eaeaea" cx="112.3" cy="111.34" r="15.91"/>
+          <line stroke="#eaeaea" stroke-linecap="round" stroke-miterlimit="10" stroke-width="15" x1="112.15" y1="36.27" x2="112.22" y2="110.68" fill="none"/>
         </svg>
         <!-- Lever icon - inactive version (when closed) - used by both Lever 1 and Lever 2 -->
-        <svg v-if="(showLever1Icon || showLever2Icon) && !isOpen" class="accordion-icon-img accordion-icon-lever1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 252.31 161.04">
-          <path fill="none" stroke="#eaeaea" stroke-linecap="round" stroke-miterlimit="10" stroke-width="15" d="M115.47,63.63c4.55-1.36,9.36-2.09,14.35-2.09,27.62,0,50.02,22.39,50.02,50.02"/>
-          <path fill="none" stroke="#eaeaea" stroke-linecap="round" stroke-miterlimit="10" stroke-width="15" d="M79.8,111.56c0-6.08,1.08-11.9,3.07-17.29"/>
-          <line stroke="#eaeaea" stroke-linecap="round" stroke-miterlimit="10" stroke-width="15" x1="129.16" y1="109.1" x2="66.36" y2="45.77" fill="none"/>
-          <circle fill="#eaeaea" cx="129.26" cy="109.76" r="15.91"/>
+        <svg v-if="(showLever1Icon || showLever2Icon) && !isOpen" class="accordion-icon-img accordion-icon-lever1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 232.57 161.95">
+          <path fill="none" stroke="#eaeaea" stroke-linecap="round" stroke-miterlimit="10" stroke-width="15" d="M98.43,65.2c4.55-1.36,9.36-2.09,14.35-2.09,27.62,0,50.02,22.39,50.02,50.02"/>
+          <path fill="none" stroke="#eaeaea" stroke-linecap="round" stroke-miterlimit="10" stroke-width="15" d="M62.76,113.13c0-6.08,1.08-11.9,3.07-17.29"/>
+          <line stroke="#eaeaea" stroke-linecap="round" stroke-miterlimit="10" stroke-width="15" x1="112.3" y1="110.68" x2="49.32" y2="47.34" fill="none"/>
+          <circle fill="#eaeaea" cx="112.3" cy="111.34" r="15.91"/>
         </svg>
         
         

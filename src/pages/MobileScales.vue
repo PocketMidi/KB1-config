@@ -481,9 +481,9 @@ const currentRootNoteLabel = computed(() => {
 const keyboardSubtitle = computed(() => {
   // Show current mode and type
   if (playMode.value === 'chord') {
-    return `Chord • ${currentChordLabel.value}`;
+    return `Chord | ${currentChordLabel.value}`;
   }
-  return `Scale • ${currentScaleLabel.value}`;
+  return `Scale | ${currentScaleLabel.value}`;
 });
 
 const presetsSubtitle = computed(() => {
@@ -510,7 +510,7 @@ function getLeverSubtitle(lever: LeverSettingsType): string {
     else profile = 'Linear';
   }
   
-  return `${paramName} · ${profile}`;
+  return `${paramName} | ${profile}`;
 }
 
 function getLeverPushSubtitle(leverPush: LeverPushSettingsType): string {
@@ -533,7 +533,7 @@ function getLeverPushSubtitle(leverPush: LeverPushSettingsType): string {
     else profile = 'Linear';
   }
   
-  return `${paramName} · ${profile}`;
+  return `${paramName} | ${profile}`;
 }
 
 function getTouchSubtitle(touch: TouchSettingsType): string {
@@ -549,7 +549,7 @@ function getTouchSubtitle(touch: TouchSettingsType): string {
     mode = 'Continuous';
   }
   
-  return `${paramName} · ${mode}`;
+  return `${paramName} | ${mode}`;
 }
 
 // Handle profile and mode change events from lever components

@@ -220,7 +220,7 @@ function getLeverSubtitle(lever: LeverSettingsType): string {
     else profile = 'Linear';
   }
   
-  return `${paramName} · ${profile}`;
+  return `${paramName} | ${profile}`;
 }
 
 function getLeverPushSubtitle(leverPush: LeverPushSettingsType): string {
@@ -243,7 +243,7 @@ function getLeverPushSubtitle(leverPush: LeverPushSettingsType): string {
     else profile = 'Linear';
   }
   
-  return `${paramName} · ${profile}`;
+  return `${paramName} | ${profile}`;
 }
 
 function getTouchSubtitle(touch: TouchSettingsType): string {
@@ -259,7 +259,7 @@ function getTouchSubtitle(touch: TouchSettingsType): string {
     mode = 'Continuous';
   }
   
-  return `${paramName} · ${mode}`;
+  return `${paramName} | ${mode}`;
 }
 
 // Watch for device settings changes

@@ -2585,25 +2585,12 @@ defineExpose({
 }
 
 .link-icon {
-  position: relative; /* For pseudo-element positioning */
   width: 25px; /* Icon size */
   height: 25px; /* Icon size */
   opacity: 0.4; /* Dimmed when unlinked */
   cursor: pointer;
   transition: all 0.2s;
   user-select: none;
-}
-
-/* Expanded invisible touch area */
-.link-icon::before {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 44px; /* iOS minimum touch target */
-  height: 44px;
-  /* Invisible but interactive */
 }
 
 .link-icon:hover {

@@ -5,8 +5,6 @@
       <AccordionSection
         ref="lever1Accordion"
         :title="`Lever 1`"
-        :title-suffix="lever1Suffix"
-        :title-suffix-fading="lever1SuffixFading"
         :subtitle="getLeverSubtitle(localSettings.lever1)"
         :midi-cc="localSettings.lever1.ccNumber"
         :id="'lever-1'"
@@ -22,8 +20,6 @@
           :functionModes="leverFunctionModes"
           :valueModes="valueModes"
           @update:modelValue="markChanged"
-          @profileChanged="handleLever1ProfileChange"
-          @valueModeChanged="handleLever1ValueModeChange"
         />
       </AccordionSection>
       
@@ -93,8 +89,6 @@
       <AccordionSection
         ref="touchAccordion"
         title="TOUCH"
-        :title-suffix="touchSuffix"
-        :title-suffix-fading="touchSuffixFading"
         :subtitle="getTouchSubtitle(localSettings.touch)"
         :midi-cc="localSettings.touch.ccNumber"
         :id="'touch-sensor'"

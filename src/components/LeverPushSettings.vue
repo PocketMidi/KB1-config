@@ -481,21 +481,6 @@ const isProfileActive = (profile: ProfileType) => {
 }
 
 // Active profile name (full description)
-const activeProfileName = computed(() => {
-  if (model.value.functionMode === 3) {
-    return 'Reset'
-  } else if (model.value.functionMode === 2) {
-    return 'Static'
-  } else if (model.value.functionMode === 1) {
-    return 'Peak & Decay'
-  } else if (model.value.functionMode === 0) {
-    if (model.value.onsetType === 1) return 'Exponential'
-    if (model.value.onsetType === 2) return 'Logarithmic'
-    return 'Linear'
-  }
-  return 'Linear'
-})
-
 const selectProfile = (profile: ProfileType) => {
   if (isSupported.value) snap()
   

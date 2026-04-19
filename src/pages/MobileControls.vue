@@ -207,8 +207,11 @@ function getLeverSubtitle(lever: LeverSettingsType): string {
   if (lever.functionMode === 2) {
     // Incremental mode
     profile = 'Incremental';
+  } else if (lever.functionMode === 1) {
+    // Peak & Decay mode
+    profile = 'Peak & Decay';
   } else {
-    // Interpolated or Peak & Decay - check onsetType
+    // Interpolated mode - check onsetType
     if (lever.onsetType === 1) profile = 'Exponential';
     else if (lever.onsetType === 2) profile = 'Logarithmic';
     else profile = 'Linear';

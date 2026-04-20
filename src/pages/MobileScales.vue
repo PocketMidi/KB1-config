@@ -58,6 +58,7 @@
           :functionModes="leverFunctionModes"
           :valueModes="valueModes"
           :strum-speed="localSettings.chord.strumSpeed"
+          :play-mode="localSettings.chord.playMode"
           @update:modelValue="markChanged"
         />
       </AccordionSection>
@@ -81,6 +82,7 @@
           :categories="categories"
           :functionModes="leverPushFunctionModes"
           :interpolations="interpolations"
+          :play-mode="localSettings.chord.playMode"
           @update:modelValue="markChanged"
         />
       </AccordionSection>
@@ -105,6 +107,7 @@
           :functionModes="leverFunctionModes"
           :valueModes="valueModes"
           :strum-speed="localSettings.chord.strumSpeed"
+          :play-mode="localSettings.chord.playMode"
           @update:modelValue="markChanged"
         />
       </AccordionSection>
@@ -128,6 +131,7 @@
           :categories="categories"
           :functionModes="leverPushFunctionModes"
           :interpolations="interpolations"
+          :play-mode="localSettings.chord.playMode"
           @update:modelValue="markChanged"
         />
       </AccordionSection>

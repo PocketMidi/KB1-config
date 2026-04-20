@@ -551,8 +551,9 @@ function getTemplateForChordType(chordType: number): number {
 .build-modes-row {
   display: flex;
   gap: 0.5rem;
-  padding: 0.25rem 1rem;
-  justify-content: space-evenly;
+  padding: 0.25rem 0;
+  margin-right: 2rem;  /* Adjust to shift icons left/right */
+  justify-content: center;
   align-items: center;
 }
 

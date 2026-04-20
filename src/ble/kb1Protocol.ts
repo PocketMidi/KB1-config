@@ -623,7 +623,7 @@ export class KB1Protocol {
     const validateTouch = (touch: TouchSettings): boolean => {
       return (
         ((touch.ccNumber >= -1 && touch.ccNumber <= 128) || // Support CC 128 for Velocity
-         (touch.ccNumber >= 200 && touch.ccNumber <= 203)) && // Support KB1 Expression CCs (200-203)
+         (touch.ccNumber >= 200 && touch.ccNumber <= 206)) && // Support KB1 Expression CCs (200-206)
         touch.minCCValue >= 0 && touch.minCCValue <= 127 &&
         touch.maxCCValue >= 0 && touch.maxCCValue <= 127 &&
         touch.minCCValue <= touch.maxCCValue

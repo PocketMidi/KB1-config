@@ -32,7 +32,7 @@
 import { computed } from 'vue'
 
 const props = defineProps<{
-  steps: number      // Firmware step size: 2, 4, 8, 16, or 32
+  steps: number      // Firmware step size: 2, 4, 8, 16, 32 OR direct visual count (6, 15, 21)
   isBipolar: boolean // true for bi mode, false for uni mode
 }>()
 
@@ -41,17 +41,25 @@ const gradientUrl = computed(() =>
 )
 
 // Map firmware step sizes to visual step counts for better appearance
-// Actual firmware: 2=64steps, 4=32steps, 8=16steps, 16=8steps, 32=4steps
-// Visual mapping keeps it in a reasonable 6-20 range for clarity
+// Display % → Firmware → Visual Steps:
+// 5%  → firmware 6  → 20 visual steps (finest/most steps)
+// 10% → firmware 12 → 10 visual steps
+// 15% → firmware 20 → 7 visual steps
+// 25% → firmware 32 → 4 visual steps (coarsest/fewest steps)
+// If steps value is not in the mapping, use it directly (for discrete parameters)
 const visualSteps = computed(() => {
   const stepSizeToVisualSteps: Record<number, number> = {
-    2: 20,   // firmware stepSize 2 → 20 visual steps (instead of 64)
-    4: 16,   // firmware stepSize 4 → 16 visual steps (instead of 32)
-    8: 12,   // firmware stepSize 8 → 12 visual steps (instead of 16)
-    16: 9,   // firmware stepSize 16 → 9 visual steps (instead of 8)
-    32: 6    // firmware stepSize 32 → 6 visual steps (instead of 4)
+    2: 20,   // firmware stepSize 2 → 20 visual steps
+    4: 16,   // firmware stepSize 4 → 16 visual steps
+    6: 20,   // firmware stepSize 6 (5% display) → 20 visual steps
+    8: 12,   // firmware stepSize 8 → 12 visual steps
+    12: 10,  // firmware stepSize 12 (10% display) → 10 visual steps
+    16: 9,   // firmware stepSize 16 → 9 visual steps
+    20: 7,   // firmware stepSize 20 (15% display) → 7 visual steps
+    32: 4    // firmware stepSize 32 (25% display) → 4 visual steps
   }
-  return stepSizeToVisualSteps[props.steps] || 12
+  // If value is in mapping, use mapped value; otherwise use direct value (for discrete params)
+  return stepSizeToVisualSteps[props.steps] ?? props.steps
 })
 
 const staircasePath = computed(() => {

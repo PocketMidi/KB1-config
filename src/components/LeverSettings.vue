@@ -15,13 +15,13 @@
       </button>
 
       <!-- Profile Text Selection -->
-      <div class="profile-selector" :class="{ disabled: isStrumSpeed }">
+      <div class="profile-selector" :class="{ disabled: isIncrementalOnly }">
         <button 
           class="profile-btn"
           :class="{ active: isProfileActive('lin') }"
           @click="selectProfile('lin')"
           title="Linear"
-          :disabled="isStrumSpeed"
+          :disabled="isIncrementalOnly"
         >
           Lin
         </button>
@@ -30,7 +30,7 @@
           :class="{ active: isProfileActive('exp') }"
           @click="selectProfile('exp')"
           title="Exponential"
-          :disabled="isStrumSpeed"
+          :disabled="isIncrementalOnly"
         >
           Exp
         </button>
@@ -39,7 +39,7 @@
           :class="{ active: isProfileActive('log') }"
           @click="selectProfile('log')"
           title="Logarithmic"
-          :disabled="isStrumSpeed"
+          :disabled="isIncrementalOnly"
         >
           Log
         </button>
@@ -48,7 +48,7 @@
           :class="{ active: isProfileActive('pd') }"
           @click="selectProfile('pd')"
           title="Peak & Decay"
-          :disabled="isStrumSpeed"
+          :disabled="isIncrementalOnly"
         >
           P&D
         </button>
@@ -56,8 +56,7 @@
           class="profile-btn"
           :class="{ active: isProfileActive('inc') }"
           @click="selectProfile('inc')"
-          :title="isStrumSpeed ? 'Strum Speed uses incremental mode for immediate tempo response' : 'Incremental'"
-          :disabled="isStrumSpeed"
+          :title="isIncrementalOnly ? 'This parameter uses incremental mode for immediate response' : 'Incremental'"
         >
           Inc
         </button>
@@ -68,7 +67,8 @@
     <div class="profile-visualization">
       <IncrementalProfile 
         v-if="isIncrementalMode"
-        :steps="stepsValue"
+        :key="`inc-${model.ccNumber}-${visualStepsCount}`"
+        :steps="visualStepsCount"
         :is-bipolar="model.valueMode === 1"
         class="profile-graph"
       />
@@ -217,7 +217,7 @@
             <div class="steps-input-wrapper">
               <div 
                 class="tap-zone tap-zone-left"
-                :class="{ disabled: isStepsAtMin }"
+                :class="{ disabled: isStepsAtMin || isDiscreteParameter }"
                 @click="decreaseSteps"
                 title="Previous step value"
               >
@@ -225,6 +225,7 @@
               </div>
               <div 
                 class="draggable-value-inline"
+                :class="{ disabled: isDiscreteParameter }"
                 @mousedown="handleStepsMouseDown"
                 @touchstart="handleStepsTouchStart"
                 @touchmove="handleStepsTouchMove"
@@ -235,7 +236,7 @@
               </div>
               <div 
                 class="tap-zone tap-zone-right"
-                :class="{ disabled: isStepsAtMax }"
+                :class="{ disabled: isStepsAtMax || isDiscreteParameter }"
                 @click="increaseSteps"
                 title="Next step value"
               >
@@ -314,6 +315,7 @@ const props = defineProps<{
   functionModes: { value: number, label: string }[]
   valueModes: { value: number, label: string }[]
   strumSpeed?: number
+  playMode?: number  // 0 = Scale mode, 1 = Chord mode
 }>()
 
 const emit = defineEmits<{
@@ -367,11 +369,14 @@ function dismissHelp() {
 // Check if current parameter is KB1 Expression (unipolar only)
 const isKB1Expression = computed(() => {
   const cc = model.value.ccNumber
-  return cc === 200 || cc === 201 || cc === 202 || cc === 203
+  return cc === 200 || cc === 201 || cc === 202 || cc === 203 || cc === 204 || cc === 205
 })
 
-// Check if current parameter is Strum Speed (incremental only)
-const isStrumSpeed = computed(() => model.value.ccNumber === 200)
+// Check if current parameter requires incremental mode (Strum Speed, Scale Type, Chord Type)
+const isIncrementalOnly = computed(() => {
+  const cc = model.value.ccNumber
+  return cc === 200 || cc === 204 || cc === 205
+})
 
 // Toggle tooltip
 const toggleTooltip = computed(() => {
@@ -513,12 +518,33 @@ watch(() => props.ccMapByNumber.size, () => {
   isUpdatingInternally.value = false
 }, { immediate: true })
 
-// Filter options by selected category
-// Note: Pattern Selector (201) excluded from levers - discrete values better suited for press controls
+// Filter options based on category and context
 const filteredOptions = computed(() => {
-  return props.ccOptions.filter(opt => 
-    opt.group === selectedCategory.value && opt.value !== 201
-  )
+  return props.ccOptions.filter(opt => {
+    // Filter by selected category
+    if (opt.group !== selectedCategory.value) return false
+    
+    // Pattern Selector (201) excluded from levers - discrete values better suited for press controls
+    if (opt.value === 201) return false
+    
+    // Context-aware KB1 Expression filtering based on play mode
+    if (props.playMode !== undefined && opt.group === 'KB1 Expression') {
+      const isScaleMode = props.playMode === 0
+      const isChordMode = props.playMode === 1
+      
+      if (isScaleMode) {
+        // Scale mode: ONLY Scale Type (204) available
+        return opt.value === 204
+      }
+      
+      if (isChordMode) {
+        // Chord mode: All EXCEPT Scale Type (204) available
+        return opt.value !== 204
+      }
+    }
+    
+    return true
+  })
 })
 
 // Watch ccNumber to keep Category in sync and clamp KB1 Expression parameters
@@ -556,6 +582,28 @@ watch(() => model.value.ccNumber, (cc) => {
       minCCValue: min,
       maxCCValue: max
     }
+  } else if (cc === 204) {
+    // Scale Type: 0-20, INCREMENTAL only for discrete selection
+    const min = 0
+    const max = 20
+    model.value = {
+      ...model.value,
+      valueMode: VALUE_MODE_UNIPOLAR,
+      functionMode: 2, // Force INCREMENTAL
+      minCCValue: Math.round((min / max) * 127),
+      maxCCValue: 127
+    }
+  } else if (cc === 205) {
+    // Chord Type: 0-14, INCREMENTAL only for discrete selection
+    const min = 0
+    const max = 14
+    model.value = {
+      ...model.value,
+      valueMode: VALUE_MODE_UNIPOLAR,
+      functionMode: 2, // Force INCREMENTAL
+      minCCValue: Math.round((min / max) * 127),
+      maxCCValue: 127
+    }
   }
   // Note: Pattern Selector (201) filtered out for levers - handled by press controls only
   
@@ -578,6 +626,12 @@ watch(selectedCategory, (cat) => {
 // Computed properties for mode detection
 const isIncrementalMode = computed(() => model.value.functionMode === 2)
 
+// Check if current parameter is a discrete type (Pattern, Scale Type, Chord Type)
+const isDiscreteParameter = computed(() => {
+  const cc = model.value.ccNumber
+  return cc === 201 || cc === 204 || cc === 205
+})
+
 // Step size mapping: Display % → Firmware stepSize
 const stepsDisplayToFirmware: Record<number, number> = {
   25: 32,
@@ -593,13 +647,39 @@ const stepsFirmwareToDisplay: Record<number, number> = {
 }
 
 // Direct access to firmware stepSize with % display conversion
+// For discrete parameters, always show and enforce step size of 1
 const stepsValue = computed({
   get: () => {
+    const cc = model.value.ccNumber
+    // Discrete parameters: always show "1"
+    if (cc === 201 || cc === 204 || cc === 205) {
+      return 1
+    }
     return stepsFirmwareToDisplay[model.value.stepSize] ?? 5
   },
   set: (displayPercent: number) => {
+    const cc = model.value.ccNumber
+    // Discrete parameters: ignore attempts to change step size
+    if (cc === 201 || cc === 204 || cc === 205) {
+      return
+    }
     model.value = { ...model.value, stepSize: stepsDisplayToFirmware[displayPercent] ?? 6 }
   }
+})
+
+// Visual steps for IncrementalProfile display
+// For discrete parameters, show actual count; for others, use firmware step mapping
+const visualStepsCount = computed(() => {
+  const cc = model.value.ccNumber
+  
+  // Discrete parameters: show exact number of values
+  if (cc === 201) return 6   // Pattern Selector: 1-6 (6 values)
+  if (cc === 204) return 21  // Scale Type: 0-20 (21 values)
+  if (cc === 205) return 15  // Chord Type: 0-14 (15 values)
+  
+  // For other parameters, use firmware step size directly
+  // (IncrementalProfile.vue will map it to visual steps)
+  return model.value.stepSize
 })
 
 // Value mode constants
@@ -630,6 +710,8 @@ const minRange = computed(() => {
   if (cc === 201) return 1   // Pattern Selector: 1-6
   if (cc === 202) return 50  // Swing: 50-100%
   if (cc === 203) return 10   // Velocity Spread: 10-100%
+  if (cc === 204) return 0    // Scale Type: 0-20
+  if (cc === 205) return 0    // Chord Type: 0-14
   
   return 0  // Default unipolar minimum
 })
@@ -644,25 +726,41 @@ const maxRange = computed(() => {
   }
   
   if (cc === 201) return 6   // Pattern Selector: 1-6 (discrete)
+  if (cc === 204) return 20  // Scale Type: 0-20 (21 discrete types)
+  if (cc === 205) return 14  // Chord Type: 0-14 (15 discrete types)
   return 100  // Default maximum
 })
 
-// Buffer between min and max to prevent overlap (at least 5 units)
-const MIN_MAX_BUFFER = 5
+// Buffer between min and max to prevent overlap
+// Discrete parameters (201, 204, 205) use smaller buffer
+const MIN_MAX_BUFFER = computed(() => {
+  const cc = model.value.ccNumber
+  if (cc === 201 || cc === 204 || cc === 205) {
+    return 1  // Discrete parameters: minimum 1-step buffer
+  }
+  return 5  // Default: 5 units buffer
+})
 
 // Constrained ranges to prevent min/max overlap
 const constrainedMaxForMin = computed(() => {
   // userMin can't exceed userMax - buffer
-  return Math.min(maxRange.value, userMax.value - MIN_MAX_BUFFER)
+  return Math.min(maxRange.value, userMax.value - MIN_MAX_BUFFER.value)
 })
 
 const constrainedMinForMax = computed(() => {
   // userMax can't go below userMin + buffer
-  return Math.max(minRange.value, userMin.value + MIN_MAX_BUFFER)
+  return Math.max(minRange.value, userMin.value + MIN_MAX_BUFFER.value)
 })
 
 // Step size for MIN/MAX controls in incremental mode
 const minMaxStepSize = computed(() => {
+  const cc = model.value.ccNumber
+  
+  // Discrete parameters: allow single-step precision for exact selection
+  if (cc === 201 || cc === 204 || cc === 205) {
+    return 1
+  }
+  
   // In incremental mode, match the STEPS percentage (5%, 10%, 15%, 25%)
   if (isIncrementalMode.value) {
     return stepsValue.value
@@ -754,6 +852,28 @@ function midiToStrumSpeed(midiValue: number): number {
   return isReverse ? -magnitude : magnitude
 }
 
+// Special conversion for Scale Type (CC 204): 0-20 discrete values
+function scaleTypeToMidi(scaleType: number): number {
+  // Map 0-20 to MIDI 0-127
+  return Math.round((scaleType / 20) * 127)
+}
+
+function midiToScaleType(midiValue: number): number {
+  // Map MIDI 0-127 to 0-20
+  return Math.round((midiValue / 127) * 20)
+}
+
+// Special conversion for Chord Type (CC 205): 0-14 discrete values
+function chordTypeToMidi(chordType: number): number {
+  // Map 0-14 to MIDI 0-127
+  return Math.round((chordType / 14) * 127)
+}
+
+function midiToChordType(midiValue: number): number {
+  // Map MIDI 0-127 to 0-14
+  return Math.round((midiValue / 127) * 14)
+}
+
 // User-facing Min value (0-100 or -100 to +100, or special ranges)
 const userMin = computed({
   get: () => {
@@ -764,6 +884,10 @@ const userMin = computed({
       value = midiToPattern(model.value.minCCValue)
     } else if (model.value.ccNumber === 202) {
       value = midiToSwingPercent(model.value.minCCValue)
+    } else if (model.value.ccNumber === 204) {
+      value = midiToScaleType(model.value.minCCValue)
+    } else if (model.value.ccNumber === 205) {
+      value = midiToChordType(model.value.minCCValue)
     } else if (model.value.valueMode === VALUE_MODE_BIPOLAR) {
       value = midiToBipolar(model.value.minCCValue)
     } else {
@@ -781,6 +905,10 @@ const userMin = computed({
       model.value = { ...model.value, minCCValue: patternToMidi(snappedValue) }
     } else if (model.value.ccNumber === 202) {
       model.value = { ...model.value, minCCValue: swingPercentToMidi(snappedValue) }
+    } else if (model.value.ccNumber === 204) {
+      model.value = { ...model.value, minCCValue: scaleTypeToMidi(snappedValue) }
+    } else if (model.value.ccNumber === 205) {
+      model.value = { ...model.value, minCCValue: chordTypeToMidi(snappedValue) }
     } else if (model.value.valueMode === VALUE_MODE_BIPOLAR) {
       model.value = { ...model.value, minCCValue: bipolarToMidi(snappedValue) }
     } else {
@@ -799,6 +927,10 @@ const userMax = computed({
       value = midiToPattern(model.value.maxCCValue)
     } else if (model.value.ccNumber === 202) {
       value = midiToSwingPercent(model.value.maxCCValue)
+    } else if (model.value.ccNumber === 204) {
+      value = midiToScaleType(model.value.maxCCValue)
+    } else if (model.value.ccNumber === 205) {
+      value = midiToChordType(model.value.maxCCValue)
     } else if (model.value.valueMode === VALUE_MODE_BIPOLAR) {
       value = midiToBipolar(model.value.maxCCValue)
     } else {
@@ -816,6 +948,10 @@ const userMax = computed({
       model.value = { ...model.value, maxCCValue: patternToMidi(snappedValue) }
     } else if (model.value.ccNumber === 202) {
       model.value = { ...model.value, maxCCValue: swingPercentToMidi(snappedValue) }
+    } else if (model.value.ccNumber === 204) {
+      model.value = { ...model.value, maxCCValue: scaleTypeToMidi(snappedValue) }
+    } else if (model.value.ccNumber === 205) {
+      model.value = { ...model.value, maxCCValue: chordTypeToMidi(snappedValue) }
     } else if (model.value.valueMode === VALUE_MODE_BIPOLAR) {
       model.value = { ...model.value, maxCCValue: bipolarToMidi(snappedValue) }
     } else {
@@ -958,6 +1094,7 @@ const stepsOptions = [25, 15, 10, 5] // Display percentages: 25%, 15%, 10%, 5%
 
 // Mouse wheel for steps
 function handleStepsWheel(event: WheelEvent) {
+  if (isDiscreteParameter.value) return  // Discrete parameters can't change step size
   event.preventDefault()
   const currentIndex = stepsOptions.indexOf(stepsValue.value)
   const delta = event.deltaY > 0 ? -1 : 1
@@ -967,6 +1104,7 @@ function handleStepsWheel(event: WheelEvent) {
 
 // Mouse drag for steps
 function handleStepsMouseDown(event: MouseEvent) {
+  if (isDiscreteParameter.value) return  // Discrete parameters can't change step size
   event.preventDefault()
   stepsDragging.value = true
   stepsDragStartX.value = event.clientX
@@ -994,6 +1132,7 @@ function handleStepsMouseUp() {
 
 // Touch drag for steps
 function handleStepsTouchStart(event: TouchEvent) {
+  if (isDiscreteParameter.value) return  // Discrete parameters can't change step size
   if (!event.touches[0]) return
   stepsDragging.value = true
   stepsDragStartX.value = event.touches[0].clientX
@@ -1028,6 +1167,7 @@ const isStepsAtMax = computed(() => {
 
 // Arrow button functions for steps
 function decreaseSteps() {
+  if (isDiscreteParameter.value) return  // Discrete parameters can't change step size
   if (isSupported.value) tap()
   const currentIndex = stepsOptions.indexOf(stepsValue.value)
   if (currentIndex > 0) {
@@ -1036,6 +1176,7 @@ function decreaseSteps() {
 }
 
 function increaseSteps() {
+  if (isDiscreteParameter.value) return  // Discrete parameters can't change step size
   if (isSupported.value) tap()
   const currentIndex = stepsOptions.indexOf(stepsValue.value)
   if (currentIndex < stepsOptions.length - 1) {

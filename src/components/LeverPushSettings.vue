@@ -2,24 +2,24 @@
   <div class="settings-leverpush" :class="`lever-${lever}`">
     <!-- Toggle and Profile Selection -->
     <div class="controls-row">
-      <!-- Momentary/Latch Toggle (or REV/FWD for Pattern Selector) -->
+      <!-- Momentary/Latch Toggle (or REV/FWD for cycling parameters) -->
       <button 
         class="toggle-btn" 
         @click="handleToggleClick"
         :title="toggleTooltip"
         :disabled="isResetMode"
       >
-        <span :class="{ active: isResetMode || (isPatternSelector ? !isMomentary : isMomentary) }">{{ isPatternSelector ? 'REV' : 'MOM' }}</span>
+        <span :class="{ active: isResetMode || (isCyclingParameter ? !isMomentary : isMomentary) }">{{ isCyclingParameter ? 'REV' : 'MOM' }}</span>
         <span class="toggle-divider">|</span>
-        <span :class="{ active: !isResetMode && (isPatternSelector ? isMomentary : !isMomentary) }">{{ isPatternSelector ? 'FWD' : 'LAT' }}</span>
+        <span :class="{ active: !isResetMode && (isCyclingParameter ? isMomentary : !isMomentary) }">{{ isCyclingParameter ? 'FWD' : 'LAT' }}</span>
       </button>
 
-      <!-- Profile Text Selection (hidden for Pattern Selector) -->
-      <div class="profile-selector" v-if="!isPatternSelector">
+      <!-- Profile Text Selection (always visible, disabled for incremental-only params) -->
+      <div class="profile-selector">
         <button 
           class="profile-btn"
           :class="{ active: isProfileActive('lin') }"
-          :disabled="isResetMode"
+          :disabled="isResetMode || isIncrementalOnly"
           @click="selectProfile('lin')"
           title="Linear"
         >
@@ -28,7 +28,7 @@
         <button 
           class="profile-btn"
           :class="{ active: isProfileActive('exp') }"
-          :disabled="isResetMode"
+          :disabled="isResetMode || isIncrementalOnly"
           @click="selectProfile('exp')"
           title="Exponential"
         >
@@ -37,7 +37,7 @@
         <button 
           class="profile-btn"
           :class="{ active: isProfileActive('log') }"
-          :disabled="isResetMode"
+          :disabled="isResetMode || isIncrementalOnly"
           @click="selectProfile('log')"
           title="Logarithmic"
         >
@@ -46,11 +46,20 @@
         <button 
           class="profile-btn"
           :class="{ active: isProfileActive('pd') }"
-          :disabled="isResetMode"
+          :disabled="isResetMode || isIncrementalOnly"
           @click="selectProfile('pd')"
           title="Peak & Decay"
         >
           P&D
+        </button>
+        <button 
+          class="profile-btn"
+          :class="{ active: isProfileActive('inc') }"
+          :disabled="isResetMode"
+          @click="selectProfile('inc')"
+          :title="isIncrementalOnly ? 'This parameter uses incremental mode for immediate response' : 'Incremental'"
+        >
+          Inc
         </button>
       </div>
     </div>
@@ -268,6 +277,7 @@ const props = defineProps<{
   categories: string[]
   functionModes: { value: number, label: string }[]
   interpolations: { value: number, label: string }[]
+  playMode?: number // 0 = Scale mode, 1 = Chord mode
 }>()
 
 const emit = defineEmits<{
@@ -361,7 +371,27 @@ const filteredOptions = computed(() => {
     return props.ccOptions
   }
   
-  return props.ccOptions.filter(opt => opt.group === selectedCategory.value)
+  let options = props.ccOptions.filter(opt => opt.group === selectedCategory.value)
+  
+  // For KB1 Expression category in press mode, only show press-compatible parameters
+  if (selectedCategory.value === 'KB1 Expression') {
+    // Remove continuous/lever-only parameters (Strum Speed, Swing, Velocity Spread)
+    options = options.filter(opt => {
+      const cc = opt.value
+      return cc !== 200 && cc !== 202 && cc !== 203 // Keep 201, 204, 205, 206
+    })
+    
+    // Context-aware filtering based on play mode
+    if (props.playMode === 0) {
+      // Scale mode: Show Pattern, Scale Type, Root Note (exclude Chord Type)
+      options = options.filter(opt => opt.value !== 205)
+    } else if (props.playMode === 1) {
+      // Chord mode: Show Pattern, Chord Type, Root Note (exclude Scale Type)
+      options = options.filter(opt => opt.value !== 204)
+    }
+  }
+  
+  return options
 })
 
 // Watch ccNumber to keep Category in sync and clamp KB1 Expression parameters
@@ -392,6 +422,32 @@ watch(() => model.value.ccNumber, (cc) => {
     const min = Math.round((8 / 100) * 127)   // 8 -> ~10 MIDI
     const max = Math.round((100 / 100) * 127) // 100 -> 127 MIDI
     model.value = { ...model.value, minCCValue: min, maxCCValue: max }
+  } else if (cc === 204) {
+    // Scale Type: 0-20, STATIC mode for discrete selection
+    model.value = {
+      ...model.value,
+      functionMode: FUNCTION_MODE_STATIC,
+      minCCValue: 0,
+      maxCCValue: 127
+    }
+  } else if (cc === 205) {
+    // Chord Type: 0-14, STATIC mode for discrete selection
+    model.value = {
+      ...model.value,
+      functionMode: FUNCTION_MODE_STATIC,
+      minCCValue: 0,
+      maxCCValue: 127
+    }
+  } else if (cc === 206) {
+    // Root Note: 0-11, STATIC mode for discrete selection
+    // Default to FWD (forward) cycling: offsetTime = 0
+    model.value = {
+      ...model.value,
+      functionMode: FUNCTION_MODE_STATIC,
+      minCCValue: 0,
+      maxCCValue: 127,
+      offsetTime: 0
+    }
   }
   
   isUpdatingInternally.value = false
@@ -450,7 +506,7 @@ function handleToggleClick() {
     // If onsetTime is 0, use a sensible default (100ms)
     const timeValue = model.value.onsetTime || 100
     model.value = { ...model.value, onsetTime: timeValue, offsetTime: timeValue }
-    if (isPatternSelector.value) {
+    if (isCyclingParameter.value) {
       emit('behaviourChanged', 'Cycle Reverse')
     } else {
       emit('behaviourChanged', 'Latched')
@@ -458,7 +514,7 @@ function handleToggleClick() {
   } else {
     // Switch to momentary/forward - set offsetTime to 0
     model.value = { ...model.value, offsetTime: 0 }
-    if (isPatternSelector.value) {
+    if (isCyclingParameter.value) {
       emit('behaviourChanged', 'Cycle Forward')
     } else {
       emit('behaviourChanged', 'Momentary')
@@ -561,19 +617,31 @@ const profileImage = computed(() => {
 const isResetMode = computed(() => model.value.functionMode === FUNCTION_MODE_RESET)
 const isPatternSelector = computed(() => model.value.ccNumber === 201)
 
-// Watch for Pattern Selector activation to emit initial direction state
-watch(isPatternSelector, (isActive) => {
+// Check if current parameter is a cycling/discrete parameter (uses REV/FWD toggle)
+const isCyclingParameter = computed(() => {
+  const cc = model.value.ccNumber
+  return cc === 201 || cc === 204 || cc === 205 || cc === 206
+})
+
+// Check if current parameter requires incremental mode (CC 200, 204, 205, 206)
+const isIncrementalOnly = computed(() => {
+  const cc = model.value.ccNumber
+  return cc === 200 || cc === 204 || cc === 205 || cc === 206
+})
+
+// Watch for cycling parameter activation to emit initial direction state
+watch(isCyclingParameter, (isActive) => {
   if (isActive) {
-    // Emit current direction when Pattern Selector becomes active
+    // Emit current direction when cycling parameter becomes active
     nextTick(() => {
       emit('behaviourChanged', isMomentary.value ? 'Cycle Forward' : 'Cycle Reverse')
     })
   }
 }, { immediate: true })
 
-// Toggle tooltip (depends on isPatternSelector)
+// Toggle tooltip (depends on isCyclingParameter)
 const toggleTooltip = computed(() => {
-  if (isPatternSelector.value) {
+  if (isCyclingParameter.value) {
     return isMomentary.value ? 'Switch to Reverse Cycling' : 'Switch to Forward Cycling'
   }
   return isMomentary.value ? 'Switch to Latched' : 'Switch to Momentary'
@@ -626,19 +694,29 @@ const minRange = computed(() => {
   if (cc === 201) return 1   // Pattern Selector: 1-6
   if (cc === 202) return 50  // Swing: 50-100%
   if (cc === 203) return 8   // Velocity Spread: 8-100%
+  if (cc === 204) return 0    // Scale Type: 0-20
+  if (cc === 205) return 0    // Chord Type: 0-14
+  if (cc === 206) return 0    // Root Note: 0-11
   return 0  // Default minimum
 })
 
 const maxRange = computed(() => {
   const cc = model.value.ccNumber
   if (cc === 201) return 6   // Pattern Selector: 1-6 (discrete)
+  if (cc === 204) return 20  // Scale Type: 0-20 (21 discrete types)
+  if (cc === 205) return 14  // Chord Type: 0-14 (15 discrete types)
+  if (cc === 206) return 11  // Root Note: 0-11 (12 discrete notes)
   return 100  // Default maximum
 })
 
 // Buffer between min and max to prevent overlap
-// Smaller buffer for Pattern Selector (1-6 range) vs regular params (0-100 range)
+// Smaller buffer for discrete parameters vs regular params (0-100 range)
 const MIN_MAX_BUFFER = computed(() => {
-  return model.value.ccNumber === 201 ? 1 : 5
+  const cc = model.value.ccNumber
+  if (cc === 201 || cc === 204 || cc === 205 || cc === 206) {
+    return 1  // Discrete parameters: minimum 1-step buffer
+  }
+  return 5  // Default: 5 units buffer
 })
 
 // Constrained ranges to prevent min/max overlap
@@ -696,6 +774,39 @@ function midiToSwingPercent(midiValue: number): number {
   return Math.round(50 + (midiValue / 127) * 50)
 }
 
+// Special conversion for Scale Type (CC 204): 0-20 discrete values
+function scaleTypeToMidi(scaleType: number): number {
+  // Map 0-20 to MIDI 0-127
+  return Math.round((scaleType / 20) * 127)
+}
+
+function midiToScaleType(midiValue: number): number {
+  // Map MIDI 0-127 to 0-20
+  return Math.round((midiValue / 127) * 20)
+}
+
+// Special conversion for Chord Type (CC 205): 0-14 discrete values
+function chordTypeToMidi(chordType: number): number {
+  // Map 0-14 to MIDI 0-127
+  return Math.round((chordType / 14) * 127)
+}
+
+function midiToChordType(midiValue: number): number {
+  // Map MIDI 0-127 to 0-14
+  return Math.round((midiValue / 127) * 14)
+}
+
+// Special conversion for Root Note (CC 206): 0-11 discrete values (C to B)
+function rootNoteToMidi(rootNote: number): number {
+  // Map 0-11 to MIDI 0-127
+  return Math.round((rootNote / 11) * 127)
+}
+
+function midiToRootNote(midiValue: number): number {
+  // Map MIDI 0-127 to 0-11
+  return Math.round((midiValue / 127) * 11)
+}
+
 // User-facing Min value (0-100 for normal params, 1-7 for pattern selector)
 const userMin = computed({
   get: () => {
@@ -706,11 +817,17 @@ const userMin = computed({
       value = midiToPattern(model.value.minCCValue)
     } else if (model.value.ccNumber === 202) {
       value = midiToSwingPercent(model.value.minCCValue)
+    } else if (model.value.ccNumber === 204) {
+      value = midiToScaleType(model.value.minCCValue)
+    } else if (model.value.ccNumber === 205) {
+      value = midiToChordType(model.value.minCCValue)
+    } else if (model.value.ccNumber === 206) {
+      value = midiToRootNote(model.value.minCCValue)
     } else {
       value = midiToUnipolar(model.value.minCCValue)
     }
-    // Snap displayed value to user preference step size (except pattern selector)
-    if (model.value.ccNumber !== 201) {
+    // Snap displayed value to user preference step size (except discrete parameters)
+    if (model.value.ccNumber !== 201 && model.value.ccNumber !== 204 && model.value.ccNumber !== 205 && model.value.ccNumber !== 206) {
       return Math.round(value / unipolarStepSize.value) * unipolarStepSize.value
     }
     return value
@@ -718,7 +835,7 @@ const userMin = computed({
   set: (userValue: number) => {
     // Snap to step increments before converting to MIDI
     let snappedValue = userValue
-    if (model.value.ccNumber !== 201) {
+    if (model.value.ccNumber !== 201 && model.value.ccNumber !== 204 && model.value.ccNumber !== 205 && model.value.ccNumber !== 206) {
       snappedValue = Math.round(userValue / unipolarStepSize.value) * unipolarStepSize.value
     }
     
@@ -728,6 +845,12 @@ const userMin = computed({
       model.value = { ...model.value, minCCValue: patternToMidi(snappedValue) }
     } else if (model.value.ccNumber === 202) {
       model.value = { ...model.value, minCCValue: swingPercentToMidi(snappedValue) }
+    } else if (model.value.ccNumber === 204) {
+      model.value = { ...model.value, minCCValue: scaleTypeToMidi(snappedValue) }
+    } else if (model.value.ccNumber === 205) {
+      model.value = { ...model.value, minCCValue: chordTypeToMidi(snappedValue) }
+    } else if (model.value.ccNumber === 206) {
+      model.value = { ...model.value, minCCValue: rootNoteToMidi(snappedValue) }
     } else {
       model.value = { ...model.value, minCCValue: unipolarToMidi(snappedValue) }
     }
@@ -744,11 +867,17 @@ const userMax = computed({
       value = midiToPattern(model.value.maxCCValue)
     } else if (model.value.ccNumber === 202) {
       value = midiToSwingPercent(model.value.maxCCValue)
+    } else if (model.value.ccNumber === 204) {
+      value = midiToScaleType(model.value.maxCCValue)
+    } else if (model.value.ccNumber === 205) {
+      value = midiToChordType(model.value.maxCCValue)
+    } else if (model.value.ccNumber === 206) {
+      value = midiToRootNote(model.value.maxCCValue)
     } else {
       value = midiToUnipolar(model.value.maxCCValue)
     }
-    // Snap displayed value to user preference step size (except pattern selector)
-    if (model.value.ccNumber !== 201) {
+    // Snap displayed value to user preference step size (except discrete parameters)
+    if (model.value.ccNumber !== 201 && model.value.ccNumber !== 204 && model.value.ccNumber !== 205 && model.value.ccNumber !== 206) {
       return Math.round(value / unipolarStepSize.value) * unipolarStepSize.value
     }
     return value
@@ -756,7 +885,7 @@ const userMax = computed({
   set: (userValue: number) => {
     // Snap to step increments before converting to MIDI
     let snappedValue = userValue
-    if (model.value.ccNumber !== 201) {
+    if (model.value.ccNumber !== 201 && model.value.ccNumber !== 204 && model.value.ccNumber !== 205 && model.value.ccNumber !== 206) {
       snappedValue = Math.round(userValue / unipolarStepSize.value) * unipolarStepSize.value
     }
     
@@ -766,6 +895,12 @@ const userMax = computed({
       model.value = { ...model.value, maxCCValue: patternToMidi(snappedValue) }
     } else if (model.value.ccNumber === 202) {
       model.value = { ...model.value, maxCCValue: swingPercentToMidi(snappedValue) }
+    } else if (model.value.ccNumber === 204) {
+      model.value = { ...model.value, maxCCValue: scaleTypeToMidi(snappedValue) }
+    } else if (model.value.ccNumber === 205) {
+      model.value = { ...model.value, maxCCValue: chordTypeToMidi(snappedValue) }
+    } else if (model.value.ccNumber === 206) {
+      model.value = { ...model.value, maxCCValue: rootNoteToMidi(snappedValue) }
     } else {
       model.value = { ...model.value, maxCCValue: unipolarToMidi(snappedValue) }
     }
@@ -783,11 +918,17 @@ const resetValue = computed({
       value = midiToPattern(model.value.minCCValue)
     } else if (model.value.ccNumber === 202) {
       value = midiToSwingPercent(model.value.minCCValue)
+    } else if (model.value.ccNumber === 204) {
+      value = midiToScaleType(model.value.minCCValue)
+    } else if (model.value.ccNumber === 205) {
+      value = midiToChordType(model.value.minCCValue)
+    } else if (model.value.ccNumber === 206) {
+      value = midiToRootNote(model.value.minCCValue)
     } else {
       value = midiToUnipolar(model.value.minCCValue)
     }
-    // Snap displayed value to user preference step size (except pattern selector)
-    if (model.value.ccNumber !== 201) {
+    // Snap displayed value to user preference step size (except discrete parameters)
+    if (model.value.ccNumber !== 201 && model.value.ccNumber !== 204 && model.value.ccNumber !== 205 && model.value.ccNumber !== 206) {
       return Math.round(value / unipolarStepSize.value) * unipolarStepSize.value
     }
     return value
@@ -795,7 +936,7 @@ const resetValue = computed({
   set: (userValue: number) => {
     // Snap to step increments before converting to MIDI
     let snappedValue = userValue
-    if (model.value.ccNumber !== 201) {
+    if (model.value.ccNumber !== 201 && model.value.ccNumber !== 204 && model.value.ccNumber !== 205 && model.value.ccNumber !== 206) {
       snappedValue = Math.round(userValue / unipolarStepSize.value) * unipolarStepSize.value
     }
     
@@ -815,6 +956,27 @@ const resetValue = computed({
       }
     } else if (model.value.ccNumber === 202) {
       const midiValue = swingPercentToMidi(snappedValue)
+      model.value = {
+        ...model.value,
+        minCCValue: midiValue,
+        maxCCValue: midiValue
+      }
+    } else if (model.value.ccNumber === 204) {
+      const midiValue = scaleTypeToMidi(snappedValue)
+      model.value = {
+        ...model.value,
+        minCCValue: midiValue,
+        maxCCValue: midiValue
+      }
+    } else if (model.value.ccNumber === 205) {
+      const midiValue = chordTypeToMidi(snappedValue)
+      model.value = {
+        ...model.value,
+        minCCValue: midiValue,
+        maxCCValue: midiValue
+      }
+    } else if (model.value.ccNumber === 206) {
+      const midiValue = rootNoteToMidi(snappedValue)
       model.value = {
         ...model.value,
         minCCValue: midiValue,
@@ -1208,10 +1370,6 @@ function dismissHelp() {
   background: var(--ui-highlight);
   flex-shrink: 0;
   border-radius: 2px;
-}
-
-.meter-divider.thick {
-  /* No longer needed - all dividers are now 5px */
 }
 
 .latch-indicator {

@@ -199,10 +199,22 @@ async function parsePolyendCSV(csvText: string): Promise<void> {
             category: 'KB1 Expression',
             entries: [
               {
-                ccNumber: 203,
-                parameter: 'Velocity Spread',
+                ccNumber: 204,
+                parameter: 'Scale Type',
                 category: 'KB1 Expression',
-                range: { min: 10, max: 100, text: '10 to 100' },
+                range: { min: 0, max: 20, text: '0 to 20' },
+              },
+              {
+                ccNumber: 205,
+                parameter: 'Chord Type',
+                category: 'KB1 Expression',
+                range: { min: 0, max: 14, text: '0 to 14' },
+              },
+              {
+                ccNumber: 206,
+                parameter: 'Root Note',
+                category: 'KB1 Expression',
+                range: { min: 0, max: 11, text: '0 to 11' },
               },
               {
                 ccNumber: 200,
@@ -211,16 +223,22 @@ async function parsePolyendCSV(csvText: string): Promise<void> {
                 range: { min: -100, max: 100, text: '-100 to 100' },
               },
               {
+                ccNumber: 201,
+                parameter: 'Pattern Selector',
+                category: 'KB1 Expression',
+                range: { min: 1, max: 6, text: '1 to 6' },
+              },
+              {
                 ccNumber: 202,
                 parameter: 'Swing',
                 category: 'KB1 Expression',
                 range: { min: 50, max: 100, text: '50 to 100' },
               },
               {
-                ccNumber: 201,
-                parameter: 'Pattern Selector',
+                ccNumber: 203,
+                parameter: 'Velocity Spread',
                 category: 'KB1 Expression',
-                range: { min: 1, max: 6, text: '1 to 6' },
+                range: { min: 10, max: 100, text: '10 to 100' },
               },
             ],
           };

@@ -191,6 +191,12 @@ const markers = computed<Marker[]>(() => {
   
   // Special case: Pattern Selector (1-6) shows exactly 6 dots
   const isPatternSelector = rangeMin === 1 && rangeMax === 6
+  // Special case: Chord Type (0-14) shows exactly 15 dots
+  const isChordType = rangeMin === 0 && rangeMax === 14
+  // Special case: Scale Type (0-20) shows exactly 21 dots
+  const isScaleType = rangeMin === 0 && rangeMax === 20
+  // Special case: Root Note (0-11) shows exactly 12 dots
+  const isRootNote = rangeMin === 0 && rangeMax === 11
   
   const result: Marker[] = []
   
@@ -205,6 +211,24 @@ const markers = computed<Marker[]>(() => {
       if (props.mode === 'reset') {
         const distanceToValue = Math.abs(value - props.value)
         highlighted = distanceToValue <= 0.5
+      } else {
+        const distanceToMin = Math.abs(value - props.min)
+        const distanceToMax = Math.abs(value - props.max)
+        highlighted = distanceToMin <= 0.5 || distanceToMax <= 0.5
+      }
+      
+      result.push({ position, value, highlighted })
+    }
+  } else if (isChordType || isScaleType || isRootNote) {
+    // Chord Type (0-14), Scale Type (0-20), or Root Note (0-11): show dot for each discrete value
+    const count = isChordType ? 15 : isScaleType ? 21 : 12
+    for (let i = 0; i < count; i++) {
+      const value = rangeMin + i
+      const position = (i / (count - 1)) * 100
+      
+      let highlighted = false
+      if (props.mode === 'reset') {
+        highlighted = Math.abs(value - props.value) <= 0.5
       } else {
         const distanceToMin = Math.abs(value - props.min)
         const distanceToMax = Math.abs(value - props.max)
@@ -267,6 +291,44 @@ const labels = computed<Label[]>(() => {
     const rangeMin = props.minAllowed ?? 0
     const rangeMax = props.maxAllowed ?? 100
     const rangeSpan = rangeMax - rangeMin
+    
+    // Special handling for discrete parameters
+    const isChordType = rangeMin === 0 && rangeMax === 14
+    const isScaleType = rangeMin === 0 && rangeMax === 20
+    const isRootNote = rangeMin === 0 && rangeMax === 11
+    
+    if (isChordType) {
+      // Chord Type: show 0, 4, 7, 11, 14 (evenly spaced from 15 values)
+      return [
+        { value: 0, position: 0, text: '0' },
+        { value: 4, position: (4 / 14) * 100, text: '4' },
+        { value: 7, position: (7 / 14) * 100, text: '7' },
+        { value: 11, position: (11 / 14) * 100, text: '11' },
+        { value: 14, position: 100, text: '14' }
+      ]
+    }
+    
+    if (isScaleType) {
+      // Scale Type: show 0, 5, 10, 15, 20 (evenly spaced from 21 values)
+      return [
+        { value: 0, position: 0, text: '0' },
+        { value: 5, position: (5 / 20) * 100, text: '5' },
+        { value: 10, position: (10 / 20) * 100, text: '10' },
+        { value: 15, position: (15 / 20) * 100, text: '15' },
+        { value: 20, position: 100, text: '20' }
+      ]
+    }
+    
+    if (isRootNote) {
+      // Root Note: show 0, 3, 6, 8, 11 (evenly spaced from 12 values)
+      return [
+        { value: 0, position: 0, text: '0' },
+        { value: 3, position: (3 / 11) * 100, text: '3' },
+        { value: 6, position: (6 / 11) * 100, text: '6' },
+        { value: 8, position: (8 / 11) * 100, text: '8' },
+        { value: 11, position: 100, text: '11' }
+      ]
+    }
     
     // For small discrete ranges (like Pattern 1-7), show all values
     if (rangeSpan <= 10) {

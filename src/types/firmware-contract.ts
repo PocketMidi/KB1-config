@@ -91,11 +91,13 @@ export const SCALE_TYPE_CHROMATIC = 0;
  * INVARIANTS:
  * - Standard MIDI CC: 0-127
  * - CC 128: Velocity (special case)
- * - CC 200-203: KB1 Expression Parameters (extended range)
- *   - CC 200: Strum Speed (bipolar)
- *   - CC 201: Strum Pattern
- *   - CC 202: Strum Swing
- *   - CC 203: Velocity Spread
+ * - CC 200-205: KB1 Expression Parameters (extended range)
+ *   - CC 200: Strum Speed (bipolar, incremental only)
+ *   - CC 201: Strum Pattern (1-6, discrete values)
+ *   - CC 202: Strum Swing (50-100%)
+ *   - CC 203: Velocity Spread (10-100%)
+ *   - CC 204: Scale Type (0-20, incremental only)
+ *   - CC 205: Chord Type (0-14, incremental only)
  * -1: Disabled
  * 
  * CRITICAL: CC 200 uses bipolar mapping, ALL others use unipolar
@@ -106,9 +108,12 @@ export const CC_STRUM_SPEED = 200;
 export const CC_STRUM_PATTERN = 201;
 export const CC_STRUM_SWING = 202;
 export const CC_VELOCITY_SPREAD = 203;
+export const CC_SCALE_TYPE = 204;
+export const CC_CHORD_TYPE = 205;
+export const CC_ROOT_NOTE = 206;
 
 export function isExtendedCC(ccNumber: number): boolean {
-  return ccNumber >= 200 && ccNumber <= 203;
+  return ccNumber >= 200 && ccNumber <= 206;
 }
 
 export function isBipolarCC(ccNumber: number): boolean {

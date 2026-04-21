@@ -73,7 +73,7 @@
             :class="{ active: activeSlot === (slot - 1) }"
             :disabled="!getSlotPreset(slot - 1)"
             title="Load into web app">
-            Activate
+            Apply
           </button>
           <button 
             class="btn-action btn-with-indicator" 
@@ -107,8 +107,8 @@
             v-model="slotAuthor"
             type="text"
             class="input-text"
-            placeholder="Your name (max 12 chars)"
-            maxlength="12"
+            placeholder="Your name"
+            maxlength="14"
           />
         </div>
         <div class="form-group">
@@ -244,7 +244,7 @@
             <p>Click any slot to save current settings with a name for easy reference.</p>
           </div>
           <div class="help-section">
-            <h4>Activate</h4>
+            <h4>Apply</h4>
             <p>Loads the preset into config app ready to send to <em>KB1</em>.</p>
           </div>
           <div class="help-section">
@@ -806,7 +806,7 @@ function activateSlot(slot: number) {
   activeSlot.value = slot;
   activeDeviceSlot.value = null;
   
-  toast.success(`Activated: "${preset.name}"`);
+  toast.success(`Applied: "${preset.name}"`);
 }
 
 function loadFactoryDefaults() {
@@ -1309,7 +1309,7 @@ function downloadJSON(json: string, filename: string) {
   position: relative;
   background: rgba(132, 132, 132, 0.1);
   border: 1px solid rgba(205, 205, 205, 0.2);
-  padding: 0.5rem 0.5rem;
+  padding: 0.35rem 0.5rem;
   font-size: 0.75rem;
   font-weight: 500;
   color: #CDCDCD;

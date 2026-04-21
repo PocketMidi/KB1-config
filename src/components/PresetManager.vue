@@ -28,8 +28,8 @@
       v-if="!selectionMode"
       class="btn-factory-defaults"
       @click.stop="loadFactoryDefaults"
-      title="Load factory default settings into configurator">
-      Load Factory Defaults
+      title="Load default starter presets">
+      Load Defaults
     </button>
     <div v-if="!selectionMode" class="factory-divider"></div>
 
@@ -59,7 +59,7 @@
           <div class="slot-label-wrapper">
             <div class="slot-label">
               {{ slot }}
-              <span v-if="getSlotPreset(slot - 1)?.isFactoryDefault" class="starter-badge" title="Factory starter preset">STARTER</span>
+              <span v-if="getSlotPreset(slot - 1)?.author" class="author-badge" :title="'Created by ' + getSlotPreset(slot - 1)?.author">{{ getSlotPreset(slot - 1)?.author }}</span>
             </div>
             <div class="slot-name">{{ getSlotPreset(slot - 1)?.name || '(Empty)' }}</div>
           </div>
@@ -101,6 +101,16 @@
       <div class="modal-dialog">
         <h3>{{ getSlotPreset(editingSlot) ? 'Edit Preset' : 'Save Preset' }}</h3>
         
+        <div class="form-group">
+          <label>Author (Optional)</label>
+          <input
+            v-model="slotAuthor"
+            type="text"
+            class="input-text"
+            placeholder="Your name (max 12 chars)"
+            maxlength="12"
+          />
+        </div>
         <div class="form-group">
           <label>Preset Name</label>
           <input
@@ -172,6 +182,13 @@
                 type="text"
                 class="input-text"
                 placeholder="Preset name (required)"
+              />
+              <input
+                v-model="exportMetadata.author"
+                type="text"
+                class="input-text"
+                placeholder="Your name (optional, max 12 chars)"
+                maxlength="12"
               />
               <div class="settings-snapshot" v-if="exportingSlot !== null && getSlotPreset(exportingSlot)">{{ getSlotPreset(exportingSlot)?.snapshot || generateSettingsSnapshot(getSlotPreset(exportingSlot)?.settings || props.currentSettings) }}</div>
               <textarea
@@ -275,6 +292,7 @@ const emit = defineEmits<{
 // 8-Slot Preset System (localStorage)
 interface SlotPreset {
   name: string;
+  author?: string; // Author name (max 12 chars)
   description?: string; // Optional description for community sharing
   snapshot?: string; // Auto-generated settings snapshot for quick reference
   settings: DeviceSettings;
@@ -293,6 +311,7 @@ function getDefaultPresets(): (SlotPreset | null)[] {
     // Slot 1: Scale/RootNote Control
     {
       name: "Scale Cntrl",
+      author: "STARTER",
       description: "cycle thru scales with L1 - cycle thru root notes fwd/rev with P1/Touch",
       snapshot: "KB: Maj/C • Compact\nL1: Step/Uni • P1: RootNote/FWD\nL2: Step/Bi • P2: Reset • Touch: RootNote/REV",
       modifiedAt: now,
@@ -311,6 +330,7 @@ function getDefaultPresets(): (SlotPreset | null)[] {
     // Slot 2: Chord RootNote Control
     {
       name: "Chord Cntrl",
+      author: "STARTER",
       description: "cycle thru chords with L1 - cycle thru root notes fwd/rev with P1/Touch - 2 octave range",
       snapshot: "KB: Maj/? • Chord\nL1: Step/Uni • P1: RootNote/FWD\nL2: Step/Bi • P2: Reset • Touch: RootNote/REV",
       modifiedAt: now,
@@ -329,6 +349,7 @@ function getDefaultPresets(): (SlotPreset | null)[] {
     // Slot 3: Strum Control
     {
       name: "Strum Cntrl",
+      author: "STARTER",
       description: "cycle thru strum speeds with L1 - cycle thru patterns fwd/rev with P1/Touch - 2 octave range",
       snapshot: "KB: Maj/? • Strum/Fwd/Cust\nL1: Step/Uni • P1: Pattern/FWD\nL2: Step/Bi • P2: Reset • Touch: Pattern/REV",
       modifiedAt: now,
@@ -347,6 +368,7 @@ function getDefaultPresets(): (SlotPreset | null)[] {
     // Slot 4: Strum Shape(arp) Control
     {
       name: "Shape Cntrl",
+      author: "STARTER",
       description: "cycle thru strum speeds with L1 - cycle thru shapes fwd/rev with P1/Touch - 2 octave range",
       snapshot: "KB: Maj/? • Strum/Fwd/Cust\nL1: Step/Uni • P1: Pattern/FWD\nL2: Step/Bi • P2: Reset • Touch: Pattern/REV",
       modifiedAt: now,
@@ -411,12 +433,14 @@ const selectedSlots = ref(new Set<number>());
 // Editing state
 const editingSlot = ref<number>(0);
 const slotName = ref('');
+const slotAuthor = ref('');
 const slotDescription = ref('');
 const exportingSlot = ref<number | null>(null);
 
 // Export metadata (simplified)
 const exportMetadata = ref({
   name: '',
+  author: '',
   description: ''
 });
 
@@ -697,6 +721,7 @@ function openSlotDialog(slot: number) {
   editingSlot.value = slot;
   const existing = getSlotPreset(slot);
   slotName.value = existing?.name || '';
+  slotAuthor.value = existing?.author || '';
   slotDescription.value = existing?.description || '';
   showSlotDialog.value = true;
   
@@ -722,6 +747,7 @@ function confirmSlotSave() {
   const newSlots = [...slots.value];
   newSlots[editingSlot.value] = {
     name,
+    author: slotAuthor.value.trim() || undefined,
     description: slotDescription.value.trim() || undefined,
     snapshot: generateSettingsSnapshot(props.currentSettings),
     settings: props.currentSettings,
@@ -735,6 +761,7 @@ function confirmSlotSave() {
   toast.success(`Saved to slot ${editingSlot.value + 1}: "${name}"`);
   showSlotDialog.value = false;
   slotName.value = '';
+  slotAuthor.value = '';
   slotDescription.value = '';
 }
 
@@ -758,6 +785,7 @@ function deleteCurrentSlot() {
   // Close modal and reset
   showSlotDialog.value = false;
   slotName.value = '';
+  slotAuthor.value = '';
   slotDescription.value = '';
 }
 
@@ -781,7 +809,7 @@ function loadFactoryDefaults() {
   localStorage.removeItem(SLOTS_KEY);
   slots.value = loadSlotsFromStorage(); // This will reload the 4 factory presets
   
-  toast.success('Factory defaults loaded');
+  toast.success('Defaults loaded');
 }
 
 async function syncNVSSlot(slot: number) {
@@ -850,6 +878,7 @@ function openCloudDialog(slot: number) {
   const preset = getSlotPreset(slot);
   if (preset) {
     exportMetadata.value.name = preset.name;
+    exportMetadata.value.author = preset.author || '';
     exportMetadata.value.description = preset.description || '';
   }
   
@@ -886,6 +915,7 @@ async function handleCloudPresetLoad(preset: { id: string; metadata?: { name?: s
   const newSlots = [...slots.value];
   newSlots[slotIndex] = {
     name: presetName,
+    author: preset.metadata?.author,
     description: preset.metadata?.description,
     snapshot: preset.metadata?.snapshot || generateSettingsSnapshot(preset.settings),
     settings: preset.settings,
@@ -1025,6 +1055,10 @@ async function confirmExport() {
     snapshot: preset.snapshot || generateSettingsSnapshot(preset.settings)
   };
   
+  if (exportMetadata.value.author) {
+    metadata.author = exportMetadata.value.author;
+  }
+  
   if (exportMetadata.value.description) {
     metadata.description = exportMetadata.value.description;
   }
@@ -1075,11 +1109,12 @@ async function confirmExport() {
       
       // Close dialog and reset form
       showCloudDialog.value = false;
-      exportMetadata.value = { name: '', description: '' };
+      exportMetadata.value = { name: '', author: '', description: '' };
       exportingSlot.value = null;
     } catch (error) {
       console.error('❌ Upload failed:', error);
       toast.error(`Upload failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      exportMetadata.value = { name: '', author: '', description: '' };
     }
   } else {
     // Development mode: Download locally
@@ -1106,7 +1141,7 @@ async function confirmExport() {
     toast.success(`Downloaded ${filename}`);
     
     // Reset form but keep dialog open
-    exportMetadata.value = { name: '', description: '' };
+    exportMetadata.value = { name: '', author: '', description: '' };
     exportingSlot.value = null;
   }
 }
@@ -1231,12 +1266,15 @@ function downloadJSON(json: string, filename: string) {
   gap: 0.375rem;
 }
 
-.starter-badge {
+.author-badge {
   font-size: 0.8125rem;
   font-weight: 500;
   color: #b9aa5f;
-  text-transform: uppercase;
   letter-spacing: 0.05em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 8rem;
 }
 
 .slot-name {

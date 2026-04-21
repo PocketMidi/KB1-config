@@ -57,7 +57,10 @@
         <!-- Slot Info (click to edit) -->
         <div class="slot-info" @click.stop="selectionMode ? toggleSelection(slot - 1) : openSlotDialog(slot - 1)">
           <div class="slot-label-wrapper">
-            <div class="slot-label">SLOT {{ slot }}</div>
+            <div class="slot-label">
+              SLOT {{ slot }}
+              <span v-if="getSlotPreset(slot - 1)?.isFactoryDefault" class="starter-badge" title="Factory starter preset">STARTER</span>
+            </div>
             <div class="slot-name">{{ getSlotPreset(slot - 1)?.name || '(Empty)' }}</div>
           </div>
           <button 
@@ -88,9 +91,10 @@
           </button>
           <button 
             class="btn-action btn-with-indicator" 
-            :class="{ 'btn-cloud-empty': !getSlotPreset(slot - 1) }"
-            @click.stop="openCloudDialog(slot - 1)"
-            :title="getSlotPreset(slot - 1) ? 'Load from or save to cloud' : 'Load preset from cloud'">
+            :class="{ 'btn-cloud-empty': !getSlotPreset(slot - 1), 'btn-disabled': getSlotPreset(slot - 1)?.isFactoryDefault }"
+            @click.stop="getSlotPreset(slot - 1)?.isFactoryDefault ? null : openCloudDialog(slot - 1)"
+            :disabled="getSlotPreset(slot - 1)?.isFactoryDefault"
+            :title="getSlotPreset(slot - 1)?.isFactoryDefault ? 'Starter presets cannot be uploaded' : (getSlotPreset(slot - 1) ? 'Load from or save to cloud' : 'Load preset from cloud')">
             Cloud
             <span v-if="isSlotExportedToCloud(slot - 1)" class="button-indicator button-indicator-cloud" title="Exported to cloud">●</span>
           </button>
@@ -274,6 +278,7 @@ interface SlotPreset {
   settings: DeviceSettings;
   modifiedAt: number;
   exportedToCloud?: boolean; // Track if preset has been exported
+  isFactoryDefault?: boolean; // Protected starter presets (no cloud upload)
 }
 
 const SLOTS_KEY = 'kb1_preset_slots';
@@ -285,10 +290,11 @@ function getDefaultPresets(): (SlotPreset | null)[] {
   return [
     // Slot 1: Scale/RootNote Control
     {
-      name: "Scale/RootNote Control",
+      name: "Scale/Root Cntrl",
       description: "cycle thru scales with L1 - cycle thru root notes fwd/rev with P1/Touch",
       snapshot: "KB: Maj/C • Compact\nL1: Step/Uni • P1: RootNote/FWD\nL2: Step/Bi • P2: Reset • Touch: RootNote/REV",
       modifiedAt: now,
+      isFactoryDefault: true,
       settings: {
         lever1: { ccNumber: 204, minCCValue: 0, maxCCValue: 127, stepSize: 1, functionMode: 2, valueMode: 0, onsetTime: 100, offsetTime: 100, onsetType: 0, offsetType: 0 },
         leverPush1: { ccNumber: 206, minCCValue: 0, maxCCValue: 127, functionMode: 2, onsetTime: 100, offsetTime: 0, onsetType: 0, offsetType: 0 },
@@ -302,10 +308,11 @@ function getDefaultPresets(): (SlotPreset | null)[] {
     },
     // Slot 2: Chord RootNote Control
     {
-      name: "Chord RootNote Control",
+      name: "Chord/Root Cntrl",
       description: "cycle thru chords with L1 - cycle thru root notes fwd/rev with P1/Touch - 2 octave range",
       snapshot: "KB: Maj/? • Chord\nL1: Step/Uni • P1: RootNote/FWD\nL2: Step/Bi • P2: Reset • Touch: RootNote/REV",
       modifiedAt: now,
+      isFactoryDefault: true,
       settings: {
         lever1: { ccNumber: 205, minCCValue: 0, maxCCValue: 127, stepSize: 12, functionMode: 2, valueMode: 0, onsetTime: 100, offsetTime: 100, onsetType: 0, offsetType: 0 },
         leverPush1: { ccNumber: 206, minCCValue: 0, maxCCValue: 127, functionMode: 2, onsetTime: 100, offsetTime: 0, onsetType: 0, offsetType: 0 },
@@ -319,10 +326,11 @@ function getDefaultPresets(): (SlotPreset | null)[] {
     },
     // Slot 3: Strum Control
     {
-      name: "Strum Control",
+      name: "Strum Cntrl",
       description: "cycle thru strum speeds with L1 - cycle thru patterns fwd/rev with P1/Touch - 2 octave range",
       snapshot: "KB: Maj/? • Strum/Fwd/Cust\nL1: Step/Uni • P1: Pattern/FWD\nL2: Step/Bi • P2: Reset • Touch: Pattern/REV",
       modifiedAt: now,
+      isFactoryDefault: true,
       settings: {
         lever1: { ccNumber: 200, minCCValue: 0, maxCCValue: 127, stepSize: 12, functionMode: 2, valueMode: 0, onsetTime: 100, offsetTime: 100, onsetType: 0, offsetType: 0 },
         leverPush1: { ccNumber: 201, minCCValue: 0, maxCCValue: 127, functionMode: 2, onsetTime: 100, offsetTime: 0, onsetType: 0, offsetType: 0 },
@@ -336,10 +344,11 @@ function getDefaultPresets(): (SlotPreset | null)[] {
     },
     // Slot 4: Strum Shape(arp) Control
     {
-      name: "Strum Shape(arp) Control",
+      name: "Strum/Shape Cntrl",
       description: "cycle thru strum speeds with L1 - cycle thru shapes fwd/rev with P1/Touch - 2 octave range",
       snapshot: "KB: Maj/? • Strum/Fwd/Cust\nL1: Step/Uni • P1: Pattern/FWD\nL2: Step/Bi • P2: Reset • Touch: Pattern/REV",
       modifiedAt: now,
+      isFactoryDefault: true,
       settings: {
         lever1: { ccNumber: 200, minCCValue: 0, maxCCValue: 127, stepSize: 12, functionMode: 2, valueMode: 0, onsetTime: 100, offsetTime: 100, onsetType: 0, offsetType: 0 },
         leverPush1: { ccNumber: 201, minCCValue: 0, maxCCValue: 127, functionMode: 2, onsetTime: 100, offsetTime: 0, onsetType: 0, offsetType: 0 },
@@ -712,7 +721,10 @@ function openSlotDialog(slot: number) {
   
   nextTick(() => {
     nameInput.value?.focus();
-    nameInput.value?.select();
+    // Only auto-select text for new presets (empty slots)
+    if (!existing) {
+      nameInput.value?.select();
+    }
   });
 }
 
@@ -760,6 +772,11 @@ function loadFactoryDefaults() {
   emit('loadFactoryDefaults');
   activeSlot.value = null;
   activeDeviceSlot.value = null;
+  
+  // Clear preset slots from localStorage and reload factory defaults
+  localStorage.removeItem(SLOTS_KEY);
+  slots.value = loadSlotsFromStorage(); // This will reload the 4 factory presets
+  
   toast.success('Factory defaults loaded');
 }
 
@@ -1207,6 +1224,24 @@ function downloadJSON(json: string, filename: string) {
   letter-spacing: 0.05em;
 }
 
+.slot-label {
+  font-size: 0.8125rem;
+  font-weight: 400;
+  color: #EAEAEA;
+  letter-spacing: 0.05em;
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.starter-badge {
+  font-size: 0.625rem;
+  font-weight: 500;
+  color: #b9aa5f;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
 .slot-name {
   font-size: 0.8125rem;
   color: #CDCDCD;
@@ -1273,6 +1308,12 @@ function downloadJSON(json: string, filename: string) {
 .btn-action:disabled {
   opacity: 0.4;
   cursor: not-allowed;
+}
+
+.btn-action.btn-disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+  pointer-events: none;
 }
 
 .btn-action.active {
@@ -1382,6 +1423,8 @@ function downloadJSON(json: string, filename: string) {
 .modal-body {
   padding: 1rem;
   flex: 1;
+  overflow-y: auto;
+  min-height: 0;
 }
 
 .dialog-intro {

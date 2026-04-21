@@ -1309,7 +1309,7 @@ function downloadJSON(json: string, filename: string) {
   position: relative;
   background: rgba(132, 132, 132, 0.1);
   border: 1px solid rgba(205, 205, 205, 0.2);
-  padding: 0.5rem 0.875rem;
+  padding: 0.5rem 0.5rem;
   font-size: 0.75rem;
   font-weight: 500;
   color: #CDCDCD;

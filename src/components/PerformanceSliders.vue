@@ -176,10 +176,15 @@ const currentColorIndex = ref<number>(0);
 // Color picker state
 const showColorPicker = ref<number | null>(null); // Index of slider showing picker
 
-// Explainer text for toggle changes
+// Global explainer text for general messages
 const explainerText = ref('');
 const explainerFading = ref(false);
 let explainerTimeout: number | null = null;
+
+// Per-slider explainer text for toggle changes
+const sliderExplainerTexts = ref<Record<number, string>>({});
+const sliderExplainerFading = ref<Record<number, boolean>>({});
+const sliderExplainerTimeouts = ref<Record<number, number>>({});
 
 // Link state - 11 links between 12 sliders
 const links = ref<boolean[]>(new Array(11).fill(false));
@@ -346,7 +351,7 @@ function savePreset() {
   SliderPresetStore.saveCurrentState(preset);
 }
 
-// Show explainer text with fade effect
+// Show global explainer text with fade effect
 function showExplainerText(text: string) {
   // Clear any existing timeout
   if (explainerTimeout) {
@@ -361,6 +366,33 @@ function showExplainerText(text: string) {
   explainerTimeout = window.setTimeout(() => {
     explainerFading.value = true;
   }, 2000);
+}
+
+// Show per-slider explainer text (for toggle buttons)
+function showSliderExplainer(index: number, text: string) {
+  // Clear any existing timeout for this slider
+  if (sliderExplainerTimeouts.value[index]) {
+    clearTimeout(sliderExplainerTimeouts.value[index]);
+  }
+  
+  // Set text and reset fade state for this slider
+  sliderExplainerTexts.value = { ...sliderExplainerTexts.value, [index]: text };
+  sliderExplainerFading.value = { ...sliderExplainerFading.value, [index]: false };
+  
+  // Start fade out after 1 second
+  sliderExplainerTimeouts.value[index] = window.setTimeout(() => {
+    sliderExplainerFading.value = { ...sliderExplainerFading.value, [index]: true };
+    
+    // Clear text after fade completes (1s transition)
+    sliderExplainerTimeouts.value[index] = window.setTimeout(() => {
+      const newTexts = { ...sliderExplainerTexts.value };
+      const newFading = { ...sliderExplainerFading.value };
+      delete newTexts[index];
+      delete newFading[index];
+      sliderExplainerTexts.value = newTexts;
+      sliderExplainerFading.value = newFading;
+    }, 1000);
+  }, 1000);
 }
 
 // Convert hex color to rgba with alpha
@@ -818,8 +850,8 @@ function toggleBipolar(index: number) {
   
   slider.bipolar = !slider.bipolar;
   
-  // Show explainer text
-  showExplainerText(slider.bipolar ? 'Bipolar' : 'Unipolar');
+  // Show explainer text for this specific slider
+  showSliderExplainer(index, slider.bipolar ? 'Bipolar' : 'Unipolar');
   
   // Reset to appropriate default when switching modes
   slider.value = getDefaultValue(slider);
@@ -835,8 +867,8 @@ function toggleMomentary(index: number) {
   
   slider.momentary = !slider.momentary;
   
-  // Show explainer text
-  showExplainerText(slider.momentary ? 'Momentary' : 'Latched');
+  // Show explainer text for this specific slider
+  showSliderExplainer(index, slider.momentary ? 'Momentary' : 'Latched');
   
   savePreset();
 }
@@ -1671,7 +1703,12 @@ defineExpose({
             
             <!-- FX Parameter Dropdown (FX and COMBO modes) -->
             <div v-if="controlMode === 'fx' || controlMode === 'combo'" class="fx-param-section" :class="{ 'combo-mode': controlMode === 'combo' }">
+              <!-- Per-slider explainer text (replaces dropdown temporarily) -->
+              <div v-if="sliderExplainerTexts[index]" class="explainer-label" :class="{ fading: sliderExplainerFading[index] }">
+                {{ sliderExplainerTexts[index] }}
+              </div>
               <CustomCCDropdown
+                v-else
                 :model-value="getFxParamDisplayValue(slider)"
                 :options="FX_PARAMS.map(p => ({ cc: p.id, label: `${p.abbr}` }))"
                 :min-width="'100px'"
@@ -2450,6 +2487,26 @@ defineExpose({
   left: 175px;
   width: 100px;
   margin-right: 0;
+}
+
+.explainer-label {
+  padding: 0.15rem 0.3rem;
+  background: rgba(106, 104, 83, 0.35);
+  border: 1px solid rgba(106, 104, 83, 0.4);
+  border-radius: 3px;
+  color: #b9aa5f;
+  font-size: 0.7rem;
+  font-weight: 500;
+  font-family: 'Roboto Mono', monospace;
+  cursor: default;
+  min-width: 100px;
+  text-align: center;
+  transition: none;
+}
+
+.explainer-label.fading {
+  color: transparent;
+  transition: color 1s ease-out;
 }
 
 .fx-param-dropdown {

@@ -47,6 +47,8 @@
         :id="'lever-1'"
         :default-open="false"
         :show-lever1-icon="true"
+        :title-suffix="lever1Suffix"
+        :title-suffix-fading="lever1SuffixFading"
       >
         <LeverSettings
           title="Lever"
@@ -60,6 +62,7 @@
           :strum-speed="localSettings.chord.strumSpeed"
           :play-mode="localSettings.chord.playMode"
           @update:modelValue="markChanged"
+          @valueModeChanged="handleLever1ValueModeChanged"
         />
       </AccordionSection>
       
@@ -72,6 +75,8 @@
         :id="'lever-push-1'"
         :default-open="false"
         :show-press1-icon="true"
+        :title-suffix="leverPush1Suffix"
+        :title-suffix-fading="leverPush1SuffixFading"
       >
         <LeverPushSettings
           title="Press"
@@ -84,6 +89,7 @@
           :interpolations="interpolations"
           :play-mode="localSettings.chord.playMode"
           @update:modelValue="markChanged"
+          @behaviourChanged="handleLeverPush1BehaviourChanged"
         />
       </AccordionSection>
       
@@ -96,6 +102,8 @@
         :id="'lever-2'"
         :default-open="false"
         :show-lever2-icon="true"
+        :title-suffix="lever2Suffix"
+        :title-suffix-fading="lever2SuffixFading"
       >
         <LeverSettings
           title="Lever"
@@ -109,6 +117,7 @@
           :strum-speed="localSettings.chord.strumSpeed"
           :play-mode="localSettings.chord.playMode"
           @update:modelValue="markChanged"
+          @valueModeChanged="handleLever2ValueModeChanged"
         />
       </AccordionSection>
       
@@ -121,6 +130,8 @@
         :id="'lever-push-2'"
         :default-open="false"
         :show-press2-icon="true"
+        :title-suffix="leverPush2Suffix"
+        :title-suffix-fading="leverPush2SuffixFading"
       >
         <LeverPushSettings
           title="Press"
@@ -133,6 +144,7 @@
           :interpolations="interpolations"
           :play-mode="localSettings.chord.playMode"
           @update:modelValue="markChanged"
+          @behaviourChanged="handleLeverPush2BehaviourChanged"
         />
       </AccordionSection>
       
@@ -271,6 +283,26 @@ const presetSlotCount = ref<number>(0);
 let presetsFadeTimeoutId: ReturnType<typeof setTimeout> | null = null;
 let presetsClearTimeoutId: ReturnType<typeof setTimeout> | null = null;
 
+const lever1Suffix = ref<string>('');
+const lever1SuffixFading = ref<boolean>(false);
+let lever1FadeTimeoutId: number | null = null;
+let lever1ClearTimeoutId: number | null = null;
+
+const leverPush1Suffix = ref<string>('');
+const leverPush1SuffixFading = ref<boolean>(false);
+let leverPush1FadeTimeoutId: number | null = null;
+let leverPush1ClearTimeoutId: number | null = null;
+
+const lever2Suffix = ref<string>('');
+const lever2SuffixFading = ref<boolean>(false);
+let lever2FadeTimeoutId: number | null = null;
+let lever2ClearTimeoutId: number | null = null;
+
+const leverPush2Suffix = ref<string>('');
+const leverPush2SuffixFading = ref<boolean>(false);
+let leverPush2FadeTimeoutId: number | null = null;
+let leverPush2ClearTimeoutId: number | null = null;
+
 // Load CC map on mount
 onMounted(async () => {
   try {
@@ -288,6 +320,14 @@ onBeforeUnmount(() => {
   if (keyboardClearTimeoutId) clearTimeout(keyboardClearTimeoutId);
   if (presetsFadeTimeoutId) clearTimeout(presetsFadeTimeoutId);
   if (presetsClearTimeoutId) clearTimeout(presetsClearTimeoutId);
+  if (lever1FadeTimeoutId) clearTimeout(lever1FadeTimeoutId);
+  if (lever1ClearTimeoutId) clearTimeout(lever1ClearTimeoutId);
+  if (leverPush1FadeTimeoutId) clearTimeout(leverPush1FadeTimeoutId);
+  if (leverPush1ClearTimeoutId) clearTimeout(leverPush1ClearTimeoutId);
+  if (lever2FadeTimeoutId) clearTimeout(lever2FadeTimeoutId);
+  if (lever2ClearTimeoutId) clearTimeout(lever2ClearTimeoutId);
+  if (leverPush2FadeTimeoutId) clearTimeout(leverPush2FadeTimeoutId);
+  if (leverPush2ClearTimeoutId) clearTimeout(leverPush2ClearTimeoutId);
 });
 
 // CC Options
@@ -758,6 +798,62 @@ function handleChromaticWarning(message: string) {
     keyboardSuffixFading.value = false;
     keyboardClearTimeoutId = null;
   }, 2500);
+}
+
+function handleLever1ValueModeChanged(modeName: string) {
+  if (lever1FadeTimeoutId) clearTimeout(lever1FadeTimeoutId);
+  if (lever1ClearTimeoutId) clearTimeout(lever1ClearTimeoutId);
+  lever1Suffix.value = ` ${modeName}`;
+  lever1SuffixFading.value = false;
+  lever1FadeTimeoutId = window.setTimeout(() => {
+    lever1SuffixFading.value = true;
+  }, 2000);
+  lever1ClearTimeoutId = window.setTimeout(() => {
+    lever1Suffix.value = '';
+    lever1SuffixFading.value = false;
+  }, 4000);
+}
+
+function handleLeverPush1BehaviourChanged(behaviourName: string) {
+  if (leverPush1FadeTimeoutId) clearTimeout(leverPush1FadeTimeoutId);
+  if (leverPush1ClearTimeoutId) clearTimeout(leverPush1ClearTimeoutId);
+  leverPush1Suffix.value = ` ${behaviourName}`;
+  leverPush1SuffixFading.value = false;
+  leverPush1FadeTimeoutId = window.setTimeout(() => {
+    leverPush1SuffixFading.value = true;
+  }, 2000);
+  leverPush1ClearTimeoutId = window.setTimeout(() => {
+    leverPush1Suffix.value = '';
+    leverPush1SuffixFading.value = false;
+  }, 4000);
+}
+
+function handleLever2ValueModeChanged(modeName: string) {
+  if (lever2FadeTimeoutId) clearTimeout(lever2FadeTimeoutId);
+  if (lever2ClearTimeoutId) clearTimeout(lever2ClearTimeoutId);
+  lever2Suffix.value = ` ${modeName}`;
+  lever2SuffixFading.value = false;
+  lever2FadeTimeoutId = window.setTimeout(() => {
+    lever2SuffixFading.value = true;
+  }, 2000);
+  lever2ClearTimeoutId = window.setTimeout(() => {
+    lever2Suffix.value = '';
+    lever2SuffixFading.value = false;
+  }, 4000);
+}
+
+function handleLeverPush2BehaviourChanged(behaviourName: string) {
+  if (leverPush2FadeTimeoutId) clearTimeout(leverPush2FadeTimeoutId);
+  if (leverPush2ClearTimeoutId) clearTimeout(leverPush2ClearTimeoutId);
+  leverPush2Suffix.value = ` ${behaviourName}`;
+  leverPush2SuffixFading.value = false;
+  leverPush2FadeTimeoutId = window.setTimeout(() => {
+    leverPush2SuffixFading.value = true;
+  }, 2000);
+  leverPush2ClearTimeoutId = window.setTimeout(() => {
+    leverPush2Suffix.value = '';
+    leverPush2SuffixFading.value = false;
+  }, 4000);
 }
 
 function handlePresetLoad(settings: DeviceSettings) {

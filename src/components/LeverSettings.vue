@@ -648,14 +648,16 @@ const stepsFirmwareToDisplay: Record<number, number> = {
 
 // Direct access to firmware stepSize with % display conversion
 // For discrete parameters, always show and enforce step size of 1
-const stepsValue = computed({
-  get: () => {
+const stepsValue = computed<number>({
+  get: (): number => {
     const cc = model.value.ccNumber
     // Discrete parameters: always show "1"
     if (cc === 201 || cc === 204 || cc === 205) {
       return 1
     }
-    return stepsFirmwareToDisplay[model.value.stepSize] ?? 5
+    // Ensure we have a valid stepSize, default to 6 (which displays as 5%)
+    const stepSize = model.value.stepSize || 6
+    return stepsFirmwareToDisplay[stepSize] ?? 5
   },
   set: (displayPercent: number) => {
     const cc = model.value.ccNumber
@@ -679,7 +681,8 @@ const visualStepsCount = computed(() => {
   
   // For other parameters, use firmware step size directly
   // (IncrementalProfile.vue will map it to visual steps)
-  return model.value.stepSize
+  // Ensure we have a valid stepSize, default to 6
+  return model.value.stepSize || 6
 })
 
 // Value mode constants

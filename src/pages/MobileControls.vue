@@ -9,6 +9,8 @@
         :midi-cc="localSettings.lever1.ccNumber"
         :id="'lever-1'"
         :default-open="false"
+        :title-suffix="lever1Suffix"
+        :title-suffix-fading="lever1SuffixFading"
       >
         <LeverSettings
           title="Lever"
@@ -20,6 +22,7 @@
           :functionModes="leverFunctionModes"
           :valueModes="valueModes"
           @update:modelValue="markChanged"
+          @valueModeChanged="handleLever1ValueModeChanged"
         />
       </AccordionSection>
       
@@ -30,6 +33,8 @@
         :midi-cc="localSettings.leverPush1.ccNumber"
         :id="'lever-push-1'"
         :default-open="false"
+        :title-suffix="leverPush1Suffix"
+        :title-suffix-fading="leverPush1SuffixFading"
       >
         <LeverPushSettings
           title="Press"
@@ -41,6 +46,7 @@
           :functionModes="leverPushFunctionModes"
           :interpolations="interpolations"
           @update:modelValue="markChanged"
+          @behaviourChanged="handleLeverPush1BehaviourChanged"
         />
       </AccordionSection>
       
@@ -48,6 +54,49 @@
         ref="lever2Accordion"
         :title="`Lever 2`"
         :subtitle="getLeverSubtitle(localSettings.lever2)"
+        :midi-cc="localSettings.lever2.ccNumber"
+        :id="'lever-2'"
+        :default-open="false"
+        :title-suffix="lever2Suffix"
+        :title-suffix-fading="lever2SuffixFading"
+      >
+        <LeverSettings
+          title="Lever"
+          :lever="2"
+          v-model="localSettings.lever2"
+          :ccOptions="ccOptions"
+          :ccMapByNumber="ccMapByNumber"
+          :categories="categories"
+          :functionModes="leverFunctionModes"
+          :valueModes="valueModes"
+          @update:modelValue="markChanged"
+          @valueModeChanged="handleLever2ValueModeChanged"
+        />
+      </AccordionSection>
+      
+      <AccordionSection
+        ref="leverPush2Accordion"
+        :title="`Press 2`"
+        :subtitle="getLeverPushSubtitle(localSettings.leverPush2)"
+        :midi-cc="localSettings.leverPush2.ccNumber"
+        :id="'lever-push-2'"
+        :default-open="false"
+        :title-suffix="leverPush2Suffix"
+        :title-suffix-fading="leverPush2SuffixFading"
+      >
+        <LeverPushSettings
+          title="Press"
+          :lever="2"
+          v-model="localSettings.leverPush2"
+          :ccOptions="ccOptions"
+          :ccMapByNumber="ccMapByNumber"
+          :categories="categories"
+          :functionModes="leverPushFunctionModes"
+          :interpolations="interpolations"
+          @update:modelValue="markChanged"
+          @behaviourChanged="handleLeverPush2BehaviourChanged"
+        />
+      </AccordionSection>
         :midi-cc="localSettings.lever2.ccNumber"
         :id="'lever-2'"
         :default-open="false"
@@ -110,7 +159,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, computed, onMounted } from 'vue';
+import { ref, watch, computed, onMounted, onBeforeUnmount } from 'vue';
 import { useDeviceState } from '../composables/useDeviceState';
 import type { 
   DeviceSettings, 
@@ -138,6 +187,109 @@ const {
 const localSettings = ref<DeviceSettings>({ ...deviceSettings.value });
 const hasChanges = ref(false);
 
+// Fade-up explainer text for accordions
+const lever1Suffix = ref<string>('');
+const lever1SuffixFading = ref<boolean>(false);
+let lever1FadeTimeoutId: number | null = null;
+let lever1ClearTimeoutId: number | null = null;
+
+const lever2Suffix = ref<string>('');
+const lever2SuffixFading = ref<boolean>(false);
+let lever2FadeTimeoutId: number | null = null;
+let lever2ClearTimeoutId: number | null = null;
+
+const leverPush1Suffix = ref<string>('');
+const leverPush1SuffixFading = ref<boolean>(false);
+let leverPush1FadeTimeoutId: number | null = null;
+let leverPush1ClearTimeoutId: number | null = null;
+
+const leverPush2Suffix = ref<string>('');
+const leverPush2SuffixFading = ref<boolean>(false);
+let leverPush2FadeTimeoutId: number | null = null;
+let leverPush2ClearTimeoutId: number | null = null;
+
+// Show explainer text in accordion title with fade-out effect
+function showLever1Explainer(text: string) {
+  if (lever1FadeTimeoutId) clearTimeout(lever1FadeTimeoutId);
+  if (lever1ClearTimeoutId) clearTimeout(lever1ClearTimeoutId);
+  
+  lever1Suffix.value = text;
+  lever1SuffixFading.value = false;
+  
+  lever1FadeTimeoutId = window.setTimeout(() => {
+    lever1SuffixFading.value = true;
+    lever1ClearTimeoutId = window.setTimeout(() => {
+      lever1Suffix.value = '';
+      lever1SuffixFading.value = false;
+    }, 2000);
+  }, 2000);
+}
+
+function showLever2Explainer(text: string) {
+  if (lever2FadeTimeoutId) clearTimeout(lever2FadeTimeoutId);
+  if (lever2ClearTimeoutId) clearTimeout(lever2ClearTimeoutId);
+  
+  lever2Suffix.value = text;
+  lever2SuffixFading.value = false;
+  
+  lever2FadeTimeoutId = window.setTimeout(() => {
+    lever2SuffixFading.value = true;
+    lever2ClearTimeoutId = window.setTimeout(() => {
+      lever2Suffix.value = '';
+      lever2SuffixFading.value = false;
+    }, 2000);
+  }, 2000);
+}
+
+function showLeverPush1Explainer(text: string) {
+  if (leverPush1FadeTimeoutId) clearTimeout(leverPush1FadeTimeoutId);
+  if (leverPush1ClearTimeoutId) clearTimeout(leverPush1ClearTimeoutId);
+  
+  leverPush1Suffix.value = text;
+  leverPush1SuffixFading.value = false;
+  
+  leverPush1FadeTimeoutId = window.setTimeout(() => {
+    leverPush1SuffixFading.value = true;
+    leverPush1ClearTimeoutId = window.setTimeout(() => {
+      leverPush1Suffix.value = '';
+      leverPush1SuffixFading.value = false;
+    }, 2000);
+  }, 2000);
+}
+
+function showLeverPush2Explainer(text: string) {
+  if (leverPush2FadeTimeoutId) clearTimeout(leverPush2FadeTimeoutId);
+  if (leverPush2ClearTimeoutId) clearTimeout(leverPush2ClearTimeoutId);
+  
+  leverPush2Suffix.value = text;
+  leverPush2SuffixFading.value = false;
+  
+  leverPush2FadeTimeoutId = window.setTimeout(() => {
+    leverPush2SuffixFading.value = true;
+    leverPush2ClearTimeoutId = window.setTimeout(() => {
+      leverPush2Suffix.value = '';
+      leverPush2SuffixFading.value = false;
+    }, 2000);
+  }, 2000);
+}
+
+// Event handlers for value mode changes
+function handleLever1ValueModeChanged(modeName: string) {
+  showLever1Explainer(modeName);
+}
+
+function handleLever2ValueModeChanged(modeName: string) {
+  showLever2Explainer(modeName);
+}
+
+function handleLeverPush1BehaviourChanged(behaviourName: string) {
+  showLeverPush1Explainer(behaviourName);
+}
+
+function handleLeverPush2BehaviourChanged(behaviourName: string) {
+  showLeverPush2Explainer(behaviourName);
+}
+
 // Load CC map on mount
 onMounted(async () => {
   try {
@@ -145,6 +297,18 @@ onMounted(async () => {
   } catch (error) {
     console.error('Failed to load CC map:', error);
   }
+});
+
+// Cleanup timeouts on unmount
+onBeforeUnmount(() => {
+  if (lever1FadeTimeoutId) clearTimeout(lever1FadeTimeoutId);
+  if (lever1ClearTimeoutId) clearTimeout(lever1ClearTimeoutId);
+  if (lever2FadeTimeoutId) clearTimeout(lever2FadeTimeoutId);
+  if (lever2ClearTimeoutId) clearTimeout(lever2ClearTimeoutId);
+  if (leverPush1FadeTimeoutId) clearTimeout(leverPush1FadeTimeoutId);
+  if (leverPush1ClearTimeoutId) clearTimeout(leverPush1ClearTimeoutId);
+  if (leverPush2FadeTimeoutId) clearTimeout(leverPush2FadeTimeoutId);
+  if (leverPush2ClearTimeoutId) clearTimeout(leverPush2ClearTimeoutId);
 });
 
 // CC Options

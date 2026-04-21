@@ -72,6 +72,13 @@
         :max="userMax"
         :current="currentPattern"
       />
+      <IncrementalProfile 
+        v-else-if="isIncrementalMode && isCyclingParameter"
+        :key="`inc-${model.ccNumber}-${visualStepsCount}`"
+        :steps="visualStepsCount"
+        :is-bipolar="false"
+        class="profile-graph"
+      />
       <img 
         v-else
         :src="profileImage" 
@@ -250,6 +257,7 @@ import ValueControl from './ValueControl.vue'
 import LevelMeter from './LevelMeter.vue'
 import OptionWheelPicker from './OptionWheelPicker.vue'
 import PatternSelector from './PatternSelector.vue'
+import IncrementalProfile from './IncrementalProfile.vue'
 import { useHaptics } from '../composables/useHaptics'
 import { useUIPreferences } from '../composables/useUIPreferences'
 
@@ -397,12 +405,10 @@ const filteredOptions = computed(() => {
 // Watch ccNumber to keep Category in sync and clamp KB1 Expression parameters
 watch(() => model.value.ccNumber, (cc) => {
   if (isUpdatingInternally.value) return
-  // Don't override if we're in Reset mode
-  if (model.value.functionMode === FUNCTION_MODE_RESET) return
   
   isUpdatingInternally.value = true
   const cat = props.ccMapByNumber.get(cc)?.category
-  if (cat && cat !== 'Reset') selectedCategory.value = cat
+  if (cat) selectedCategory.value = cat
   
   // KB1 Expression parameters: Clamp to valid ranges
   if (cc === 200) {
@@ -424,19 +430,23 @@ watch(() => model.value.ccNumber, (cc) => {
     model.value = { ...model.value, minCCValue: min, maxCCValue: max }
   } else if (cc === 204) {
     // Scale Type: 0-20, STATIC mode for discrete selection
+    // Default to FWD (forward) cycling: offsetTime = 0
     model.value = {
       ...model.value,
       functionMode: FUNCTION_MODE_STATIC,
       minCCValue: 0,
-      maxCCValue: 127
+      maxCCValue: 127,
+      offsetTime: 0
     }
   } else if (cc === 205) {
     // Chord Type: 0-14, STATIC mode for discrete selection
+    // Default to FWD (forward) cycling: offsetTime = 0
     model.value = {
       ...model.value,
       functionMode: FUNCTION_MODE_STATIC,
       minCCValue: 0,
-      maxCCValue: 127
+      maxCCValue: 127,
+      offsetTime: 0
     }
   } else if (cc === 206) {
     // Root Note: 0-11, STATIC mode for discrete selection
@@ -448,10 +458,16 @@ watch(() => model.value.ccNumber, (cc) => {
       maxCCValue: 127,
       offsetTime: 0
     }
+  } else {
+    // For all other parameters (Global, Velocity, Aftertouch, etc.)
+    // If currently in RESET mode, switch to INTERPOLATED mode
+    if (model.value.functionMode === FUNCTION_MODE_RESET) {
+      model.value = { ...model.value, functionMode: FUNCTION_MODE_INTERPOLATED }
+    }
   }
   
   isUpdatingInternally.value = false
-})
+}, { immediate: true })
 
 // Watch selectedCategory to handle Reset mode and parameter selection
 watch(selectedCategory, (cat) => {
@@ -615,12 +631,27 @@ const profileImage = computed(() => {
 
 // Computed properties to determine which controls to show
 const isResetMode = computed(() => model.value.functionMode === FUNCTION_MODE_RESET)
+const isIncrementalMode = computed(() => model.value.functionMode === FUNCTION_MODE_STATIC)
 const isPatternSelector = computed(() => model.value.ccNumber === 201)
 
 // Check if current parameter is a cycling/discrete parameter (uses REV/FWD toggle)
 const isCyclingParameter = computed(() => {
   const cc = model.value.ccNumber
   return cc === 201 || cc === 204 || cc === 205 || cc === 206
+})
+
+// Visual steps for IncrementalProfile display
+const visualStepsCount = computed(() => {
+  const cc = model.value.ccNumber
+  
+  // Discrete parameters: show exact number of values
+  if (cc === 201) return 6   // Pattern Selector: 1-6 (6 values)
+  if (cc === 204) return 21  // Scale Type: 0-20 (21 values)
+  if (cc === 205) return 15  // Chord Type: 0-14 (15 values)
+  if (cc === 206) return 12  // Root Note: 0-11 (12 values)
+  
+  // Default (shouldn't reach here for cycling parameters)
+  return 10
 })
 
 // Check if current parameter requires incremental mode (CC 200, 204, 205, 206)

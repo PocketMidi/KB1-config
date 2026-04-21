@@ -153,6 +153,7 @@
           :ccMapByNumber="ccMapByNumber"
           :categories="categories"
           :functionModes="touchFunctionModes"
+          :play-mode="localSettings.chord.playMode"
           @update:modelValue="markChanged"
         />
       </AccordionSection>
@@ -525,7 +526,16 @@ function getLeverPushSubtitle(leverPush: LeverPushSettingsType): string {
   const ccInfo = ccMap.get(leverPush.ccNumber);
   const paramName = ccInfo?.parameter || `CC ${leverPush.ccNumber}`;
   
-  // Show full interpolation profile name
+  // Cycling parameters (Pattern Selector, Scale Type, Chord Type, Root Note) - show direction
+  const isCyclingParameter = leverPush.ccNumber === 201 || leverPush.ccNumber === 204 || 
+                             leverPush.ccNumber === 205 || leverPush.ccNumber === 206;
+  
+  if (isCyclingParameter) {
+    const direction = leverPush.offsetTime === 0 ? 'FWD' : 'REV';
+    return `${paramName} | ${direction}`;
+  }
+  
+  // Show full interpolation profile name for other parameters
   let profile = 'Linear'; // default
   if (leverPush.functionMode === 3) {
     // Reset mode
@@ -548,7 +558,16 @@ function getTouchSubtitle(touch: TouchSettingsType): string {
   const ccInfo = ccMap.get(touch.ccNumber);
   const paramName = ccInfo?.parameter || `CC ${touch.ccNumber}`;
   
-  // Show function mode
+  // Cycling parameters (Pattern Selector, Scale Type, Chord Type, Root Note) - show direction
+  const isCyclingParameter = touch.ccNumber === 201 || touch.ccNumber === 204 || 
+                             touch.ccNumber === 205 || touch.ccNumber === 206;
+  
+  if (isCyclingParameter) {
+    const direction = touch.offsetTime === 0 ? 'FWD' : 'REV';
+    return `${paramName} | ${direction}`;
+  }
+  
+  // Show function mode for other parameters
   let mode = 'Gate'; // default
   if (touch.functionMode === 1) {
     mode = 'Toggle';

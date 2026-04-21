@@ -2,11 +2,12 @@
   <div class="settings-touch">
     <!-- Mode Selection -->
     <div class="controls-row">
-      <!-- Mode buttons (hidden for Pattern Selector) -->
-      <div class="mode-selector" v-if="!isPatternSelector">
+      <!-- Mode buttons (always visible, dimmed for cycling parameters) -->
+      <div class="mode-selector">
         <button 
           class="mode-btn"
           :class="{ active: model.functionMode === 2 }"
+          :disabled="isCyclingParameter"
           @click="selectMode(2)"
           title="Continuous"
         >
@@ -23,6 +24,7 @@
         <button 
           class="mode-btn"
           :class="{ active: model.functionMode === 0 }"
+          :disabled="isCyclingParameter"
           @click="selectMode(0)"
           title="Gate"
         >
@@ -30,12 +32,12 @@
         </button>
       </div>
 
-      <!-- Pattern Selector Direction Toggle (REV/FWD) -->
+      <!-- Cycling Parameter Direction Toggle (REV/FWD) -->
       <button 
-        v-if="isPatternSelector"
+        v-if="isCyclingParameter"
         class="toggle-btn" 
         @click="handleToggleClick"
-        title="Pattern cycling direction"
+        :title="toggleTooltip"
       >
         <span :class="{ active: !isMomentary }">REV</span>
         <span class="toggle-divider">|</span>
@@ -66,7 +68,7 @@
       mode="range"
       :min-allowed="minRange"
       :max-allowed="maxRange"
-      :step-size="isPatternSelector ? 1 : 5"
+      :step-size="isCyclingParameter ? 1 : 5"
       @update:min="userMin = $event"
       @update:max="userMax = $event"
     />
@@ -105,8 +107,8 @@
           :min="minRange"
           :max="constrainedMaxForMin"
           :step="1"
-          :small-step="isPatternSelector ? 1 : unipolarStepSize"
-          :large-step="isPatternSelector ? 1 : unipolarStepSize * 2"
+          :small-step="isCyclingParameter ? 1 : unipolarStepSize"
+          :large-step="isCyclingParameter ? 1 : unipolarStepSize * 2"
         />
       </div>
       <div class="input-divider"></div>
@@ -118,8 +120,8 @@
           :min="constrainedMinForMax"
           :max="maxRange"
           :step="1"
-          :small-step="isPatternSelector ? 1 : unipolarStepSize"
-          :large-step="isPatternSelector ? 1 : unipolarStepSize * 2"
+          :small-step="isCyclingParameter ? 1 : unipolarStepSize"
+          :large-step="isCyclingParameter ? 1 : unipolarStepSize * 2"
         />
       </div>
       <div class="input-divider"></div>
@@ -197,6 +199,7 @@ const props = defineProps<{
   ccMapByNumber: Map<number, CCEntry>
   categories: string[]
   functionModes: { value: number, label: string }[]
+  playMode?: number // 0 = Scale mode, 1 = Chord mode
 }>()
 
 const emit = defineEmits<{
@@ -240,7 +243,13 @@ const modeImage = computed(() => {
   return `${BASE_PATH}touch/gate_animated.svg`
 })
 
-// Check if Pattern Selector is active
+// Check if current parameter is a cycling/discrete parameter (uses REV/FWD toggle)
+const isCyclingParameter = computed(() => {
+  const cc = model.value.ccNumber
+  return cc === 201 || cc === 204 || cc === 205 || cc === 206
+})
+
+// Legacy alias for backward compatibility
 const isPatternSelector = computed(() => model.value.ccNumber === 201)
 
 // Initialize selectedCategory from current ccNumber's category (fallback to first available category)
@@ -287,7 +296,27 @@ watch(() => props.ccMapByNumber.size, () => {
 
 // Filter options by selected category
 const filteredOptions = computed(() => {
-  return props.ccOptions.filter(opt => opt.group === selectedCategory.value)
+  let options = props.ccOptions.filter(opt => opt.group === selectedCategory.value)
+  
+  // For KB1 Expression category, only show touch-compatible parameters
+  if (selectedCategory.value === 'KB1 Expression') {
+    // Remove continuous/lever-only parameters (Strum Speed, Swing, Velocity Spread)
+    options = options.filter(opt => {
+      const cc = opt.value
+      return cc !== 200 && cc !== 202 && cc !== 203 // Keep 201, 204, 205, 206
+    })
+    
+    // Context-aware filtering based on play mode
+    if (props.playMode === 0) {
+      // Scale mode: Show Pattern, Scale Type, Root Note (exclude Chord Type)
+      options = options.filter(opt => opt.value !== 205)
+    } else if (props.playMode === 1) {
+      // Chord mode: Show Pattern, Chord Type, Root Note (exclude Scale Type)
+      options = options.filter(opt => opt.value !== 204)
+    }
+  }
+  
+  return options
 })
 
 // Watch ccNumber to keep Category in sync and auto-clamp KB1 Expression ranges
@@ -308,14 +337,46 @@ watch(() => model.value.ccNumber, (cc) => {
   } else if (cc === 201) {
     // Pattern Selector: 1-6 (discrete values)
     // Force TOGGLE mode for cycling
-    // Preserve offsetTime if already set (for preset loading), otherwise default to FWD mode
-    const currentOffsetTime = model.value.offsetTime ?? 0;
+    // Default to REV (reverse) mode for touch controls
     model.value = {
       ...model.value,
       functionMode: 1,       // TOGGLE
       minCCValue: 0,         // Pattern 1
       maxCCValue: 127,       // Pattern 6
-      offsetTime: currentOffsetTime  // Preserve direction (FWD/REV)
+      offsetTime: 100        // REV mode (reverse cycling)
+    }
+  } else if (cc === 204) {
+    // Scale Type: 0-20 (21 discrete values)
+    // Force TOGGLE mode for cycling
+    // Default to REV (reverse) mode for touch controls
+    model.value = {
+      ...model.value,
+      functionMode: 1,       // TOGGLE
+      minCCValue: 0,         // Scale type 0
+      maxCCValue: 127,       // Scale type 20
+      offsetTime: 100        // REV mode (reverse cycling)
+    }
+  } else if (cc === 205) {
+    // Chord Type: 0-14 (15 discrete values)
+    // Force TOGGLE mode for cycling
+    // Default to REV (reverse) mode for touch controls
+    model.value = {
+      ...model.value,
+      functionMode: 1,       // TOGGLE
+      minCCValue: 0,         // Chord type 0
+      maxCCValue: 127,       // Chord type 14
+      offsetTime: 100        // REV mode (reverse cycling)
+    }
+  } else if (cc === 206) {
+    // Root Note: 0-11 (12 discrete values)
+    // Force TOGGLE mode for cycling
+    // Default to REV (reverse) mode for touch controls
+    model.value = {
+      ...model.value,
+      functionMode: 1,       // TOGGLE
+      minCCValue: 0,         // Root note 0 (C)
+      maxCCValue: 127,       // Root note 11 (B)
+      offsetTime: 100        // REV mode (reverse cycling)
     }
   } else if (cc === 202) {
     // Swing: 50-100% (UI) maps to 0-100 (firmware)
@@ -371,6 +432,39 @@ function midiToPattern(midiValue: number): number {
   return Math.round((midiValue / 127) * 5) + 1
 }
 
+// Special conversion for Scale Type (CC 204): 0-20 discrete values
+function scaleTypeToMidi(scaleType: number): number {
+  // Map 0-20 to MIDI 0-127
+  return Math.round((scaleType / 20) * 127)
+}
+
+function midiToScaleType(midiValue: number): number {
+  // Map MIDI 0-127 to 0-20
+  return Math.round((midiValue / 127) * 20)
+}
+
+// Special conversion for Chord Type (CC 205): 0-14 discrete values
+function chordTypeToMidi(chordType: number): number {
+  // Map 0-14 to MIDI 0-127
+  return Math.round((chordType / 14) * 127)
+}
+
+function midiToChordType(midiValue: number): number {
+  // Map MIDI 0-127 to 0-14
+  return Math.round((midiValue / 127) * 14)
+}
+
+// Special conversion for Root Note (CC 206): 0-11 discrete values
+function rootNoteToMidi(rootNote: number): number {
+  // Map 0-11 to MIDI 0-127
+  return Math.round((rootNote / 11) * 127)
+}
+
+function midiToRootNote(midiValue: number): number {
+  // Map MIDI 0-127 to 0-11
+  return Math.round((midiValue / 127) * 11)
+}
+
 // Special conversion for Strum Speed (CC 200): inverted so higher % = faster
 // User sees 5-100% range (better UX), maps to 4-360ms: 100%→4ms, 5%→360ms
 function speedPercentToMidi(percent: number): number {
@@ -402,19 +496,25 @@ const minRange = computed(() => {
   if (cc === 201) return 1   // Pattern Selector: 1-6
   if (cc === 202) return 50  // Swing: 50-100%
   if (cc === 203) return 8   // Velocity Spread: 8-100%
+  if (cc === 204) return 0    // Scale Type: 0-20
+  if (cc === 205) return 0    // Chord Type: 0-14
+  if (cc === 206) return 0    // Root Note: 0-11
   return 0  // Default minimum
 })
 
 const maxRange = computed(() => {
   const cc = model.value.ccNumber
   if (cc === 201) return 6   // Pattern Selector: 1-6 (discrete)
+  if (cc === 204) return 20  // Scale Type: 0-20 (21 discrete types)
+  if (cc === 205) return 14  // Chord Type: 0-14 (15 discrete types)
+  if (cc === 206) return 11  // Root Note: 0-11 (12 discrete notes)
   return 100  // Default maximum
 })
 
 // Buffer between min and max to prevent overlap
-// Pattern Selector (1-6 range) needs smaller buffer than regular params (0-100 range)
+// Discrete cycling parameters need smaller buffer than regular params
 const MIN_MAX_BUFFER = computed(() => {
-  return model.value.ccNumber === 201 ? 1 : 5
+  return isCyclingParameter.value ? 1 : 5
 })
 
 // Constrained ranges to prevent min/max overlap
@@ -438,11 +538,17 @@ const userMin = computed({
       value = midiToPattern(model.value.minCCValue)
     } else if (model.value.ccNumber === 202) {
       value = midiToSwingPercent(model.value.minCCValue)
+    } else if (model.value.ccNumber === 204) {
+      value = midiToScaleType(model.value.minCCValue)
+    } else if (model.value.ccNumber === 205) {
+      value = midiToChordType(model.value.minCCValue)
+    } else if (model.value.ccNumber === 206) {
+      value = midiToRootNote(model.value.minCCValue)
     } else {
       value = midiToUnipolar(model.value.minCCValue)
     }
-    // Snap displayed value to user preference step size (except pattern selector)
-    if (model.value.ccNumber !== 201) {
+    // Snap displayed value to user preference step size (except cycling parameters)
+    if (!isCyclingParameter.value) {
       return Math.round(value / unipolarStepSize.value) * unipolarStepSize.value
     }
     return value
@@ -454,6 +560,12 @@ const userMin = computed({
       model.value = { ...model.value, minCCValue: patternToMidi(userValue) }
     } else if (model.value.ccNumber === 202) {
       model.value = { ...model.value, minCCValue: swingPercentToMidi(userValue) }
+    } else if (model.value.ccNumber === 204) {
+      model.value = { ...model.value, minCCValue: scaleTypeToMidi(userValue) }
+    } else if (model.value.ccNumber === 205) {
+      model.value = { ...model.value, minCCValue: chordTypeToMidi(userValue) }
+    } else if (model.value.ccNumber === 206) {
+      model.value = { ...model.value, minCCValue: rootNoteToMidi(userValue) }
     } else {
       model.value = { ...model.value, minCCValue: unipolarToMidi(userValue) }
     }
@@ -470,11 +582,17 @@ const userMax = computed({
       value = midiToPattern(model.value.maxCCValue)
     } else if (model.value.ccNumber === 202) {
       value = midiToSwingPercent(model.value.maxCCValue)
+    } else if (model.value.ccNumber === 204) {
+      value = midiToScaleType(model.value.maxCCValue)
+    } else if (model.value.ccNumber === 205) {
+      value = midiToChordType(model.value.maxCCValue)
+    } else if (model.value.ccNumber === 206) {
+      value = midiToRootNote(model.value.maxCCValue)
     } else {
       value = midiToUnipolar(model.value.maxCCValue)
     }
-    // Snap displayed value to user preference step size (except pattern selector)
-    if (model.value.ccNumber !== 201) {
+    // Snap displayed value to user preference step size (except cycling parameters)
+    if (!isCyclingParameter.value) {
       return Math.round(value / unipolarStepSize.value) * unipolarStepSize.value
     }
     return value
@@ -486,6 +604,12 @@ const userMax = computed({
       model.value = { ...model.value, maxCCValue: patternToMidi(userValue) }
     } else if (model.value.ccNumber === 202) {
       model.value = { ...model.value, maxCCValue: swingPercentToMidi(userValue) }
+    } else if (model.value.ccNumber === 204) {
+      model.value = { ...model.value, maxCCValue: scaleTypeToMidi(userValue) }
+    } else if (model.value.ccNumber === 205) {
+      model.value = { ...model.value, maxCCValue: chordTypeToMidi(userValue) }
+    } else if (model.value.ccNumber === 206) {
+      model.value = { ...model.value, maxCCValue: rootNoteToMidi(userValue) }
     } else {
       model.value = { ...model.value, maxCCValue: unipolarToMidi(userValue) }
     }
@@ -516,10 +640,18 @@ const userThreshold = computed({
 // Momentary/Reverse Toggle (using offset time: 0 = momentary/FWD, >0 = latched/REV)
 const isMomentary = computed(() => (model.value.offsetTime ?? 0) === 0)
 
-// Watch for Pattern Selector activation to emit initial direction state
-watch(isPatternSelector, (isActive) => {
+// Toggle tooltip (depends on isCyclingParameter)
+const toggleTooltip = computed(() => {
+  if (isCyclingParameter.value) {
+    return 'Toggle cycling direction: REV (reverse) or FWD (forward)'
+  }
+  return ''
+})
+
+// Watch for cycling parameter activation to emit initial direction state
+watch(isCyclingParameter, (isActive) => {
   if (isActive) {
-    // Emit current direction when Pattern Selector becomes active
+    // Emit current direction when cycling parameter becomes active
     nextTick(() => {
       emit('behaviourChanged', isMomentary.value ? 'Cycle Forward' : 'Cycle Reverse')
     })
@@ -532,13 +664,13 @@ function handleToggleClick() {
   if (isMomentary.value) {
     // Switch to reverse - set offsetTime to 100ms
     model.value = { ...model.value, offsetTime: 100 }
-    if (isPatternSelector.value) {
+    if (isCyclingParameter.value) {
       emit('behaviourChanged', 'Cycle Reverse')
     }
   } else {
     // Switch to forward - set offsetTime to 0
     model.value = { ...model.value, offsetTime: 0 }
-    if (isPatternSelector.value) {
+    if (isCyclingParameter.value) {
       emit('behaviourChanged', 'Cycle Forward')
     }
   }
@@ -761,9 +893,10 @@ function dismissHelp() {
   flex-wrap: nowrap;
 }
 
-/* Toggle Button (REV/FWD for Pattern Selector) */
+/* Toggle Button (REV/FWD for cycling parameters) */
 .toggle-btn {
   flex: 0 0 auto;
+  margin-left: auto; /* Push to far right */
   padding: 0.15rem 0.375rem;
   background: rgba(106, 104, 83, 0.35);
   border: 1px solid rgba(106, 104, 83, 0.4);

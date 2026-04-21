@@ -137,7 +137,6 @@ import { useHaptics } from '../composables/useHaptics'
 import { useUIPreferences } from '../composables/useUIPreferences'
 import { useBatteryModal } from '../composables/useBatteryModal'
 import { useToast } from '../composables/useToast'
-import { useConfirm } from '../composables/useConfirm'
 import ValueControl from './ValueControl.vue'
 
 type SystemModel = {
@@ -170,9 +169,6 @@ const { enabled: hapticsEnabled, init: initHaptics, snap } = useHaptics()
 
 // Toast
 const toast = useToast()
-
-// Confirm dialog
-const { confirm } = useConfirm()
 
 // Initialize haptics from localStorage on mount
 onMounted(() => {

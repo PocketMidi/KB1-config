@@ -174,6 +174,7 @@
           :current-settings="localSettings"
           :has-unsaved-changes="hasChanges"
           @load="handlePresetLoad"
+          @loadFactoryDefaults="handleResetDefaults"
           @preset-activated="handlePresetActivated"
           @slot-name-display="handleSlotNameDisplay"
           @slot-count="handleSlotCount"
@@ -196,7 +197,6 @@
             :is-connected="isConnected"
             @update:modelValue="markChanged"
             @restore-from-device="handleLoadClick"
-            @reset-to-factory="handleResetDefaults"
           />
         </AccordionSection>
       </div>
@@ -761,7 +761,7 @@ function handleChromaticWarning(message: string) {
 }
 
 function handlePresetLoad(settings: DeviceSettings) {
-  console.log('📂 Preset loaded - hasChanges reset to false');
+  console.log('📂 Preset loaded - settings loaded, Send button armed');
   localSettings.value = JSON.parse(JSON.stringify(settings));
   
   // Ensure offsetTime has a default value for older presets that don't have it
@@ -769,7 +769,7 @@ function handlePresetLoad(settings: DeviceSettings) {
     localSettings.value.touch.offsetTime = 0; // Default to FWD mode
   }
   
-  hasChanges.value = false; // No changes yet - will become true when user modifies settings
+  hasChanges.value = true; // Arm the Send button - user controls when to send
 }
 
 function handlePresetActivated(presetId: string | null) {

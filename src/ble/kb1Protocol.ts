@@ -588,10 +588,10 @@ export class KB1Protocol {
   validateSettings(settings: DeviceSettings): boolean {
     // Helper to validate lever settings
     const validateLever = (lever: LeverSettings): boolean => {
-      // ccNumber ranges: -1 (disabled), 0-128 (MIDI CC + Velocity), 200-203 (extended chord parameters)
+      // ccNumber ranges: -1 (disabled), 0-128 (MIDI CC + Velocity), 200-206 (KB1 Expression)
       const ccValid = lever.ccNumber === -1 || 
                       (lever.ccNumber >= 0 && lever.ccNumber <= 128) ||
-                      (lever.ccNumber >= 200 && lever.ccNumber <= 203);
+                      (lever.ccNumber >= 200 && lever.ccNumber <= 206);
       return (
         ccValid &&
         lever.minCCValue >= 0 && lever.minCCValue <= 127 &&
@@ -605,10 +605,10 @@ export class KB1Protocol {
 
     // Helper to validate lever push settings
     const validateLeverPush = (leverPush: LeverPushSettings): boolean => {
-      // ccNumber ranges: -1 (disabled), 0-128 (MIDI CC + Velocity), 200-203 (extended chord parameters)
+      // ccNumber ranges: -1 (disabled), 0-128 (MIDI CC + Velocity), 200-206 (KB1 Expression)
       const ccValid = leverPush.ccNumber === -1 || 
                       (leverPush.ccNumber >= 0 && leverPush.ccNumber <= 128) ||
-                      (leverPush.ccNumber >= 200 && leverPush.ccNumber <= 203);
+                      (leverPush.ccNumber >= 200 && leverPush.ccNumber <= 206);
       return (
         ccValid &&
         leverPush.minCCValue >= 0 && leverPush.minCCValue <= 127 &&

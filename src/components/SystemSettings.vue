@@ -103,20 +103,13 @@
           CONFIG SETTINGS
           <span class="info-icon" @click.stop="showHelp('configSettings')" title="Show help">i</span>
         </label>
-        <div class="button-group">
-          <button
-            class="config-btn"
-            :class="{ active: restoringFromDevice }"
-            :disabled="!props.isConnected"
-            @click="handleRestoreFromDevice"
-            :title="props.isConnected ? 'Load current settings from KB1' : 'Connect to KB1 to refresh settings'"
-          >REFRESH</button>
-          <button
-            class="config-btn danger"
-            :class="{ active: resettingToFactory }"
-            @click="handleResetToFactory"
-          >DEFAULTS</button>
-        </div>
+        <button
+          class="config-btn"
+          :class="{ active: restoringFromDevice }"
+          :disabled="!props.isConnected"
+          @click="handleRestoreFromDevice"
+          :title="props.isConnected ? 'Load current settings from KB1' : 'Connect to KB1 to refresh settings'"
+        >REFRESH FROM DEVICE</button>
       </div>
     </div>
   </div>
@@ -161,7 +154,6 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: 'update:modelValue', v: SystemModel): void
   (e: 'restore-from-device'): void
-  (e: 'reset-to-factory'): void
 }>()    
 
 const model = computed({
@@ -251,7 +243,7 @@ const helpTexts = {
   },
   configSettings: {
     title: 'Config Settings',
-    description: '<strong>REFRESH</strong> loads the current settings from your connected KB1 into the app.<br><br><strong>DEFAULTS</strong> resets all parameters and settings to their initial values in the app.'
+    description: '<strong>REFRESH FROM DEVICE</strong> loads the current settings from your connected KB1 into the app.'
   }
 }
 
@@ -301,17 +293,6 @@ function handleRestoreFromDevice() {
   emit('restore-from-device')
   snap()
   setTimeout(() => { restoringFromDevice.value = false }, 600)
-}
-
-// Reset to factory momentary button
-const resettingToFactory = ref(false)
-
-async function handleResetToFactory() {
-  if (!await confirm('Reset all app settings to their defaults? Upload to apply the changes to KB1.')) return
-  resettingToFactory.value = true
-  emit('reset-to-factory')
-  snap()
-  setTimeout(() => { resettingToFactory.value = false }, 600)
 }
 
 // Auto-calculate deep sleep as light sleep + 90s (fixed pulsing LED warning period)

@@ -88,6 +88,15 @@
       </div>
     </div>
 
+    <!-- Factory Defaults Button (below slots) -->
+    <button 
+      v-if="!selectionMode"
+      class="btn-factory-defaults"
+      @click.stop="loadFactoryDefaults"
+      title="Load factory default settings into configurator">
+      Load Factory Defaults
+    </button>
+
     <!-- Slot Edit Dialog -->
     <div v-if="showSlotDialog" class="modal-overlay" @click.self.stop="showSlotDialog = false">
       <div class="modal-dialog">
@@ -253,6 +262,7 @@ const emit = defineEmits<{
   (e: 'presetActivated', presetId: string | null): void;
   (e: 'slotNameDisplay', name: string): void;
   (e: 'slotCount', count: number, total: number): void;
+  (e: 'loadFactoryDefaults'): void;
 }>();
 
 // 8-Slot Preset System (localStorage)
@@ -355,11 +365,19 @@ const leverModes: Record<number, string> = {
 };
 
 const pushModes: Record<number, string> = {
-  0: 'Smooth', 1: 'Peak', 3: 'Reset'
+  0: 'Smooth', 1: 'Peak', 2: 'Static', 3: 'Reset'
 };
 
 const touchModes: Record<number, string> = {
   0: 'Gate', 1: 'Toggle', 2: 'Smooth'
+};
+
+// KB1 Expression parameter names for cycling parameters
+const kb1ExpressionParamNames: Record<number, string> = {
+  201: 'Pattern',
+  204: 'ScaleType',
+  205: 'ChordType',
+  206: 'RootNote'
 };
 
 const valueModeNames: Record<number, string> = {
@@ -403,10 +421,31 @@ function generateSettingsSnapshot(settings: DeviceSettings): string {
   if (settings.lever1.ccNumber >= 0) {
     const l1mode = leverModes[settings.lever1.functionMode] || '?';
     const l1value = valueModeNames[settings.lever1.valueMode] || 'Uni';
-    const p1mode = settings.leverPush1.ccNumber >= 0 ? pushModes[settings.leverPush1.functionMode] || '?' : 'Off';
+    let p1mode = 'Off';
+    if (settings.leverPush1.ccNumber >= 0) {
+      // Check if it's a cycling parameter (Pattern, ScaleType, ChordType, RootNote)
+      const isCyclingParam = [201, 204, 205, 206].includes(settings.leverPush1.ccNumber);
+      if (isCyclingParam) {
+        const direction = (settings.leverPush1.offsetTime ?? 0) === 0 ? 'FWD' : 'REV';
+        const paramName = kb1ExpressionParamNames[settings.leverPush1.ccNumber] || 'Cycle';
+        p1mode = `${paramName}/${direction}`;
+      } else {
+        p1mode = pushModes[settings.leverPush1.functionMode] || '?';
+      }
+    }
     lines.push(`L1: ${l1mode}/${l1value} • P1: ${p1mode}`);
   } else {
-    const p1mode = settings.leverPush1.ccNumber >= 0 ? pushModes[settings.leverPush1.functionMode] || '?' : 'Off';
+    let p1mode = 'Off';
+    if (settings.leverPush1.ccNumber >= 0) {
+      const isCyclingParam = [201, 204, 205, 206].includes(settings.leverPush1.ccNumber);
+      if (isCyclingParam) {
+        const direction = (settings.leverPush1.offsetTime ?? 0) === 0 ? 'FWD' : 'REV';
+        const paramName = kb1ExpressionParamNames[settings.leverPush1.ccNumber] || 'Cycle';
+        p1mode = `${paramName}/${direction}`;
+      } else {
+        p1mode = pushModes[settings.leverPush1.functionMode] || '?';
+      }
+    }
     lines.push(`L1: Off • P1: ${p1mode}`);
   }
   
@@ -424,15 +463,31 @@ function generateSettingsSnapshot(settings: DeviceSettings): string {
   }
   
   if (settings.leverPush2.ccNumber >= 0) {
-    const p2mode = pushModes[settings.leverPush2.functionMode] || '?';
-    p2parts.push(`P2: ${p2mode}`);
+    // Check if it's a cycling parameter
+    const isCyclingParam = [201, 204, 205, 206].includes(settings.leverPush2.ccNumber);
+    if (isCyclingParam) {
+      const direction = (settings.leverPush2.offsetTime ?? 0) === 0 ? 'FWD' : 'REV';
+      const paramName = kb1ExpressionParamNames[settings.leverPush2.ccNumber] || 'Cycle';
+      p2parts.push(`P2: ${paramName}/${direction}`);
+    } else {
+      const p2mode = pushModes[settings.leverPush2.functionMode] || '?';
+      p2parts.push(`P2: ${p2mode}`);
+    }
   } else {
     p2parts.push('P2: Off');
   }
   
   if (settings.touch.ccNumber >= 0) {
-    const tmode = touchModes[settings.touch.functionMode] || '?';
-    tparts.push(`Touch: ${tmode}`);
+    // Check if it's a cycling parameter
+    const isCyclingParam = [201, 204, 205, 206].includes(settings.touch.ccNumber);
+    if (isCyclingParam) {
+      const direction = (settings.touch.offsetTime ?? 0) === 0 ? 'FWD' : 'REV';
+      const paramName = kb1ExpressionParamNames[settings.touch.ccNumber] || 'Cycle';
+      tparts.push(`Touch: ${paramName}/${direction}`);
+    } else {
+      const tmode = touchModes[settings.touch.functionMode] || '?';
+      tparts.push(`Touch: ${tmode}`);
+    }
   } else {
     tparts.push('Touch: Off');
   }
@@ -614,6 +669,13 @@ function activateSlot(slot: number) {
   activeDeviceSlot.value = null;
   
   toast.success(`Activated: "${preset.name}"`);
+}
+
+function loadFactoryDefaults() {
+  emit('loadFactoryDefaults');
+  activeSlot.value = null;
+  activeDeviceSlot.value = null;
+  toast.success('Factory defaults loaded');
 }
 
 async function syncNVSSlot(slot: number) {
@@ -980,6 +1042,30 @@ function downloadJSON(json: string, filename: string) {
   gap: 0.5rem;
 }
 
+.btn-factory-defaults {
+  width: 100%;
+  margin-top: 0.75rem;
+  padding: 0.5rem 1rem;
+  background: rgba(29, 29, 29, 0.5);
+  border: 1px solid rgba(205, 205, 205, 0.15);
+  border-radius: 4px;
+  color: rgba(205, 205, 205, 0.7);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-factory-defaults:hover {
+  background: rgba(29, 29, 29, 0.7);
+  border-color: rgba(205, 205, 205, 0.3);
+  color: rgba(205, 205, 205, 0.9);
+}
+
+.btn-factory-defaults:active {
+  transform: scale(0.98);
+}
+
 .preset-slot {
   display: flex;
   align-items: center;
@@ -1264,9 +1350,7 @@ function downloadJSON(json: string, filename: string) {
   margin: 1rem 0;
 }
 
-.import-section {
-  /* Community presets list below */
-}
+/* Community presets list below */
 
 .btn-refresh {
   background: none;

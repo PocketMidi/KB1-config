@@ -643,24 +643,32 @@ const stepsFirmwareToDisplay: Record<number, number> = {
   32: 25,
   20: 15,
   12: 10,
-  6: 5
+  6: 5,
+  // Invalid values (like 1 from Interpolated mode) map to 5% (firmware 6)
+  1: 5,
+  2: 5,
+  3: 5,
+  4: 5,
+  5: 5
 }
 
 // Direct access to firmware stepSize with % display conversion
 // For discrete parameters, always show and enforce step size of 1
 const stepsValue = computed<number>({
   get: (): number => {
-    const cc = model.value.ccNumber
+    const cc = model.value?.ccNumber
     // Discrete parameters: always show "1"
     if (cc === 201 || cc === 204 || cc === 205) {
       return 1
     }
-    // Ensure we have a valid stepSize, default to 6 (which displays as 5%)
-    const stepSize = model.value.stepSize || 6
-    return stepsFirmwareToDisplay[stepSize] ?? 5
+    // Get stepSize, ensure it's at least 6 (5% display) for Incremental mode
+    const stepSize = model.value?.stepSize
+    const validStepSize = (stepSize && stepSize > 0) ? stepSize : 6
+    // Map to display %, defaulting to 5% for invalid values
+    return stepsFirmwareToDisplay[validStepSize] ?? 5
   },
   set: (displayPercent: number) => {
-    const cc = model.value.ccNumber
+    const cc = model.value?.ccNumber
     // Discrete parameters: ignore attempts to change step size
     if (cc === 201 || cc === 204 || cc === 205) {
       return
@@ -672,7 +680,7 @@ const stepsValue = computed<number>({
 // Visual steps for IncrementalProfile display
 // For discrete parameters, show actual count; for others, use firmware step mapping
 const visualStepsCount = computed(() => {
-  const cc = model.value.ccNumber
+  const cc = model.value?.ccNumber
   
   // Discrete parameters: show exact number of values
   if (cc === 201) return 6   // Pattern Selector: 1-6 (6 values)
@@ -680,9 +688,10 @@ const visualStepsCount = computed(() => {
   if (cc === 205) return 15  // Chord Type: 0-14 (15 values)
   
   // For other parameters, use firmware step size directly
-  // (IncrementalProfile.vue will map it to visual steps)
-  // Ensure we have a valid stepSize, default to 6
-  return model.value.stepSize || 6
+  // (IncrementalProfile.vue will map minimum 6 (5% display)
+  const stepSize = model.value?.stepSize
+  return (stepSize && stepSize >= 6) ? stepSize : 6
+  return (stepSize && stepSize > 0) ? stepSize : 12
 })
 
 // Value mode constants

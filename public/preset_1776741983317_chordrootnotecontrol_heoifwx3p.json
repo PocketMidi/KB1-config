@@ -1,7 +1,8 @@
 {
     "id": "preset_1776741983317_chord-rootnote-control_heoifwx3p",
     "metadata": {
-        "name": "Chord RootNote Control",
+        "name": "Chord Cntrl",
+        "author": "STARTER",
         "date": "2026-04-21",
         "snapshot": "KB: Maj\/? \u2022 Chord\nL1: Step\/Uni \u2022 P1: RootNote\/FWD\nL2: Step\/Bi \u2022 P2: Reset \u2022 Touch: RootNote\/REV",
         "description": "cycle thru chords with L1 - cycle thru root notes fwd\/rev with P1\/Touch - 2 octave range"

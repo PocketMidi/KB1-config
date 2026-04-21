@@ -22,7 +22,10 @@
         class="preset-item"
       >
         <div class="preset-info">
-          <div class="preset-name">{{ preset.metadata?.name || 'Unnamed Preset' }}</div>
+          <div class="preset-header">
+            <div class="preset-author" v-if="preset.metadata?.author">{{ preset.metadata.author }}</div>
+            <div class="preset-name">{{ preset.metadata?.name || 'Unnamed Preset' }}</div>
+          </div>
           <div class="preset-snapshot" v-if="preset.metadata?.snapshot">{{ preset.metadata.snapshot }}</div>
           <div class="preset-description" v-if="preset.metadata?.description">{{ preset.metadata.description }}</div>
         </div>
@@ -246,10 +249,24 @@ defineExpose({
   min-width: 0;
 }
 
+.preset-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
 .preset-name {
   font-size: 0.8125rem;
   font-weight: 500;
   color: #EAEAEA;
+  font-family: 'Roboto Mono', monospace;
+}
+
+.preset-author {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: #b9aa5f;
   font-family: 'Roboto Mono', monospace;
 }
 

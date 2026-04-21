@@ -1,7 +1,8 @@
 {
     "id": "preset_1776742007976_strum-shape-arp-control_vfqzkhutk",
     "metadata": {
-        "name": "Strum Shape(arp) Control",
+        "name": "Shape Cntrl",
+        "author": "STARTER",
         "date": "2026-04-21",
         "snapshot": "KB: Maj\/? \u2022 Strum\/Fwd\/Cust\nL1: Step\/Uni \u2022 P1: Pattern\/FWD\nL2: Step\/Bi \u2022 P2: Reset \u2022 Touch: Pattern\/REV",
         "description": "cycle thru strum speeds with L1 - cycle thru shapes fwd\/rev with P1\/Touch - 2 octave range"

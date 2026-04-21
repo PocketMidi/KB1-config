@@ -1,7 +1,8 @@
 {
     "id": "preset_1776741973134_scale-rootnote-control_dzjsaeomn",
     "metadata": {
-        "name": "Scale\/RootNote Control",
+        "name": "Scale Cntrl",
+        "author": "STARTER",
         "date": "2026-04-21",
         "snapshot": "KB: Maj\/C \u2022 Compact\nL1: Step\/Uni \u2022 P1: RootNote\/FWD\nL2: Step\/Bi \u2022 P2: Reset \u2022 Touch: RootNote\/REV",
         "description": "cycle thru scales with L1 - cycle thru root notes fwd\/rev with P1\/Touch"

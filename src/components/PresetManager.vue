@@ -161,9 +161,13 @@
     <div v-if="showCloudDialog" class="modal-overlay" @click.self.stop="showCloudDialog = false">
       <div class="modal-dialog cloud-dialog" @click.stop>
         <div class="modal-header">
-          <h3>Cloud Presets</h3>
+          <h3>{{ exportingSlot !== null && getSlotPreset(exportingSlot) ? 'Share Your Preset' : 'Browse Community Presets' }}</h3>
           <div class="header-actions">
-            <button class="btn-refresh" @click.stop="refreshCommunityPresets" title="Refresh presets">
+            <button 
+              v-if="exportingSlot === null || !getSlotPreset(exportingSlot)"
+              class="btn-refresh" 
+              @click.stop="refreshCommunityPresets" 
+              title="Refresh presets">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
               </svg>
@@ -177,26 +181,35 @@
           <div class="export-section" v-if="exportingSlot !== null && getSlotPreset(exportingSlot)">
             <div class="section-label">Share Your Preset</div>
             <div class="export-form-compact">
-              <input
-                v-model="exportMetadata.name"
-                type="text"
-                class="input-text"
-                placeholder="Preset name (required)"
-              />
-              <input
-                v-model="exportMetadata.author"
-                type="text"
-                class="input-text"
-                placeholder="Your name (optional, max 12 chars)"
-                maxlength="12"
-              />
+              <div class="form-group">
+                <label>Author (Optional)</label>
+                <input
+                  v-model="exportMetadata.author"
+                  type="text"
+                  class="input-text"
+                  placeholder="Your name (max 12 chars)"
+                  maxlength="12"
+                />
+              </div>
+              <div class="form-group">
+                <label>Preset Name</label>
+                <input
+                  v-model="exportMetadata.name"
+                  type="text"
+                  class="input-text"
+                  placeholder="Enter preset name"
+                />
+              </div>
               <div class="settings-snapshot" v-if="exportingSlot !== null && getSlotPreset(exportingSlot)">{{ getSlotPreset(exportingSlot)?.snapshot || generateSettingsSnapshot(getSlotPreset(exportingSlot)?.settings || props.currentSettings) }}</div>
-              <textarea
-                v-model="exportMetadata.description"
-                class="input-text"
-                rows="2"
-                placeholder="Brief description (optional)"
-              ></textarea>
+              <div class="form-group">
+                <label>Description (Optional)</label>
+                <textarea
+                  v-model="exportMetadata.description"
+                  class="input-text"
+                  rows="2"
+                  placeholder="Brief description"
+                ></textarea>
+              </div>
               <button 
                 class="btn-primary btn-export" 
                 @click.stop="confirmExport"
@@ -206,12 +219,8 @@
             </div>
           </div>
 
-          <!-- Divider - Only show if export section is visible -->
-          <div class="section-divider" v-if="exportingSlot !== null && getSlotPreset(exportingSlot)"></div>
-          
-          <!-- Browse/Import Section -->
-          <div class="import-section">
-            <div class="section-label">Browse Community Presets</div>
+          <!-- Browse/Import Section - Only show if slot is empty -->
+          <div class="import-section" v-if="exportingSlot === null || !getSlotPreset(exportingSlot)">
             <CommunityPresets 
               ref="communityPresetsRef" 
               :fullHeight="exportingSlot !== null && !getSlotPreset(exportingSlot)"

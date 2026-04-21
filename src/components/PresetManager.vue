@@ -23,6 +23,16 @@
       <button class="btn-select-action" @click="enterSelectionMode">Select</button>
     </div>
 
+    <!-- Factory Defaults Button (top with divider) -->
+    <button 
+      v-if="!selectionMode"
+      class="btn-factory-defaults"
+      @click.stop="loadFactoryDefaults"
+      title="Load factory default settings into configurator">
+      Load Factory Defaults
+    </button>
+    <div v-if="!selectionMode" class="factory-divider"></div>
+
     <!-- 8-Slot Preset System -->
     <div class="preset-slots">
       <div
@@ -87,15 +97,6 @@
         </div>
       </div>
     </div>
-
-    <!-- Factory Defaults Button (below slots) -->
-    <button 
-      v-if="!selectionMode"
-      class="btn-factory-defaults"
-      @click.stop="loadFactoryDefaults"
-      title="Load factory default settings into configurator">
-      Load Factory Defaults
-    </button>
 
     <!-- Slot Edit Dialog -->
     <div v-if="showSlotDialog" class="modal-overlay" @click.self.stop="showSlotDialog = false">
@@ -277,13 +278,97 @@ interface SlotPreset {
 
 const SLOTS_KEY = 'kb1_preset_slots';
 
-// Load slots from localStorage
+// Factory defaults - 4 presets showcasing KB1 Expression cycling parameters
+function getDefaultPresets(): (SlotPreset | null)[] {
+  const now = Date.now();
+  
+  return [
+    // Slot 1: Scale/RootNote Control
+    {
+      name: "Scale/RootNote Control",
+      description: "cycle thru scales with L1 - cycle thru root notes fwd/rev with P1/Touch",
+      snapshot: "KB: Maj/C • Compact\nL1: Step/Uni • P1: RootNote/FWD\nL2: Step/Bi • P2: Reset • Touch: RootNote/REV",
+      modifiedAt: now,
+      settings: {
+        lever1: { ccNumber: 204, minCCValue: 0, maxCCValue: 127, stepSize: 1, functionMode: 2, valueMode: 0, onsetTime: 100, offsetTime: 100, onsetType: 0, offsetType: 0 },
+        leverPush1: { ccNumber: 206, minCCValue: 0, maxCCValue: 127, functionMode: 2, onsetTime: 100, offsetTime: 0, onsetType: 0, offsetType: 0 },
+        lever2: { ccNumber: 128, minCCValue: 13, maxCCValue: 127, stepSize: 6, functionMode: 2, valueMode: 1, onsetTime: 100, offsetTime: 100, onsetType: 0, offsetType: 0 },
+        leverPush2: { ccNumber: 128, minCCValue: 85, maxCCValue: 85, functionMode: 3, onsetTime: 100, offsetTime: 100, onsetType: 0, offsetType: 0 },
+        touch: { ccNumber: 206, minCCValue: 0, maxCCValue: 127, functionMode: 1, threshold: 36800, offsetTime: 100 },
+        scale: { scaleType: 1, rootNote: 60, keyMapping: 1 },
+        chord: { playMode: 0, chordType: 0, strumEnabled: false, velocitySpread: 10, strumSpeed: 80, strumPattern: 0, strumSwing: 0, voicing: 1, strumIntervals: [0, 4, 7, 12], buildMode: "up" },
+        system: { lightSleepTimeout: 300, deepSleepTimeout: 390, bleTimeout: 600 }
+      }
+    },
+    // Slot 2: Chord RootNote Control
+    {
+      name: "Chord RootNote Control",
+      description: "cycle thru chords with L1 - cycle thru root notes fwd/rev with P1/Touch - 2 octave range",
+      snapshot: "KB: Maj/? • Chord\nL1: Step/Uni • P1: RootNote/FWD\nL2: Step/Bi • P2: Reset • Touch: RootNote/REV",
+      modifiedAt: now,
+      settings: {
+        lever1: { ccNumber: 205, minCCValue: 0, maxCCValue: 127, stepSize: 12, functionMode: 2, valueMode: 0, onsetTime: 100, offsetTime: 100, onsetType: 0, offsetType: 0 },
+        leverPush1: { ccNumber: 206, minCCValue: 0, maxCCValue: 127, functionMode: 2, onsetTime: 100, offsetTime: 0, onsetType: 0, offsetType: 0 },
+        lever2: { ccNumber: 128, minCCValue: 13, maxCCValue: 127, stepSize: 6, functionMode: 2, valueMode: 1, onsetTime: 100, offsetTime: 100, onsetType: 0, offsetType: 0 },
+        leverPush2: { ccNumber: 128, minCCValue: 85, maxCCValue: 85, functionMode: 3, onsetTime: 100, offsetTime: 100, onsetType: 0, offsetType: 0 },
+        touch: { ccNumber: 206, minCCValue: 0, maxCCValue: 127, functionMode: 1, threshold: 36800, offsetTime: 100 },
+        scale: { scaleType: 0, rootNote: 0, keyMapping: 0 },
+        chord: { playMode: 1, chordType: 0, strumEnabled: false, velocitySpread: 59, strumSpeed: 80, strumPattern: 0, strumSwing: 20, voicing: 2, strumIntervals: [0, 12, 4, 7], buildMode: "exclusive" },
+        system: { lightSleepTimeout: 300, deepSleepTimeout: 390, bleTimeout: 600 }
+      }
+    },
+    // Slot 3: Strum Control
+    {
+      name: "Strum Control",
+      description: "cycle thru strum speeds with L1 - cycle thru patterns fwd/rev with P1/Touch - 2 octave range",
+      snapshot: "KB: Maj/? • Strum/Fwd/Cust\nL1: Step/Uni • P1: Pattern/FWD\nL2: Step/Bi • P2: Reset • Touch: Pattern/REV",
+      modifiedAt: now,
+      settings: {
+        lever1: { ccNumber: 200, minCCValue: 0, maxCCValue: 127, stepSize: 12, functionMode: 2, valueMode: 0, onsetTime: 100, offsetTime: 100, onsetType: 0, offsetType: 0 },
+        leverPush1: { ccNumber: 201, minCCValue: 0, maxCCValue: 127, functionMode: 2, onsetTime: 100, offsetTime: 0, onsetType: 0, offsetType: 0 },
+        lever2: { ccNumber: 128, minCCValue: 13, maxCCValue: 127, stepSize: 6, functionMode: 2, valueMode: 1, onsetTime: 100, offsetTime: 100, onsetType: 0, offsetType: 0 },
+        leverPush2: { ccNumber: 128, minCCValue: 85, maxCCValue: 85, functionMode: 3, onsetTime: 100, offsetTime: 100, onsetType: 0, offsetType: 0 },
+        touch: { ccNumber: 201, minCCValue: 0, maxCCValue: 127, functionMode: 1, threshold: 36800, offsetTime: 100 },
+        scale: { scaleType: 0, rootNote: 0, keyMapping: 0 },
+        chord: { playMode: 1, chordType: 0, strumEnabled: true, velocitySpread: 59, strumSpeed: 80, strumPattern: 7, strumSwing: 20, voicing: 2, strumIntervals: [0, 4, 7, 12], buildMode: "up" },
+        system: { lightSleepTimeout: 300, deepSleepTimeout: 390, bleTimeout: 600 }
+      }
+    },
+    // Slot 4: Strum Shape(arp) Control
+    {
+      name: "Strum Shape(arp) Control",
+      description: "cycle thru strum speeds with L1 - cycle thru shapes fwd/rev with P1/Touch - 2 octave range",
+      snapshot: "KB: Maj/? • Strum/Fwd/Cust\nL1: Step/Uni • P1: Pattern/FWD\nL2: Step/Bi • P2: Reset • Touch: Pattern/REV",
+      modifiedAt: now,
+      settings: {
+        lever1: { ccNumber: 200, minCCValue: 0, maxCCValue: 127, stepSize: 12, functionMode: 2, valueMode: 0, onsetTime: 100, offsetTime: 100, onsetType: 0, offsetType: 0 },
+        leverPush1: { ccNumber: 201, minCCValue: 0, maxCCValue: 127, functionMode: 2, onsetTime: 100, offsetTime: 0, onsetType: 0, offsetType: 0 },
+        lever2: { ccNumber: 128, minCCValue: 13, maxCCValue: 127, stepSize: 6, functionMode: 2, valueMode: 1, onsetTime: 100, offsetTime: 100, onsetType: 0, offsetType: 0 },
+        leverPush2: { ccNumber: 128, minCCValue: 85, maxCCValue: 85, functionMode: 3, onsetTime: 100, offsetTime: 100, onsetType: 0, offsetType: 0 },
+        touch: { ccNumber: 201, minCCValue: 0, maxCCValue: 127, functionMode: 1, threshold: 36800, offsetTime: 100 },
+        scale: { scaleType: 0, rootNote: 0, keyMapping: 0 },
+        chord: { playMode: 1, chordType: 0, strumEnabled: true, velocitySpread: 59, strumSpeed: 80, strumPattern: 7, strumSwing: 20, voicing: 2, strumIntervals: [0, 4, 7, 12], buildMode: "up" },
+        system: { lightSleepTimeout: 300, deepSleepTimeout: 390, bleTimeout: 600 }
+      }
+    },
+    // Slots 5-8: Empty
+    null,
+    null,
+    null,
+    null
+  ];
+}
+
+// Load slots from localStorage (or defaults on first run)
 function loadSlotsFromStorage(): (SlotPreset | null)[] {
   try {
     const stored = localStorage.getItem(SLOTS_KEY);
     if (stored) {
       return JSON.parse(stored);
     }
+    // First time - return factory defaults
+    console.log('Loading factory default presets (Slots 1-4)');
+    return getDefaultPresets();
   } catch (error) {
     console.error('Failed to load slots from localStorage:', error);
   }
@@ -1044,7 +1129,7 @@ function downloadJSON(json: string, filename: string) {
 
 .btn-factory-defaults {
   width: 100%;
-  margin-top: 0.75rem;
+  margin-bottom: 0;
   padding: 0.5rem 1rem;
   background: rgba(29, 29, 29, 0.5);
   border: 1px solid rgba(205, 205, 205, 0.15);
@@ -1064,6 +1149,12 @@ function downloadJSON(json: string, filename: string) {
 
 .btn-factory-defaults:active {
   transform: scale(0.98);
+}
+
+.factory-divider {
+  height: 1px;
+  background: rgba(205, 205, 205, 0.1);
+  margin: 0.75rem 0;
 }
 
 .preset-slot {

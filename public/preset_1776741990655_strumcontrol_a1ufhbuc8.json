@@ -1,0 +1,90 @@
+{
+    "id": "preset_1776741990655_strum-control_a1ufhbuc8",
+    "metadata": {
+        "name": "Strum Control",
+        "date": "2026-04-21",
+        "snapshot": "KB: Maj\/? \u2022 Strum\/Fwd\/Cust\nL1: Step\/Uni \u2022 P1: Pattern\/FWD\nL2: Step\/Bi \u2022 P2: Reset \u2022 Touch: Pattern\/REV",
+        "description": "cycle thru strum speeds with L1 - cycle thru root notes fwd\/rev with P1\/Touch - 2 octave range"
+    },
+    "settings": {
+        "lever1": {
+            "ccNumber": 200,
+            "minCCValue": 0,
+            "maxCCValue": 127,
+            "stepSize": 12,
+            "functionMode": 2,
+            "valueMode": 0,
+            "onsetTime": 100,
+            "offsetTime": 100,
+            "onsetType": 0,
+            "offsetType": 0
+        },
+        "leverPush1": {
+            "ccNumber": 201,
+            "minCCValue": 0,
+            "maxCCValue": 127,
+            "functionMode": 2,
+            "onsetTime": 100,
+            "offsetTime": 0,
+            "onsetType": 0,
+            "offsetType": 0
+        },
+        "lever2": {
+            "ccNumber": 128,
+            "minCCValue": 13,
+            "maxCCValue": 127,
+            "stepSize": 6,
+            "functionMode": 2,
+            "valueMode": 1,
+            "onsetTime": 100,
+            "offsetTime": 100,
+            "onsetType": 0,
+            "offsetType": 0
+        },
+        "leverPush2": {
+            "ccNumber": 128,
+            "minCCValue": 85,
+            "maxCCValue": 85,
+            "functionMode": 3,
+            "onsetTime": 100,
+            "offsetTime": 100,
+            "onsetType": 0,
+            "offsetType": 0
+        },
+        "touch": {
+            "ccNumber": 201,
+            "minCCValue": 0,
+            "maxCCValue": 127,
+            "functionMode": 1,
+            "threshold": 36800,
+            "offsetTime": 100
+        },
+        "scale": {
+            "scaleType": 0,
+            "rootNote": 0,
+            "keyMapping": 0
+        },
+        "chord": {
+            "playMode": 1,
+            "chordType": 0,
+            "strumEnabled": true,
+            "velocitySpread": 59,
+            "strumSpeed": 80,
+            "strumPattern": 7,
+            "strumSwing": 20,
+            "voicing": 2,
+            "strumIntervals": [
+                0,
+                4,
+                7,
+                12
+            ],
+            "buildMode": "up"
+        },
+        "system": {
+            "lightSleepTimeout": 300,
+            "deepSleepTimeout": 390,
+            "bleTimeout": 600
+        }
+    }
+}

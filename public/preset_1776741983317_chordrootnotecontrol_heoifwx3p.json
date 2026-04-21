@@ -1,0 +1,90 @@
+{
+    "id": "preset_1776741983317_chord-rootnote-control_heoifwx3p",
+    "metadata": {
+        "name": "Chord RootNote Control",
+        "date": "2026-04-21",
+        "snapshot": "KB: Maj\/? \u2022 Chord\nL1: Step\/Uni \u2022 P1: RootNote\/FWD\nL2: Step\/Bi \u2022 P2: Reset \u2022 Touch: RootNote\/REV",
+        "description": "cycle thru chords with L1 - cycle thru root notes fwd\/rev with P1\/Touch - 2 octave range"
+    },
+    "settings": {
+        "lever1": {
+            "ccNumber": 205,
+            "minCCValue": 0,
+            "maxCCValue": 127,
+            "stepSize": 12,
+            "functionMode": 2,
+            "valueMode": 0,
+            "onsetTime": 100,
+            "offsetTime": 100,
+            "onsetType": 0,
+            "offsetType": 0
+        },
+        "leverPush1": {
+            "ccNumber": 206,
+            "minCCValue": 0,
+            "maxCCValue": 127,
+            "functionMode": 2,
+            "onsetTime": 100,
+            "offsetTime": 0,
+            "onsetType": 0,
+            "offsetType": 0
+        },
+        "lever2": {
+            "ccNumber": 128,
+            "minCCValue": 13,
+            "maxCCValue": 127,
+            "stepSize": 6,
+            "functionMode": 2,
+            "valueMode": 1,
+            "onsetTime": 100,
+            "offsetTime": 100,
+            "onsetType": 0,
+            "offsetType": 0
+        },
+        "leverPush2": {
+            "ccNumber": 128,
+            "minCCValue": 85,
+            "maxCCValue": 85,
+            "functionMode": 3,
+            "onsetTime": 100,
+            "offsetTime": 100,
+            "onsetType": 0,
+            "offsetType": 0
+        },
+        "touch": {
+            "ccNumber": 206,
+            "minCCValue": 0,
+            "maxCCValue": 127,
+            "functionMode": 1,
+            "threshold": 36800,
+            "offsetTime": 100
+        },
+        "scale": {
+            "scaleType": 0,
+            "rootNote": 0,
+            "keyMapping": 0
+        },
+        "chord": {
+            "playMode": 1,
+            "chordType": 0,
+            "strumEnabled": false,
+            "velocitySpread": 59,
+            "strumSpeed": 80,
+            "strumPattern": 0,
+            "strumSwing": 20,
+            "voicing": 2,
+            "strumIntervals": [
+                0,
+                12,
+                4,
+                7
+            ],
+            "buildMode": "exclusive"
+        },
+        "system": {
+            "lightSleepTimeout": 300,
+            "deepSleepTimeout": 390,
+            "bleTimeout": 600
+        }
+    }
+}

@@ -1,0 +1,90 @@
+{
+    "id": "preset_1776741973134_scale-rootnote-control_dzjsaeomn",
+    "metadata": {
+        "name": "Scale\/RootNote Control",
+        "date": "2026-04-21",
+        "snapshot": "KB: Maj\/C \u2022 Compact\nL1: Step\/Uni \u2022 P1: RootNote\/FWD\nL2: Step\/Bi \u2022 P2: Reset \u2022 Touch: RootNote\/REV",
+        "description": "cycle thru scales with L1 - cycle thru root notes fwd\/rev with P1\/Touch"
+    },
+    "settings": {
+        "lever1": {
+            "ccNumber": 204,
+            "minCCValue": 0,
+            "maxCCValue": 127,
+            "stepSize": 1,
+            "functionMode": 2,
+            "valueMode": 0,
+            "onsetTime": 100,
+            "offsetTime": 100,
+            "onsetType": 0,
+            "offsetType": 0
+        },
+        "leverPush1": {
+            "ccNumber": 206,
+            "minCCValue": 0,
+            "maxCCValue": 127,
+            "functionMode": 2,
+            "onsetTime": 100,
+            "offsetTime": 0,
+            "onsetType": 0,
+            "offsetType": 0
+        },
+        "lever2": {
+            "ccNumber": 128,
+            "minCCValue": 13,
+            "maxCCValue": 127,
+            "stepSize": 6,
+            "functionMode": 2,
+            "valueMode": 1,
+            "onsetTime": 100,
+            "offsetTime": 100,
+            "onsetType": 0,
+            "offsetType": 0
+        },
+        "leverPush2": {
+            "ccNumber": 128,
+            "minCCValue": 85,
+            "maxCCValue": 85,
+            "functionMode": 3,
+            "onsetTime": 100,
+            "offsetTime": 100,
+            "onsetType": 0,
+            "offsetType": 0
+        },
+        "touch": {
+            "ccNumber": 206,
+            "minCCValue": 0,
+            "maxCCValue": 127,
+            "functionMode": 1,
+            "threshold": 36800,
+            "offsetTime": 100
+        },
+        "scale": {
+            "scaleType": 1,
+            "rootNote": 60,
+            "keyMapping": 1
+        },
+        "chord": {
+            "playMode": 0,
+            "chordType": 0,
+            "strumEnabled": false,
+            "velocitySpread": 10,
+            "strumSpeed": 80,
+            "strumPattern": 0,
+            "strumSwing": 0,
+            "voicing": 1,
+            "strumIntervals": [
+                0,
+                4,
+                7,
+                12
+            ],
+            "buildMode": "up"
+        },
+        "system": {
+            "lightSleepTimeout": 300,
+            "deepSleepTimeout": 390,
+            "bleTimeout": 600
+        }
+    }
+}

@@ -58,17 +58,11 @@
         <div class="slot-info" @click.stop="selectionMode ? toggleSelection(slot - 1) : openSlotDialog(slot - 1)">
           <div class="slot-label-wrapper">
             <div class="slot-label">
-              SLOT {{ slot }}
+              {{ slot }}
               <span v-if="getSlotPreset(slot - 1)?.isFactoryDefault" class="starter-badge" title="Factory starter preset">STARTER</span>
             </div>
             <div class="slot-name">{{ getSlotPreset(slot - 1)?.name || '(Empty)' }}</div>
           </div>
-          <button 
-            v-if="getSlotPreset(slot - 1) && !selectionMode"
-            class="btn-clear"
-            @click.stop="clearSlot(slot - 1)"
-            title="Delete preset"
-          >×</button>
         </div>
 
         <!-- Slot Actions (hidden in selection mode) -->
@@ -137,10 +131,18 @@
           ></textarea>
         </div>
         <div class="modal-buttons">
-          <button class="btn-secondary" @click.stop="showSlotDialog = false">Cancel</button>
-          <button class="btn-primary" @click.stop="confirmSlotSave" :disabled="!slotName.trim()">
-            Save
-          </button>
+          <button 
+            v-if="getSlotPreset(editingSlot)"
+            class="btn-delete" 
+            @click.stop="deleteCurrentSlot"
+            title="Delete this preset"
+          >Delete</button>
+          <div class="modal-buttons-right">
+            <button class="btn-secondary" @click.stop="showSlotDialog = false">Cancel</button>
+            <button class="btn-primary" @click.stop="confirmSlotSave" :disabled="!slotName.trim()">
+              Save
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -290,7 +292,7 @@ function getDefaultPresets(): (SlotPreset | null)[] {
   return [
     // Slot 1: Scale/RootNote Control
     {
-      name: "Scale/Root Cntrl",
+      name: "Scale Cntrl",
       description: "cycle thru scales with L1 - cycle thru root notes fwd/rev with P1/Touch",
       snapshot: "KB: Maj/C • Compact\nL1: Step/Uni • P1: RootNote/FWD\nL2: Step/Bi • P2: Reset • Touch: RootNote/REV",
       modifiedAt: now,
@@ -308,7 +310,7 @@ function getDefaultPresets(): (SlotPreset | null)[] {
     },
     // Slot 2: Chord RootNote Control
     {
-      name: "Chord/Root Cntrl",
+      name: "Chord Cntrl",
       description: "cycle thru chords with L1 - cycle thru root notes fwd/rev with P1/Touch - 2 octave range",
       snapshot: "KB: Maj/? • Chord\nL1: Step/Uni • P1: RootNote/FWD\nL2: Step/Bi • P2: Reset • Touch: RootNote/REV",
       modifiedAt: now,
@@ -344,7 +346,7 @@ function getDefaultPresets(): (SlotPreset | null)[] {
     },
     // Slot 4: Strum Shape(arp) Control
     {
-      name: "Strum/Shape Cntrl",
+      name: "Shape Cntrl",
       description: "cycle thru strum speeds with L1 - cycle thru shapes fwd/rev with P1/Touch - 2 octave range",
       snapshot: "KB: Maj/? • Strum/Fwd/Cust\nL1: Step/Uni • P1: Pattern/FWD\nL2: Step/Bi • P2: Reset • Touch: Pattern/REV",
       modifiedAt: now,
@@ -613,27 +615,6 @@ function isSlotExportedToCloud(slot: number): boolean {
   return slotPreset?.exportedToCloud === true;
 }
 
-function clearSlot(slot: number) {
-  const preset = getSlotPreset(slot);
-  if (!preset) return;
-  
-  // Simple confirmation
-  if (!window.confirm(`Delete "${preset.name}"?`)) return;
-  
-  const newSlots = [...slots.value];
-  newSlots[slot] = null;
-  
-  slots.value = newSlots;
-  saveSlotsToStorage(newSlots);
-  
-  // Clear active state if this was active
-  if (activeSlot.value === slot) {
-    activeSlot.value = null;
-  }
-  
-  toast.success(`Deleted "${preset.name}"`);
-}
-
 // ========================================
 // Selection Mode Functions
 // ========================================
@@ -752,6 +733,29 @@ function confirmSlotSave() {
   saveSlotsToStorage(newSlots);
   
   toast.success(`Saved to slot ${editingSlot.value + 1}: "${name}"`);
+  showSlotDialog.value = false;
+  slotName.value = '';
+  slotDescription.value = '';
+}
+
+function deleteCurrentSlot() {
+  const preset = getSlotPreset(editingSlot.value);
+  if (!preset) return;
+  
+  const newSlots = [...slots.value];
+  newSlots[editingSlot.value] = null;
+  
+  slots.value = newSlots;
+  saveSlotsToStorage(newSlots);
+  
+  // Clear active state if this was active
+  if (activeSlot.value === editingSlot.value) {
+    activeSlot.value = null;
+  }
+  
+  toast.success(`Deleted "${preset.name}"`);
+  
+  // Close modal and reset
   showSlotDialog.value = false;
   slotName.value = '';
   slotDescription.value = '';
@@ -1222,20 +1226,13 @@ function downloadJSON(json: string, filename: string) {
   font-weight: 400;
   color: #EAEAEA;
   letter-spacing: 0.05em;
-}
-
-.slot-label {
-  font-size: 0.8125rem;
-  font-weight: 400;
-  color: #EAEAEA;
-  letter-spacing: 0.05em;
   display: flex;
   align-items: center;
   gap: 0.375rem;
 }
 
 .starter-badge {
-  font-size: 0.625rem;
+  font-size: 0.8125rem;
   font-weight: 500;
   color: #b9aa5f;
   text-transform: uppercase;
@@ -1253,29 +1250,6 @@ function downloadJSON(json: string, filename: string) {
 .preset-slot.empty .slot-name {
   color: #848484;
   font-style: italic;
-}
-
-.btn-clear {
-  background: transparent;
-  border: none;
-  color: #848484;
-  font-size: 1.25rem;
-  line-height: 1;
-  cursor: pointer;
-  padding: 0;
-  width: 24px;
-  height: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  transition: all 0.2s;
-  border-radius: 4px;
-}
-
-.btn-clear:hover {
-  background: rgba(205, 205, 205, 0.1);
-  color: #E57373;
 }
 
 .slot-actions {
@@ -1968,7 +1942,32 @@ textarea.input-text {
 .modal-buttons {
   display: flex;
   gap: 0.5rem;
-  justify-content: flex-end;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-buttons-right {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.btn-delete {
+  padding: 0.25rem 1rem;
+  background: transparent;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: rgba(239, 68, 68, 0.8);
+  font-size: 0.8125rem;
+  font-weight: 400;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: 'Roboto Mono', monospace;
+}
+
+.btn-delete:hover {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.6);
+  color: #ef4444;
 }
 
 .btn-primary {

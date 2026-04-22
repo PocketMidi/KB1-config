@@ -18,20 +18,29 @@ The following pages in `src/pages/` are **not actively used** in the current app
 - **Replaced by**: Functionality distributed across mobile pages
 - **Notes**: Desktop-focused CC mapping interface
 
-### LandingPage.vue
-- **Status**: Legacy / Reference Only
+## Removed Legacy Files (April 2026)
+
+The following legacy files were removed during codebase cleanup as they had broken imports and were documented as not actively used:
+
+### LandingPage.vue (Removed)
+- **Status**: Removed - had broken imports to deleted SettingsPanel.vue
 - **Purpose**: Original landing page with settings panel + sliders panel
 - **Replaced by**: `App.vue` with mobile-first tab navigation
-- **Dependencies**: Uses `SlidersPanel.vue` which is also legacy
 
-## Legacy Components (Not Currently Used)
-
-### SlidersPanel.vue
-- **Status**: Legacy / Reference Only
+### SlidersPanel.vue (Removed)
+- **Status**: Removed - had broken imports to deleted GroupMorph.vue and SettingsPanel.vue
 - **Purpose**: Desktop slider panel component
-- **Used by**: `LandingPage.vue` (also legacy)
 - **Replaced by**: `PerformanceSliders.vue` in `MobileSliders.vue`
-- **Notes**: Original desktop slider interface before mobile redesign
+
+### SliderControl.vue (Removed)
+- **Status**: Removed - only used by deleted SlidersPanel.vue
+- **Purpose**: Individual slider control component for desktop interface
+- **Replaced by**: Slider controls in `PerformanceSliders.vue`
+
+### SnapshotBar.vue (Removed)
+- **Status**: Removed - only used by deleted SlidersPanel.vue
+- **Purpose**: Snapshot/preset bar for desktop sliders
+- **Replaced by**: Preset functionality in mobile interface
 
 ## Current Active Architecture
 

@@ -9,6 +9,12 @@
  * All components use CSS variables for consistent theming.
  */
 
+/* ===== Mobile Tap Highlight (Android Chrome) ===== */
+* {
+  -webkit-tap-highlight-color: transparent; /* Disable blue flash on tap */
+  /* Alternative: rgba(106, 104, 83, 0.15) for subtle system tan feedback */
+}
+
 /* ===== DARK MODE (Default) ===== */
 :root.theme-kb1-dark {
   color-scheme: dark; /* Tells browser (incl. non-Safari iOS) to use dark overscroll, status bar, scrollbars */

@@ -292,8 +292,6 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: 'load', settings: DeviceSettings): void;
-  (e: 'presetActivated', presetId: string | null): void;
-  (e: 'slotNameDisplay', name: string): void;
   (e: 'slotCount', count: number, total: number): void;
   (e: 'loadFactoryDefaults'): void;
 }>();
@@ -464,8 +462,6 @@ const activeDeviceSlot = ref<number | null>(null);
 
 // Load presets on mount
 onMounted(() => {
-  console.log('🎬 PresetManager mounted');
-  console.log('📊 Initial device presets:', JSON.parse(JSON.stringify(devicePresets.value)));
   refreshDevicePresets();
 });
 
@@ -959,11 +955,8 @@ function getDevicePreset(slot: number) {
 
 // Load presets on mount
 
-// Debug: Watch devicePresets for changes & auto-sync on connect
+// Auto-sync device presets to empty browser slots on initial connect
 watch(devicePresets, async (newPresets) => {
-  console.log('🔄 Device presets changed:', JSON.parse(JSON.stringify(newPresets)));
-  
-  // Auto-sync device presets to empty browser slots on initial connect
   if (!hasAutoSynced.value && isConnected.value && newPresets.length > 0) {
     hasAutoSynced.value = true;
     
@@ -991,7 +984,6 @@ watch(devicePresets, async (newPresets) => {
           saveSlotsToStorage(newSlots);
           
           syncedCount++;
-          console.log(`Auto-synced slot ${i + 1}: "${devicePreset.name}"`);
         } catch (error) {
           console.error(`Failed to auto-sync slot ${i + 1}:`, error);
         }
@@ -1095,9 +1087,6 @@ async function confirmExport() {
         const error = await response.json().catch(() => ({ error: 'Upload failed' }));
         throw new Error(error.error || `HTTP ${response.status}`);
       }
-      
-      const result = await response.json();
-      console.log('✅ Preset uploaded:', result);
       
       // Mark slot as exported to cloud
       const uploadedSlot = exportingSlot.value;

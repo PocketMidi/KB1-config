@@ -361,7 +361,7 @@ async function confirmRecalibrate() {
     // Modal stays open and reactively updates to show new state
   } catch (error) {
     console.error('Battery recalibration failed:', error);
-    // TODO: Show error toast
+    // No toast - UI shows result (icon stays at current % if BLE write fails)
   } finally {
     isRecalibrating.value = false;
     showConfirmation.value = false; // Close dialog after reset completes
@@ -390,7 +390,6 @@ function handleBatteryClick() {
     devModeUnlocked.value = true;
     devBatteryPercent.value = estimatedPercentage.value ?? 80;
     clickCount.value = 0;
-    console.log('Dev mode unlocked!');
     return;
   }
   

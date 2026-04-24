@@ -18,6 +18,10 @@
 /* ===== DARK MODE (Default) ===== */
 :root.theme-kb1-dark {
   color-scheme: dark; /* Tells browser (incl. non-Safari iOS) to use dark overscroll, status bar, scrollbars */
+  
+  /* Force sRGB color space for Android Chrome wide-gamut displays */
+  color-interpolation-filters: sRGB;
+  forced-color-adjust: none; /* Prevent OS color adjustments */
 
   /* ===== Generic Color Variables (used throughout app) ===== */
   --color-background: #0F0F0F;
@@ -98,6 +102,22 @@
   --battery-critical: #ef4444; /* Critical battery level - red */
   --battery-disconnected: #6b7280; /* Disconnected/unavailable - gray */
   --battery-uncalibrated: #6b7280; /* Uncalibrated battery - gray */
+}
+
+/* ===== Android Wide-Gamut Color Correction ===== */
+/* Samsung AMOLED and other wide-gamut displays shift sRGB toward blue/purple */
+@media (color-gamut: p3) or (color-gamut: rec2020) {
+  :root.theme-kb1-dark {
+    /* Shift bronze/tan accent warmer to compensate for blue shift */
+    --ui-highlight: #c4a85e; /* Warmer than #b9aa5f */
+    --ui-highlight-rgb: 196, 168, 94;
+    --ui-highlight-hover: #d0b56a;
+    --ui-highlight-active: #b89a52;
+    
+    /* Slightly warm up key-active green */
+    --key-active: #4d7865; /* Warmer than #4b736a */
+    --key-active-rgb: 77, 120, 101;
+  }
   
   /* ===== Strum & Pattern Colors ===== */
   --strum-reverse: #955799; /* Reverse strum direction - muted violet */

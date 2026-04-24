@@ -1,25 +1,56 @@
 <template>
   <Teleport to="body">
-    <Transition name="picker-fade">
-      <div v-if="isOpen" class="picker-backdrop" @click="handleBackdropClick">
-        <div 
-          class="picker-overlay" 
-          @click.stop
-          :style="positionStyle"
-        >
-          <div class="wheel-picker-container">
+    <Transition name="sheet-fade">
+      <div v-if="isOpen" class="sheet-backdrop" @click="handleBackdropClick">
+        <!-- ==================== NEW: BOTTOM SHEET CONTAINER ==================== -->
+        <div class="sheet-container" @click.stop :style="{ height: sheetHeight }">
+          
+          <!-- Header: Title (clickable to close) -->
+          <div class="sheet-header" @click="close">
+            <span class="sheet-title">{{ title }}</span>
+          </div>
+
+          <!-- Content Area: Arrows + Scrollable List -->
+          <div class="sheet-content" :style="{ height: contentHeight }">
+            
+            <!-- ==================== NEW: NAVIGATION ARROWS ==================== -->
+            <div class="arrow-controls">
+              <button 
+                class="arrow-btn arrow-up" 
+                :disabled="!canScrollUp"
+                @click="scrollUp"
+              >
+                ↑
+              </button>
+              <button 
+                class="arrow-btn arrow-down" 
+                :disabled="!canScrollDown"
+                @click="scrollDown"
+              >
+                ↓
+              </button>
+            </div>
+
+            <!-- ==================== NEW: CENTER INDICATOR BAR ==================== -->
             <div class="center-indicator"></div>
+
+            <!-- Scrollable List -->
             <div 
               ref="scrollContainer"
-              class="wheel-scroll"
+              class="sheet-scroll"
               @scroll="handleScroll"
             >
-              <div class="wheel-spacer"></div>
+              <div class="scroll-spacer"></div>
               <div
-                v-for="(option, index) in options"
+                v-for="(option, index) in selectableOptions"
                 :key="option.value"
-                :class="['wheel-item', { 'divider-item': option.isDivider }]"
+                class="sheet-item"
+                :class="{ 
+                  'selected': option.value === modelValue,
+                  'divider-item': option.isDivider 
+                }"
                 :data-index="index"
+                :style="getItemStyle(index)"
                 @click="!option.isDivider && selectItem(index)"
               >
                 <span v-if="option.isDivider" class="divider-line">{{ option.label }}</span>
@@ -28,7 +59,7 @@
                   <span v-if="parseLabel(option.label).secondary" class="item-secondary">{{ parseLabel(option.label).secondary }}</span>
                 </template>
               </div>
-              <div class="wheel-spacer"></div>
+              <div class="scroll-spacer"></div>
             </div>
           </div>
         </div>
@@ -47,66 +78,114 @@ interface WheelOption {
   isDivider?: boolean;
 }
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   modelValue: string | number;
   options: WheelOption[];
   isOpen: boolean;
-  triggerEl?: HTMLElement | null;
-}>();
+  title?: string;
+  triggerEl?: HTMLElement | null; // Kept for compatibility, not used in bottom sheet
+}>(), {
+  title: 'SELECT OPTION', // ADJUST: Default header title (uppercase for consistency)
+  triggerEl: undefined
+});
 
 const emit = defineEmits<{
   (e: 'update:modelValue', value: string | number): void;
   (e: 'update:isOpen', value: boolean): void;
 }>();
 
+// ==================== VISUAL PARAMETERS (ADJUST THESE) ====================
+const ITEM_HEIGHT = 44;           // Height of each list item in pixels
+const MIN_VISIBLE_ITEMS = 3;      // Minimum items to show (for short lists)
+const MAX_VISIBLE_ITEMS = 5;      // Maximum items to show (before scrolling)
+const HEADER_HEIGHT = 52;         // Header height in pixels
+const OPACITY_CENTER = 1.0;       // Opacity of centered/selected item
+const OPACITY_ADJACENT = 0.55;    // Opacity of items ±1 from center (increased from 0.35)
+const OPACITY_FAR = 0.25;         // Opacity of items ±2+ from center (increased from 0.15)
+// ==========================================================================
+
 const scrollContainer = ref<HTMLElement | null>(null);
-const ITEM_HEIGHT = 44; // Height of each item in px
-const VISIBLE_ITEMS = 5; // Number of visible items
+const currentCenterIndex = ref(0);
 const lastHapticIndex = ref(-1);
 let scrollTimeout: ReturnType<typeof setTimeout> | null = null;
 
 const { detent, isSupported } = useHaptics();
 
-// Calculate position relative to trigger element
-const positionStyle = computed(() => {
-  if (!props.triggerEl) {
-    return {
-      position: 'fixed' as const,
-      top: '50%',
-      left: '50%',
-      transform: 'translate(-50%, -50%)'
-    };
+// ==================== NEW: FILTER OUT DIVIDERS FOR NAVIGATION ====================
+// Only selectable items (no dividers) for arrow navigation
+const selectableOptions = computed(() => props.options.filter(opt => !opt.isDivider));
+
+// ==================== NEW: DYNAMIC HEIGHT CALCULATION ====================
+// Adjust sheet height based on number of items
+const visibleItemCount = computed(() => {
+  const itemCount = selectableOptions.value.length;
+  return Math.min(Math.max(itemCount, MIN_VISIBLE_ITEMS), MAX_VISIBLE_ITEMS);
+});
+
+const sheetHeight = computed(() => {
+  const contentHeight = visibleItemCount.value * ITEM_HEIGHT;
+  const totalHeight = HEADER_HEIGHT + contentHeight;
+  return `${totalHeight}px`;
+});
+
+// Content area height (for center indicator positioning)
+const contentHeight = computed(() => {
+  return `${visibleItemCount.value * ITEM_HEIGHT}px`;
+});
+
+// ==================== NEW: ARROW BUTTON STATE ====================
+// Only show arrows if there are more items than visible (scrolling is possible)
+const needsScrolling = computed(() => selectableOptions.value.length > visibleItemCount.value);
+const canScrollUp = computed(() => needsScrolling.value && currentCenterIndex.value > 0);
+const canScrollDown = computed(() => needsScrolling.value && currentCenterIndex.value < selectableOptions.value.length - 1);
+
+// ==================== NEW: OPACITY CALCULATION FOR ITEMS ====================
+// Returns inline style with opacity based on distance from center
+function getItemStyle(index: number) {
+  const distance = Math.abs(index - currentCenterIndex.value);
+  let opacity = OPACITY_CENTER;
+  
+  if (distance === 1) {
+    opacity = OPACITY_ADJACENT;
+  } else if (distance >= 2) {
+    opacity = OPACITY_FAR;
   }
   
-  const rect = props.triggerEl.getBoundingClientRect();
-  const pickerHeight = VISIBLE_ITEMS * ITEM_HEIGHT; // 220px
-  
-  // Center the picker vertically over the trigger button
-  const top = rect.top + (rect.height / 2) - (pickerHeight / 2);
-  
-  return {
-    position: 'fixed' as const,
-    top: `${top}px`,
-    right: `${window.innerWidth - rect.right}px`,
-    minWidth: `${rect.width}px`
-  };
-});
+  return { opacity: opacity.toString() };
+}
 
 // Initialize scroll position when opened
 watch(() => props.isOpen, async (open) => {
   if (open) {
     await nextTick();
-    let initialIndex = props.options.findIndex(opt => opt.value === props.modelValue);
-    // Skip divider if found
-    if (initialIndex >= 0 && props.options[initialIndex]?.isDivider) {
-      initialIndex = props.options.findIndex((opt, idx) => idx > initialIndex && !opt.isDivider);
-    }
-    if (initialIndex >= 0) {
+    let initialIndex = selectableOptions.value.findIndex(opt => opt.value === props.modelValue);
+    if (initialIndex === -1) initialIndex = 0;
+    
+    currentCenterIndex.value = initialIndex;
+    
+    // Small delay to ensure DOM is fully rendered before scrolling
+    setTimeout(() => {
       scrollToIndex(initialIndex, false);
-    }
-    updateItemStyles();
+    }, 50);
   }
 });
+
+// ==================== NEW: ARROW NAVIGATION ====================
+function scrollUp() {
+  if (canScrollUp.value) {
+    const newIndex = currentCenterIndex.value - 1;
+    scrollToIndex(newIndex, true);
+    if (isSupported.value) detent(); // Haptic feedback
+  }
+}
+
+function scrollDown() {
+  if (canScrollDown.value) {
+    const newIndex = currentCenterIndex.value + 1;
+    scrollToIndex(newIndex, true);
+    if (isSupported.value) detent(); // Haptic feedback
+  }
+}
 
 function scrollToIndex(index: number, smooth = true) {
   if (!scrollContainer.value) return;
@@ -116,16 +195,16 @@ function scrollToIndex(index: number, smooth = true) {
     top: targetScroll,
     behavior: smooth ? 'smooth' : 'auto'
   });
+  
+  currentCenterIndex.value = index;
 }
 
 function selectItem(index: number) {
-  const selectedOption = props.options[index];
+  const selectedOption = selectableOptions.value[index];
   if (selectedOption) {
-    // No haptic on tap - only during scroll
-    // Scroll to the selected position before closing
     scrollToIndex(index, true);
     
-    // Wait for scroll to complete before emitting and closing
+    // Emit immediately and close
     setTimeout(() => {
       emit('update:modelValue', selectedOption.value);
       close();
@@ -134,18 +213,18 @@ function selectItem(index: number) {
 }
 
 function handleScroll() {
-  updateItemStyles();
+  if (!scrollContainer.value) return;
   
-  // Trigger detent haptic when scrolling past items (skip completely on iOS)
-  if (isSupported.value) {
-    const scrollTop = scrollContainer.value?.scrollTop || 0;
-    const currentIndex = Math.round(scrollTop / ITEM_HEIGHT);
-    if (currentIndex !== lastHapticIndex.value && currentIndex >= 0 && currentIndex < props.options.length) {
-      // Only haptic for non-dividers
-      if (!props.options[currentIndex]?.isDivider) {
-        detent();
-        lastHapticIndex.value = currentIndex;
-      }
+  const scrollTop = scrollContainer.value.scrollTop;
+  const newCenterIndex = Math.round(scrollTop / ITEM_HEIGHT);
+  
+  // Update center index and trigger haptic if changed
+  if (newCenterIndex !== currentCenterIndex.value) {
+    currentCenterIndex.value = newCenterIndex;
+    
+    if (isSupported.value && newCenterIndex !== lastHapticIndex.value) {
+      detent();
+      lastHapticIndex.value = newCenterIndex;
     }
   }
   
@@ -162,54 +241,18 @@ function snapToNearest() {
   if (!scrollContainer.value) return;
   
   const scrollTop = scrollContainer.value.scrollTop;
-  let nearestIndex = Math.round(scrollTop / ITEM_HEIGHT);
+  const nearestIndex = Math.round(scrollTop / ITEM_HEIGHT);
+  const clampedIndex = Math.max(0, Math.min(nearestIndex, selectableOptions.value.length - 1));
   
-  // Skip dividers - find nearest non-divider
-  while (nearestIndex >= 0 && nearestIndex < props.options.length && props.options[nearestIndex]?.isDivider) {
-    nearestIndex++;
-  }
-  
-  const clampedIndex = Math.max(0, Math.min(nearestIndex, props.options.length - 1));
-  
-  scrollToIndex(clampedIndex);
+  scrollToIndex(clampedIndex, true);
   
   // Emit selection after snap
   setTimeout(() => {
-    const selectedOption = props.options[clampedIndex];
-    if (selectedOption && !selectedOption.isDivider) {
+    const selectedOption = selectableOptions.value[clampedIndex];
+    if (selectedOption) {
       emit('update:modelValue', selectedOption.value);
     }
   }, 100);
-}
-
-function updateItemStyles() {
-  if (!scrollContainer.value) return;
-  
-  const scrollTop = scrollContainer.value.scrollTop;
-  const containerHeight = VISIBLE_ITEMS * ITEM_HEIGHT; // 220px
-  const spacerHeight = 88; // 2 items worth of space
-  
-  // Center of the visible container
-  const centerY = scrollTop + (containerHeight / 2);
-  
-  const items = scrollContainer.value.querySelectorAll('.wheel-item');
-  items.forEach((item, index) => {
-    // Each item's center position accounting for spacer
-    const itemY = spacerHeight + (index * ITEM_HEIGHT) + (ITEM_HEIGHT / 2);
-    const distance = Math.abs(centerY - itemY);
-    const maxDistance = containerHeight / 2;
-    
-    // Calculate scale and opacity based on distance from center
-    const distanceRatio = Math.min(distance / maxDistance, 1);
-    const scale = 1 - (distanceRatio * 0.4); // Scale from 1.0 to 0.6
-    const opacity = 1 - (distanceRatio * 0.9); // Opacity from 1.0 to 0.1
-    const blur = distanceRatio * 2; // Blur from 0px to 2px
-    
-    const element = item as HTMLElement;
-    element.style.transform = `scale(${scale})`;
-    element.style.opacity = `${opacity}`;
-    element.style.filter = `blur(${blur}px)`;
-  });
 }
 
 function handleBackdropClick() {
@@ -234,36 +277,113 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
-.picker-backdrop {
+/* ==================== BACKDROP ==================== */
+.sheet-backdrop {
   position: fixed;
   top: 0;
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(15, 15, 15, 0.8); /* ADJUST: Backdrop darkness */
   z-index: 9999;
-  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: flex-end;
   touch-action: manipulation;
   user-select: none;
   -webkit-user-select: none;
 }
 
-.picker-overlay {
-  background: rgba(20, 20, 20, 0.5);
-  border-radius: 8px;
+/* ==================== BOTTOM SHEET CONTAINER ==================== */
+.sheet-container {
+  width: 100%;
+  background: rgb(19, 19, 18); /* ADJUST: Backdrop tint */
+  /* ADJUST: Sheet background color */
+  border-radius: 10px 10px 0 0; /* Rounded top corners only */
   overflow: hidden;
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
   touch-action: manipulation;
   user-select: none;
   -webkit-user-select: none;
 }
 
-.wheel-picker-container {
+/* ==================== HEADER ==================== */
+.sheet-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.6rem 1.25rem;
+  border-bottom: 1px solid rgba(159, 156, 128, 0.2); /* ADJUST: Border color/opacity */
+  background: rgba(33, 33, 29, 0.4); /* ADJUST: Header background tint */
+  cursor: pointer; /* Clickable to close sheet */
+  transition: background 0.15s ease;
+}
+
+.sheet-header:hover {
+  background: rgba(33, 33, 29, 0.85); /* ADJUST: Header hover state */
+}
+
+.sheet-title {
+  font-family: 'Roboto Mono';
+  font-size: 0.8125rem; /* 13px - standard label size */
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #909090; /* ADJUST: Title color */
+}
+
+/* ==================== CONTENT AREA ==================== */
+.sheet-content {
   position: relative;
-  height: 220px; /* 5 items × 44px */
   overflow: hidden;
 }
 
+/* ==================== NAVIGATION ARROWS ==================== */
+.arrow-controls {
+  position: absolute;
+  left: 0.75rem; /* ADJUST: Arrow distance from left edge */
+  top: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 0.5rem 0;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.arrow-btn {
+  width: 32px; /* ADJUST: Arrow button size */
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(52, 52, 52, 0); /* ADJUST: Arrow background */
+  border: 1px solid rgba(255, 255, 255, 0.0);
+  border-radius: 6px;
+  color: rgba(240, 240, 240, 0.5); /* ADJUST: Arrow color */
+  font-size: 1.25rem;
+  cursor: pointer;
+  pointer-events: auto;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.arrow-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.8); /* ADJUST: Arrow hover color */
+  border-color: rgba(184, 184, 184, 0.1);
+}
+
+.arrow-btn:active:not(:disabled) {
+  background: rgba(255, 255, 255, 0.15);
+  transform: scale(0.95);
+}
+
+.arrow-btn:disabled {
+  opacity: 0.3; /* ADJUST: Disabled arrow opacity */
+  cursor: not-allowed;
+}
+
+/* ==================== CENTER INDICATOR ==================== */
 .center-indicator {
   position: absolute;
   top: 50%;
@@ -271,107 +391,120 @@ onBeforeUnmount(() => {
   right: 0;
   height: 44px;
   transform: translateY(-50%);
-  background: rgba(40, 40, 40, 0.6);
+  background: rgba(33, 33, 29, 0.5); /* ADJUST: Center highlight background (increased from 0.08) */
+  border-top: 1px solid rgba(33, 33, 29, 0.7); /* ADJUST: Center borders (increased from 0.25) */
+  border-bottom: 1px solid rgba(33, 33, 29, 0.7);
   pointer-events: none;
-  z-index: 0;
+  z-index: 0; /* ADJUST: Below text items so opacity is visible */
 }
 
-.wheel-scroll {
+/* ==================== SCROLLABLE LIST ==================== */
+.sheet-scroll {
   height: 100%;
   overflow-y: auto;
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
+  /* scroll-snap-type: y mandatory; */ /* DISABLED: Interferes with programmatic scrolling */
 }
 
-.wheel-scroll::-webkit-scrollbar {
+.sheet-scroll::-webkit-scrollbar {
   display: none;
 }
 
-.wheel-spacer {
-  height: 88px; /* 2 items worth of space for centering */
+.scroll-spacer {
+  /* ADJUST: Spacer height to center first/last item */
+  /* Formula: (visibleItemCount * ITEM_HEIGHT - ITEM_HEIGHT) / 2 */
+  /* For 5 items @ 44px: (220px - 44px) / 2 = 88px */
+  height: calc(50% - 22px); /* 50% of container minus half an item */
   flex-shrink: 0;
 }
 
-.wheel-item {
-  height: 44px;
+/* ==================== LIST ITEMS ==================== */
+.sheet-item {
+  position: relative; /* For z-index stacking */
+  height: 44px; /* ADJUST: Item height (must match ITEM_HEIGHT constant) */
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  padding-right: 0.75rem;
+  padding-right: 2.3rem; /* ADJUST: Item right padding */
   font-family: 'Roboto Mono', monospace;
-  font-size: 0.9375rem;
-  color: #EAEAEA;
+  font-size: 0.8125rem; /* ADJUST: Item font size */
+  color: #EAEAEA; /* ADJUST: Item text color */
   cursor: pointer;
-  transition: transform 0.1s ease, opacity 0.1s ease;
+  transition: opacity 0.15s ease; /* Only opacity transitions - NO transforms */
   user-select: none;
-  transform-origin: center center;
   gap: 0.5rem;
   white-space: nowrap;
+  z-index: 1; /* ADJUST: Above center indicator so opacity effect is visible */
+  /* scroll-snap-align: center; */ /* DISABLED: Using manual scroll control */
 }
 
+.sheet-item:active {
+  background: rgba(33, 33, 29, 0.1); /* ADJUST: Item tap feedback */
+}
+
+/* Divider items (non-selectable headers) */
 .divider-item {
   cursor: default;
   pointer-events: none;
-  opacity: 0.3;
+  opacity: 0.3 !important; /* ADJUST: Divider opacity */
 }
 
 .divider-line {
   font-weight: 300;
   letter-spacing: 0.2em;
-  font-size: 0.75rem;
+  font-size: 0.75rem; /* ADJUST: Divider font size */
 }
 
+/* Main and secondary label parts (split by —) */
 .item-main {
-  font-weight: 500;
+  font-weight: 500; /* ADJUST: Main label weight */
 }
 
 .item-secondary {
-  opacity: 0.4;
-  font-size: 0.8125rem;
+  opacity: 0.5; /* ADJUST: Secondary label opacity */
+  font-size: 0.875rem; /* ADJUST: Secondary label font size */
 }
 
-/* Transition animations */
-.picker-fade-enter-active {
+/* ==================== ANIMATIONS ==================== */
+.sheet-fade-enter-active {
+  transition: opacity 0.25s ease;
+}
+
+.sheet-fade-leave-active {
   transition: opacity 0.2s ease;
 }
 
-.picker-fade-leave-active {
-  transition: opacity 0.15s ease;
-}
-
-.picker-fade-enter-from,
-.picker-fade-leave-to {
+.sheet-fade-enter-from,
+.sheet-fade-leave-to {
   opacity: 0;
 }
 
-.picker-fade-enter-active .picker-overlay {
-  animation: picker-popup 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+/* Sheet slides up from bottom */
+.sheet-fade-enter-active .sheet-container {
+  animation: sheet-slide-up 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
-.picker-fade-leave-active .picker-overlay {
-  animation: picker-popdown 0.2s ease-in;
+.sheet-fade-leave-active .sheet-container {
+  animation: sheet-slide-down 0.25s cubic-bezier(0.55, 0.055, 0.675, 0.19);
 }
 
-@keyframes picker-popup {
+@keyframes sheet-slide-up {
   from {
-    transform: scale(0.8);
-    opacity: 0;
+    transform: translateY(100%);
   }
   to {
-    transform: scale(1);
-    opacity: 1;
+    transform: translateY(0);
   }
 }
 
-@keyframes picker-popdown {
+@keyframes sheet-slide-down {
   from {
-    transform: scale(1);
-    opacity: 1;
+    transform: translateY(0);
   }
   to {
-    transform: scale(0.8);
-    opacity: 0;
+    transform: translateY(100%);
   }
 }
 </style>

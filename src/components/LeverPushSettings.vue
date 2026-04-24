@@ -222,6 +222,7 @@
       v-model:isOpen="categoryPickerOpen"
       :options="categoryOptions"
       :trigger-el="categoryTriggerRef"
+      title="CATEGORY"
     />
 
     <!-- Parameter Wheel Picker Modal -->
@@ -230,6 +231,7 @@
       v-model:isOpen="parameterPickerOpen"
       :options="filteredOptions"
       :trigger-el="parameterTriggerRef"
+      title="PARAMETER"
     />
 
     <!-- Help Modal -->

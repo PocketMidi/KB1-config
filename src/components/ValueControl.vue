@@ -334,7 +334,7 @@ onBeforeUnmount(() => {
   font-size: 0.75rem; /* 12px - smaller arrows */
   font-family: 'Roboto Mono';
   color: #EAEAEA;
-  opacity: 0.4;
+  opacity: 1.0;
   transition: opacity 0.2s;
   user-select: none;
   pointer-events: none; /* Let clicks pass through to parent tap-zone */

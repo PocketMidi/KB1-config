@@ -86,6 +86,7 @@
       v-model:isOpen="scalePickerOpen"
       :options="scales"
       :trigger-el="scaleTriggerRef"
+      title="CATEGORY"
     />
   </div>
 </template>

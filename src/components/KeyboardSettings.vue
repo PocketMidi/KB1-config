@@ -324,6 +324,7 @@
       v-model:isOpen="typePickerOpen"
       :options="typeOptions"
       :trigger-el="typeTriggerRef"
+      :title="leftLabel"
     />
 
     <!-- Help Modal -->

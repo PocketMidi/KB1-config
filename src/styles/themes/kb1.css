@@ -15,6 +15,11 @@
   /* Alternative: rgba(106, 104, 83, 0.15) for subtle system tan feedback */
 }
 
+/* ===== Android Color Correction ===== */
+body.android-device {
+  filter: hue-rotate(-5deg) saturate(0.95);
+}
+
 /* ===== DARK MODE (Default) ===== */
 :root.theme-kb1-dark {
   color-scheme: dark; /* Tells browser (incl. non-Safari iOS) to use dark overscroll, status bar, scrollbars */
@@ -98,12 +103,86 @@
   --battery-critical: #ef4444; /* Critical battery level - red */
   --battery-disconnected: #6b7280; /* Disconnected/unavailable - gray */
   --battery-uncalibrated: #6b7280; /* Uncalibrated battery - gray */
-}
-
-/* ===== Android Color Correction ===== */
-/* Samsung AMOLED displays interpret sRGB as wide-gamut, shifting toward blue/purple */
-body.android-device {
-  filter: hue-rotate(-8deg) saturate(0.92);
+  
+  /* ===== Strum & Pattern Colors ===== */
+  --strum-reverse: #955799; /* Reverse strum direction - muted violet */
+  --strum-forward: var(--ui-highlight); /* Forward strum direction - uses UI highlight */
+  
+  /* ===== Key Colors (keyboard visualization) ===== */
+  --key-active: #4b736a; /* Active key background - muted teal */
+  --key-active-rgb: 75, 115, 106; /* RGB version for rgba() usage */
+  --key-active-hover: #568073; /* Hover state */
+  --key-inactive: #222222; /* Inactive key background */
+  --key-inactive-rgb: 34, 34, 34; /* RGB version for rgba() usage */
+  --key-text-active: #0F0F0F; /* Text on active keys */
+  --key-text-inactive: rgba(255, 255, 255, 0.4); /* Text on inactive keys */
+  
+  --label-gray: #848484; /* Original gray */
+  
+  /* ===== SVG Icon Filters (dark mode) ===== */
+  --svg-icon-filter: none;
+  
+  /* ===== Typography ===== */
+  --kb1-font-family: 'Roboto Mono';
+  --kb1-font-family-mono: 'Roboto Mono';
+  --kb1-font-size-xs: 0.8125rem; /* 13px */
+  --kb1-font-size-sm: 0.8125rem; /* 13px */
+  --kb1-font-size-base: 0.8125rem; /* 13px */
+  --kb1-font-size-lg: 0.8125rem; /* 13px */
+  --kb1-font-size-xl: 0.8125rem; /* 13px */
+  --kb1-font-size-2xl: 0.8125rem; /* 13px */
+  
+  /* ===== Spacing ===== */
+  --kb1-spacing-xs: 0.25rem;
+  --kb1-spacing-sm: 0.5rem;
+  --kb1-spacing-md: 1rem;
+  --kb1-spacing-lg: 1.5rem;
+  --kb1-spacing-xl: 2rem;
+  --kb1-spacing-2xl: 3rem;
+  
+  /* ===== Border Radius ===== */
+  --kb1-radius-sm: 4px;
+  --kb1-radius-md: 6px;
+  --kb1-radius-lg: 8px;
+  --kb1-radius-xl: 12px;
+  --kb1-radius-full: 9999px;
+  
+  /* ===== Settings Panel Styling ===== */
+  --settings-panel-padding: 1.5rem;
+  --settings-panel-gap: 1rem;
+  --settings-panel-bg: var(--color-background-soft);
+  --settings-panel-border: 1px solid var(--color-border);
+  --settings-panel-radius: var(--kb1-radius-lg);
+  
+  /* ===== Input Styling ===== */
+  --input-bg: var(--color-background);
+  --input-border: 1px solid var(--color-border);
+  --input-border-focus: 1px solid var(--kb1-color-primary);
+  --input-radius: var(--kb1-radius-md);
+  --input-padding: 0.75rem;
+  --input-color: var(--color-text);
+  
+  /* ===== Select/Dropdown Styling ===== */
+  --select-bg: var(--color-background);
+  --select-border: 1px solid var(--color-border);
+  --select-border-focus: 1px solid var(--kb1-color-primary);
+  --select-radius: var(--kb1-radius-md);
+  --select-padding: 0.75rem;
+  --select-color: var(--color-text);
+  
+  /* ===== Label Styling ===== */
+  --label-color: var(--color-text);
+  --label-font-size: var(--kb1-font-size-sm);
+  --label-font-weight: 500;
+  
+  /* ===== Title Block Styling ===== */
+  --title-color: var(--color-text);
+  --title-font-size: var(--kb1-font-size-xl);
+  --title-font-weight: 600;
+  --title-cc-color: var(--kb1-color-primary);
+  --title-cc-bg: rgba(37, 99, 235, 0.1);
+  --title-cc-padding: 0.5rem 1rem;
+  --title-cc-radius: var(--kb1-radius-md);
 }
 
 /* ===== Smooth Theme Transitions ===== */

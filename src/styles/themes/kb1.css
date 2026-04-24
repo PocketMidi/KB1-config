@@ -17,7 +17,7 @@
 
 /* ===== Android Color Correction ===== */
 body.android-device {
-  filter: hue-rotate(-5deg) saturate(0.95);
+  filter: hue-rotate(8deg) saturate(1.25);
 }
 
 /* ===== DARK MODE (Default) ===== */

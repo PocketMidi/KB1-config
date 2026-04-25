@@ -564,13 +564,13 @@ defineExpose({
 }
 
 .controls-accordion {
-  padding: 1rem;
+  padding: var(--kb1-spacing-md);
   overflow-y: auto;
   overflow-x: hidden;
   /* Ensure content doesn't hide behind sticky bars */
-  padding-top: 1rem;
+  padding-top: var(--kb1-spacing-md);
   /* Clear fixed footer height (~72px) + safe area */
-  padding-bottom: 1.5rem;
+  padding-bottom: var(--kb1-spacing-lg);
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;

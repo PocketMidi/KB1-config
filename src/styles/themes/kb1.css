@@ -158,11 +158,11 @@ body.android-device {
   --kb1-font-weight-semibold: 600;
   --kb1-font-weight-bold: 700;
   
-  /* Letter Spacing */
-  --kb1-letter-spacing-tight: -0.025em;
-  --kb1-letter-spacing-normal: 0;
-  --kb1-letter-spacing-wide: 0.05em; /* Standard for uppercase labels */
-  --kb1-letter-spacing-wider: 0.1em;
+  /* Letter Spacing = KERNING/TRACKING (horizontal space between characters) */
+  --kb1-letter-spacing-tight: -0.025em;   /* Tight kerning (characters closer) */
+  --kb1-letter-spacing-normal: 0;         /* Default kerning (no adjustment) */
+  --kb1-letter-spacing-wide: 0.05em;      /* Wide tracking - Standard for uppercase labels */
+  --kb1-letter-spacing-wider: 0.1em;      /* Extra wide tracking (loose letters) */
   
   /* Text Transform */
   --kb1-text-transform-none: none;
@@ -170,18 +170,25 @@ body.android-device {
   --kb1-text-transform-lowercase: lowercase;
   --kb1-text-transform-capitalize: capitalize;
   
-  /* Line Heights */
-  --kb1-line-height-tight: 1.2;
-  --kb1-line-height-normal: 1.5;
-  --kb1-line-height-relaxed: 1.75;
+  /* Line Heights = LEADING (vertical space between lines of text) */
+  --kb1-line-height-tight: 1.2;      /* Tight leading (dense text blocks) */
+  --kb1-line-height-normal: 1.5;     /* Normal leading (comfortable reading) */
+  --kb1-line-height-relaxed: 1.75;   /* Relaxed leading (airy, open text) */
   
   /* ===== Spacing ===== */
-  --kb1-spacing-xs: 0.25rem;
-  --kb1-spacing-sm: 0.5rem;
-  --kb1-spacing-md: 1rem;
-  --kb1-spacing-lg: 1.5rem;
-  --kb1-spacing-xl: 2rem;
-  --kb1-spacing-2xl: 3rem;
+  /* Layout Spacing (padding, margin, gap) - Used for BOTH horizontal & vertical */
+  /* Think of these as "gutter" sizes between/around UI elements */
+  --kb1-spacing-xxs: 0.1rem;   /* 1.6px - Extra tight spacing (minimal gap) */
+  --kb1-spacing-xs: 0.2rem;    /* 3.2px - Tight spacing (minimal breathing room) */
+  --kb1-spacing-sm: 0.45rem;    /* 8px - Small gutter (compact layouts) */
+  --kb1-spacing-md: 1rem;      /* 16px - Standard gutter (normal breathing room) */
+  --kb1-spacing-lg: 1.5rem;    /* 24px - Large gutter (generous spacing) */
+  --kb1-spacing-xl: 2rem;      /* 32px - Extra large gutter (section separation) */
+  --kb1-spacing-2xl: 3rem;     /* 48px - Massive gutter (major divisions) */
+  
+  /* Typography Spacing (already defined above) */
+  /* --kb1-letter-spacing-* = KERNING (horizontal space between letters) */
+  /* --kb1-line-height-* = LEADING (vertical space between lines of text) */
   
   /* ===== Border Radius ===== */
   --kb1-radius-sm: 4px;

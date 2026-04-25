@@ -85,7 +85,7 @@ const patterns = computed<Pattern[]>(() => [
 
 .patterns-grid {
   display: flex;
-  gap: 0.5rem;
+  gap: var(--kb1-spacing-sm);
   padding: 0.25rem 0;
   margin-right: 2rem;  /* Adjust to shift icons left/right */
   justify-content: center;

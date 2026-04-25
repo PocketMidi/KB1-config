@@ -234,7 +234,7 @@ function updateField(field: keyof CCMapping, event: Event) {
 }
 
 .card-header {
-  padding: 0.75rem 1rem;
+  padding: 0.75rem var(--kb1-spacing-md);
   background: var(--color-background-mute);
   border-bottom: 1px solid var(--color-border);
 }
@@ -246,7 +246,7 @@ function updateField(field: keyof CCMapping, event: Event) {
 }
 
 .parameter-info {
-  margin-top: 0.25rem;
+  margin-top: var(--kb1-spacing-xs);
   font-size: var(--kb1-font-input); /* 13px */
   color: var(--color-text-mute);
 }
@@ -257,22 +257,22 @@ function updateField(field: keyof CCMapping, event: Event) {
 }
 
 .card-body {
-  padding: 1rem;
+  padding: var(--kb1-spacing-md);
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: var(--kb1-spacing-md);
 }
 
 .form-group {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: var(--kb1-spacing-xs);
 }
 
 .form-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 1rem;
+  gap: var(--kb1-spacing-md);
 }
 
 label {
@@ -284,7 +284,7 @@ label {
 input[type="number"],
 input[type="text"],
 select {
-  padding: 0.5rem;
+  padding: var(--kb1-spacing-sm);
   border: 1px solid var(--color-border);
   border-radius: var(--kb1-radius-sm);
   background: var(--color-background);

@@ -340,13 +340,13 @@ async function handleSaveToDevice() {
 
 <style scoped>
 .device-settings-page {
-  padding: 2rem;
+  padding: var(--kb1-spacing-xl);
   max-width: 1200px;
   margin: 0 auto;
 }
 
 .page-header {
-  margin-bottom: 2rem;
+  margin-bottom: var(--kb1-spacing-xl);
 }
 
 .page-header h2 {
@@ -369,14 +369,14 @@ async function handleSaveToDevice() {
 .settings-content {
   display: flex;
   flex-direction: column;
-  gap: 2rem;
+  gap: var(--kb1-spacing-xl);
 }
 
 .action-bar {
   display: flex;
-  gap: 1rem;
+  gap: var(--kb1-spacing-md);
   justify-content: flex-end;
-  padding-bottom: 1rem;
+  padding-bottom: var(--kb1-spacing-md);
   border-bottom: 1px solid var(--color-border);
   flex-wrap: wrap;
 }
@@ -384,7 +384,7 @@ async function handleSaveToDevice() {
 .settings-sections {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: var(--kb1-spacing-lg);
 }
 
 /* BLE-dependent sections dimmed when disconnected */
@@ -393,7 +393,7 @@ async function handleSaveToDevice() {
   pointer-events: none;
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: var(--kb1-spacing-lg);
 }wrapper gets blue accent to show it's always available */
 .system-settings-wrapper :deep(.settings-system)
 /* System Settings gets blue accent to show it's always available */
@@ -438,7 +438,7 @@ async function handleSaveToDevice() {
 
 @media (max-width: 768px) {
   .device-settings-page {
-    padding: 1rem;
+    padding: var(--kb1-spacing-md);
   }
 
   .action-bar {

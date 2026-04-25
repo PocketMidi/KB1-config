@@ -220,7 +220,7 @@ defineExpose({
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 0.5rem;
+  gap: var(--kb1-spacing-xxs);
 }
 
 .accordion-icon-img {
@@ -290,7 +290,7 @@ defineExpose({
 
 .title-suffix {
   color: var(--ui-highlight);
-  margin-left: 0.5rem;
+  margin-left: var(--kb1-spacing-sm);
   font-weight: var(--kb1-font-weight-medium);
   text-transform: var(--kb1-text-transform-none);
   opacity: 1;
@@ -372,7 +372,7 @@ defineExpose({
   }
   
   .accordion-icon {
-    margin-left: 0.5rem;
+    margin-left: var(--kb1-spacing-sm);
   }
 }
 </style>

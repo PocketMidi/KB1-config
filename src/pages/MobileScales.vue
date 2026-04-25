@@ -965,7 +965,7 @@ defineExpose({
 /* Collapse All Bar */
 .collapse-all-bar {
   width: 100%;
-  padding: 0.5rem 1rem;
+  padding: var(--kb1-spacing-sm) var(--kb1-spacing-md);
   background: rgba(106, 104, 83, 0.2);
   border: none;
   border-radius: var(--kb1-radius-lg);
@@ -1012,12 +1012,12 @@ defineExpose({
 }
 
 .scales-content {
-  padding: 1rem;
+  padding: var(--kb1-spacing-md);
   overflow-y: auto;
   /* Ensure content doesn't hide behind sticky bars */
-  padding-top: 1rem;
+  padding-top: var(--kb1-spacing-md);
   /* Clear fixed footer height (~72px) + safe area */
-  padding-bottom: 1.5rem;
+  padding-bottom: var(--kb1-spacing-lg);
 }
 
 .root-note-display {

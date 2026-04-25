@@ -127,7 +127,7 @@ function handleBackdropClick() {
   align-items: center;
   justify-content: center;
   z-index: 900;
-  padding: 1rem;
+  padding: var(--kb1-spacing-md);
   touch-action: manipulation;
   user-select: none;
   -webkit-user-select: none;

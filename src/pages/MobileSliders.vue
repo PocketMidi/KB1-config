@@ -216,14 +216,14 @@ defineExpose({
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  padding: 1rem;
+  padding: var(--kb1-spacing-md);
 }
 
 .modal-dialog {
   background: #1D1D1D;
   border: 1px solid rgba(234, 234, 234, 0.2);
   border-radius: var(--kb1-radius-lg);
-  padding: 1rem;
+  padding: var(--kb1-spacing-md);
   max-width: 400px;
   width: 100%;
   max-height: 80vh;
@@ -274,7 +274,7 @@ defineExpose({
 
 .modal-buttons {
   display: flex;
-  gap: 0.5rem;
+  gap: var(--kb1-spacing-sm);
   justify-content: flex-end;
   margin-top: 0.75rem;
 }
@@ -320,7 +320,7 @@ defineExpose({
 .presets-list {
   max-height: 300px;
   overflow-y: auto;
-  margin-bottom: 0.5rem;
+  margin-bottom: var(--kb1-spacing-sm);
 }
 
 .preset-item {
@@ -331,7 +331,7 @@ defineExpose({
   background: rgba(29, 29, 29, 0.4);
   border: none;
   border-radius: var(--kb1-radius-sm);
-  margin-bottom: 0.5rem;
+  margin-bottom: var(--kb1-spacing-sm);
   cursor: pointer;
   transition: all 0.2s;
 }
@@ -347,7 +347,7 @@ defineExpose({
 .preset-name {
   color: #EAEAEA;
   font-size: var(--kb1-font-input);
-  margin-bottom: 0.25rem;
+  margin-bottom: var(--kb1-spacing-xs);
 }
 
 .preset-meta {
@@ -357,7 +357,7 @@ defineExpose({
 
 .preset-actions {
   display: flex;
-  gap: 0.5rem;
+  gap: var(--kb1-spacing-sm);
 }
 
 .btn-icon {
@@ -377,7 +377,7 @@ defineExpose({
 
 .empty-state {
   text-align: center;
-  padding: 1rem;
+  padding: var(--kb1-spacing-md);
   color: #848484;
 }
 

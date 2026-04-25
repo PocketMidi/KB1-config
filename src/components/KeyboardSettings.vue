@@ -1417,7 +1417,7 @@ function handleKeyClick(midiNote: number) {
 /* Mode Selector (like Touch) */
 .mode-selector {
   display: flex;
-  gap: 1.5rem;
+  gap: var(--kb1-spacing-lg);
   margin-bottom: 12px;
   padding-bottom: 10px;
   border-bottom: 1px solid var(--color-divider);
@@ -1456,10 +1456,10 @@ function handleKeyClick(midiNote: number) {
 
 /* Keyboard Visualization */
 .keyboard-visual {
-  margin-bottom: 1rem;
+  margin-bottom: var(--kb1-spacing-md);
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: var(--kb1-spacing-sm);
   padding: 5px;
   overflow: visible;
   position: relative;
@@ -1467,7 +1467,7 @@ function handleKeyClick(midiNote: number) {
 
 .keyboard-row {
   display: flex;
-  gap: 0.5rem;
+  gap: var(--kb1-spacing-sm);
   justify-content: center;
   flex-wrap: nowrap;
   overflow: visible;
@@ -1656,7 +1656,7 @@ function handleKeyClick(midiNote: number) {
   background: var(--color-background-soft, #1A1A1A);
   border: 1px solid var(--color-border, #333333);
   border-radius: var(--kb1-radius-lg);
-  margin-top: 1rem;
+  margin-top: var(--kb1-spacing-md);
   padding: 0;
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
@@ -1702,7 +1702,7 @@ function handleKeyClick(midiNote: number) {
 
 .hint-description {
   margin: 0;
-  padding: 1rem;
+  padding: var(--kb1-spacing-md);
   font-size: var(--kb1-font-input);
   line-height: 1.6;
   color: var(--color-text, #EAEAEA);
@@ -1710,11 +1710,11 @@ function handleKeyClick(midiNote: number) {
 }
 
 .hint-footer {
-  padding: 0.75rem 1rem;
+  padding: 0.75rem var(--kb1-spacing-md);
   border-top: 1px solid var(--color-border, #333333);
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: var(--kb1-spacing-sm);
 }
 
 .hint-btn-primary {
@@ -1759,7 +1759,7 @@ function handleKeyClick(midiNote: number) {
 .mapping-toggle-row {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: var(--kb1-spacing-md);
   padding-top: 0.75rem;
   margin-bottom: 0;
   padding-bottom: 0.75rem;
@@ -1780,7 +1780,7 @@ function handleKeyClick(midiNote: number) {
   font-family: var(--kb1-font-family);
   white-space: nowrap;
   display: flex;
-  gap: 0.25rem;
+  gap: var(--kb1-spacing-xs);
   align-items: center;
   justify-content: center;
 }
@@ -1988,7 +1988,7 @@ function handleKeyClick(midiNote: number) {
 .direction-toggle {
   display: inline-flex;
   align-items: center;
-  gap: 0.25rem;
+  gap: var(--kb1-spacing-xs);
   padding: 0.25rem 0.6rem;
   background: transparent;
   border: 1px solid #3A3A3A;
@@ -2052,12 +2052,12 @@ function handleKeyClick(midiNote: number) {
 .chord-controls {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: var(--kb1-spacing-xs);
 }
 
 /* Smart Slider (Controls only) */
 .smart-slider-section {
-  padding-top: 0.5rem;
+  padding-top: var(--kb1-spacing-sm);
   padding-bottom: 0.75rem;
   border-bottom: 1px solid var(--color-divider);
 }
@@ -2065,7 +2065,7 @@ function handleKeyClick(midiNote: number) {
 .duration-control-wrapper {
   display: flex;
   align-items: center;
-  gap: 0.25rem;
+  gap: var(--kb1-spacing-xs);
   justify-content: flex-end;
 }
 
@@ -2090,7 +2090,7 @@ function handleKeyClick(midiNote: number) {
 
 /* Advanced Strum Section */
 .advanced-strum-section {
-  margin-top: 0.5rem;
+  margin-top: var(--kb1-spacing-sm);
   padding: 0.25rem 0.75rem;
   background: rgba(234, 234, 234, 0.03);
   border-radius: var(--kb1-radius-sm);
@@ -2128,7 +2128,7 @@ function handleKeyClick(midiNote: number) {
 .advanced-strum-header .right-controls {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--kb1-spacing-sm);
 }
 
 .advanced-strum-header .adv-label {
@@ -2164,9 +2164,9 @@ function handleKeyClick(midiNote: number) {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding-top: 1rem;
-  padding-bottom: 0.25rem;
-  margin-top: 1rem;
+  padding-top: var(--kb1-spacing-md);
+  padding-bottom: var(--kb1-spacing-xs);
+  margin-top: var(--kb1-spacing-md);
   border-top: 1px solid var(--color-divider);
 }
 
@@ -2207,7 +2207,7 @@ function handleKeyClick(midiNote: number) {
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;
-  gap: 1rem;
+  gap: var(--kb1-spacing-md);
 }
 
 .group label {
@@ -2222,7 +2222,7 @@ function handleKeyClick(midiNote: number) {
 }
 
 .picker-trigger {
-  padding: 0.5rem 0.75rem;
+  padding: var(--kb1-spacing-sm) 0.75rem;
   border: none;
   border-radius: 0;
   background: transparent;
@@ -2246,8 +2246,8 @@ function handleKeyClick(midiNote: number) {
 
 /* Static Mood Bar (for scale/chord modes) */
 .static-mood-bar {
-  margin-top: 0.5rem;
-  padding: 0.5rem 0.75rem;
+  margin-top: var(--kb1-spacing-sm);
+  padding: var(--kb1-spacing-sm) 0.75rem;
   background: rgba(234, 234, 234, 0.03);
   border-radius: var(--kb1-radius-sm);
 }
@@ -2293,7 +2293,7 @@ function handleKeyClick(midiNote: number) {
 .root-range-row {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--kb1-spacing-sm);
 }
 
 /* Voicing dots container */
@@ -2393,7 +2393,7 @@ function handleKeyClick(midiNote: number) {
   align-items: center;
   justify-content: center;
   z-index: 10000;
-  padding: 1rem;
+  padding: var(--kb1-spacing-md);
 }
 
 .help-modal {
@@ -2410,7 +2410,7 @@ function handleKeyClick(midiNote: number) {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1.5rem;
+  padding: var(--kb1-spacing-lg);
   border-bottom: 1px solid var(--color-border);
 }
 
@@ -2445,7 +2445,7 @@ function handleKeyClick(midiNote: number) {
 }
 
 .help-modal-body {
-  padding: 1.5rem;
+  padding: var(--kb1-spacing-lg);
 }
 
 .help-modal-body p {
@@ -2456,7 +2456,7 @@ function handleKeyClick(midiNote: number) {
 }
 
 .help-modal-footer {
-  padding: 1rem 1.5rem;
+  padding: var(--kb1-spacing-md) var(--kb1-spacing-lg);
   border-top: 1px solid var(--color-border);
   display: flex;
   justify-content: flex-end;

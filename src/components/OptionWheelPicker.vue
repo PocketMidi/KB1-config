@@ -434,7 +434,7 @@ onBeforeUnmount(() => {
   cursor: pointer;
   transition: opacity 0.15s ease; /* Only opacity transitions - NO transforms */
   user-select: none;
-  gap: 0.5rem;
+  gap: var(--kb1-spacing-sm);
   white-space: nowrap;
   z-index: 1; /* ADJUST: Above center indicator so opacity effect is visible */
   /* scroll-snap-align: center; */ /* DISABLED: Using manual scroll control */

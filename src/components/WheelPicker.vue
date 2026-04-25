@@ -275,7 +275,7 @@ function snapToNearest() {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1rem;
+  padding: var(--kb1-spacing-md);
   border-bottom: 1px solid var(--color-border);
 }
 
@@ -293,7 +293,7 @@ function snapToNearest() {
   border: none;
   color: var(--color-text);
   cursor: pointer;
-  padding: 0.5rem;
+  padding: var(--kb1-spacing-sm);
 }
 
 .picker-done {

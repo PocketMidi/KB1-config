@@ -1225,7 +1225,7 @@ function increaseSteps() {
   display: flex;
   justify-content: flex-start; /* Align to left for flush alignment */
   align-items: center;
-  gap: 1rem;
+  gap: var(--kb1-spacing-md);
   margin-bottom: 0.75rem;
   width: 100%;
   max-width: 100%;
@@ -1250,7 +1250,7 @@ function increaseSteps() {
   gap: 0.2rem;
   align-items: center;
   justify-content: center;
-  margin-right: 1rem;
+  margin-right: var(--kb1-spacing-md);
 }
 
 .toggle-btn:hover {
@@ -1295,7 +1295,7 @@ function increaseSteps() {
 
 .profile-selector {
   display: flex;
-  gap: 1.5rem; /* Internal spacing between Lin, Exp, Log, Inc buttons */
+  gap: var(--kb1-spacing-lg); /* Internal spacing between Lin, Exp, Log, Inc buttons */
   align-items: center;
   flex-shrink: 1; /* Allow buttons to shrink if needed */
 }
@@ -1381,7 +1381,7 @@ function increaseSteps() {
 
 @media (max-width: 480px) {
   .controls-row {
-    gap: 0.5rem; /* 8px gap on very small screens */
+    gap: var(--kb1-spacing-sm); /* 8px gap on very small screens */
   }
 }
 
@@ -1391,7 +1391,7 @@ function increaseSteps() {
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;
-  margin-top: 1.5rem;
+  margin-top: var(--kb1-spacing-lg);
 }
 
 .input-divider {
@@ -1404,8 +1404,8 @@ function increaseSteps() {
 .duration-container {
   border: 1px solid var(--color-divider);
   border-radius: var(--kb1-radius-md);
-  padding: 0.5rem 1rem;
-  margin-top: 0.5rem;
+  padding: var(--kb1-spacing-sm) var(--kb1-spacing-md);
+  margin-top: var(--kb1-spacing-sm);
   margin-left: -1rem;
   margin-right: -1rem;
 }
@@ -1509,7 +1509,7 @@ function increaseSteps() {
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;
-  gap: 1rem;
+  gap: var(--kb1-spacing-md);
 }
 
 .group label {
@@ -1525,7 +1525,7 @@ function increaseSteps() {
 
 .group input,
 .group select {
-  padding: 0.5rem 0.75rem;
+  padding: var(--kb1-spacing-sm) 0.75rem;
   border: none;
   border-radius: 0;
   background: transparent;
@@ -1540,7 +1540,7 @@ function increaseSteps() {
 }
 
 .picker-trigger {
-  padding: 0.5rem 0.75rem;
+  padding: var(--kb1-spacing-sm) 0.75rem;
   border: none;
   border-radius: 0;
   background: transparent;
@@ -1567,7 +1567,7 @@ function increaseSteps() {
   background-repeat: no-repeat;
   background-position: right 0.5rem center;
   background-size: 1rem;
-  padding-right: 2rem;
+  padding-right: var(--kb1-spacing-xl);
 }
 
 /* CustomDropdown right-justification */
@@ -1595,7 +1595,7 @@ function increaseSteps() {
 .number-with-unit {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--kb1-spacing-sm);
   justify-content: flex-end;
   flex: 1;
 }
@@ -1756,14 +1756,14 @@ function increaseSteps() {
 .value-control {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--kb1-spacing-sm);
   justify-content: flex-end;
 }
 
 .duration-control-wrapper {
   display: flex;
   align-items: center;
-  gap: 0.25rem;
+  gap: var(--kb1-spacing-xs);
   justify-content: flex-end;
 }
 
@@ -1817,7 +1817,7 @@ function increaseSteps() {
   align-items: center;
   justify-content: center;
   z-index: 10000;
-  padding: 1rem;
+  padding: var(--kb1-spacing-md);
 }
 
 .help-modal {
@@ -1834,7 +1834,7 @@ function increaseSteps() {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1.5rem;
+  padding: var(--kb1-spacing-lg);
   border-bottom: 1px solid var(--color-border);
 }
 
@@ -1869,7 +1869,7 @@ function increaseSteps() {
 }
 
 .help-modal-body {
-  padding: 1.5rem;
+  padding: var(--kb1-spacing-lg);
 }
 
 .help-modal-body p {
@@ -1884,7 +1884,7 @@ function increaseSteps() {
 }
 
 .help-modal-footer {
-  padding: 1rem 1.5rem;
+  padding: var(--kb1-spacing-md) var(--kb1-spacing-lg);
   border-top: 1px solid var(--color-border);
   display: flex;
   justify-content: flex-end;

@@ -107,7 +107,7 @@ function handleBatteryAlert(event: Event) {
   align-items: center;
   justify-content: space-between;
   padding: 1.5rem 2rem;
-  gap: 2rem;
+  gap: var(--kb1-spacing-xl);
 }
 
 /* When connected (no BT button), center logo and push battery to right */
@@ -153,7 +153,7 @@ function handleBatteryAlert(event: Event) {
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .header-top {
-    padding: 1rem 1.5rem;
+    padding: var(--kb1-spacing-md) var(--kb1-spacing-lg);
   }
   
   .header-top:not(:has(.bluetooth-connect-btn)) .battery-meter {
@@ -163,8 +163,8 @@ function handleBatteryAlert(event: Event) {
 
 @media (max-width: 480px) {
   .header-top {
-    padding: 1rem;
-    gap: 1rem;
+    padding: var(--kb1-spacing-md);
+    gap: var(--kb1-spacing-md);
   }
   
   .header-logo {

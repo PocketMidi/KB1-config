@@ -116,7 +116,7 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 0.5rem;
+  gap: var(--kb1-spacing-sm);
   padding: 1px 0.5rem 1px 0.25rem;
   background: transparent !important;
   border: none;
@@ -139,7 +139,7 @@ onUnmounted(() => {
 
 .dropdown-triangle {
   display: inline-block;
-  margin-left: 0.5rem;
+  margin-left: var(--kb1-spacing-sm);
   color: rgba(234, 234, 234, 0.5);
   font-size: var(--kb1-font-tiny);
   transition: transform 0.2s ease;

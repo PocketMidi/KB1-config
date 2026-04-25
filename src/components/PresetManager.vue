@@ -1161,7 +1161,7 @@ function downloadJSON(json: string, filename: string) {
 
 <style scoped>
 .preset-manager {
-  padding: 1rem;
+  padding: var(--kb1-spacing-md);
   font-family: var(--kb1-font-family);
 }
 
@@ -1178,13 +1178,13 @@ function downloadJSON(json: string, filename: string) {
 .preset-slots {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: var(--kb1-spacing-sm);
 }
 
 .btn-factory-defaults {
   width: 100%;
   margin-bottom: 0;
-  padding: 0.5rem 1rem;
+  padding: var(--kb1-spacing-sm) var(--kb1-spacing-md);
   background: rgba(29, 29, 29, 0.5);
   border: 1px solid rgba(205, 205, 205, 0.15);
   border-radius: var(--kb1-radius-sm);
@@ -1218,8 +1218,8 @@ function downloadJSON(json: string, filename: string) {
   background: rgba(29, 29, 29, 0.5);
   border: 1px solid rgba(205, 205, 205, 0.1);
   border-radius: var(--kb1-radius-sm);
-  padding: 0.5rem 0.75rem;
-  gap: 1rem;
+  padding: var(--kb1-spacing-sm) 0.75rem;
+  gap: var(--kb1-spacing-md);
   transition: all 0.2s;
 }
 
@@ -1249,7 +1249,7 @@ function downloadJSON(json: string, filename: string) {
 .slot-label-wrapper {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: var(--kb1-spacing-xs);
   flex: 1;
   min-width: 0;
 }
@@ -1290,7 +1290,7 @@ function downloadJSON(json: string, filename: string) {
 
 .slot-actions {
   display: flex;
-  gap: 0.5rem;
+  gap: var(--kb1-spacing-sm);
   flex-shrink: 0;
 }
 
@@ -1345,7 +1345,7 @@ function downloadJSON(json: string, filename: string) {
 
 /* Help Section (inside help-modal-body) */
 .help-section {
-  margin-bottom: 1.5rem;
+  margin-bottom: var(--kb1-spacing-lg);
 }
 
 .help-section:last-child {
@@ -1374,7 +1374,7 @@ function downloadJSON(json: string, filename: string) {
 }
 
 .btn-with-indicator {
-  padding-right: 0.5rem;
+  padding-right: var(--kb1-spacing-sm);
 }
 
 .button-indicator {
@@ -1410,7 +1410,7 @@ function downloadJSON(json: string, filename: string) {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1.5rem;
+  padding: var(--kb1-spacing-lg);
   border-bottom: 1px solid var(--color-border);
   flex-shrink: 0;
 }
@@ -1431,14 +1431,14 @@ function downloadJSON(json: string, filename: string) {
 }
 
 .modal-body {
-  padding: 1rem;
+  padding: var(--kb1-spacing-md);
   flex: 1;
   overflow-y: auto;
   min-height: 0;
 }
 
 .dialog-intro {
-  margin-bottom: 1rem;
+  margin-bottom: var(--kb1-spacing-md);
 }
 
 .dialog-intro p {
@@ -1450,7 +1450,7 @@ function downloadJSON(json: string, filename: string) {
 
 /* Cloud Dialog - Export + Import Unified */
 .export-section {
-  margin-bottom: 0.5rem;
+  margin-bottom: var(--kb1-spacing-sm);
 }
 
 .section-label {
@@ -1459,7 +1459,7 @@ function downloadJSON(json: string, filename: string) {
   text-transform: var(--kb1-text-transform-uppercase);
   letter-spacing: var(--kb1-letter-spacing-wide);
   color: #848484;
-  margin-bottom: 0.5rem;
+  margin-bottom: var(--kb1-spacing-sm);
 }
 
 .export-form-compact {
@@ -1530,8 +1530,8 @@ function downloadJSON(json: string, filename: string) {
 /* Tab Navigation (Legacy - can be removed if unused) */
 .preset-tabs {
   display: flex;
-  gap: 1.5rem;
-  margin-bottom: 1.5rem;
+  gap: var(--kb1-spacing-lg);
+  margin-bottom: var(--kb1-spacing-lg);
 }
 
 .preset-tab {
@@ -1575,7 +1575,7 @@ function downloadJSON(json: string, filename: string) {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  margin-bottom: 1rem;
+  margin-bottom: var(--kb1-spacing-md);
   padding: 0.75rem;
   background: rgba(29, 29, 29, 0.3);
   border-radius: var(--kb1-radius-sm);
@@ -1662,8 +1662,8 @@ function downloadJSON(json: string, filename: string) {
 .presets-list {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
-  margin-bottom: 1rem;
+  gap: var(--kb1-spacing-sm);
+  margin-bottom: var(--kb1-spacing-md);
   overflow: visible;
 }
 
@@ -1718,10 +1718,10 @@ function downloadJSON(json: string, filename: string) {
   font-size: var(--kb1-font-input);
   color: #EAEAEA;
   font-weight: var(--kb1-font-weight-medium);
-  margin-bottom: 0.25rem;
+  margin-bottom: var(--kb1-spacing-xs);
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--kb1-spacing-sm);
 }
 
 .active-indicator {
@@ -1736,7 +1736,7 @@ function downloadJSON(json: string, filename: string) {
 
 .preset-actions {
   display: flex;
-  gap: 0.5rem;
+  gap: var(--kb1-spacing-sm);
   align-items: center;
   position: relative;
 }
@@ -1782,11 +1782,11 @@ function downloadJSON(json: string, filename: string) {
   position: absolute;
   top: 100%;
   right: 0;
-  margin-top: 0.25rem;
+  margin-top: var(--kb1-spacing-xs);
   background: #1D1D1D;
   border: 1px solid rgba(234, 234, 234, 0.2);
   border-radius: var(--kb1-radius-sm);
-  padding: 0.25rem;
+  padding: var(--kb1-spacing-xs);
   z-index: 9999;
   min-width: 140px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.8);
@@ -1794,7 +1794,7 @@ function downloadJSON(json: string, filename: string) {
 
 .preset-menu button {
   width: 100%;
-  padding: 0.5rem 0.75rem;
+  padding: var(--kb1-spacing-sm) 0.75rem;
   background: transparent;
   border: none;
   color: #EAEAEA;
@@ -1842,8 +1842,8 @@ function downloadJSON(json: string, filename: string) {
 
 .import-export-section {
   display: flex;
-  gap: 0.5rem;
-  padding-top: 1rem;
+  gap: var(--kb1-spacing-sm);
+  padding-top: var(--kb1-spacing-md);
   border-top: none;
 }
 
@@ -1880,7 +1880,7 @@ function downloadJSON(json: string, filename: string) {
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  padding: 1rem;
+  padding: var(--kb1-spacing-md);
   touch-action: manipulation;
   user-select: none;
   -webkit-user-select: none;
@@ -1890,7 +1890,7 @@ function downloadJSON(json: string, filename: string) {
   background: #1D1D1D;
   border: 1px solid rgba(234, 234, 234, 0.2);
   border-radius: var(--kb1-radius-lg);
-  padding: 1.5rem;
+  padding: var(--kb1-spacing-lg);
   max-width: 400px;
   width: 100%;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.8);
@@ -1907,12 +1907,12 @@ function downloadJSON(json: string, filename: string) {
 }
 
 .form-group {
-  margin-bottom: 1rem;
+  margin-bottom: var(--kb1-spacing-md);
 }
 
 .form-group label {
   display: block;
-  margin-bottom: 0.5rem;
+  margin-bottom: var(--kb1-spacing-sm);
   font-size: var(--kb1-font-label);
   color: #848484;
   text-transform: var(--kb1-text-transform-uppercase);
@@ -1972,19 +1972,19 @@ textarea.input-text {
 }
 
 .form-actions {
-  margin-bottom: 1rem;
+  margin-bottom: var(--kb1-spacing-md);
 }
 
 .modal-buttons {
   display: flex;
-  gap: 0.5rem;
+  gap: var(--kb1-spacing-sm);
   justify-content: space-between;
   align-items: center;
 }
 
 .modal-buttons-right {
   display: flex;
-  gap: 0.5rem;
+  gap: var(--kb1-spacing-sm);
 }
 
 .btn-delete {
@@ -2040,7 +2040,7 @@ textarea.input-text {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1.5rem;
+  padding: var(--kb1-spacing-lg);
   border-bottom: 1px solid var(--color-border);
   flex-shrink: 0;
 }
@@ -2055,7 +2055,7 @@ textarea.input-text {
 }
 
 .import-dialog .modal-body {
-  padding: 1.5rem;
+  padding: var(--kb1-spacing-lg);
   overflow-y: auto;
   flex: 1;
 }
@@ -2064,12 +2064,12 @@ textarea.input-text {
   font-size: var(--kb1-font-input);
   color: #848484;
   line-height: 1.5;
-  margin-bottom: 1.5rem;
-  margin-top: 0.5rem;
+  margin-bottom: var(--kb1-spacing-lg);
+  margin-top: var(--kb1-spacing-sm);
 }
 
 .metadata-form {
-  margin-bottom: 1.5rem;
+  margin-bottom: var(--kb1-spacing-lg);
 }
 
 .metadata-form textarea {
@@ -2090,7 +2090,7 @@ textarea.input-text {
 
 /* Device Presets Section */
 .preset-section {
-  margin-bottom: 2rem;
+  margin-bottom: var(--kb1-spacing-xl);
 }
 
 .preset-section-header {
@@ -2099,7 +2099,7 @@ textarea.input-text {
   text-transform: var(--kb1-text-transform-uppercase);
   letter-spacing: var(--kb1-letter-spacing-wide);
   color: #848484;
-  margin-bottom: 1rem;
+  margin-bottom: var(--kb1-spacing-md);
   font-family: var(--kb1-font-family);
 }
 
@@ -2108,13 +2108,13 @@ textarea.input-text {
   font-weight: var(--kb1-font-weight-bold);
   text-transform: var(--kb1-text-transform-uppercase);
   color: var(--color-text);
-  margin-bottom: 0.25rem;
+  margin-bottom: var(--kb1-spacing-xs);
 }
 
 .section-subtitle {
   font-size: var(--kb1-font-label);
   color: var(--color-text-muted);
-  margin-bottom: 1rem;
+  margin-bottom: var(--kb1-spacing-md);
 }
 
 .device-presets-grid {
@@ -2130,7 +2130,7 @@ textarea.input-text {
   min-height: 110px;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: var(--kb1-spacing-sm);
   transition: border-color 0.2s, background-color 0.2s;
   background: rgba(234, 234, 234, 0.02);
 }
@@ -2153,7 +2153,7 @@ textarea.input-text {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: var(--kb1-spacing-sm);
 }
 
 .slot-name {
@@ -2166,7 +2166,7 @@ textarea.input-text {
 
 .slot-actions {
   display: flex;
-  gap: 0.25rem;
+  gap: var(--kb1-spacing-xs);
   flex-wrap: wrap;
 }
 
@@ -2253,7 +2253,7 @@ textarea.input-text {
   cursor: pointer;
   transition: all 0.2s;
   user-select: none;
-  margin-left: 0.5rem;
+  margin-left: var(--kb1-spacing-sm);
 }
 
 .info-icon:hover {
@@ -2273,7 +2273,7 @@ textarea.input-text {
   align-items: center;
   justify-content: center;
   z-index: 10000;
-  padding: 1rem;
+  padding: var(--kb1-spacing-md);
 }
 
 .help-modal {
@@ -2290,7 +2290,7 @@ textarea.input-text {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1.5rem;
+  padding: var(--kb1-spacing-lg);
   border-bottom: 1px solid var(--color-border);
 }
 
@@ -2325,7 +2325,7 @@ textarea.input-text {
 }
 
 .help-modal-body {
-  padding: 1.5rem;
+  padding: var(--kb1-spacing-lg);
 }
 
 .help-modal-body p {
@@ -2336,7 +2336,7 @@ textarea.input-text {
 }
 
 .help-modal-footer {
-  padding: 1rem 1.5rem;
+  padding: var(--kb1-spacing-md) var(--kb1-spacing-lg);
   border-top: 1px solid var(--color-border);
   display: flex;
   justify-content: flex-end;
@@ -2379,12 +2379,12 @@ textarea.input-text {
 
 .selection-actions {
   display: flex;
-  gap: 0.5rem;
+  gap: var(--kb1-spacing-sm);
   align-items: center;
 }
 
 .btn-select-action {
-  padding: 0.5rem 1rem;
+  padding: var(--kb1-spacing-sm) var(--kb1-spacing-md);
   font-size: var(--kb1-font-input);
   font-family: var(--kb1-font-family);
   font-weight: var(--kb1-font-weight-normal);
@@ -2404,7 +2404,7 @@ textarea.input-text {
 }
 
 .btn-delete-selected {
-  padding: 0.5rem 1rem;
+  padding: var(--kb1-spacing-sm) var(--kb1-spacing-md);
   font-size: var(--kb1-font-input);
   font-family: var(--kb1-font-family);
   font-weight: var(--kb1-font-weight-normal);

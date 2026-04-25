@@ -317,7 +317,7 @@ const formatTime = (seconds: number): string => {
 
 <style scoped>
 .settings-system {
-  padding: 1rem;
+  padding: var(--kb1-spacing-md);
   background: var(--color-background-soft);
   border: 1px solid var(--color-border);
   border-radius: var(--kb1-radius-lg);
@@ -358,7 +358,7 @@ const formatTime = (seconds: number): string => {
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;
-  gap: 1rem;
+  gap: var(--kb1-spacing-md);
 }
 
 .group label {
@@ -372,7 +372,7 @@ const formatTime = (seconds: number): string => {
   min-width: 120px;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--kb1-spacing-sm);
 }
 
 .info-icon {
@@ -403,13 +403,13 @@ const formatTime = (seconds: number): string => {
   color: #EAEAEA;
   font-weight: var(--kb1-font-weight-normal);
   margin-right: auto;
-  padding-left: 1rem;
+  padding-left: var(--kb1-spacing-md);
 }
 
 .time-control-wrapper {
   display: flex;
   align-items: center;
-  gap: 0.25rem;
+  gap: var(--kb1-spacing-xs);
   justify-content: flex-end;
 }
 
@@ -501,7 +501,7 @@ const formatTime = (seconds: number): string => {
   align-items: center;
   justify-content: center;
   z-index: 10000;
-  padding: 1rem;
+  padding: var(--kb1-spacing-md);
 }
 
 .help-modal {
@@ -518,7 +518,7 @@ const formatTime = (seconds: number): string => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1.5rem;
+  padding: var(--kb1-spacing-lg);
   border-bottom: 1px solid var(--color-border);
 }
 
@@ -553,7 +553,7 @@ const formatTime = (seconds: number): string => {
 }
 
 .help-modal-body {
-  padding: 1.5rem;
+  padding: var(--kb1-spacing-lg);
 }
 
 .help-modal-body p {
@@ -564,7 +564,7 @@ const formatTime = (seconds: number): string => {
 }
 
 .help-modal-footer {
-  padding: 1rem 1.5rem;
+  padding: var(--kb1-spacing-md) var(--kb1-spacing-lg);
   border-top: 1px solid var(--color-border);
   display: flex;
   justify-content: flex-end;
@@ -665,7 +665,7 @@ const formatTime = (seconds: number): string => {
 /* CONFIG SETTINGS button group */
 .button-group {
   display: flex;
-  gap: 0.25rem;
+  gap: var(--kb1-spacing-xs);
 }
 
 .config-btn {

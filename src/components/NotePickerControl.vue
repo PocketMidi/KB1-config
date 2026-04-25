@@ -189,7 +189,7 @@ onBeforeUnmount(() => {
 .note-picker-control {
   display: flex;
   align-items: center;
-  gap: 0.1rem;
+  gap: var(--kb1-spacing-xs);  /* Use spacing variable (currently 0.2rem) */
   width: auto;
   min-width: 110px;
 }

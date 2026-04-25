@@ -158,7 +158,7 @@ defineExpose({
 .community-presets {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: var(--kb1-spacing-md);
   min-height: 200px;
 }
 
@@ -169,7 +169,7 @@ defineExpose({
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 1rem;
+  gap: var(--kb1-spacing-md);
   padding: 3rem 1rem;
   color: #848484;
   text-align: center;
@@ -203,7 +203,7 @@ defineExpose({
   gap: 0.75rem;
   max-height: 200px;
   overflow-y: auto;
-  padding-right: 0.5rem;
+  padding-right: var(--kb1-spacing-sm);
 }
 
 .presets-list-full {
@@ -232,7 +232,7 @@ defineExpose({
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 1rem;
+  gap: var(--kb1-spacing-md);
   transition: opacity 0.2s;
   padding: 0.5rem 0;
 }
@@ -252,7 +252,7 @@ defineExpose({
 .preset-header {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--kb1-spacing-sm);
   flex-wrap: wrap;
 }
 
@@ -309,7 +309,7 @@ defineExpose({
 }
 
 .btn-secondary {
-  padding: 0.5rem 1rem;
+  padding: var(--kb1-spacing-sm) var(--kb1-spacing-md);
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.15);
   color: #EAEAEA;

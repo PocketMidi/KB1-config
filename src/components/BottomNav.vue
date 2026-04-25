@@ -49,8 +49,8 @@ defineEmits<{
   display: flex;
   background: var(--color-background-soft);
   border-top: 1px solid var(--color-border);
-  padding: 0.5rem;
-  gap: 0.5rem;
+  padding: var(--kb1-spacing-sm);
+  gap: var(--kb1-spacing-sm);
   z-index: 100;
   box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
 }
@@ -61,7 +61,7 @@ defineEmits<{
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 0.5rem;
+  padding: var(--kb1-spacing-sm);
   background: transparent;
   border: none;
   color: var(--color-text);
@@ -87,7 +87,7 @@ defineEmits<{
 
 .bottom-nav-icon {
   font-size: var(--kb1-font-input); /* 13px */
-  margin-bottom: 0.25rem;
+  margin-bottom: var(--kb1-spacing-xs);
 }
 
 .bottom-nav-label {

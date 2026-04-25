@@ -125,7 +125,7 @@ function handleBackdropClick() {
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  padding: 1rem;
+  padding: var(--kb1-spacing-md);
   touch-action: manipulation;
   user-select: none;
   -webkit-user-select: none;
@@ -287,7 +287,7 @@ function handleBackdropClick() {
 
 @media (max-width: 480px) {
   .first-time-overlay {
-    padding: 0.5rem;
+    padding: var(--kb1-spacing-sm);
   }
   
   .modal-card {

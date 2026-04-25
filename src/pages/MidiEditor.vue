@@ -166,13 +166,13 @@ async function handleSave() {
 
 <style scoped>
 .midi-editor-page {
-  padding: 2rem;
+  padding: var(--kb1-spacing-xl);
   max-width: 1200px;
   margin: 0 auto;
 }
 
 .page-header {
-  margin-bottom: 2rem;
+  margin-bottom: var(--kb1-spacing-xl);
 }
 
 .page-header h2 {
@@ -195,20 +195,20 @@ async function handleSave() {
 .editor-content {
   display: flex;
   flex-direction: column;
-  gap: 2rem;
+  gap: var(--kb1-spacing-xl);
 }
 
 .cc-mappings-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 1rem;
+  gap: var(--kb1-spacing-md);
 }
 
 .action-bar {
   display: flex;
-  gap: 1rem;
+  gap: var(--kb1-spacing-md);
   justify-content: flex-end;
-  padding-top: 1rem;
+  padding-top: var(--kb1-spacing-md);
   border-top: 1px solid var(--color-border);
   flex-wrap: wrap;
 }

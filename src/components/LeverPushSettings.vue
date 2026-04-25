@@ -1146,7 +1146,7 @@ function dismissHelp() {
 
 <style scoped>
 .settings-leverpush {
-  padding: 1rem;
+  padding: var(--kb1-spacing-md);
   background: var(--color-background-soft);
   border: 1px solid var(--color-border);
   border-radius: var(--kb1-radius-lg);
@@ -1169,7 +1169,7 @@ function dismissHelp() {
   display: flex;
   justify-content: flex-start;
   align-items: center;
-  gap: 1rem;
+  gap: var(--kb1-spacing-md);
   margin-bottom: 0.75rem;
   width: 100%;
   max-width: 100%;
@@ -1194,7 +1194,7 @@ function dismissHelp() {
   gap: 0.2rem;
   align-items: center;
   justify-content: center;
-  margin-right: 1rem;
+  margin-right: var(--kb1-spacing-md);
 }
 
 .toggle-btn:hover:not(:disabled) {
@@ -1236,7 +1236,7 @@ function dismissHelp() {
 
 .profile-selector {
   display: flex;
-  gap: 1.5rem;
+  gap: var(--kb1-spacing-lg);
   align-items: center;
   flex-shrink: 1;
 }
@@ -1333,8 +1333,8 @@ function dismissHelp() {
 .duration-container {
   border: 1px solid var(--color-divider);
   border-radius: var(--kb1-radius-md);
-  padding: 0.5rem 1rem;
-  margin-top: 0.5rem;
+  padding: var(--kb1-spacing-sm) var(--kb1-spacing-md);
+  margin-top: var(--kb1-spacing-sm);
   margin-left: -1rem;
   margin-right: -1rem;
 }
@@ -1427,7 +1427,7 @@ function dismissHelp() {
 .duration-control-wrapper {
   display: flex;
   align-items: center;
-  gap: 0.25rem;
+  gap: var(--kb1-spacing-xs);
   justify-content: flex-end;
 }
 
@@ -1443,7 +1443,7 @@ function dismissHelp() {
 .value-control {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--kb1-spacing-sm);
   justify-content: flex-end;
 }
 
@@ -1481,7 +1481,7 @@ function dismissHelp() {
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;
-  gap: 1rem;
+  gap: var(--kb1-spacing-md);
 }
 
 .group label {
@@ -1497,7 +1497,7 @@ function dismissHelp() {
 
 .group input,
 .group select {
-  padding: 0.5rem 0.75rem;
+  padding: var(--kb1-spacing-sm) 0.75rem;
   border: none;
   border-radius: 0;
   background: transparent;
@@ -1512,7 +1512,7 @@ function dismissHelp() {
 }
 
 .picker-trigger {
-  padding: 0.5rem 0.75rem;
+  padding: var(--kb1-spacing-sm) 0.75rem;
   border: none;
   border-radius: 0;
   background: transparent;
@@ -1539,7 +1539,7 @@ function dismissHelp() {
   background-repeat: no-repeat;
   background-position: right 0.5rem center;
   background-size: 1rem;
-  padding-right: 2rem;
+  padding-right: var(--kb1-spacing-xl);
 }
 
 .group option {
@@ -1558,7 +1558,7 @@ function dismissHelp() {
 .number-with-unit {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--kb1-spacing-sm);
   justify-content: flex-end;
   flex: 1;
 }
@@ -1682,7 +1682,7 @@ function dismissHelp() {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1rem;
+  padding: var(--kb1-spacing-md);
   border-bottom: 1px solid var(--color-border);
 }
 
@@ -1715,7 +1715,7 @@ function dismissHelp() {
 }
 
 .help-modal-body {
-  padding: 1rem;
+  padding: var(--kb1-spacing-md);
   line-height: 1.6;
 }
 
@@ -1728,7 +1728,7 @@ function dismissHelp() {
 }
 
 .help-modal-footer {
-  padding: 1rem;
+  padding: var(--kb1-spacing-md);
   border-top: 1px solid var(--color-border);
   display: flex;
   justify-content: flex-end;

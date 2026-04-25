@@ -694,7 +694,7 @@ function dismissSpeakerHelp() {
 .duration-control-wrapper {
   display: flex;
   align-items: center;
-  gap: 0.25rem;
+  gap: var(--kb1-spacing-xs);
   justify-content: flex-end;
 }
 
@@ -719,7 +719,7 @@ function dismissSpeakerHelp() {
   align-items: center;
   justify-content: center;
   z-index: 10000;
-  padding: 1rem;
+  padding: var(--kb1-spacing-md);
 }
 
 .help-modal {
@@ -736,7 +736,7 @@ function dismissSpeakerHelp() {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1.5rem;
+  padding: var(--kb1-spacing-lg);
   border-bottom: 1px solid var(--color-border);
 }
 
@@ -771,7 +771,7 @@ function dismissSpeakerHelp() {
 }
 
 .help-modal-body {
-  padding: 1.5rem;
+  padding: var(--kb1-spacing-lg);
 }
 
 .help-modal-body p {
@@ -786,7 +786,7 @@ function dismissSpeakerHelp() {
 }
 
 .help-modal-footer {
-  padding: 1rem 1.5rem;
+  padding: var(--kb1-spacing-md) var(--kb1-spacing-lg);
   border-top: 1px solid var(--color-border);
   display: flex;
   justify-content: flex-end;
@@ -1405,7 +1405,7 @@ input:checked + .toggle-slider:before {
 .dev-value-wrapper {
   display: flex;
   align-items: center;
-  gap: 0.25rem;
+  gap: var(--kb1-spacing-xs);
 }
 
 /* Responsive */

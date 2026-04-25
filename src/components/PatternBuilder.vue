@@ -550,7 +550,7 @@ function getTemplateForChordType(chordType: number): number {
 
 .build-modes-row {
   display: flex;
-  gap: 0.5rem;
+  gap: var(--kb1-spacing-sm);
   padding: 0.25rem 0;
   margin-right: 2rem;  /* Adjust to shift icons left/right */
   justify-content: center;
@@ -600,7 +600,7 @@ function getTemplateForChordType(chordType: number): number {
 .template-info {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: var(--kb1-spacing-xs);
   padding: 0.25rem 0;
   width: 100%;
 }

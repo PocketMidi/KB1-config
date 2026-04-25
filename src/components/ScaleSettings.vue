@@ -298,7 +298,7 @@ function isRootNote(midiNote: number): boolean {
 
 <style scoped>
 .settings-scale {
-  padding: 1.5rem;
+  padding: var(--kb1-spacing-lg);
   background: var(--color-background-soft);
   border: 1px solid var(--color-border);
   border-radius: var(--kb1-radius-lg);
@@ -307,17 +307,17 @@ function isRootNote(midiNote: number): boolean {
 
 /* Keyboard Visualization */
 .keyboard-visual {
-  margin-bottom: 1.5rem;
+  margin-bottom: var(--kb1-spacing-lg);
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: var(--kb1-spacing-sm);
   padding: 5px; /* Add padding to prevent outline clipping */
   overflow: visible;
 }
 
 .keyboard-row {
   display: flex;
-  gap: 0.5rem;
+  gap: var(--kb1-spacing-sm);
   justify-content: center;
   flex-wrap: nowrap;
   overflow: visible;
@@ -380,10 +380,10 @@ function isRootNote(midiNote: number): boolean {
 .mapping-toggle-row {
   display: flex;
   align-items: center;
-  gap: 1rem;
-  padding-top: 1rem;
+  gap: var(--kb1-spacing-md);
+  padding-top: var(--kb1-spacing-md);
   margin-bottom: 0.75rem;
-  padding-bottom: 0.5rem;
+  padding-bottom: var(--kb1-spacing-sm);
   border-top: 1px solid var(--color-divider);
 }
 
@@ -459,7 +459,7 @@ function isRootNote(midiNote: number): boolean {
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;
-  gap: 1rem;
+  gap: var(--kb1-spacing-md);
 }
 
 .group label {
@@ -474,7 +474,7 @@ function isRootNote(midiNote: number): boolean {
 }
 
 .picker-trigger {
-  padding: 0.5rem 0.75rem;
+  padding: var(--kb1-spacing-sm) 0.75rem;
   border: none;
   border-radius: 0;
   background: transparent;

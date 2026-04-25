@@ -46,8 +46,8 @@ const statusClass = computed(() => ({
 .connection-status {
   display: flex;
   align-items: center;
-  gap: 1rem;
-  padding: 0.75rem 1rem;
+  gap: var(--kb1-spacing-md);
+  padding: 0.75rem var(--kb1-spacing-md);
   border-radius: var(--kb1-radius-lg);
   background: var(--color-background-soft);
   border: 1px solid var(--color-border);
@@ -61,7 +61,7 @@ const statusClass = computed(() => ({
 .status-indicator {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--kb1-spacing-sm);
 }
 
 .status-dot {
@@ -84,7 +84,7 @@ const statusClass = computed(() => ({
 .device-info {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--kb1-spacing-sm);
 }
 
 .device-name {

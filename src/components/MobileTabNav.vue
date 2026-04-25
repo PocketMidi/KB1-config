@@ -86,7 +86,7 @@ const isHovering = ref(false);
 }
 
 .tab-button {
-  padding: 1rem 1.5rem;
+  padding: var(--kb1-spacing-md) var(--kb1-spacing-lg);
   background: transparent;
   border: none;
   border-radius: 0;
@@ -149,7 +149,7 @@ const isHovering = ref(false);
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  padding: 1rem 1.5rem;
+  padding: var(--kb1-spacing-md) var(--kb1-spacing-lg);
   white-space: nowrap;
 }
 
@@ -253,12 +253,12 @@ const isHovering = ref(false);
 @media (max-width: 768px) {
   .tab-button {
     font-size: var(--kb1-font-input);
-    padding: 0.75rem 1rem;
+    padding: 0.75rem var(--kb1-spacing-md);
   }
   
   .bluetooth-status {
-    padding: 0.75rem 1rem;
-    gap: 0.5rem;
+    padding: 0.75rem var(--kb1-spacing-md);
+    gap: var(--kb1-spacing-sm);
   }
   
   .bluetooth-icon {

@@ -376,7 +376,7 @@ const labels = computed<Label[]>(() => {
   position: relative;
   height: 13px;
   width: 100%;
-  margin-bottom: 1rem;
+  margin-bottom: var(--kb1-spacing-md);
   cursor: pointer;
   user-select: none;
 }

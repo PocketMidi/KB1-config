@@ -2067,14 +2067,14 @@ defineExpose({
   display: flex;
   flex-direction: column;
   height: 100%;
-  padding: 1rem;
+  padding: var(--kb1-spacing-md);
   overflow: auto;
 }
 
 .setup-header {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: var(--kb1-spacing-sm);
   margin-bottom: 0.75rem;
 }
 
@@ -2129,7 +2129,7 @@ defineExpose({
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  gap: 0.5rem;
+  gap: var(--kb1-spacing-sm);
   height: 1.75rem;
 }
 
@@ -2148,7 +2148,7 @@ defineExpose({
 /* Header buttons row */
 .header-buttons-row {
   display: flex;
-  gap: 0.5rem;
+  gap: var(--kb1-spacing-sm);
   width: 100%;
 }
 
@@ -2172,7 +2172,7 @@ defineExpose({
   font-family: var(--kb1-font-family);
   white-space: nowrap;
   display: flex;
-  gap: 0.25rem;
+  gap: var(--kb1-spacing-xs);
   align-items: center;
 }
 
@@ -2331,7 +2331,7 @@ defineExpose({
   top: 50%;
   transform: translate(-50%, -50%);
   z-index: 100;
-  padding: 0.5rem;
+  padding: var(--kb1-spacing-sm);
   background: rgba(15, 15, 15, 0.95);
   border: none;
   border-radius: var(--kb1-radius-lg);
@@ -2472,7 +2472,7 @@ defineExpose({
 .cc-dropdown option {
   background: #1a1a1a;
   color: #b9aa5f !important;
-  padding: 0.25rem;
+  padding: var(--kb1-spacing-xs);
 }
 
 .fx-param-section {
@@ -2538,13 +2538,13 @@ defineExpose({
 .fx-param-dropdown option {
   background: #1a1a1a;
   color: #EAEAEA;
-  padding: 0.25rem;
+  padding: var(--kb1-spacing-xs);
 }
 
 .slider-toggle-inline {
   display: flex;
   flex-direction: row;
-  gap: 0.5rem;
+  gap: var(--kb1-spacing-sm);
   flex: 1; /* Allow container to grow proportionally */
   justify-content: flex-start;
   min-height: 26px; /* Match button height to prevent collapse */
@@ -2686,7 +2686,7 @@ defineExpose({
   top: 0;
   left: 0;
   right: 0;
-  padding: 0.5rem;
+  padding: var(--kb1-spacing-sm);
   text-align: center;
   background: rgba(116, 196, 255, 0.1);
   color: var(--bluetooth-status-active);
@@ -2717,12 +2717,12 @@ defineExpose({
 
 .prompt-content {
   text-align: center;
-  padding: 2rem;
+  padding: var(--kb1-spacing-xl);
 }
 
 .rotate-icon {
   font-size: var(--kb1-font-display-lg);
-  margin-bottom: 1rem;
+  margin-bottom: var(--kb1-spacing-md);
   animation: rotate-hint 2s ease-in-out infinite;
 }
 
@@ -2730,7 +2730,7 @@ defineExpose({
   width: auto;
   height: min(70vh, 500px);
   max-width: 90vw;
-  margin-bottom: 1rem;
+  margin-bottom: var(--kb1-spacing-md);
   display: block;
   margin-left: auto;
   margin-right: auto;
@@ -2747,7 +2747,7 @@ defineExpose({
   font-size: var(--kb1-font-input);
   color: var(--bluetooth-status-active);
   font-weight: var(--kb1-font-weight-semibold);
-  margin-bottom: 0.5rem;
+  margin-bottom: var(--kb1-spacing-sm);
 }
 
 .prompt-subtext {
@@ -2803,8 +2803,8 @@ defineExpose({
 }
 
 .live-mode.mobile-landscape .live-sliders-container {
-  padding: 0.5rem;
-  gap: 1.5rem; /* Increased spacing to fill screen */
+  padding: var(--kb1-spacing-sm);
+  gap: var(--kb1-spacing-lg); /* Increased spacing to fill screen */
   overflow: hidden;
   min-height: 0;
   height: 100dvh;
@@ -2927,7 +2927,7 @@ defineExpose({
 
 .hint-description {
   margin: 0;
-  padding: 1rem;
+  padding: var(--kb1-spacing-md);
   font-size: var(--kb1-font-input);
   line-height: 1.6;
   color: var(--color-text, #EAEAEA);
@@ -2935,11 +2935,11 @@ defineExpose({
 }
 
 .hint-footer {
-  padding: 0.75rem 1rem;
+  padding: 0.75rem var(--kb1-spacing-md);
   border-top: 1px solid var(--color-border, #333333);
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: var(--kb1-spacing-sm);
 }
 
 .hint-btn-primary {
@@ -3004,7 +3004,7 @@ defineExpose({
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--kb1-spacing-sm);
   min-width: 42px;
   border: none;
   outline: none;
@@ -3141,11 +3141,11 @@ defineExpose({
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  padding: 0.5rem 1rem;
+  padding: var(--kb1-spacing-sm) var(--kb1-spacing-md);
   background: rgba(106, 104, 83, 0.15);
   border-top: 1px solid rgba(106, 104, 83, 0.3);
   border-radius: var(--kb1-radius-md);
-  margin-top: 0.5rem;
+  margin-top: var(--kb1-spacing-sm);
 }
 
 /* Camera Button with Pulse Animation */
@@ -3236,7 +3236,7 @@ defineExpose({
 .preset-dropdown option {
   background: #1a1a1a;
   color: #EAEAEA;
-  padding: 0.25rem;
+  padding: var(--kb1-spacing-xs);
 }
 
 /* Delete Preset Button */
@@ -3360,7 +3360,7 @@ defineExpose({
   background: #1D1D1D;
   border: 1px solid rgba(234, 234, 234, 0.2);
   border-radius: var(--kb1-radius-lg);
-  padding: 1.5rem;
+  padding: var(--kb1-spacing-lg);
   max-width: 400px;
   width: 100%;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.8);
@@ -3377,12 +3377,12 @@ defineExpose({
 }
 
 .form-group {
-  margin-bottom: 1rem;
+  margin-bottom: var(--kb1-spacing-md);
 }
 
 .form-group label {
   display: block;
-  margin-bottom: 0.5rem;
+  margin-bottom: var(--kb1-spacing-sm);
   font-size: var(--kb1-font-label);
   color: #848484;
   text-transform: var(--kb1-text-transform-uppercase);
@@ -3411,12 +3411,12 @@ textarea.input-text {
 }
 
 .form-actions {
-  margin-bottom: 1rem;
+  margin-bottom: var(--kb1-spacing-md);
 }
 
 .modal-buttons {
   display: flex;
-  gap: 0.5rem;
+  gap: var(--kb1-spacing-sm);
   justify-content: flex-end;
 }
 
@@ -3479,7 +3479,7 @@ textarea.input-text {
   background: #1a1a1a;
   border: 1px solid rgba(234, 234, 234, 0.2);
   border-radius: var(--kb1-radius-lg);
-  padding: 2rem;
+  padding: var(--kb1-spacing-xl);
   max-width: 500px;
   width: 100%;
   position: relative;
@@ -3522,11 +3522,11 @@ textarea.input-text {
   color: #EAEAEA;
   font-size: var(--kb1-font-large);
   line-height: 1.6;
-  margin-bottom: 2rem;
+  margin-bottom: var(--kb1-spacing-xl);
 }
 
 .mode-info-section {
-  margin-bottom: 1.5rem;
+  margin-bottom: var(--kb1-spacing-lg);
 }
 
 .mode-info-section:last-child {

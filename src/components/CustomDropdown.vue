@@ -121,9 +121,9 @@ onUnmounted(() => {
   background: transparent !important;
   border: none;
   color: #EAEAEA;
-  font-size: 0.8125rem;
-  font-family: 'Roboto Mono';
-  font-weight: 400;
+  font-size: var(--kb1-font-input);
+  font-family: var(--kb1-font-family);
+  font-weight: var(--kb1-font-weight-normal);
   cursor: pointer;
   text-align: right;
   transition: all 0.2s ease;
@@ -141,7 +141,7 @@ onUnmounted(() => {
   display: inline-block;
   margin-left: 0.5rem;
   color: rgba(234, 234, 234, 0.5);
-  font-size: 0.625rem;
+  font-size: var(--kb1-font-tiny);
   transition: transform 0.2s ease;
   transform: rotate(180deg);
 }
@@ -178,9 +178,9 @@ onUnmounted(() => {
   border: none;
   border-bottom: 3px solid #0F0F0F;
   color: #EAEAEA;
-  font-size: 0.8125rem;
-  font-family: 'Roboto Mono';
-  font-weight: 400;
+  font-size: var(--kb1-font-input);
+  font-family: var(--kb1-font-family);
+  font-weight: var(--kb1-font-weight-normal);
   text-align: right;
   white-space: nowrap;
   cursor: pointer;
@@ -199,7 +199,7 @@ onUnmounted(() => {
 
 .dropdown-item.is-selected {
   background: linear-gradient(to right, #0F0F0F, rgba(66, 63, 59, 0.8));
-  font-weight: 600;
+  font-weight: var(--kb1-font-weight-semibold);
 }
 
 /* Transition animations */

@@ -228,7 +228,7 @@ function updateField(field: keyof CCMapping, event: Event) {
 <style scoped>
 .cc-mapping-card {
   border: 1px solid var(--color-border);
-  border-radius: 8px;
+  border-radius: var(--kb1-radius-lg);
   overflow: hidden;
   background: var(--color-background-soft);
 }
@@ -241,13 +241,13 @@ function updateField(field: keyof CCMapping, event: Event) {
 
 .card-header h3 {
   margin: 0;
-  font-size: 0.8125rem; /* 13px */
-  font-weight: 600;
+  font-size: var(--kb1-font-input); /* 13px */
+  font-weight: var(--kb1-font-weight-semibold);
 }
 
 .parameter-info {
   margin-top: 0.25rem;
-  font-size: 0.8125rem; /* 13px */
+  font-size: var(--kb1-font-input); /* 13px */
   color: var(--color-text-mute);
 }
 
@@ -276,8 +276,8 @@ function updateField(field: keyof CCMapping, event: Event) {
 }
 
 label {
-  font-size: 0.8125rem; /* 13px */
-  font-weight: 500;
+  font-size: var(--kb1-font-input); /* 13px */
+  font-weight: var(--kb1-font-weight-medium);
   color: var(--color-text);
 }
 
@@ -286,10 +286,10 @@ input[type="text"],
 select {
   padding: 0.5rem;
   border: 1px solid var(--color-border);
-  border-radius: 4px;
+  border-radius: var(--kb1-radius-sm);
   background: var(--color-background);
   color: var(--color-text);
-  font-size: 0.8125rem; /* 13px */
+  font-size: var(--kb1-font-input); /* 13px */
 }
 
 input[type="number"]:focus,

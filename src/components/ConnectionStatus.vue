@@ -48,7 +48,7 @@ const statusClass = computed(() => ({
   align-items: center;
   gap: 1rem;
   padding: 0.75rem 1rem;
-  border-radius: 8px;
+  border-radius: var(--kb1-radius-lg);
   background: var(--color-background-soft);
   border: 1px solid var(--color-border);
 }
@@ -67,7 +67,7 @@ const statusClass = computed(() => ({
 .status-dot {
   width: 10px;
   height: 10px;
-  border-radius: 50%;
+  border-radius: var(--kb1-radius-full);
   background: #6b7280;
   transition: background-color 0.3s;
 }
@@ -77,8 +77,8 @@ const statusClass = computed(() => ({
 }
 
 .status-text {
-  font-weight: 500;
-  font-size: 0.8125rem; /* 13px */
+  font-weight: var(--kb1-font-weight-medium);
+  font-size: var(--kb1-font-input); /* 13px */
 }
 
 .device-info {
@@ -88,13 +88,13 @@ const statusClass = computed(() => ({
 }
 
 .device-name {
-  font-size: 0.8125rem; /* 13px */
+  font-size: var(--kb1-font-input); /* 13px */
   color: var(--color-text-muted);
 }
 
 .error-message {
   margin-left: auto;
   color: #ef4444;
-  font-size: 0.8125rem; /* 13px */
+  font-size: var(--kb1-font-input); /* 13px */
 }
 </style>

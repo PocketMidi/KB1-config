@@ -331,8 +331,8 @@ onBeforeUnmount(() => {
 }
 
 .tap-indicator {
-  font-size: 0.75rem; /* 12px - smaller arrows */
-  font-family: 'Roboto Mono';
+  font-size: var(--kb1-font-label); /* 12px - smaller arrows */
+  font-family: var(--kb1-font-family);
   color: #EAEAEA;
   opacity: 1.0;
   transition: opacity 0.2s;
@@ -347,9 +347,9 @@ onBeforeUnmount(() => {
   border: none;
   background: transparent;
   color: #EAEAEA;
-  font-size: 0.8125rem; /* 13px */
-  font-family: 'Roboto Mono';
-  font-weight: 400;
+  font-size: var(--kb1-font-input); /* 13px */
+  font-family: var(--kb1-font-family);
+  font-weight: var(--kb1-font-weight-normal);
   text-align: center;
   cursor: ew-resize; /* Indicates horizontal dragging */
   touch-action: none; /* Prevent default touch behaviors */

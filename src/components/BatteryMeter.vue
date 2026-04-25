@@ -105,7 +105,7 @@ const ariaLabel = computed(() => {
   display: flex;
   align-items: center;
   padding: 4px 8px;
-  border-radius: 6px;
+  border-radius: var(--kb1-radius-md);
   cursor: pointer;
   transition: background-color 0.2s ease, opacity 0.2s ease;
   user-select: none;

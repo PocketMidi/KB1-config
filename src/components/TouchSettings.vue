@@ -723,9 +723,9 @@ function dismissHelp() {
   padding: 1rem;
   background: var(--color-background-soft);
   border: 1px solid var(--color-border);
-  border-radius: 8px;
-  font-family: 'Roboto Mono';
-  font-size: 0.8125rem; /* 13px */
+  border-radius: var(--kb1-radius-lg);
+  font-family: var(--kb1-font-family);
+  font-size: var(--kb1-font-input); /* 13px */
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;
@@ -754,9 +754,9 @@ function dismissHelp() {
 
 .title h2 {
   margin: 0;
-  font-size: 0.8125rem; /* 13px */
-  font-weight: 600;
-  font-family: 'Roboto Mono';
+  font-size: var(--kb1-font-input); /* 13px */
+  font-weight: var(--kb1-font-weight-semibold);
+  font-family: var(--kb1-font-family);
 }
 
 .parameter-header {
@@ -764,12 +764,12 @@ function dismissHelp() {
   flex-direction: column;
   align-items: flex-end;
   gap: 0.25rem;
-  font-size: 0.8125rem; /* 13px */
-  font-family: 'Roboto Mono';
+  font-size: var(--kb1-font-input); /* 13px */
+  font-family: var(--kb1-font-family);
 }
 
 .parameter-name {
-  font-weight: 600;
+  font-weight: var(--kb1-font-weight-semibold);
   color: var(--color-text);
 }
 
@@ -780,8 +780,8 @@ function dismissHelp() {
 
 .cc-reference {
   color: var(--color-text-muted);
-  font-size: 0.8125rem; /* 13px */
-  font-family: 'Roboto Mono';
+  font-size: var(--kb1-font-input); /* 13px */
+  font-family: var(--kb1-font-family);
 }
 
 .inputs {
@@ -811,12 +811,12 @@ function dismissHelp() {
 }
 
 .group label {
-  font-weight: 400;
-  font-size: 0.8125rem; /* 13px */
+  font-weight: var(--kb1-font-weight-normal);
+  font-size: var(--kb1-font-input); /* 13px */
   color: #848484;
-  font-family: 'Roboto Mono';
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  font-family: var(--kb1-font-family);
+  text-transform: var(--kb1-text-transform-uppercase);
+  letter-spacing: var(--kb1-letter-spacing-wide);
   flex-shrink: 0;
   min-width: 120px;
 }
@@ -827,9 +827,9 @@ function dismissHelp() {
   border-radius: 0;
   background: transparent;
   color: #EAEAEA;
-  font-size: 0.8125rem; /* 13px */
-  font-family: 'Roboto Mono';
-  font-weight: 400;
+  font-size: var(--kb1-font-input); /* 13px */
+  font-family: var(--kb1-font-family);
+  font-weight: var(--kb1-font-weight-normal);
   flex: 1;
   text-align: right;
   cursor: pointer;
@@ -850,9 +850,9 @@ function dismissHelp() {
   border-radius: 0;
   background: transparent;
   color: #EAEAEA;
-  font-size: 0.8125rem; /* 13px */
-  font-family: 'Roboto Mono';
-  font-weight: 400;
+  font-size: var(--kb1-font-input); /* 13px */
+  font-family: var(--kb1-font-family);
+  font-weight: var(--kb1-font-weight-normal);
   flex: 1;
   text-align: right;
   appearance: none;
@@ -867,9 +867,9 @@ function dismissHelp() {
 .group option {
   background: var(--color-background);
   color: #EAEAEA;
-  font-family: 'Roboto Mono';
-  font-weight: 400;
-  font-size: 0.8125rem;
+  font-family: var(--kb1-font-family);
+  font-weight: var(--kb1-font-weight-normal);
+  font-size: var(--kb1-font-input);
 }
 
 .group select:focus {
@@ -877,11 +877,11 @@ function dismissHelp() {
 }
 
 .hint-text {
-  font-size: 0.8125rem; /* 13px */
+  font-size: var(--kb1-font-input); /* 13px */
   font-style: italic;
   color: var(--color-text-muted);
   padding: 0.5rem 0 1rem 0;
-  font-family: 'Roboto Mono';
+  font-family: var(--kb1-font-family);
 }
 
 /* Controls Row */
@@ -903,12 +903,12 @@ function dismissHelp() {
   background: rgba(106, 104, 83, 0.35);
   border: 1px solid rgba(106, 104, 83, 0.4);
   color: var(--kb1-text-primary, #EAEAEA);
-  font-size: 0.65rem;
-  font-weight: 500;
-  border-radius: 4px;
+  font-size: var(--kb1-font-badge);
+  font-weight: var(--kb1-font-weight-medium);
+  border-radius: var(--kb1-radius-sm);
   cursor: pointer;
   transition: all 0.2s ease;
-  font-family: 'Roboto Mono', monospace;
+  font-family: var(--kb1-font-family);
   white-space: nowrap;
   display: flex;
   gap: 0.2rem;
@@ -946,12 +946,12 @@ function dismissHelp() {
 .toggle-btn span.active {
   opacity: 1;
   color: #EAEAEA;
-  font-weight: 600;
+  font-weight: var(--kb1-font-weight-semibold);
 }
 
 .toggle-btn .toggle-divider {
   opacity: 0.3;
-  font-weight: 300;
+  font-weight: var(--kb1-font-weight-light);
 }
 
 /* Mode Selector */
@@ -966,13 +966,13 @@ function dismissHelp() {
   background: none;
   border: none;
   padding: 0.5rem 0;
-  font-size: 0.8125rem;
-  font-weight: 500;
+  font-size: var(--kb1-font-input);
+  font-weight: var(--kb1-font-weight-medium);
   color: #848484;
   cursor: pointer;
   position: relative;
   transition: color 0.2s ease;
-  font-family: 'Roboto Mono';
+  font-family: var(--kb1-font-family);
 }
 
 .mode-btn:hover {
@@ -1011,16 +1011,16 @@ function dismissHelp() {
 
 /* Help System */
 .info-icon {
-  text-transform: none;
+  text-transform: var(--kb1-text-transform-none);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   width: 16px;
   height: 16px;
   border: 1px solid #999;
-  border-radius: 50%;
+  border-radius: var(--kb1-radius-full);
   font-size: 11px;
-  font-family: 'Roboto Mono', monospace;
+  font-family: var(--kb1-font-family);
   margin-left: 4px;
   cursor: pointer;
   transition: all 0.2s;
@@ -1048,12 +1048,12 @@ function dismissHelp() {
 .help-modal {
   background: var(--color-background-soft);
   border: 1px solid var(--color-border);
-  border-radius: 8px;
+  border-radius: var(--kb1-radius-lg);
   max-width: 500px;
   width: 90%;
   max-height: 80vh;
   overflow-y: auto;
-  font-family: 'Roboto Mono', monospace;
+  font-family: var(--kb1-font-family);
 }
 
 .help-modal-header {
@@ -1066,17 +1066,17 @@ function dismissHelp() {
 
 .help-modal-header h3 {
   margin: 0;
-  font-size: 1rem;
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  font-size: var(--kb1-font-subhead);
+  font-weight: var(--kb1-font-weight-medium);
+  text-transform: var(--kb1-text-transform-uppercase);
+  letter-spacing: var(--kb1-letter-spacing-wide);
 }
 
 .help-modal-header .close-btn {
   background: none;
   border: none;
   color: var(--color-text);
-  font-size: 1.5rem;
+  font-size: var(--kb1-font-title);
   cursor: pointer;
   padding: 0;
   width: 24px;
@@ -1117,10 +1117,10 @@ function dismissHelp() {
   color: #1A1A1A; /* Dark text on green button */
   border: none;
   padding: 0.5rem 1.5rem; /* 8px top/bottom, 24px left/right */
-  border-radius: 4px;
+  border-radius: var(--kb1-radius-sm);
   cursor: pointer;
-  font-family: 'Roboto Mono', monospace;
-  font-weight: 500;
+  font-family: var(--kb1-font-family);
+  font-weight: var(--kb1-font-weight-medium);
   transition: opacity 0.2s;
 }
 

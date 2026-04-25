@@ -134,7 +134,7 @@ function handleBackdropClick() {
 .modal-card {
   background: #1A1A1A;
   border: 1px solid #333333;
-  border-radius: 8px;
+  border-radius: var(--kb1-radius-lg);
   padding: 40px;
   max-width: 500px;
   width: 100%;
@@ -152,7 +152,7 @@ function handleBackdropClick() {
   background: transparent;
   border: none;
   color: #EAEAEA;
-  font-size: 0.8125rem; /* 13px */
+  font-size: var(--kb1-font-input); /* 13px */
   cursor: pointer;
   opacity: 0.5;
   transition: opacity 0.2s;
@@ -173,7 +173,7 @@ function handleBackdropClick() {
   opacity: 1;
   outline: 2px solid var(--bluetooth-status-active);
   outline-offset: 2px;
-  border-radius: 4px;
+  border-radius: var(--kb1-radius-sm);
 }
 
 .modal-content {
@@ -185,15 +185,15 @@ function handleBackdropClick() {
 }
 
 .modal-title {
-  font-size: 0.8125rem; /* 13px */
-  font-weight: 700;
+  font-size: var(--kb1-font-input); /* 13px */
+  font-weight: var(--kb1-font-weight-bold);
   color: #EAEAEA;
   margin: 0;
-  font-family: 'Roboto Mono';
+  font-family: var(--kb1-font-family);
 }
 
 .modal-description {
-  font-size: 0.8125rem; /* 13px */
+  font-size: var(--kb1-font-input); /* 13px */
   color: rgba(234, 234, 234, 0.7);
   margin: 0;
   line-height: 1.5;
@@ -211,14 +211,14 @@ function handleBackdropClick() {
   background: var(--bluetooth-status-active);
   color: #0F0F0F;
   border: none;
-  border-radius: 6px;
+  border-radius: var(--kb1-radius-md);
   padding: 14px 32px;
-  font-size: 0.8125rem; /* 13px */
-  font-weight: 700;
-  font-family: 'Roboto Mono';
+  font-size: var(--kb1-font-input); /* 13px */
+  font-weight: var(--kb1-font-weight-bold);
+  font-family: var(--kb1-font-family);
   cursor: pointer;
   transition: all 0.2s;
-  text-transform: uppercase;
+  text-transform: var(--kb1-text-transform-uppercase);
 }
 
 .connect-button:hover {
@@ -241,8 +241,8 @@ function handleBackdropClick() {
   color: rgba(234, 234, 234, 0.5);
   border: none;
   padding: 12px 24px;
-  font-size: 0.8125rem; /* 13px */
-  font-family: 'Roboto Mono';
+  font-size: var(--kb1-font-input); /* 13px */
+  font-family: var(--kb1-font-family);
   cursor: pointer;
   transition: color 0.2s;
   text-decoration: underline;
@@ -256,7 +256,7 @@ function handleBackdropClick() {
   color: rgba(234, 234, 234, 0.8);
   outline: 2px solid var(--bluetooth-status-active);
   outline-offset: 2px;
-  border-radius: 4px;
+  border-radius: var(--kb1-radius-sm);
 }
 
 /* Fade transition */
@@ -277,11 +277,11 @@ function handleBackdropClick() {
   }
   
   .modal-title {
-    font-size: 0.8125rem; /* 13px */
+    font-size: var(--kb1-font-input); /* 13px */
   }
   
   .modal-description {
-    font-size: 0.8125rem; /* 13px */
+    font-size: var(--kb1-font-input); /* 13px */
   }
 }
 
@@ -295,16 +295,16 @@ function handleBackdropClick() {
   }
   
   .modal-title {
-    font-size: 0.8125rem; /* 13px */
+    font-size: var(--kb1-font-input); /* 13px */
   }
   
   .modal-description {
-    font-size: 0.8125rem; /* 13px */
+    font-size: var(--kb1-font-input); /* 13px */
   }
   
   .connect-button {
     padding: 12px 24px;
-    font-size: 0.8125rem; /* 13px */
+    font-size: var(--kb1-font-input); /* 13px */
   }
 }
 </style>

@@ -80,7 +80,7 @@ const patterns = computed<Pattern[]>(() => [
   width: 100%;
   padding: 0.5rem 0;
   background: rgba(26, 26, 26, 0.4);
-  border-radius: 4px;
+  border-radius: var(--kb1-radius-sm);
 }
 
 .patterns-grid {
@@ -142,7 +142,7 @@ const patterns = computed<Pattern[]>(() => [
   width: 8px;
   height: 8px;
   background: #ff6b35;
-  border-radius: 50%;
+  border-radius: var(--kb1-radius-full);
   box-shadow: 0 0 6px rgba(255, 107, 53, 0.6);
 }
 

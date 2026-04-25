@@ -222,20 +222,20 @@ defineExpose({
 .modal-dialog {
   background: #1D1D1D;
   border: 1px solid rgba(234, 234, 234, 0.2);
-  border-radius: 8px;
+  border-radius: var(--kb1-radius-lg);
   padding: 1rem;
   max-width: 400px;
   width: 100%;
   max-height: 80vh;
   overflow-y: auto;
-  font-family: 'Roboto Mono', monospace;
+  font-family: var(--kb1-font-family);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.8);
 }
 
 .modal-dialog h3 {
   margin: 0 0 0.5rem 0;
   color: #EAEAEA;
-  font-size: 1rem;
+  font-size: var(--kb1-font-subhead);
   font-weight: 500;
 }
 
@@ -247,8 +247,8 @@ defineExpose({
   display: block;
   margin-bottom: 0.375rem;
   color: #848484;
-  font-size: 0.75rem;
-  text-transform: uppercase;
+  font-size: var(--kb1-font-label);
+  text-transform: var(--kb1-text-transform-uppercase);
 }
 
 .input-text {
@@ -256,10 +256,10 @@ defineExpose({
   padding: 0.25rem 1rem;
   background: rgba(234, 234, 234, 0.05);
   border: none;
-  border-radius: 4px;
+  border-radius: var(--kb1-radius-sm);
   color: #EAEAEA;
-  font-family: 'Roboto Mono', monospace;
-  font-size: 0.8125rem;
+  font-family: var(--kb1-font-family);
+  font-size: var(--kb1-font-input);
   box-sizing: border-box;
 }
 
@@ -282,9 +282,9 @@ defineExpose({
 .btn-primary,
 .btn-secondary {
   padding: 0.25rem 1rem;
-  border-radius: 4px;
-  font-family: 'Roboto Mono', monospace;
-  font-size: 0.8125rem;
+  border-radius: var(--kb1-radius-sm);
+  font-family: var(--kb1-font-family);
+  font-size: var(--kb1-font-input);
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s;
@@ -330,7 +330,7 @@ defineExpose({
   padding: 0.25rem 1rem;
   background: rgba(29, 29, 29, 0.4);
   border: none;
-  border-radius: 4px;
+  border-radius: var(--kb1-radius-sm);
   margin-bottom: 0.5rem;
   cursor: pointer;
   transition: all 0.2s;
@@ -346,13 +346,13 @@ defineExpose({
 
 .preset-name {
   color: #EAEAEA;
-  font-size: 0.8125rem;
+  font-size: var(--kb1-font-input);
   margin-bottom: 0.25rem;
 }
 
 .preset-meta {
   color: #8B8970;
-  font-size: 0.75rem;
+  font-size: var(--kb1-font-label);
 }
 
 .preset-actions {
@@ -365,9 +365,9 @@ defineExpose({
   border: none;
   padding: 0.25rem 0.5rem;
   cursor: pointer;
-  font-size: 0.75rem;
+  font-size: var(--kb1-font-label);
   color: #848484;
-  font-family: 'Roboto Mono', monospace;
+  font-family: var(--kb1-font-family);
   transition: color 0.2s;
 }
 
@@ -383,7 +383,7 @@ defineExpose({
 
 .empty-state p {
   margin: 0;
-  font-size: 0.8125rem;
+  font-size: var(--kb1-font-input);
 }
 
 @media (min-width: 769px) {

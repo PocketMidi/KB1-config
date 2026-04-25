@@ -1162,16 +1162,16 @@ function downloadJSON(json: string, filename: string) {
 <style scoped>
 .preset-manager {
   padding: 1rem;
-  font-family: 'Roboto Mono', monospace;
+  font-family: var(--kb1-font-family);
 }
 
 .preset-title {
   margin: 0 0 1rem 0;
-  font-size: 0.9375rem;
-  font-weight: 600;
+  font-size: var(--kb1-font-large);
+  font-weight: var(--kb1-font-weight-semibold);
   color: #EAEAEA;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  text-transform: var(--kb1-text-transform-uppercase);
+  letter-spacing: var(--kb1-letter-spacing-wide);
 }
 
 /* Slot System */
@@ -1187,10 +1187,10 @@ function downloadJSON(json: string, filename: string) {
   padding: 0.5rem 1rem;
   background: rgba(29, 29, 29, 0.5);
   border: 1px solid rgba(205, 205, 205, 0.15);
-  border-radius: 4px;
+  border-radius: var(--kb1-radius-sm);
   color: rgba(205, 205, 205, 0.7);
-  font-size: 0.875rem;
-  font-weight: 500;
+  font-size: var(--kb1-font-medium);
+  font-weight: var(--kb1-font-weight-medium);
   cursor: pointer;
   transition: all 0.2s;
 }
@@ -1217,7 +1217,7 @@ function downloadJSON(json: string, filename: string) {
   justify-content: space-between;
   background: rgba(29, 29, 29, 0.5);
   border: 1px solid rgba(205, 205, 205, 0.1);
-  border-radius: 4px;
+  border-radius: var(--kb1-radius-sm);
   padding: 0.5rem 0.75rem;
   gap: 1rem;
   transition: all 0.2s;
@@ -1255,20 +1255,20 @@ function downloadJSON(json: string, filename: string) {
 }
 
 .slot-label {
-  font-size: 0.8125rem;
-  font-weight: 400;
+  font-size: var(--kb1-font-input);
+  font-weight: var(--kb1-font-weight-normal);
   color: #EAEAEA;
-  letter-spacing: 0.05em;
+  letter-spacing: var(--kb1-letter-spacing-wide);
   display: flex;
   align-items: center;
   gap: 0.375rem;
 }
 
 .author-badge {
-  font-size: 0.8125rem;
-  font-weight: 500;
+  font-size: var(--kb1-font-input);
+  font-weight: var(--kb1-font-weight-medium);
   color: #b9aa5f;
-  letter-spacing: 0.05em;
+  letter-spacing: var(--kb1-letter-spacing-wide);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1276,7 +1276,7 @@ function downloadJSON(json: string, filename: string) {
 }
 
 .slot-name {
-  font-size: 0.8125rem;
+  font-size: var(--kb1-font-input);
   color: #CDCDCD;
   white-space: nowrap;
   overflow: hidden;
@@ -1299,13 +1299,13 @@ function downloadJSON(json: string, filename: string) {
   background: rgba(132, 132, 132, 0.1);
   border: 1px solid rgba(205, 205, 205, 0.2);
   padding: 0.35rem 0.5rem;
-  font-size: 0.75rem;
-  font-weight: 500;
+  font-size: var(--kb1-font-label);
+  font-weight: var(--kb1-font-weight-medium);
   color: #CDCDCD;
   cursor: pointer;
-  border-radius: 4px;
+  border-radius: var(--kb1-radius-sm);
   transition: all 0.2s;
-  font-family: 'Roboto Mono', monospace;
+  font-family: var(--kb1-font-family);
   white-space: nowrap;
 }
 
@@ -1354,23 +1354,23 @@ function downloadJSON(json: string, filename: string) {
 
 .help-section h4 {
   margin: 0 0 0.5rem 0;
-  font-size: 0.875rem;
+  font-size: var(--kb1-font-medium);
   color: #EAEAEA;
-  font-weight: 500;
-  font-family: 'Roboto Mono', monospace;
+  font-weight: var(--kb1-font-weight-medium);
+  font-family: var(--kb1-font-family);
 }
 
 .help-section p {
   margin: 0;
-  font-size: 0.8125rem;
+  font-size: var(--kb1-font-input);
   line-height: 1.5;
   color: #CDCDCD;
-  font-family: 'Roboto Mono', monospace;
+  font-family: var(--kb1-font-family);
 }
 
 .help-section strong {
   color: #EAEAEA;
-  font-weight: 500;
+  font-weight: var(--kb1-font-weight-medium);
 }
 
 .btn-with-indicator {
@@ -1384,7 +1384,7 @@ function downloadJSON(json: string, filename: string) {
   width: 6px;
   height: 6px;
   background: #4CAF50;
-  border-radius: 50%;
+  border-radius: var(--kb1-radius-full);
   font-size: 0;
   animation: pulse 2s ease-in-out infinite;
 }
@@ -1417,11 +1417,11 @@ function downloadJSON(json: string, filename: string) {
 
 .modal-header h3 {
   margin: 0;
-  font-size: 0.8125rem;
-  font-weight: 600;
+  font-size: var(--kb1-font-input);
+  font-weight: var(--kb1-font-weight-semibold);
   color: #EAEAEA;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  text-transform: var(--kb1-text-transform-uppercase);
+  letter-spacing: var(--kb1-letter-spacing-wide);
 }
 
 .header-actions {
@@ -1443,7 +1443,7 @@ function downloadJSON(json: string, filename: string) {
 
 .dialog-intro p {
   margin: 0;
-  font-size: 0.8125rem;
+  font-size: var(--kb1-font-input);
   color: #848484;
   line-height: 1.5;
 }
@@ -1454,10 +1454,10 @@ function downloadJSON(json: string, filename: string) {
 }
 
 .section-label {
-  font-size: 0.75rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  font-size: var(--kb1-font-label);
+  font-weight: var(--kb1-font-weight-semibold);
+  text-transform: var(--kb1-text-transform-uppercase);
+  letter-spacing: var(--kb1-letter-spacing-wide);
   color: #848484;
   margin-bottom: 0.5rem;
 }
@@ -1470,7 +1470,7 @@ function downloadJSON(json: string, filename: string) {
 
 .export-form-compact input,
 .export-form-compact textarea {
-  font-size: 0.8125rem;
+  font-size: var(--kb1-font-input);
 }
 
 .export-form-compact textarea {
@@ -1480,7 +1480,7 @@ function downloadJSON(json: string, filename: string) {
 
 .btn-export {
   padding: 0.625rem;
-  font-size: 0.8125rem;
+  font-size: var(--kb1-font-input);
 }
 
 .btn-export:disabled {
@@ -1538,13 +1538,13 @@ function downloadJSON(json: string, filename: string) {
   background: none;
   border: none;
   padding: 0.5rem 0;
-  font-size: 0.8125rem;
-  font-weight: 500;
+  font-size: var(--kb1-font-input);
+  font-weight: var(--kb1-font-weight-medium);
   color: #848484;
   cursor: pointer;
   position: relative;
   transition: color 0.2s ease;
-  font-family: 'Roboto Mono', monospace;
+  font-family: var(--kb1-font-family);
 }
 
 .preset-tab:hover {
@@ -1578,7 +1578,7 @@ function downloadJSON(json: string, filename: string) {
   margin-bottom: 1rem;
   padding: 0.75rem;
   background: rgba(29, 29, 29, 0.3);
-  border-radius: 4px;
+  border-radius: var(--kb1-radius-sm);
 }
 
 .slot-fade-label {
@@ -1587,8 +1587,8 @@ function downloadJSON(json: string, filename: string) {
   left: 50%;
   transform: translateX(-50%);
   color: var(--ui-highlight);
-  font-size: 0.75rem;
-  font-weight: 500;
+  font-size: var(--kb1-font-label);
+  font-weight: var(--kb1-font-weight-medium);
   white-space: nowrap;
   opacity: 1;
   transition: opacity 2s ease-out;
@@ -1613,7 +1613,7 @@ function downloadJSON(json: string, filename: string) {
   width: 21px;
   height: 22px;
   background: rgba(234, 234, 234, 0.05);
-  border-radius: 4px;
+  border-radius: var(--kb1-radius-sm);
   cursor: default;
   transition: all 0.2s;
 }
@@ -1645,10 +1645,10 @@ function downloadJSON(json: string, filename: string) {
 }
 
 .slot-number {
-  font-size: 0.6875rem;
-  font-weight: 500;
+  font-size: var(--kb1-font-caption);
+  font-weight: var(--kb1-font-weight-medium);
   color: rgba(249, 172, 32, 0.5);
-  font-family: 'Roboto Mono', monospace;
+  font-family: var(--kb1-font-family);
   transition: color 0.2s ease;
 }
 
@@ -1670,7 +1670,7 @@ function downloadJSON(json: string, filename: string) {
 .preset-item {
   background: rgba(29, 29, 29, 0.4);
   border: none;
-  border-radius: 4px;
+  border-radius: var(--kb1-radius-sm);
   padding: 0.25rem 1rem;
   display: flex;
   justify-content: space-between;
@@ -1715,9 +1715,9 @@ function downloadJSON(json: string, filename: string) {
 }
 
 .preset-name {
-  font-size: 0.8125rem;
+  font-size: var(--kb1-font-input);
   color: #EAEAEA;
-  font-weight: 500;
+  font-weight: var(--kb1-font-weight-medium);
   margin-bottom: 0.25rem;
   display: flex;
   align-items: center;
@@ -1726,11 +1726,11 @@ function downloadJSON(json: string, filename: string) {
 
 .active-indicator {
   color: #6A6853;
-  font-size: 0.6rem;
+  font-size: var(--kb1-font-tiny); /* 10px - slightly larger for readability */
 }
 
 .preset-meta {
-  font-size: 0.75rem;
+  font-size: var(--kb1-font-label);
   color: var(--label-gray);
 }
 
@@ -1746,11 +1746,11 @@ function downloadJSON(json: string, filename: string) {
   background: rgba(234, 234, 234, 0.1);
   border: none;
   color: #EAEAEA;
-  font-size: 0.75rem;
+  font-size: var(--kb1-font-label);
   border-radius: 3px;
   cursor: pointer;
   transition: all 0.2s;
-  font-family: 'Roboto Mono', monospace;
+  font-family: var(--kb1-font-family);
   white-space: nowrap;
 }
 
@@ -1765,7 +1765,7 @@ function downloadJSON(json: string, filename: string) {
 
 .btn-menu {
   padding: 0.375rem 0.5rem;
-  font-size: 1rem;
+  font-size: var(--kb1-font-subhead);
   line-height: 1;
 }
 
@@ -1785,7 +1785,7 @@ function downloadJSON(json: string, filename: string) {
   margin-top: 0.25rem;
   background: #1D1D1D;
   border: 1px solid rgba(234, 234, 234, 0.2);
-  border-radius: 4px;
+  border-radius: var(--kb1-radius-sm);
   padding: 0.25rem;
   z-index: 9999;
   min-width: 140px;
@@ -1798,11 +1798,11 @@ function downloadJSON(json: string, filename: string) {
   background: transparent;
   border: none;
   color: #EAEAEA;
-  font-size: 0.75rem;
+  font-size: var(--kb1-font-label);
   text-align: left;
   cursor: pointer;
   border-radius: 3px;
-  font-family: 'Roboto Mono', monospace;
+  font-family: var(--kb1-font-family);
   transition: background 0.2s;
 }
 
@@ -1832,11 +1832,11 @@ function downloadJSON(json: string, filename: string) {
 
 .empty-state p {
   margin: 0.5rem 0;
-  font-size: 0.8125rem;
+  font-size: var(--kb1-font-input);
 }
 
 .empty-state .hint {
-  font-size: 0.75rem;
+  font-size: var(--kb1-font-label);
   opacity: 0.7;
 }
 
@@ -1853,11 +1853,11 @@ function downloadJSON(json: string, filename: string) {
   background: rgba(234, 234, 234, 0.05);
   border: none;
   color: #EAEAEA;
-  font-size: 0.75rem;
-  border-radius: 4px;
+  font-size: var(--kb1-font-label);
+  border-radius: var(--kb1-radius-sm);
   cursor: pointer;
   transition: all 0.2s;
-  font-family: 'Roboto Mono', monospace;
+  font-family: var(--kb1-font-family);
 }
 
 .btn-secondary:hover:not(:disabled) {
@@ -1889,7 +1889,7 @@ function downloadJSON(json: string, filename: string) {
 .modal-dialog {
   background: #1D1D1D;
   border: 1px solid rgba(234, 234, 234, 0.2);
-  border-radius: 8px;
+  border-radius: var(--kb1-radius-lg);
   padding: 1.5rem;
   max-width: 400px;
   width: 100%;
@@ -1901,9 +1901,9 @@ function downloadJSON(json: string, filename: string) {
 
 .modal-dialog h3 {
   margin: 0 0 1rem 0;
-  font-size: 1rem;
+  font-size: var(--kb1-font-subhead);
   color: #EAEAEA;
-  font-weight: 500;
+  font-weight: var(--kb1-font-weight-medium);
 }
 
 .form-group {
@@ -1913,18 +1913,18 @@ function downloadJSON(json: string, filename: string) {
 .form-group label {
   display: block;
   margin-bottom: 0.5rem;
-  font-size: 0.75rem;
+  font-size: var(--kb1-font-label);
   color: #848484;
-  text-transform: uppercase;
+  text-transform: var(--kb1-text-transform-uppercase);
 }
 
 .settings-snapshot {
   background: rgba(234, 234, 234, 0.05);
   border: 1px solid rgba(234, 234, 234, 0.1);
-  border-radius: 4px;
+  border-radius: var(--kb1-radius-sm);
   padding: 0.75rem;
-  font-size: 0.75rem;
-  font-family: 'Roboto Mono', monospace;
+  font-size: var(--kb1-font-label);
+  font-family: var(--kb1-font-family);
   color: #EAEAEA;
   line-height: 1.6;
   white-space: pre-line;
@@ -1936,10 +1936,10 @@ function downloadJSON(json: string, filename: string) {
   padding: 0.25rem 1rem;
   background: rgba(234, 234, 234, 0.05);
   border: none;
-  border-radius: 4px;
+  border-radius: var(--kb1-radius-sm);
   color: #EAEAEA;
-  font-size: 0.8125rem;
-  font-family: 'Roboto Mono', monospace;
+  font-size: var(--kb1-font-input);
+  font-family: var(--kb1-font-family);
   box-sizing: border-box;
 }
 
@@ -1958,10 +1958,10 @@ textarea.input-text {
   padding: 0.25rem 1rem;
   background: rgba(234, 234, 234, 0.05);
   border: none;
-  border-radius: 4px;
+  border-radius: var(--kb1-radius-sm);
   color: #EAEAEA;
-  font-size: 0.8125rem;
-  font-family: 'Roboto Mono', monospace;
+  font-size: var(--kb1-font-input);
+  font-family: var(--kb1-font-family);
   box-sizing: border-box;
   cursor: pointer;
 }
@@ -1992,12 +1992,12 @@ textarea.input-text {
   background: transparent;
   border: 1px solid rgba(239, 68, 68, 0.3);
   color: rgba(239, 68, 68, 0.8);
-  font-size: 0.8125rem;
-  font-weight: 400;
-  border-radius: 4px;
+  font-size: var(--kb1-font-input);
+  font-weight: var(--kb1-font-weight-normal);
+  border-radius: var(--kb1-radius-sm);
   cursor: pointer;
   transition: all 0.2s;
-  font-family: 'Roboto Mono', monospace;
+  font-family: var(--kb1-font-family);
 }
 
 .btn-delete:hover {
@@ -2011,12 +2011,12 @@ textarea.input-text {
   background: #6A6853;
   border: none;
   color: #EAEAEA;
-  font-size: 0.8125rem;
-  font-weight: 500;
-  border-radius: 4px;
+  font-size: var(--kb1-font-input);
+  font-weight: var(--kb1-font-weight-medium);
+  border-radius: var(--kb1-radius-sm);
   cursor: pointer;
   transition: all 0.2s;
-  font-family: 'Roboto Mono', monospace;
+  font-family: var(--kb1-font-family);
 }
 
 .btn-primary:hover:not(:disabled) {
@@ -2047,11 +2047,11 @@ textarea.input-text {
 
 .import-dialog .modal-header h3 {
   margin: 0;
-  font-size: 0.8125rem;
-  font-weight: 600;
+  font-size: var(--kb1-font-input);
+  font-weight: var(--kb1-font-weight-semibold);
   color: #EAEAEA;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  text-transform: var(--kb1-text-transform-uppercase);
+  letter-spacing: var(--kb1-letter-spacing-wide);
 }
 
 .import-dialog .modal-body {
@@ -2061,7 +2061,7 @@ textarea.input-text {
 }
 
 .export-intro {
-  font-size: 0.8125rem;
+  font-size: var(--kb1-font-input);
   color: #848484;
   line-height: 1.5;
   margin-bottom: 1.5rem;
@@ -2083,7 +2083,7 @@ textarea.input-text {
   }
   
   .btn-small {
-    font-size: 0.7rem;
+    font-size: var(--kb1-font-small);
     padding: 0.25rem 0.5rem;
   }
 }
@@ -2094,25 +2094,25 @@ textarea.input-text {
 }
 
 .preset-section-header {
-  font-size: 0.75rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  font-size: var(--kb1-font-label);
+  font-weight: var(--kb1-font-weight-semibold);
+  text-transform: var(--kb1-text-transform-uppercase);
+  letter-spacing: var(--kb1-letter-spacing-wide);
   color: #848484;
   margin-bottom: 1rem;
-  font-family: 'Roboto Mono', monospace;
+  font-family: var(--kb1-font-family);
 }
 
 .section-title {
-  font-size: 0.875rem;
-  font-weight: 700;
-  text-transform: uppercase;
+  font-size: var(--kb1-font-medium);
+  font-weight: var(--kb1-font-weight-bold);
+  text-transform: var(--kb1-text-transform-uppercase);
   color: var(--color-text);
   margin-bottom: 0.25rem;
 }
 
 .section-subtitle {
-  font-size: 0.75rem;
+  font-size: var(--kb1-font-label);
   color: var(--color-text-muted);
   margin-bottom: 1rem;
 }
@@ -2125,7 +2125,7 @@ textarea.input-text {
 
 .device-preset-slot {
   border: 1px solid var(--color-border);
-  border-radius: 4px;
+  border-radius: var(--kb1-radius-sm);
   padding: 0.75rem;
   min-height: 110px;
   display: flex;
@@ -2157,8 +2157,8 @@ textarea.input-text {
 }
 
 .slot-name {
-  font-size: 0.8125rem;
-  font-weight: 600;
+  font-size: var(--kb1-font-input);
+  font-weight: var(--kb1-font-weight-semibold);
   word-break: break-word;
   color: var(--color-text);
   flex: 1;
@@ -2174,7 +2174,7 @@ textarea.input-text {
   flex: 1;
   min-width: 45px;
   padding: 0.25rem 0.5rem;
-  font-size: 0.7rem;
+  font-size: var(--kb1-font-small);
 }
 
 .slot-empty {
@@ -2225,10 +2225,10 @@ textarea.input-text {
   position: relative;
   background: var(--color-background);
   padding: 0 1rem;
-  font-size: 0.75rem;
+  font-size: var(--kb1-font-label);
   color: var(--color-text-muted);
-  text-transform: uppercase;
-  font-weight: 500;
+  text-transform: var(--kb1-text-transform-uppercase);
+  font-weight: var(--kb1-font-weight-medium);
 }
 
 @media (max-width: 768px) {
@@ -2239,17 +2239,17 @@ textarea.input-text {
 
 /* Info Icon */
 .info-icon {
-  text-transform: none;
+  text-transform: var(--kb1-text-transform-none);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   width: 16px;
   height: 16px;
-  font-size: 0.625rem;
-  font-family: 'Roboto Mono', monospace;
+  font-size: var(--kb1-font-tiny);
+  font-family: var(--kb1-font-family);
   color: #848484;
   border: 1px solid #848484;
-  border-radius: 50%;
+  border-radius: var(--kb1-radius-full);
   cursor: pointer;
   transition: all 0.2s;
   user-select: none;
@@ -2279,11 +2279,11 @@ textarea.input-text {
 .help-modal {
   background: var(--color-background-soft);
   border: 1px solid var(--color-border);
-  border-radius: 8px;
+  border-radius: var(--kb1-radius-lg);
   max-width: 500px;
   width: 100%;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
-  font-family: 'Roboto Mono';
+  font-family: var(--kb1-font-family);
 }
 
 .help-modal-header {
@@ -2296,17 +2296,17 @@ textarea.input-text {
 
 .help-modal-header h3 {
   margin: 0;
-  font-size: 0.8125rem;
-  font-weight: 600;
+  font-size: var(--kb1-font-input);
+  font-weight: var(--kb1-font-weight-semibold);
   color: #EAEAEA;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  text-transform: var(--kb1-text-transform-uppercase);
+  letter-spacing: var(--kb1-letter-spacing-wide);
 }
 
 .close-btn {
   background: none;
   border: none;
-  font-size: 1.5rem;
+  font-size: var(--kb1-font-title);
   color: #848484;
   cursor: pointer;
   padding: 0;
@@ -2315,7 +2315,7 @@ textarea.input-text {
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 4px;
+  border-radius: var(--kb1-radius-sm);
   transition: all 0.2s;
 }
 
@@ -2330,7 +2330,7 @@ textarea.input-text {
 
 .help-modal-body p {
   margin: 0;
-  font-size: 0.8125rem;
+  font-size: var(--kb1-font-input);
   line-height: 1.6;
   color: var(--color-text);
 }
@@ -2347,10 +2347,10 @@ textarea.input-text {
   background: #5dad6b; /* Standardized green for all modals */
   color: #1A1A1A; /* Dark text on green button */
   border: none;
-  border-radius: 4px;
-  font-family: 'Roboto Mono';
-  font-size: 0.8125rem;
-  font-weight: 500;
+  border-radius: var(--kb1-radius-sm);
+  font-family: var(--kb1-font-family);
+  font-size: var(--kb1-font-input);
+  font-weight: var(--kb1-font-weight-medium);
   cursor: pointer;
   transition: all 0.2s;
 }
@@ -2385,10 +2385,10 @@ textarea.input-text {
 
 .btn-select-action {
   padding: 0.5rem 1rem;
-  font-size: 0.8125rem;
-  font-family: 'Roboto Mono', monospace;
-  font-weight: 400;
-  border-radius: 4px;
+  font-size: var(--kb1-font-input);
+  font-family: var(--kb1-font-family);
+  font-weight: var(--kb1-font-weight-normal);
+  border-radius: var(--kb1-radius-sm);
   cursor: pointer;
   transition: all 0.2s;
   background: rgba(29, 29, 29, 0.5);
@@ -2405,10 +2405,10 @@ textarea.input-text {
 
 .btn-delete-selected {
   padding: 0.5rem 1rem;
-  font-size: 0.8125rem;
-  font-family: 'Roboto Mono', monospace;
-  font-weight: 400;
-  border-radius: 4px;
+  font-size: var(--kb1-font-input);
+  font-family: var(--kb1-font-family);
+  font-weight: var(--kb1-font-weight-normal);
+  border-radius: var(--kb1-radius-sm);
   cursor: pointer;
   transition: all 0.2s;
   background: rgba(244, 67, 54, 0.15);

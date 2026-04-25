@@ -92,9 +92,9 @@ const isHovering = ref(false);
   border-radius: 0;
   color: #EAEAEA;
   font-family: var(--kb1-font-family-mono);
-  font-weight: 400;
-  font-size: 0.8125rem; /* 13px */
-  text-transform: uppercase;
+  font-weight: var(--kb1-font-weight-normal);
+  font-size: var(--kb1-font-input); /* 13px */
+  text-transform: var(--kb1-text-transform-uppercase);
   cursor: pointer;
   border-bottom: 2px solid transparent;
   opacity: 0.32;
@@ -113,7 +113,7 @@ const isHovering = ref(false);
   color: #EAEAEA;
   opacity: 1;
   background: transparent;
-  font-weight: 700;
+  font-weight: var(--kb1-font-weight-bold);
 }
 
 .tab-button.active::after {
@@ -167,8 +167,8 @@ const isHovering = ref(false);
 
 .status-text {
   font-family: var(--kb1-font-family-mono);
-  font-weight: 400;
-  font-size: 0.8125rem; /* 13px */
+  font-weight: var(--kb1-font-weight-normal);
+  font-size: var(--kb1-font-input); /* 13px */
   color: #47708E;
   opacity: 0.5;
   transition: color 0.5s ease-in-out, opacity 0.5s ease-in-out, transform 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55), font-weight 0.5s ease-in-out;
@@ -180,7 +180,7 @@ const isHovering = ref(false);
   color: var(--bluetooth-status-active);
   opacity: 1;
   transform: scale(1.1);
-  font-weight: 700;
+  font-weight: var(--kb1-font-weight-bold);
 }
 
 .bluetooth-status.connected .status-text {
@@ -221,13 +221,13 @@ const isHovering = ref(false);
   0%, 100% {
     opacity: 0.5;
     color: #47708E;
-    font-weight: 400;
+    font-weight: var(--kb1-font-weight-normal);
     text-shadow: none;
   }
   50% {
     opacity: 1;
     color: var(--bluetooth-status-active);
-    font-weight: 700;
+    font-weight: var(--kb1-font-weight-bold);
     text-shadow: 0 0 20px rgba(116, 196, 255, 1), 0 0 40px rgba(116, 196, 255, 0.8), 0 0 60px rgba(116, 196, 255, 0.5);
   }
 }
@@ -252,7 +252,7 @@ const isHovering = ref(false);
 
 @media (max-width: 768px) {
   .tab-button {
-    font-size: 0.8125rem;
+    font-size: var(--kb1-font-input);
     padding: 0.75rem 1rem;
   }
   

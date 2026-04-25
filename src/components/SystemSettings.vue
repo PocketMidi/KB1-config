@@ -320,9 +320,9 @@ const formatTime = (seconds: number): string => {
   padding: 1rem;
   background: var(--color-background-soft);
   border: 1px solid var(--color-border);
-  border-radius: 8px;
-  font-family: 'Roboto Mono';
-  font-size: 0.8125rem; /* 13px */
+  border-radius: var(--kb1-radius-lg);
+  font-family: var(--kb1-font-family);
+  font-size: var(--kb1-font-input); /* 13px */
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;
@@ -362,12 +362,12 @@ const formatTime = (seconds: number): string => {
 }
 
 .group label {
-  font-weight: 400;
-  font-size: 0.8125rem; /* 13px */
+  font-weight: var(--kb1-font-weight-normal);
+  font-size: var(--kb1-font-input); /* 13px */
   color: #848484;
-  font-family: 'Roboto Mono';
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  font-family: var(--kb1-font-family);
+  text-transform: var(--kb1-text-transform-uppercase);
+  letter-spacing: var(--kb1-letter-spacing-wide);
   flex-shrink: 0;
   min-width: 120px;
   display: flex;
@@ -376,17 +376,17 @@ const formatTime = (seconds: number): string => {
 }
 
 .info-icon {
-  text-transform: none;
+  text-transform: var(--kb1-text-transform-none);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   width: 16px;
   height: 16px;
-  font-size: 0.625rem;
-  font-family: 'Roboto Mono', monospace;
+  font-size: var(--kb1-font-tiny);
+  font-family: var(--kb1-font-family);
   color: #848484;
   border: 1px solid #848484;
-  border-radius: 50%;
+  border-radius: var(--kb1-radius-full);
   cursor: pointer;
   transition: all 0.2s;
   user-select: none;
@@ -398,10 +398,10 @@ const formatTime = (seconds: number): string => {
 }
 
 .time-display {
-  font-family: 'Roboto Mono';
-  font-size: 0.8125rem; /* 13px */
+  font-family: var(--kb1-font-family);
+  font-size: var(--kb1-font-input); /* 13px */
   color: #EAEAEA;
-  font-weight: 400;
+  font-weight: var(--kb1-font-weight-normal);
   margin-right: auto;
   padding-left: 1rem;
 }
@@ -414,10 +414,10 @@ const formatTime = (seconds: number): string => {
 }
 
 .unit-label {
-  font-size: 0.8125rem;
+  font-size: var(--kb1-font-input);
   color: #EAEAEA;
-  font-family: 'Roboto Mono';
-  font-weight: 400;
+  font-family: var(--kb1-font-family);
+  font-weight: var(--kb1-font-weight-normal);
   cursor: default;
   user-select: none;
 }
@@ -435,7 +435,7 @@ const formatTime = (seconds: number): string => {
   width: 44px;
   height: 24px;
   background: #2A2A2A;
-  border-radius: 12px;
+  border-radius: var(--kb1-radius-xl);
   position: relative;
   transition: background-color 0.25s ease;
   border: 1px solid #3A3A3A;
@@ -450,7 +450,7 @@ const formatTime = (seconds: number): string => {
   width: 18px;
   height: 18px;
   background: #EAEAEA;
-  border-radius: 50%;
+  border-radius: var(--kb1-radius-full);
   position: absolute;
   top: 2px;
   left: 2px;
@@ -463,10 +463,10 @@ const formatTime = (seconds: number): string => {
 
 .toggle-label-left,
 .toggle-label-right {
-  font-family: 'Roboto Mono';
-  font-size: 0.8125rem;
+  font-family: var(--kb1-font-family);
+  font-size: var(--kb1-font-input);
   color: #848484;
-  font-weight: 400;
+  font-weight: var(--kb1-font-weight-normal);
   min-width: 32px;
   text-align: center;
   transition: color 0.25s ease;
@@ -486,7 +486,7 @@ const formatTime = (seconds: number): string => {
 .resolution-toggle .toggle-label-left.active,
 .resolution-toggle .toggle-label-right.active {
   color: var(--ui-highlight);
-  font-weight: 500;
+  font-weight: var(--kb1-font-weight-medium);
 }
 
 /* Help Modal */
@@ -507,11 +507,11 @@ const formatTime = (seconds: number): string => {
 .help-modal {
   background: var(--color-background-soft);
   border: 1px solid var(--color-border);
-  border-radius: 8px;
+  border-radius: var(--kb1-radius-lg);
   max-width: 500px;
   width: 100%;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
-  font-family: 'Roboto Mono';
+  font-family: var(--kb1-font-family);
 }
 
 .help-modal-header {
@@ -524,17 +524,17 @@ const formatTime = (seconds: number): string => {
 
 .help-modal-header h3 {
   margin: 0;
-  font-size: 0.8125rem;
-  font-weight: 600;
+  font-size: var(--kb1-font-input);
+  font-weight: var(--kb1-font-weight-semibold);
   color: #EAEAEA;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  text-transform: var(--kb1-text-transform-uppercase);
+  letter-spacing: var(--kb1-letter-spacing-wide);
 }
 
 .close-btn {
   background: none;
   border: none;
-  font-size: 1.5rem;
+  font-size: var(--kb1-font-title);
   color: #848484;
   cursor: pointer;
   padding: 0;
@@ -543,7 +543,7 @@ const formatTime = (seconds: number): string => {
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 4px;
+  border-radius: var(--kb1-radius-sm);
   transition: all 0.2s;
 }
 
@@ -558,7 +558,7 @@ const formatTime = (seconds: number): string => {
 
 .help-modal-body p {
   margin: 0;
-  font-size: 0.8125rem;
+  font-size: var(--kb1-font-input);
   line-height: 1.6;
   color: var(--color-text);
 }
@@ -575,10 +575,10 @@ const formatTime = (seconds: number): string => {
   background: #5dad6b; /* Standardized green for all modals */
   color: #1A1A1A; /* Dark text on green button */
   border: none;
-  border-radius: 4px;
-  font-family: 'Roboto Mono';
-  font-size: 0.8125rem;
-  font-weight: 500;
+  border-radius: var(--kb1-radius-sm);
+  font-family: var(--kb1-font-family);
+  font-size: var(--kb1-font-input);
+  font-weight: var(--kb1-font-weight-medium);
   cursor: pointer;
   transition: all 0.2s;
 }
@@ -604,13 +604,13 @@ const formatTime = (seconds: number): string => {
 
 .toggle-switch.momentary-btn.active .toggle-label-right {
   color: #5dad6b;
-  font-weight: 500;
+  font-weight: var(--kb1-font-weight-medium);
 }
 
 .toggle-switch.momentary-btn .toggle-label-left {
   color: #848484;
-  font-weight: 400;
-  font-size: 0.6875rem;
+  font-weight: var(--kb1-font-weight-normal);
+  font-size: var(--kb1-font-caption);
 }
 
 /* Hints restore pill button */
@@ -620,10 +620,10 @@ const formatTime = (seconds: number): string => {
   border: 1px solid rgba(234, 234, 234, 0.2);
   border-radius: 999px;
   color: rgba(234, 234, 234, 0.45);
-  font-family: 'Roboto Mono', monospace;
-  font-size: 0.6875rem;
-  font-weight: 400;
-  letter-spacing: 0.05em;
+  font-family: var(--kb1-font-family);
+  font-size: var(--kb1-font-caption);
+  font-weight: var(--kb1-font-weight-normal);
+  letter-spacing: var(--kb1-letter-spacing-wide);
   cursor: pointer;
   transition: all 0.15s;
   white-space: nowrap;
@@ -640,7 +640,7 @@ const formatTime = (seconds: number): string => {
 }
 
 .toggle-switch.momentary-btn .toggle-label-right {
-  font-size: 1rem;
+  font-size: var(--kb1-font-subhead);
   color: #848484;
   transition: all 0.2s ease;
 }
@@ -672,21 +672,21 @@ const formatTime = (seconds: number): string => {
   padding: 0.25rem 0.6rem;
   background: transparent;
   border: 1px solid #3A3A3A;
-  border-radius: 4px;
+  border-radius: var(--kb1-radius-sm);
   color: #848484;
-  font-family: 'Roboto Mono';
-  font-size: 0.6875rem;
-  font-weight: 400;
+  font-family: var(--kb1-font-family);
+  font-size: var(--kb1-font-caption);
+  font-weight: var(--kb1-font-weight-normal);
   cursor: pointer;
   transition: all 0.2s;
-  letter-spacing: 0.05em;
+  letter-spacing: var(--kb1-letter-spacing-wide);
 }
 
 .config-btn.active {
   background: rgba(234, 234, 234, 0.1);
   border-color: rgba(234, 234, 234, 0.4);
   color: #EAEAEA;
-  font-weight: 500;
+  font-weight: var(--kb1-font-weight-medium);
 }
 
 .config-btn:hover:not(.active) {

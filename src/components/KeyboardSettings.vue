@@ -1410,7 +1410,7 @@ function handleKeyClick(midiNote: number) {
   padding: 1.25rem;
   background: var(--color-background-soft);
   border: 1px solid var(--color-border);
-  border-radius: 8px;
+  border-radius: var(--kb1-radius-lg);
   overflow: visible;
 }
 
@@ -1427,13 +1427,13 @@ function handleKeyClick(midiNote: number) {
   background: none;
   border: none;
   padding: 0.5rem 0;
-  font-size: 0.8125rem;
-  font-weight: 500;
+  font-size: var(--kb1-font-input);
+  font-weight: var(--kb1-font-weight-medium);
   color: #848484;
   cursor: pointer;
   position: relative;
   transition: color 0.2s ease;
-  font-family: 'Roboto Mono';
+  font-family: var(--kb1-font-family);
 }
 
 .mode-btn:hover {
@@ -1476,14 +1476,14 @@ function handleKeyClick(midiNote: number) {
 .key {
   width: 23px;
   height: 60px;
-  border-radius: 4px;
+  border-radius: var(--kb1-radius-sm);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  font-family: 'Roboto Mono';
-  font-size: 0.6875rem;
-  font-weight: 500;
+  font-family: var(--kb1-font-family);
+  font-size: var(--kb1-font-caption);
+  font-weight: var(--kb1-font-weight-medium);
   transition: background-color 0.2s ease, color 0.2s ease;
   flex-shrink: 0;
 }
@@ -1572,7 +1572,7 @@ function handleKeyClick(midiNote: number) {
 
 .note-label-alt {
   line-height: 1;
-  font-size: 0.625rem;
+  font-size: var(--kb1-font-tiny);
 }
 
 /* Chromatic Mode: Center-out pulse animation on text */
@@ -1655,13 +1655,13 @@ function handleKeyClick(midiNote: number) {
   position: relative;
   background: var(--color-background-soft, #1A1A1A);
   border: 1px solid var(--color-border, #333333);
-  border-radius: 8px;
+  border-radius: var(--kb1-radius-lg);
   margin-top: 1rem;
   padding: 0;
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-  font-family: 'Roboto Mono';
+  font-family: var(--kb1-font-family);
 }
 
 .hint-close-btn {
@@ -1670,7 +1670,7 @@ function handleKeyClick(midiNote: number) {
   right: 12px;
   background: none;
   border: none;
-  font-size: 1.5rem;
+  font-size: var(--kb1-font-title);
   color: #848484;
   cursor: pointer;
   padding: 0;
@@ -1679,7 +1679,7 @@ function handleKeyClick(midiNote: number) {
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 4px;
+  border-radius: var(--kb1-radius-sm);
   transition: all 0.2s;
   z-index: 1;
 }
@@ -1692,21 +1692,21 @@ function handleKeyClick(midiNote: number) {
 .hint-title {
   margin: 0;
   padding: 1rem 2.5rem 0.75rem 1rem;
-  font-size: 0.8125rem;
-  font-weight: 600;
+  font-size: var(--kb1-font-input);
+  font-weight: var(--kb1-font-weight-semibold);
   color: #EAEAEA;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  text-transform: var(--kb1-text-transform-uppercase);
+  letter-spacing: var(--kb1-letter-spacing-wide);
   border-bottom: 1px solid var(--color-border, #333333);
 }
 
 .hint-description {
   margin: 0;
   padding: 1rem;
-  font-size: 0.8125rem;
+  font-size: var(--kb1-font-input);
   line-height: 1.6;
   color: var(--color-text, #EAEAEA);
-  font-weight: 400;
+  font-weight: var(--kb1-font-weight-normal);
 }
 
 .hint-footer {
@@ -1723,10 +1723,10 @@ function handleKeyClick(midiNote: number) {
   background: #5dad6b;
   color: #1A1A1A;
   border: none;
-  border-radius: 4px;
-  font-family: 'Roboto Mono';
-  font-size: 0.8125rem;
-  font-weight: 500;
+  border-radius: var(--kb1-radius-sm);
+  font-family: var(--kb1-font-family);
+  font-size: var(--kb1-font-input);
+  font-weight: var(--kb1-font-weight-medium);
   cursor: pointer;
   transition: all 0.2s;
 }
@@ -1741,10 +1741,10 @@ function handleKeyClick(midiNote: number) {
   background: transparent;
   color: #848484;
   border: 1px solid #333333;
-  border-radius: 4px;
-  font-family: 'Roboto Mono';
-  font-size: 0.8125rem;
-  font-weight: 500;
+  border-radius: var(--kb1-radius-sm);
+  font-family: var(--kb1-font-family);
+  font-size: var(--kb1-font-input);
+  font-weight: var(--kb1-font-weight-medium);
   cursor: pointer;
   transition: all 0.2s;
 }
@@ -1772,12 +1772,12 @@ function handleKeyClick(midiNote: number) {
   background: rgba(106, 104, 83, 0.35);
   border: 1px solid rgba(106, 104, 83, 0.4);
   color: var(--kb1-text-primary, #EAEAEA);
-  font-size: 0.6875rem;
-  font-weight: 500;
-  border-radius: 4px;
+  font-size: var(--kb1-font-caption);
+  font-weight: var(--kb1-font-weight-medium);
+  border-radius: var(--kb1-radius-sm);
   cursor: pointer;
   transition: all 0.2s ease;
-  font-family: 'Roboto Mono', monospace;
+  font-family: var(--kb1-font-family);
   white-space: nowrap;
   display: flex;
   gap: 0.25rem;
@@ -1814,12 +1814,12 @@ function handleKeyClick(midiNote: number) {
 .toggle-btn span.active {
   opacity: 1;
   color: #EAEAEA;
-  font-weight: 600;
+  font-weight: var(--kb1-font-weight-semibold);
 }
 
 .toggle-btn .toggle-divider {
   opacity: 0.3;
-  font-weight: 300;
+  font-weight: var(--kb1-font-weight-light);
 }
 
 /* Dots Visualization (Scale mode) */
@@ -1838,7 +1838,7 @@ function handleKeyClick(midiNote: number) {
 .dots-visualization .dot {
   width: 5px;
   height: 5px;
-  border-radius: 50%;
+  border-radius: var(--kb1-radius-full);
   background-color: var(--ui-highlight);
   flex-shrink: 0;
 }
@@ -1887,7 +1887,7 @@ function handleKeyClick(midiNote: number) {
   display: flex;
   width: 100%;
   height: 8px;
-  border-radius: 4px;
+  border-radius: var(--kb1-radius-sm);
   overflow: visible;
   position: relative;
   animation: chord-shimmer 3s ease-in-out infinite;
@@ -1905,7 +1905,7 @@ function handleKeyClick(midiNote: number) {
 .velocity-gradient {
   width: 100%;
   height: 100%;
-  border-radius: 4px;
+  border-radius: var(--kb1-radius-sm);
   overflow: hidden;
   opacity: 0.85;
 }
@@ -1939,7 +1939,7 @@ function handleKeyClick(midiNote: number) {
   position: absolute;
   width: 5px;
   height: 5px;
-  border-radius: 50%;
+  border-radius: var(--kb1-radius-full);
   top: 50%;
   transform: translate(-50%, -50%);
   transition: left 0.3s ease;
@@ -1992,14 +1992,14 @@ function handleKeyClick(midiNote: number) {
   padding: 0.25rem 0.6rem;
   background: transparent;
   border: 1px solid #3A3A3A;
-  border-radius: 4px;
-  font-family: 'Roboto Mono', monospace;
-  font-size: 0.6875rem;
-  font-weight: 400;
+  border-radius: var(--kb1-radius-sm);
+  font-family: var(--kb1-font-family);
+  font-size: var(--kb1-font-caption);
+  font-weight: var(--kb1-font-weight-normal);
   color: #848484;
   cursor: pointer;
   transition: all 0.2s;
-  letter-spacing: 0.05em;
+  letter-spacing: var(--kb1-letter-spacing-wide);
 }
 
 .direction-toggle:hover {
@@ -2020,13 +2020,13 @@ function handleKeyClick(midiNote: number) {
 /* Active state - purple for reverse */
 .direction-toggle.reverse span:first-child {
   color: var(--strum-reverse);
-  font-weight: 500;
+  font-weight: var(--kb1-font-weight-medium);
 }
 
 /* Active state - yellow for forward */
 .direction-toggle:not(.reverse) span:last-child {
   color: var(--ui-highlight);
-  font-weight: 500;
+  font-weight: var(--kb1-font-weight-medium);
 }
 
 @keyframes strum-cascade {
@@ -2070,10 +2070,10 @@ function handleKeyClick(midiNote: number) {
 }
 
 .unit-label {
-  font-size: 0.8125rem;
+  font-size: var(--kb1-font-input);
   color: #EAEAEA;
-  font-family: 'Roboto Mono';
-  font-weight: 400;
+  font-family: var(--kb1-font-family);
+  font-weight: var(--kb1-font-weight-normal);
   cursor: default;
   user-select: none;
 }
@@ -2093,7 +2093,7 @@ function handleKeyClick(midiNote: number) {
   margin-top: 0.5rem;
   padding: 0.25rem 0.75rem;
   background: rgba(234, 234, 234, 0.03);
-  border-radius: 4px;
+  border-radius: var(--kb1-radius-sm);
 }
 
 .advanced-strum-header {
@@ -2105,7 +2105,7 @@ function handleKeyClick(midiNote: number) {
   background: transparent;
   border: none;
   cursor: pointer;
-  font-family: 'Roboto Mono';
+  font-family: var(--kb1-font-family);
   color: var(--label-gray);
   transition: color 0.2s ease;
 }
@@ -2115,8 +2115,8 @@ function handleKeyClick(midiNote: number) {
 }
 
 .advanced-strum-header .mood-text {
-  font-family: 'Roboto Mono';
-  font-size: 0.75rem;
+  font-family: var(--kb1-font-family);
+  font-size: var(--kb1-font-label);
   color: #EAEAEA;
   opacity: 0.4;
   text-align: left;
@@ -2132,10 +2132,10 @@ function handleKeyClick(midiNote: number) {
 }
 
 .advanced-strum-header .adv-label {
-  font-size: 0.8125rem;
-  font-weight: 400;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  font-size: var(--kb1-font-input);
+  font-weight: var(--kb1-font-weight-normal);
+  text-transform: var(--kb1-text-transform-uppercase);
+  letter-spacing: var(--kb1-letter-spacing-wide);
   color: var(--label-gray);
 }
 
@@ -2144,8 +2144,8 @@ function handleKeyClick(midiNote: number) {
 }
 
 .advanced-strum-header .icon {
-  font-size: 1.25rem;
-  font-weight: 300;
+  font-size: var(--kb1-font-heading);
+  font-weight: var(--kb1-font-weight-light);
   line-height: 1;
   color: var(--ui-highlight);
 }
@@ -2171,12 +2171,12 @@ function handleKeyClick(midiNote: number) {
 }
 
 .swing-control label {
-  font-weight: 400;
-  font-size: 0.8125rem;
+  font-weight: var(--kb1-font-weight-normal);
+  font-size: var(--kb1-font-input);
   color: var(--label-gray);
-  font-family: 'Roboto Mono';
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  font-family: var(--kb1-font-family);
+  text-transform: var(--kb1-text-transform-uppercase);
+  letter-spacing: var(--kb1-letter-spacing-wide);
 }
 
 .swing-control .duration-control-wrapper {
@@ -2211,12 +2211,12 @@ function handleKeyClick(midiNote: number) {
 }
 
 .group label {
-  font-weight: 400;
-  font-size: 0.8125rem;
+  font-weight: var(--kb1-font-weight-normal);
+  font-size: var(--kb1-font-input);
   color: var(--label-gray);
-  font-family: 'Roboto Mono';
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  font-family: var(--kb1-font-family);
+  text-transform: var(--kb1-text-transform-uppercase);
+  letter-spacing: var(--kb1-letter-spacing-wide);
   flex-shrink: 0;
   min-width: 120px;
 }
@@ -2227,9 +2227,9 @@ function handleKeyClick(midiNote: number) {
   border-radius: 0;
   background: transparent;
   color: #EAEAEA;
-  font-size: 0.8125rem;
-  font-family: 'Roboto Mono';
-  font-weight: 400;
+  font-size: var(--kb1-font-input);
+  font-family: var(--kb1-font-family);
+  font-weight: var(--kb1-font-weight-normal);
   flex: 1;
   text-align: right;
   cursor: pointer;
@@ -2249,12 +2249,12 @@ function handleKeyClick(midiNote: number) {
   margin-top: 0.5rem;
   padding: 0.5rem 0.75rem;
   background: rgba(234, 234, 234, 0.03);
-  border-radius: 4px;
+  border-radius: var(--kb1-radius-sm);
 }
 
 .static-mood-bar .mood-text {
-  font-family: 'Roboto Mono';
-  font-size: 0.75rem;
+  font-family: var(--kb1-font-family);
+  font-size: var(--kb1-font-label);
   color: #EAEAEA;
   opacity: 0.4;
   text-align: left;
@@ -2267,17 +2267,17 @@ function handleKeyClick(midiNote: number) {
 
 /* Info icon (?) - matches existing app style */
 .info-icon {
-  text-transform: none;
+  text-transform: var(--kb1-text-transform-none);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   width: 16px;
   height: 16px;
-  font-size: 0.625rem;
-  font-family: 'Roboto Mono', monospace;
+  font-size: var(--kb1-font-tiny);
+  font-family: var(--kb1-font-family);
   color: #848484;
   border: 1px solid #848484;
-  border-radius: 50%;
+  border-radius: var(--kb1-radius-full);
   cursor: pointer;
   transition: all 0.2s;
   user-select: none;
@@ -2353,7 +2353,7 @@ function handleKeyClick(midiNote: number) {
   height: 60px;
   justify-content: center;
   align-items: center;
-  border-radius: 4px;
+  border-radius: var(--kb1-radius-sm);
   background-color: transparent;
   user-select: none;
 }
@@ -2399,11 +2399,11 @@ function handleKeyClick(midiNote: number) {
 .help-modal {
   background: var(--color-background-soft);
   border: 1px solid var(--color-border);
-  border-radius: 8px;
+  border-radius: var(--kb1-radius-lg);
   max-width: 500px;
   width: 100%;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
-  font-family: 'Roboto Mono';
+  font-family: var(--kb1-font-family);
 }
 
 .help-modal-header {
@@ -2416,17 +2416,17 @@ function handleKeyClick(midiNote: number) {
 
 .help-modal-header h3 {
   margin: 0;
-  font-size: 0.8125rem;
-  font-weight: 600;
+  font-size: var(--kb1-font-input);
+  font-weight: var(--kb1-font-weight-semibold);
   color: #EAEAEA;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  text-transform: var(--kb1-text-transform-uppercase);
+  letter-spacing: var(--kb1-letter-spacing-wide);
 }
 
 .close-btn {
   background: none;
   border: none;
-  font-size: 1.5rem;
+  font-size: var(--kb1-font-title);
   color: #848484;
   cursor: pointer;
   padding: 0;
@@ -2435,7 +2435,7 @@ function handleKeyClick(midiNote: number) {
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 4px;
+  border-radius: var(--kb1-radius-sm);
   transition: all 0.2s;
 }
 
@@ -2450,7 +2450,7 @@ function handleKeyClick(midiNote: number) {
 
 .help-modal-body p {
   margin: 0;
-  font-size: 0.8125rem;
+  font-size: var(--kb1-font-input);
   line-height: 1.6;
   color: var(--color-text);
 }
@@ -2467,10 +2467,10 @@ function handleKeyClick(midiNote: number) {
   background: #5dad6b; /* Standardized green for all modals */
   color: #1A1A1A; /* Dark text on green button */
   border: none;
-  border-radius: 4px;
-  font-family: 'Roboto Mono';
-  font-size: 0.8125rem;
-  font-weight: 500;
+  border-radius: var(--kb1-radius-sm);
+  font-family: var(--kb1-font-family);
+  font-size: var(--kb1-font-input);
+  font-weight: var(--kb1-font-weight-medium);
   cursor: pointer;
   transition: all 0.2s;
 }

@@ -968,10 +968,10 @@ defineExpose({
   padding: 0.5rem 1rem;
   background: rgba(106, 104, 83, 0.2);
   border: none;
-  border-radius: 8px;
+  border-radius: var(--kb1-radius-lg);
   color: #848484;
-  font-family: 'Roboto Mono';
-  font-size: 0.875rem;
+  font-family: var(--kb1-font-family);
+  font-size: var(--kb1-font-medium);
   text-align: left;
   cursor: pointer;
   margin-bottom: 6px;
@@ -1021,10 +1021,10 @@ defineExpose({
 }
 
 .root-note-display {
-  font-size: 0.8125rem; /* 13px */
+  font-size: var(--kb1-font-input); /* 13px */
   font-weight: 400;
   color: #848484;
-  font-family: 'Roboto Mono';
+  font-family: var(--kb1-font-family);
   flex-shrink: 0;
   white-space: nowrap;
 }

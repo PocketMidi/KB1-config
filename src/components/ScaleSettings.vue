@@ -301,7 +301,7 @@ function isRootNote(midiNote: number): boolean {
   padding: 1.5rem;
   background: var(--color-background-soft);
   border: 1px solid var(--color-border);
-  border-radius: 8px;
+  border-radius: var(--kb1-radius-lg);
   overflow: visible;
 }
 
@@ -326,14 +326,14 @@ function isRootNote(midiNote: number): boolean {
 .key {
   width: 24px;
   height: 60px;
-  border-radius: 4px;
+  border-radius: var(--kb1-radius-sm);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  font-family: 'Roboto Mono';
-  font-size: 0.6875rem; /* 11px */
-  font-weight: 500;
+  font-family: var(--kb1-font-family);
+  font-size: var(--kb1-font-caption); /* 11px */
+  font-weight: var(--kb1-font-weight-medium);
   transition: background-color 0.2s ease, color 0.2s ease;
   flex-shrink: 0;
 }
@@ -368,7 +368,7 @@ function isRootNote(midiNote: number): boolean {
 
 .note-label-alt {
   line-height: 1;
-  font-size: 0.625rem; /* 10px */
+  font-size: var(--kb1-font-tiny); /* 10px */
 }
 
 /* Top row (sharps/flats) styling */
@@ -431,7 +431,7 @@ function isRootNote(midiNote: number): boolean {
 .dot {
   width: 5px;
   height: 5px;
-  border-radius: 50%;
+  border-radius: var(--kb1-radius-full);
   background-color: var(--ui-highlight);
   flex-shrink: 0;
 }
@@ -463,12 +463,12 @@ function isRootNote(midiNote: number): boolean {
 }
 
 .group label {
-  font-weight: 400;
-  font-size: 0.8125rem; /* 13px */
+  font-weight: var(--kb1-font-weight-normal);
+  font-size: var(--kb1-font-input); /* 13px */
   color: var(--label-gray);
-  font-family: 'Roboto Mono';
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  font-family: var(--kb1-font-family);
+  text-transform: var(--kb1-text-transform-uppercase);
+  letter-spacing: var(--kb1-letter-spacing-wide);
   flex-shrink: 0;
   min-width: 120px;
 }
@@ -479,9 +479,9 @@ function isRootNote(midiNote: number): boolean {
   border-radius: 0;
   background: transparent;
   color: #EAEAEA;
-  font-size: 0.8125rem; /* 13px */
-  font-family: 'Roboto Mono';
-  font-weight: 400;
+  font-size: var(--kb1-font-input); /* 13px */
+  font-family: var(--kb1-font-family);
+  font-weight: var(--kb1-font-weight-normal);
   flex: 1;
   text-align: right;
   cursor: pointer;

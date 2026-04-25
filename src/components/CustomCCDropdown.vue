@@ -111,8 +111,8 @@ onUnmounted(() => {
 <style scoped>
 .custom-dropdown {
   position: relative;
-  font-family: 'Roboto Mono', monospace;
-  font-size: 0.7rem;
+  font-family: var(--kb1-font-family);
+  font-size: var(--kb1-font-small);
 }
 
 .custom-dropdown.disabled {
@@ -128,7 +128,7 @@ onUnmounted(() => {
   padding: 0.15rem 0.3rem;
   background: rgba(106, 104, 83, 0.35);
   border: 1px solid rgba(106, 104, 83, 0.4);
-  border-radius: 4px;
+  border-radius: var(--kb1-radius-sm);
   cursor: pointer;
   transition: all 0.2s ease;
   display: flex;
@@ -144,7 +144,7 @@ onUnmounted(() => {
 
 .dropdown-arrow {
   color: #848484;
-  font-size: 0.6rem;
+  font-size: var(--kb1-font-tiny); /* 10px - slightly larger for readability */
   margin-left: 0.2rem;
 }
 
@@ -156,7 +156,7 @@ onUnmounted(() => {
   margin-top: 2px;
   background: #1a1a1a;
   border: 1px solid rgba(106, 104, 83, 0.6);
-  border-radius: 4px;
+  border-radius: var(--kb1-radius-sm);
   max-height: 300px;
   overflow-y: auto;
   z-index: 1000;
@@ -182,17 +182,17 @@ onUnmounted(() => {
 
 .cc-text {
   color: #848484;
-  font-weight: 400;
+  font-weight: var(--kb1-font-weight-normal);
 }
 
 .cc-num {
   color: #b9aa5f;
-  font-weight: 600;
+  font-weight: var(--kb1-font-weight-semibold);
   margin-left: 0px;
 }
 
 .cc-desc {
   color: #EAEAEA;
-  font-weight: 400;
+  font-weight: var(--kb1-font-weight-normal);
 }
 </style>

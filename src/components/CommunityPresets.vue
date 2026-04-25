@@ -180,7 +180,7 @@ defineExpose({
   height: 32px;
   border: 3px solid rgba(116, 196, 255, 0.2);
   border-top-color: var(--bluetooth-status-active);
-  border-radius: 50%;
+  border-radius: var(--kb1-radius-full);
   animation: spin 1s linear infinite;
 }
 
@@ -193,7 +193,7 @@ defineExpose({
 }
 
 .help-text {
-  font-size: 0.875rem;
+  font-size: var(--kb1-font-medium);
   opacity: 0.7;
 }
 
@@ -216,12 +216,12 @@ defineExpose({
 
 .presets-list::-webkit-scrollbar-track {
   background: rgba(234, 234, 234, 0.08);
-  border-radius: 4px;
+  border-radius: var(--kb1-radius-sm);
 }
 
 .presets-list::-webkit-scrollbar-thumb {
   background: rgba(234, 234, 234, 0.3);
-  border-radius: 4px;
+  border-radius: var(--kb1-radius-sm);
 }
 
 .presets-list::-webkit-scrollbar-thumb:hover {
@@ -257,23 +257,23 @@ defineExpose({
 }
 
 .preset-name {
-  font-size: 0.8125rem;
-  font-weight: 500;
+  font-size: var(--kb1-font-input);
+  font-weight: var(--kb1-font-weight-medium);
   color: #EAEAEA;
-  font-family: 'Roboto Mono', monospace;
+  font-family: var(--kb1-font-family);
 }
 
 .preset-author {
-  font-size: 0.8125rem;
-  font-weight: 500;
+  font-size: var(--kb1-font-input);
+  font-weight: var(--kb1-font-weight-medium);
   color: #b9aa5f;
-  font-family: 'Roboto Mono', monospace;
+  font-family: var(--kb1-font-family);
 }
 
 .preset-snapshot {
-  font-size: 0.6875rem;
+  font-size: var(--kb1-font-caption);
   color: #6B6B6B;
-  font-family: 'Roboto Mono', monospace;
+  font-family: var(--kb1-font-family);
   line-height: 1.4;
   white-space: pre-line;
   margin: 0.25rem 0;
@@ -281,7 +281,7 @@ defineExpose({
 }
 
 .preset-description {
-  font-size: 0.75rem;
+  font-size: var(--kb1-font-label);
   color: #848484;
   line-height: 1.3;
   overflow: hidden;
@@ -291,15 +291,15 @@ defineExpose({
 
 .btn-load {
   padding: 0.25rem 0.625rem;
-  font-size: 0.75rem;
+  font-size: var(--kb1-font-label);
   background: rgba(132, 132, 132, 0.1);
   color: #EAEAEA;
   border: 1px solid rgba(205, 205, 205, 0.2);
-  border-radius: 4px;
+  border-radius: var(--kb1-radius-sm);
   cursor: pointer;
   transition: all 0.2s;
   flex-shrink: 0;
-  font-family: 'Roboto Mono', monospace;
+  font-family: var(--kb1-font-family);
 }
 
 .btn-load:hover {
@@ -313,12 +313,12 @@ defineExpose({
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.15);
   color: #EAEAEA;
-  font-size: 0.875rem;
-  font-weight: 500;
-  border-radius: 4px;
+  font-size: var(--kb1-font-medium);
+  font-weight: var(--kb1-font-weight-medium);
+  border-radius: var(--kb1-radius-sm);
   cursor: pointer;
   transition: all 0.2s;
-  font-family: 'Roboto Mono', monospace;
+  font-family: var(--kb1-font-family);
 }
 
 .btn-secondary:hover {

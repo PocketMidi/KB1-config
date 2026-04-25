@@ -67,7 +67,7 @@ function handleCancel() {
 .confirm-dialog {
   background: var(--color-background-soft);
   border: 1px solid var(--color-border);
-  border-radius: 8px;
+  border-radius: var(--kb1-radius-lg);
   padding: 24px;
   min-width: 300px;
   max-width: 90vw;
@@ -76,7 +76,7 @@ function handleCancel() {
 
 .confirm-message {
   color: var(--color-text);
-  font-size: 0.8125rem;
+  font-size: var(--kb1-font-input);
   line-height: 1.5;
   margin-bottom: 20px;
   white-space: pre-wrap;
@@ -92,12 +92,12 @@ function handleCancel() {
 .btn-confirm {
   padding: 8px 20px;
   border: none;
-  border-radius: 4px;
-  font-size: 0.8125rem;
-  font-weight: 500;
+  border-radius: var(--kb1-radius-sm);
+  font-size: var(--kb1-font-input);
+  font-weight: var(--kb1-font-weight-medium);
   cursor: pointer;
   transition: all 0.2s;
-  font-family: 'Roboto Mono', monospace;
+  font-family: var(--kb1-font-family);
 }
 
 .btn-cancel {

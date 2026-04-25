@@ -201,7 +201,7 @@ onBeforeUnmount(() => {
   background: transparent;
   border: none;
   color: #EAEAEA;
-  font-size: 0.75rem;
+  font-size: var(--kb1-font-label);
   cursor: pointer;
   transition: opacity 0.2s;
   display: flex;
@@ -223,10 +223,10 @@ onBeforeUnmount(() => {
   min-width: 50px;
   width: auto;
   text-align: center;
-  font-family: 'Roboto Mono';
-  font-size: 0.8125rem;
+  font-family: var(--kb1-font-family);
+  font-size: var(--kb1-font-input);
   color: #EAEAEA;
-  font-weight: 400;
+  font-weight: var(--kb1-font-weight-normal);
   padding: 1px 0.25rem;
   cursor: ew-resize;
   user-select: none;

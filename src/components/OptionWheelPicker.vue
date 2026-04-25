@@ -322,11 +322,11 @@ onBeforeUnmount(() => {
 }
 
 .sheet-title {
-  font-family: 'Roboto Mono';
-  font-size: 0.8125rem; /* 13px - standard label size */
-  font-weight: 400;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  font-family: var(--kb1-font-family);
+  font-size: var(--kb1-font-input); /* 13px - standard label size */
+  font-weight: var(--kb1-font-weight-normal);
+  text-transform: var(--kb1-text-transform-uppercase);
+  letter-spacing: var(--kb1-letter-spacing-wide);
   color: #909090; /* ADJUST: Title color */
 }
 
@@ -358,9 +358,9 @@ onBeforeUnmount(() => {
   justify-content: center;
   background: rgba(52, 52, 52, 0); /* ADJUST: Arrow background */
   border: 1px solid rgba(255, 255, 255, 0.0);
-  border-radius: 6px;
+  border-radius: var(--kb1-radius-md);
   color: rgba(240, 240, 240, 0.5); /* ADJUST: Arrow color */
-  font-size: 1.25rem;
+  font-size: var(--kb1-font-heading);
   cursor: pointer;
   pointer-events: auto;
   transition: all 0.15s ease;
@@ -428,8 +428,8 @@ onBeforeUnmount(() => {
   align-items: center;
   justify-content: flex-end;
   padding-right: 2.3rem; /* ADJUST: Item right padding */
-  font-family: 'Roboto Mono', monospace;
-  font-size: 0.8125rem; /* ADJUST: Item font size */
+  font-family: var(--kb1-font-family);
+  font-size: var(--kb1-font-input); /* ADJUST: Item font size */
   color: #EAEAEA; /* ADJUST: Item text color */
   cursor: pointer;
   transition: opacity 0.15s ease; /* Only opacity transitions - NO transforms */
@@ -452,19 +452,19 @@ onBeforeUnmount(() => {
 }
 
 .divider-line {
-  font-weight: 300;
+  font-weight: var(--kb1-font-weight-light);
   letter-spacing: 0.2em;
-  font-size: 0.75rem; /* ADJUST: Divider font size */
+  font-size: var(--kb1-font-label); /* ADJUST: Divider font size */
 }
 
 /* Main and secondary label parts (split by —) */
 .item-main {
-  font-weight: 500; /* ADJUST: Main label weight */
+  font-weight: var(--kb1-font-weight-medium); /* ADJUST: Main label weight */
 }
 
 .item-secondary {
   opacity: 0.5; /* ADJUST: Secondary label opacity */
-  font-size: 0.875rem; /* ADJUST: Secondary label font size */
+  font-size: var(--kb1-font-medium); /* ADJUST: Secondary label font size */
 }
 
 /* ==================== ANIMATIONS ==================== */

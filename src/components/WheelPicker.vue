@@ -280,15 +280,15 @@ function snapToNearest() {
 }
 
 .picker-title {
-  font-family: 'Roboto Mono';
-  font-size: 1rem;
-  font-weight: 700;
+  font-family: var(--kb1-font-family);
+  font-size: var(--kb1-font-subhead);
+  font-weight: var(--kb1-font-weight-bold);
   color: var(--color-heading);
 }
 
 .picker-btn {
-  font-family: 'Roboto Mono';
-  font-size: 0.8125rem;
+  font-family: var(--kb1-font-family);
+  font-size: var(--kb1-font-input);
   background: transparent;
   border: none;
   color: var(--color-text);
@@ -298,7 +298,7 @@ function snapToNearest() {
 
 .picker-done {
   color: #9F9C80;
-  font-weight: 700;
+  font-weight: var(--kb1-font-weight-bold);
 }
 
 .wheel-picker-content {
@@ -367,8 +367,8 @@ function snapToNearest() {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: 'Roboto Mono';
-  font-size: 1.25rem;
+  font-family: var(--kb1-font-family);
+  font-size: var(--kb1-font-heading);
   color: var(--color-text);
   scroll-snap-align: center;
   cursor: pointer;
@@ -377,7 +377,7 @@ function snapToNearest() {
 
 .picker-item.selected {
   color: var(--color-heading);
-  font-weight: 700;
+  font-weight: var(--kb1-font-weight-bold);
 }
 
 .picker-item:active {

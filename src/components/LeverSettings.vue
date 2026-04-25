@@ -1205,9 +1205,9 @@ function increaseSteps() {
   padding: 1rem 1rem 1rem 0; /* Bottom padding back to 16px */
   background: var(--color-background-soft);
   border: 1px solid var(--color-border);
-  border-radius: 8px;
-  font-family: 'Roboto Mono';
-  font-size: 0.8125rem; /* 13px */
+  border-radius: var(--kb1-radius-lg);
+  font-family: var(--kb1-font-family);
+  font-size: var(--kb1-font-label); /* 12px */
   width: 100%; /* Ensure it takes available width */
   max-width: 100%; /* Don't exceed container */
   box-sizing: border-box; /* Include padding in width calculation */
@@ -1239,12 +1239,12 @@ function increaseSteps() {
   background: rgba(106, 104, 83, 0.35);
   border: 1px solid rgba(106, 104, 83, 0.4);
   color: var(--kb1-text-primary, #EAEAEA);
-  font-size: 0.65rem;
-  font-weight: 500;
-  border-radius: 4px;
+  font-size: var(--kb1-font-badge);
+  font-weight: var(--kb1-font-weight-medium);
+  border-radius: var(--kb1-radius-sm);
   cursor: pointer;
   transition: all 0.2s ease;
-  font-family: 'Roboto Mono', monospace;
+  font-family: var(--kb1-font-family);
   white-space: nowrap;
   display: flex;
   gap: 0.2rem;
@@ -1285,12 +1285,12 @@ function increaseSteps() {
 .toggle-btn span.active {
   opacity: 1;
   color: #EAEAEA;
-  font-weight: 600;
+  font-weight: var(--kb1-font-weight-semibold);
 }
 
 .toggle-btn .toggle-divider {
   opacity: 0.3;
-  font-weight: 300;
+  font-weight: var(--kb1-font-weight-light);
 }
 
 .profile-selector {
@@ -1309,13 +1309,13 @@ function increaseSteps() {
   background: none;
   border: none;
   padding: 0.5rem 0;
-  font-size: 0.8125rem;
-  font-weight: 500;
+  font-size: var(--kb1-font-label);
+  font-weight: var(--kb1-font-weight-medium);
   color: #848484;
   cursor: pointer;
   position: relative;
   transition: color 0.2s ease;
-  font-family: 'Roboto Mono';
+  font-family: var(--kb1-font-family);
 }
 
 .profile-btn:disabled {
@@ -1346,7 +1346,7 @@ function increaseSteps() {
   padding: 0; /* Remove padding that creates space */
   background: var(--color-background);
   border: 1px solid var(--color-border);
-  border-radius: 6px;
+  border-radius: var(--kb1-radius-md);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -1403,7 +1403,7 @@ function increaseSteps() {
 /* Duration Container with border */
 .duration-container {
   border: 1px solid var(--color-divider);
-  border-radius: 6px;
+  border-radius: var(--kb1-radius-md);
   padding: 0.5rem 1rem;
   margin-top: 0.5rem;
   margin-left: -1rem;
@@ -1513,12 +1513,12 @@ function increaseSteps() {
 }
 
 .group label {
-  font-weight: 400;
-  font-size: 0.8125rem; /* 13px */
+  font-weight: var(--kb1-font-weight-normal);
+  font-size: var(--kb1-font-label); /* 12px */
   color: #848484;
-  font-family: 'Roboto Mono';
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  font-family: var(--kb1-font-family);
+  text-transform: var(--kb1-text-transform-uppercase);
+  letter-spacing: var(--kb1-letter-spacing-wide);
   flex-shrink: 0;
   min-width: 120px;
 }
@@ -1530,9 +1530,9 @@ function increaseSteps() {
   border-radius: 0;
   background: transparent;
   color: #EAEAEA;
-  font-size: 0.8125rem; /* 13px */
-  font-family: 'Roboto Mono';
-  font-weight: 400;
+  font-size: var(--kb1-font-label); /* 12px */
+  font-family: var(--kb1-font-family);
+  font-weight: var(--kb1-font-weight-normal);
   flex: 1;
   text-align: right;
   appearance: none;
@@ -1545,9 +1545,9 @@ function increaseSteps() {
   border-radius: 0;
   background: transparent;
   color: #EAEAEA;
-  font-size: 0.8125rem; /* 13px */
-  font-family: 'Roboto Mono';
-  font-weight: 400;
+  font-size: var(--kb1-font-label); /* 12px */
+  font-family: var(--kb1-font-family);
+  font-weight: var(--kb1-font-weight-normal);
   flex: 1;
   text-align: right;
   cursor: pointer;
@@ -1582,9 +1582,9 @@ function increaseSteps() {
 .group option {
   background: var(--color-background);
   color: #EAEAEA;
-  font-family: 'Roboto Mono';
-  font-weight: 400;
-  font-size: 0.8125rem;
+  font-family: var(--kb1-font-family);
+  font-weight: var(--kb1-font-weight-normal);
+  font-size: var(--kb1-font-label); /* 12px */
 }
 
 .group input:focus,
@@ -1606,9 +1606,9 @@ function increaseSteps() {
   border: none;
   background: transparent;
   color: #EAEAEA;
-  font-size: 0.8125rem;
-  font-family: 'Roboto Mono';
-  font-weight: 400;
+  font-size: var(--kb1-font-label); /* 12px */
+  font-family: var(--kb1-font-family);
+  font-weight: var(--kb1-font-weight-normal);
   text-align: center;
   cursor: ew-resize; /* Indicates horizontal dragging */
   touch-action: none; /* Prevent default touch behaviors */
@@ -1650,10 +1650,10 @@ function increaseSteps() {
 }
 
 .number-with-unit span {
-  font-size: 0.8125rem; /* 13px */
+  font-size: var(--kb1-font-label); /* 12px */
   color: #EAEAEA;
-  font-family: 'Roboto Mono';
-  font-weight: 400;
+  font-family: var(--kb1-font-family);
+  font-weight: var(--kb1-font-weight-normal);
 }
 
 .draggable-value {
@@ -1661,9 +1661,9 @@ function increaseSteps() {
   border: none;
   background: transparent;
   color: #EAEAEA;
-  font-size: 0.8125rem; /* 13px */
-  font-family: 'Roboto Mono';
-  font-weight: 400;
+  font-size: var(--kb1-font-label); /* 12px */
+  font-family: var(--kb1-font-family);
+  font-weight: var(--kb1-font-weight-normal);
   text-align: right;
   cursor: ew-resize; /* Indicates horizontal dragging */
   touch-action: none; /* Prevent default touch behaviors */
@@ -1683,9 +1683,9 @@ function increaseSteps() {
   border: none;
   background: transparent;
   color: #EAEAEA;
-  font-size: 0.8125rem; /* 13px */
-  font-family: 'Roboto Mono';
-  font-weight: 400;
+  font-size: var(--kb1-font-label); /* 12px */
+  font-family: var(--kb1-font-family);
+  font-weight: var(--kb1-font-weight-normal);
   text-align: center;
   cursor: ew-resize; /* Indicates horizontal dragging */
   touch-action: none; /* Prevent default touch behaviors */
@@ -1745,8 +1745,8 @@ function increaseSteps() {
 }
 
 .tap-indicator {
-  font-size: 0.75rem; /* 12px */
-  font-family: 'Roboto Mono';
+  font-size: var(--kb1-font-label); /* 12px */
+  font-family: var(--kb1-font-family);
   color: #EAEAEA;
   opacity: 0.4;
   transition: opacity 0.2s;
@@ -1768,10 +1768,10 @@ function increaseSteps() {
 }
 
 .unit-label {
-  font-size: 0.8125rem;
+  font-size: var(--kb1-font-label); /* 12px */
   color: #EAEAEA;
-  font-family: 'Roboto Mono';
-  font-weight: 400;
+  font-family: var(--kb1-font-family);
+  font-weight: var(--kb1-font-weight-normal);
   cursor: default; /* Normal cursor on unit label */
   user-select: none; /* Prevent text selection */
 }
@@ -1784,17 +1784,17 @@ function increaseSteps() {
 
 /* Info Icon */
 .info-icon {
-  text-transform: none;
+  text-transform: var(--kb1-text-transform-none);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   width: 16px;
   height: 16px;
-  font-size: 0.625rem;
-  font-family: 'Roboto Mono', monospace;
+  font-size: var(--kb1-font-tiny);
+  font-family: var(--kb1-font-family);
   color: #999;
   border: 1px solid #999;
-  border-radius: 50%;
+  border-radius: var(--kb1-radius-full);
   cursor: pointer;
   transition: all 0.2s;
   user-select: none;
@@ -1823,11 +1823,11 @@ function increaseSteps() {
 .help-modal {
   background: var(--color-background-soft);
   border: 1px solid var(--color-border);
-  border-radius: 8px;
+  border-radius: var(--kb1-radius-lg);
   max-width: 500px;
   width: 100%;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
-  font-family: 'Roboto Mono';
+  font-family: var(--kb1-font-family);
 }
 
 .help-modal-header {
@@ -1840,17 +1840,17 @@ function increaseSteps() {
 
 .help-modal-header h3 {
   margin: 0;
-  font-size: 0.8125rem;
-  font-weight: 600;
+  font-size: var(--kb1-font-label); /* 12px */
+  font-weight: var(--kb1-font-weight-semibold);
   color: #EAEAEA;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  text-transform: var(--kb1-text-transform-uppercase);
+  letter-spacing: var(--kb1-letter-spacing-wide);
 }
 
 .close-btn {
   background: none;
   border: none;
-  font-size: 1.5rem;
+  font-size: var(--kb1-font-subhead);
   color: #848484;
   cursor: pointer;
   padding: 0;
@@ -1859,7 +1859,7 @@ function increaseSteps() {
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 4px;
+  border-radius: var(--kb1-radius-sm);
   transition: all 0.2s;
 }
 
@@ -1874,7 +1874,7 @@ function increaseSteps() {
 
 .help-modal-body p {
   margin: 0 0 1rem 0;
-  font-size: 0.8125rem;
+  font-size: var(--kb1-font-label);
   line-height: 1.6;
   color: var(--color-text);
 }
@@ -1895,10 +1895,10 @@ function increaseSteps() {
   background: #5dad6b; /* Standardized green for all modals */
   color: #1A1A1A; /* Dark text on green button */
   border: none;
-  border-radius: 4px;
-  font-family: 'Roboto Mono';
-  font-size: 0.8125rem;
-  font-weight: 500;
+  border-radius: var(--kb1-radius-sm);
+  font-family: var(--kb1-font-family);
+  font-size: var(--kb1-font-input);
+  font-weight: var(--kb1-font-weight-medium);
   cursor: pointer;
   transition: all 0.2s;
 }

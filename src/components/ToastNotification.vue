@@ -52,9 +52,9 @@ onMounted(() => {
   align-items: center;
   gap: 12px;
   padding: 16px 24px;
-  border-radius: 8px;
-  font-size: 0.8125rem;
-  font-weight: 500;
+  border-radius: var(--kb1-radius-lg);
+  font-size: var(--kb1-font-input);
+  font-weight: var(--kb1-font-weight-medium);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   backdrop-filter: blur(10px);
   min-width: 280px;
@@ -63,8 +63,8 @@ onMounted(() => {
 }
 
 .toast-icon {
-  font-size: 1.25rem;
-  font-weight: bold;
+  font-size: var(--kb1-font-heading);
+  font-weight: var(--kb1-font-weight-bold);
   flex-shrink: 0;
 }
 

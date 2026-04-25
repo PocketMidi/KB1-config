@@ -613,20 +613,20 @@ function getTemplateForChordType(chordType: number): number {
 }
 
 .template-name {
-  font-size: 0.75rem;
-  font-weight: 400;
+  font-size: var(--kb1-font-label);
+  font-weight: var(--kb1-font-weight-normal);
   color: #EAEAEA;
   opacity: 0.4;
-  font-family: 'Roboto Mono', monospace;
+  font-family: var(--kb1-font-family);
   text-align: left;
   letter-spacing: 0.02em;
   line-height: 1.4;
 }
 
 .build-mode-desc {
-  font-size: 0.8125rem;
+  font-size: var(--kb1-font-input);
   color: rgba(255, 255, 255, 0.5);
-  font-family: 'Roboto Mono', monospace;
+  font-family: var(--kb1-font-family);
   font-style: italic;
 }
 </style>

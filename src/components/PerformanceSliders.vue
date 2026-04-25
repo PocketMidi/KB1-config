@@ -2084,11 +2084,11 @@ defineExpose({
   padding: 0.25rem 0.6rem;
   background: transparent;
   border: 1px solid rgba(234, 234, 234, 0.15);
-  border-radius: 4px;
+  border-radius: var(--kb1-radius-sm);
   color: rgba(234, 234, 234, 0.35);
-  font-family: 'Roboto Mono', monospace;
-  font-size: 0.6875rem;
-  font-weight: 400;
+  font-family: var(--kb1-font-family);
+  font-size: var(--kb1-font-caption);
+  font-weight: var(--kb1-font-weight-normal);
   letter-spacing: 0.08em;
   cursor: pointer;
   transition: all 0.15s;
@@ -2108,10 +2108,10 @@ defineExpose({
 
 .setup-header h2 {
   margin: 0;
-  font-size: 1rem;
-  font-weight: 700;
-  font-family: 'Roboto Mono';
-  text-transform: uppercase;
+  font-size: var(--kb1-font-subhead);
+  font-weight: var(--kb1-font-weight-bold);
+  font-family: var(--kb1-font-family);
+  text-transform: var(--kb1-text-transform-uppercase);
 }
 
 .btn-live {
@@ -2120,12 +2120,12 @@ defineExpose({
   background: rgba(234, 234, 234, 0.05);
   border: 1px solid rgba(234, 234, 234, 0.4);
   color: rgba(234, 234, 234, 0.8);
-  font-size: 0.8125rem;
-  font-weight: 500;
-  border-radius: 4px;
+  font-size: var(--kb1-font-input);
+  font-weight: var(--kb1-font-weight-medium);
+  border-radius: var(--kb1-radius-sm);
   cursor: pointer;
   transition: all 0.15s;
-  font-family: 'Roboto Mono', monospace;
+  font-family: var(--kb1-font-family);
   display: flex;
   align-items: center;
   justify-content: flex-start;
@@ -2164,12 +2164,12 @@ defineExpose({
   background: rgba(106, 104, 83, 0.35);
   border: 1px solid rgba(106, 104, 83, 0.4);
   color: var(--kb1-text-primary);
-  font-size: 0.7rem;
-  font-weight: 500;
-  border-radius: 4px;
+  font-size: var(--kb1-font-small);
+  font-weight: var(--kb1-font-weight-medium);
+  border-radius: var(--kb1-radius-sm);
   cursor: pointer;
   transition: all 0.2s ease;
-  font-family: 'Roboto Mono', monospace;
+  font-family: var(--kb1-font-family);
   white-space: nowrap;
   display: flex;
   gap: 0.25rem;
@@ -2198,12 +2198,12 @@ defineExpose({
 .btn-mode-toggle span.active {
   opacity: 1;
   color: #EAEAEA;
-  font-weight: 600;
+  font-weight: var(--kb1-font-weight-semibold);
 }
 
 .btn-mode-toggle .mode-divider {
   opacity: 0.3;
-  font-weight: 300;
+  font-weight: var(--kb1-font-weight-light);
 }
 
 .btn-live-label {
@@ -2275,7 +2275,7 @@ defineExpose({
   gap: 0.01rem;
   padding: 0.125rem 1rem;
   background: rgba(106, 104, 83, 0.2);
-  border-radius: 6px;
+  border-radius: var(--kb1-radius-md);
   transition: background 0.2s;
   position: relative;
 }
@@ -2308,7 +2308,7 @@ defineExpose({
 .color-swatch {
   width: 18px;
   height: 18px;
-  border-radius: 50%;
+  border-radius: var(--kb1-radius-full);
   border: 3px solid;
   box-sizing: border-box;
   cursor: pointer;
@@ -2334,7 +2334,7 @@ defineExpose({
   padding: 0.5rem;
   background: rgba(15, 15, 15, 0.95);
   border: none;
-  border-radius: 8px;
+  border-radius: var(--kb1-radius-lg);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
 }
 
@@ -2378,7 +2378,7 @@ defineExpose({
 .color-picker-item {
   height: 12px;
   width: 12px;
-  border-radius: 50%;
+  border-radius: var(--kb1-radius-full);
   cursor: pointer;
   scroll-snap-align: center;
   transition: opacity 0.1s;
@@ -2428,17 +2428,17 @@ defineExpose({
 }
 
 .cc-label-text {
-  font-size: 0.8125rem;
-  font-family: 'Roboto Mono';
+  font-size: var(--kb1-font-input);
+  font-family: var(--kb1-font-family);
   color: #848484;
-  font-weight: 400;
+  font-weight: var(--kb1-font-weight-normal);
 }
 
 .cc-label {
-  font-size: 0.8125rem;
-  font-family: 'Roboto Mono';
+  font-size: var(--kb1-font-input);
+  font-family: var(--kb1-font-family);
   color: #b9aa5f;
-  font-weight: 600;
+  font-weight: var(--kb1-font-weight-semibold);
   margin-left: 2px;
 }
 
@@ -2447,12 +2447,12 @@ defineExpose({
   background: rgba(106, 104, 83, 0.35);
   border: 1px solid rgba(106, 104, 83, 0.4);
   color: #b9aa5f !important;
-  font-size: 0.7rem;
-  font-weight: 500;
-  border-radius: 4px;
+  font-size: var(--kb1-font-small);
+  font-weight: var(--kb1-font-weight-medium);
+  border-radius: var(--kb1-radius-sm);
   cursor: pointer;
   transition: all 0.2s ease;
-  font-family: 'Roboto Mono', monospace;
+  font-family: var(--kb1-font-family);
   width: fit-content;
   max-width: 100%;
   outline: none;
@@ -2495,9 +2495,9 @@ defineExpose({
   border: 1px solid rgba(106, 104, 83, 0.4);
   border-radius: 3px;
   color: #b9aa5f;
-  font-size: 0.7rem;
-  font-weight: 500;
-  font-family: 'Roboto Mono', monospace;
+  font-size: var(--kb1-font-small);
+  font-weight: var(--kb1-font-weight-medium);
+  font-family: var(--kb1-font-family);
   cursor: default;
   min-width: 100px;
   text-align: center;
@@ -2514,12 +2514,12 @@ defineExpose({
   background: rgba(106, 104, 83, 0.35);
   border: 1px solid rgba(106, 104, 83, 0.4);
   color: var(--kb1-text-primary);
-  font-size: 0.7rem;
-  font-weight: 500;
-  border-radius: 4px;
+  font-size: var(--kb1-font-small);
+  font-weight: var(--kb1-font-weight-medium);
+  border-radius: var(--kb1-radius-sm);
   cursor: pointer;
   transition: all 0.2s ease;
-  font-family: 'Roboto Mono', monospace;
+  font-family: var(--kb1-font-family);
   min-width: 68px;
   outline: none;
 }
@@ -2565,12 +2565,12 @@ defineExpose({
   background: rgba(106, 104, 83, 0.35);
   border: 1px solid rgba(106, 104, 83, 0.4);
   color: var(--kb1-text-primary);
-  font-size: 0.65rem;
-  font-weight: 500;
-  border-radius: 4px;
+  font-size: var(--kb1-font-badge);
+  font-weight: var(--kb1-font-weight-medium);
+  border-radius: var(--kb1-radius-sm);
   cursor: pointer;
   transition: all 0.2s ease;
-  font-family: 'Roboto Mono', monospace;
+  font-family: var(--kb1-font-family);
   white-space: nowrap;
   display: flex;
   gap: 0.2rem;
@@ -2600,12 +2600,12 @@ defineExpose({
 .slider-toggle-btn span.active {
   opacity: 1;
   color: #EAEAEA;
-  font-weight: 600;
+  font-weight: var(--kb1-font-weight-semibold);
 }
 
 .slider-toggle-btn .toggle-divider {
   opacity: 0.3;
-  font-weight: 300;
+  font-weight: var(--kb1-font-weight-light);
 }
 
 .slider-toggle-btn.disabled {
@@ -2690,8 +2690,8 @@ defineExpose({
   text-align: center;
   background: rgba(116, 196, 255, 0.1);
   color: var(--bluetooth-status-active);
-  font-size: 0.75rem;
-  font-family: 'Roboto Mono';
+  font-size: var(--kb1-font-label);
+  font-family: var(--kb1-font-family);
   z-index: 10;
   opacity: 0.7;
   transition: opacity 0.3s;
@@ -2721,7 +2721,7 @@ defineExpose({
 }
 
 .rotate-icon {
-  font-size: 4rem;
+  font-size: var(--kb1-font-display-lg);
   margin-bottom: 1rem;
   animation: rotate-hint 2s ease-in-out infinite;
 }
@@ -2743,16 +2743,16 @@ defineExpose({
 }
 
 .prompt-text {
-  font-family: 'Roboto Mono';
-  font-size: 0.8125rem;
+  font-family: var(--kb1-font-family);
+  font-size: var(--kb1-font-input);
   color: var(--bluetooth-status-active);
-  font-weight: 600;
+  font-weight: var(--kb1-font-weight-semibold);
   margin-bottom: 0.5rem;
 }
 
 .prompt-subtext {
-  font-family: 'Roboto Mono';
-  font-size: 0.8125rem;
+  font-family: var(--kb1-font-family);
+  font-size: var(--kb1-font-input);
   color: rgba(234, 234, 234, 0.6);
 }
 
@@ -2764,7 +2764,7 @@ defineExpose({
   width: 32px;
   height: 32px;
   background: rgba(15, 15, 15, 0.6);
-  border-radius: 50%;
+  border-radius: var(--kb1-radius-full);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2832,7 +2832,7 @@ defineExpose({
   height: 100%;
   min-height: 0;
   flex: 1;
-  border-radius: 8px;
+  border-radius: var(--kb1-radius-lg);
   touch-action: none; /* Prevent default, we handle touch manually */
   -webkit-touch-callout: none;
   cursor: pointer;
@@ -2874,7 +2874,7 @@ defineExpose({
   transform: translate(-50%, -50%);
   background: var(--color-background-soft, #1A1A1A);
   border: 1px solid var(--color-border, #333333);
-  border-radius: 8px;
+  border-radius: var(--kb1-radius-lg);
   padding: 0;
   z-index: 100;
   pointer-events: auto;
@@ -2886,7 +2886,7 @@ defineExpose({
   -webkit-tap-highlight-color: transparent;
   max-width: 500px;
   width: 90%;
-  font-family: 'Roboto Mono';
+  font-family: var(--kb1-font-family);
 }
 
 .hint-close-btn {
@@ -2895,7 +2895,7 @@ defineExpose({
   right: 12px;
   background: none;
   border: none;
-  font-size: 1.5rem;
+  font-size: var(--kb1-font-title);
   color: #848484;
   cursor: pointer;
   padding: 0;
@@ -2904,7 +2904,7 @@ defineExpose({
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 4px;
+  border-radius: var(--kb1-radius-sm);
   transition: all 0.2s;
   z-index: 1;
 }
@@ -2917,21 +2917,21 @@ defineExpose({
 .hint-title {
   margin: 0;
   padding: 1rem 2.5rem 0.75rem 1rem;
-  font-size: 0.8125rem;
-  font-weight: 600;
+  font-size: var(--kb1-font-input);
+  font-weight: var(--kb1-font-weight-semibold);
   color: #EAEAEA;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  text-transform: var(--kb1-text-transform-uppercase);
+  letter-spacing: var(--kb1-letter-spacing-wide);
   border-bottom: 1px solid var(--color-border, #333333);
 }
 
 .hint-description {
   margin: 0;
   padding: 1rem;
-  font-size: 0.8125rem;
+  font-size: var(--kb1-font-input);
   line-height: 1.6;
   color: var(--color-text, #EAEAEA);
-  font-weight: 400;
+  font-weight: var(--kb1-font-weight-normal);
 }
 
 .hint-footer {
@@ -2948,10 +2948,10 @@ defineExpose({
   background: #5dad6b; /* Standardized green for all modals */
   color: #1A1A1A; /* Dark text on green button */
   border: none;
-  border-radius: 4px;
-  font-family: 'Roboto Mono';
-  font-size: 0.8125rem;
-  font-weight: 500;
+  border-radius: var(--kb1-radius-sm);
+  font-family: var(--kb1-font-family);
+  font-size: var(--kb1-font-input);
+  font-weight: var(--kb1-font-weight-medium);
   cursor: pointer;
   transition: all 0.2s;
   user-select: none;
@@ -2968,10 +2968,10 @@ defineExpose({
   background: transparent;
   color: #848484;
   border: 1px solid #333333;
-  border-radius: 4px;
-  font-family: 'Roboto Mono';
-  font-size: 0.8125rem;
-  font-weight: 500;
+  border-radius: var(--kb1-radius-sm);
+  font-family: var(--kb1-font-family);
+  font-size: var(--kb1-font-input);
+  font-weight: var(--kb1-font-weight-medium);
   cursor: pointer;
   transition: all 0.2s;
   user-select: none;
@@ -3014,7 +3014,7 @@ defineExpose({
   position: relative;
   width: 42px;
   height: 490px;
-  border-radius: 12px;
+  border-radius: var(--kb1-radius-xl);
   overflow: hidden;
   cursor: pointer;
   border: none;
@@ -3060,9 +3060,9 @@ defineExpose({
   right: 0;
   text-align: center;
   color: rgba(234, 234, 234, 0.8);
-  font-size: 0.75rem;
-  font-family: 'Roboto Mono';
-  font-weight: 600;
+  font-size: var(--kb1-font-label);
+  font-family: var(--kb1-font-family);
+  font-weight: var(--kb1-font-weight-semibold);
   pointer-events: none;
   z-index: 2;
   border: none;
@@ -3144,7 +3144,7 @@ defineExpose({
   padding: 0.5rem 1rem;
   background: rgba(106, 104, 83, 0.15);
   border-top: 1px solid rgba(106, 104, 83, 0.3);
-  border-radius: 6px;
+  border-radius: var(--kb1-radius-md);
   margin-top: 0.5rem;
 }
 
@@ -3212,12 +3212,12 @@ defineExpose({
   background: rgba(106, 104, 83, 0.2);
   border: 1px solid rgba(106, 104, 83, 0.25);
   color: var(--kb1-text-primary);
-  font-size: 0.8125rem;
-  font-weight: 500;
-  border-radius: 4px;
+  font-size: var(--kb1-font-input);
+  font-weight: var(--kb1-font-weight-medium);
+  border-radius: var(--kb1-radius-sm);
   cursor: pointer;
   transition: all 0.2s ease;
-  font-family: 'Roboto Mono', monospace;
+  font-family: var(--kb1-font-family);
   outline: none;
   max-width: calc(100% - 130px); /* Reduced to make room for info icon */
 }
@@ -3248,10 +3248,10 @@ defineExpose({
   background: rgba(106, 104, 83, 0.2);
   border: 1px solid rgba(106, 104, 83, 0.25);
   color: var(--kb1-text-primary);
-  font-size: 1.25rem;
-  font-weight: 400;
+  font-size: var(--kb1-font-heading);
+  font-weight: var(--kb1-font-weight-normal);
   line-height: 1;
-  border-radius: 4px;
+  border-radius: var(--kb1-radius-sm);
   cursor: pointer;
   transition: all 0.2s ease;
   display: flex;
@@ -3293,17 +3293,17 @@ defineExpose({
 }
 
 .info-icon {
-  text-transform: none;
+  text-transform: var(--kb1-text-transform-none);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   width: 16px;
   height: 16px;
-  font-size: 0.625rem;
-  font-family: 'Roboto Mono', monospace;
+  font-size: var(--kb1-font-tiny);
+  font-family: var(--kb1-font-family);
   color: #848484;
   border: 1px solid #848484;
-  border-radius: 50%;
+  border-radius: var(--kb1-radius-full);
   cursor: pointer;
   transition: all 0.2s;
   user-select: none;
@@ -3321,12 +3321,12 @@ defineExpose({
   background: rgba(106, 104, 83, 0.2);
   border: 1px solid rgba(106, 104, 83, 0.25);
   color: var(--kb1-text-primary);
-  font-size: 0.75rem;
-  font-weight: 600;
-  border-radius: 4px;
+  font-size: var(--kb1-font-label);
+  font-weight: var(--kb1-font-weight-semibold);
+  border-radius: var(--kb1-radius-sm);
   cursor: pointer;
   transition: all 0.2s ease;
-  font-family: 'Roboto Mono', monospace;
+  font-family: var(--kb1-font-family);
   letter-spacing: 0.5px;
 }
 
@@ -3359,7 +3359,7 @@ defineExpose({
 .preset-modal-dialog {
   background: #1D1D1D;
   border: 1px solid rgba(234, 234, 234, 0.2);
-  border-radius: 8px;
+  border-radius: var(--kb1-radius-lg);
   padding: 1.5rem;
   max-width: 400px;
   width: 100%;
@@ -3371,9 +3371,9 @@ defineExpose({
 
 .preset-modal-dialog h3 {
   margin: 0 0 1rem 0;
-  font-size: 1rem;
+  font-size: var(--kb1-font-subhead);
   color: #EAEAEA;
-  font-weight: 500;
+  font-weight: var(--kb1-font-weight-medium);
 }
 
 .form-group {
@@ -3383,9 +3383,9 @@ defineExpose({
 .form-group label {
   display: block;
   margin-bottom: 0.5rem;
-  font-size: 0.75rem;
+  font-size: var(--kb1-font-label);
   color: #848484;
-  text-transform: uppercase;
+  text-transform: var(--kb1-text-transform-uppercase);
 }
 
 .input-text {
@@ -3393,10 +3393,10 @@ defineExpose({
   padding: 0.25rem 1rem;
   background: rgba(234, 234, 234, 0.05);
   border: none;
-  border-radius: 4px;
+  border-radius: var(--kb1-radius-sm);
   color: #EAEAEA;
-  font-size: 0.8125rem;
-  font-family: 'Roboto Mono', monospace;
+  font-size: var(--kb1-font-input);
+  font-family: var(--kb1-font-family);
   box-sizing: border-box;
 }
 
@@ -3425,12 +3425,12 @@ textarea.input-text {
   background: rgba(106, 104, 83, 0.2);
   border: 1px solid rgba(106, 104, 83, 0.3);
   color: var(--kb1-text-primary);
-  font-size: 0.8125rem;
-  font-weight: 500;
-  border-radius: 4px;
+  font-size: var(--kb1-font-input);
+  font-weight: var(--kb1-font-weight-medium);
+  border-radius: var(--kb1-radius-sm);
   cursor: pointer;
   transition: all 0.2s ease;
-  font-family: 'Roboto Mono', monospace;
+  font-family: var(--kb1-font-family);
 }
 
 .btn-secondary:hover {
@@ -3443,12 +3443,12 @@ textarea.input-text {
   background: #6A6853;
   border: none;
   color: #EAEAEA;
-  font-size: 0.8125rem;
-  font-weight: 500;
-  border-radius: 4px;
+  font-size: var(--kb1-font-input);
+  font-weight: var(--kb1-font-weight-medium);
+  border-radius: var(--kb1-radius-sm);
   cursor: pointer;
   transition: all 0.2s;
-  font-family: 'Roboto Mono', monospace;
+  font-family: var(--kb1-font-family);
 }
 
 .btn-primary:hover:not(:disabled) {
@@ -3478,7 +3478,7 @@ textarea.input-text {
 .mode-info-dialog {
   background: #1a1a1a;
   border: 1px solid rgba(234, 234, 234, 0.2);
-  border-radius: 8px;
+  border-radius: var(--kb1-radius-lg);
   padding: 2rem;
   max-width: 500px;
   width: 100%;
@@ -3492,7 +3492,7 @@ textarea.input-text {
   background: transparent;
   border: none;
   color: #848484;
-  font-size: 2rem;
+  font-size: var(--kb1-font-display-sm);
   line-height: 1;
   cursor: pointer;
   transition: color 0.2s ease;
@@ -3509,18 +3509,18 @@ textarea.input-text {
 }
 
 .mode-info-title {
-  font-family: 'Roboto Mono', monospace;
-  font-size: 1.25rem;
-  font-weight: 600;
+  font-family: var(--kb1-font-family);
+  font-size: var(--kb1-font-heading);
+  font-weight: var(--kb1-font-weight-semibold);
   color: #EAEAEA;
   margin: 0 0 1.5rem 0;
-  text-transform: uppercase;
+  text-transform: var(--kb1-text-transform-uppercase);
   letter-spacing: 1px;
 }
 
 .mode-info-content {
   color: #EAEAEA;
-  font-size: 0.9375rem;
+  font-size: var(--kb1-font-large);
   line-height: 1.6;
   margin-bottom: 2rem;
 }
@@ -3534,12 +3534,12 @@ textarea.input-text {
 }
 
 .mode-info-section h4 {
-  font-family: 'Roboto Mono', monospace;
-  font-size: 0.875rem;
-  font-weight: 600;
+  font-family: var(--kb1-font-family);
+  font-size: var(--kb1-font-medium);
+  font-weight: var(--kb1-font-weight-semibold);
   color: #b9aa5f;
   margin: 0 0 0.5rem 0;
-  text-transform: uppercase;
+  text-transform: var(--kb1-text-transform-uppercase);
   letter-spacing: 0.5px;
 }
 
@@ -3556,14 +3556,14 @@ textarea.input-text {
   border: none;
   color: #1A1A1A; /* Dark text on green button */
   padding: 0.75rem 2rem; /* 12px top/bottom, 32px left/right */
-  border-radius: 4px;
-  font-size: 0.875rem;
-  font-weight: 600;
-  font-family: 'Roboto Mono', monospace;
+  border-radius: var(--kb1-radius-sm);
+  font-size: var(--kb1-font-medium);
+  font-weight: var(--kb1-font-weight-semibold);
+  font-family: var(--kb1-font-family);
   cursor: pointer;
   transition: all 0.2s ease;
   width: 100%;
-  text-transform: uppercase;
+  text-transform: var(--kb1-text-transform-uppercase);
   letter-spacing: 0.5px;
 }
 

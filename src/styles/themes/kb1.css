@@ -123,14 +123,57 @@ body.android-device {
   --svg-icon-filter: none;
   
   /* ===== Typography ===== */
-  --kb1-font-family: 'Roboto Mono';
-  --kb1-font-family-mono: 'Roboto Mono';
-  --kb1-font-size-xs: 0.8125rem; /* 13px */
-  --kb1-font-size-sm: 0.8125rem; /* 13px */
-  --kb1-font-size-base: 0.8125rem; /* 13px */
-  --kb1-font-size-lg: 0.8125rem; /* 13px */
-  --kb1-font-size-xl: 0.8125rem; /* 13px */
-  --kb1-font-size-2xl: 0.8125rem; /* 13px */
+  /* Font Families */
+  --kb1-font-family: 'Roboto Mono', monospace;
+  --kb1-font-family-mono: 'Roboto Mono', monospace;
+  
+  /* Font Sizes - Semantic Naming */
+  --kb1-font-tiny: 0.625rem; /* 10px - tiny badges, info icons */
+  --kb1-font-badge: 0.65rem; /* 10.4px - small badges */
+  --kb1-font-caption: 0.6875rem; /* 11px - captions, hints */
+  --kb1-font-small: 0.7rem; /* 11.2px - small secondary text */
+  --kb1-font-label: 0.75rem; /* 12px - STANDARD labels, controls, body text */
+  --kb1-font-body: 0.75rem; /* 12px - same as label for consistency */
+  --kb1-font-input: 0.8125rem; /* 13px - input fields (legacy size, may deprecate) */
+  --kb1-font-medium: 0.875rem; /* 14px - slightly larger body text */
+  --kb1-font-large: 0.9375rem; /* 15px - emphasized text */
+  --kb1-font-subhead: 1rem; /* 16px - section subheadings */
+  --kb1-font-heading: 1.25rem; /* 20px - section headings */
+  --kb1-font-title: 1.5rem; /* 24px - modal/page titles */
+  --kb1-font-display-sm: 2rem; /* 32px - small display text */
+  --kb1-font-display-lg: 4rem; /* 64px - large display text */
+  
+  /* Legacy Aliases (for gradual migration) */
+  --kb1-font-size-xs: var(--kb1-font-label); /* 12px - maps to new standard */
+  --kb1-font-size-sm: var(--kb1-font-label); /* 12px - maps to new standard */
+  --kb1-font-size-base: var(--kb1-font-medium); /* 14px */
+  --kb1-font-size-lg: var(--kb1-font-subhead); /* 16px */
+  --kb1-font-size-xl: var(--kb1-font-heading); /* 20px */
+  --kb1-font-size-2xl: var(--kb1-font-title); /* 24px */
+  
+  /* Font Weights */
+  --kb1-font-weight-light: 300;
+  --kb1-font-weight-normal: 400; /* Standard weight for labels */
+  --kb1-font-weight-medium: 500;
+  --kb1-font-weight-semibold: 600;
+  --kb1-font-weight-bold: 700;
+  
+  /* Letter Spacing */
+  --kb1-letter-spacing-tight: -0.025em;
+  --kb1-letter-spacing-normal: 0;
+  --kb1-letter-spacing-wide: 0.05em; /* Standard for uppercase labels */
+  --kb1-letter-spacing-wider: 0.1em;
+  
+  /* Text Transform */
+  --kb1-text-transform-none: none;
+  --kb1-text-transform-uppercase: uppercase; /* Standard for labels */
+  --kb1-text-transform-lowercase: lowercase;
+  --kb1-text-transform-capitalize: capitalize;
+  
+  /* Line Heights */
+  --kb1-line-height-tight: 1.2;
+  --kb1-line-height-normal: 1.5;
+  --kb1-line-height-relaxed: 1.75;
   
   /* ===== Spacing ===== */
   --kb1-spacing-xs: 0.25rem;
@@ -172,13 +215,13 @@ body.android-device {
   
   /* ===== Label Styling ===== */
   --label-color: var(--color-text);
-  --label-font-size: var(--kb1-font-size-sm);
-  --label-font-weight: 500;
+  --label-font-size: var(--kb1-font-label); /* 12px - uses new standard */
+  --label-font-weight: var(--kb1-font-weight-normal); /* 400 */
   
   /* ===== Title Block Styling ===== */
   --title-color: var(--color-text);
-  --title-font-size: var(--kb1-font-size-xl);
-  --title-font-weight: 600;
+  --title-font-size: var(--kb1-font-medium); /* 14px */
+  --title-font-weight: var(--kb1-font-weight-semibold); /* 600 */
   --title-cc-color: var(--kb1-color-primary);
   --title-cc-bg: rgba(37, 99, 235, 0.1);
   --title-cc-padding: 0.5rem 1rem;

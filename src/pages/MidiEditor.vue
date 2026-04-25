@@ -177,7 +177,7 @@ async function handleSave() {
 
 .page-header h2 {
   margin: 0 0 0.5rem 0;
-  font-size: 0.8125rem; /* 13px */
+  font-size: var(--kb1-font-input); /* 13px */
   font-weight: 600;
 }
 
@@ -216,7 +216,7 @@ async function handleSave() {
 .btn {
   padding: 0.75rem 1.5rem;
   border: none;
-  border-radius: 6px;
+  border-radius: var(--kb1-radius-md);
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s;

@@ -162,7 +162,7 @@ defineExpose({
 .accordion-section {
   background: var(--color-background-soft);
   border: none;
-  border-radius: 8px;
+  border-radius: var(--kb1-radius-lg);
   margin-bottom: 6px; /* Gap between accordion sections */
   overflow: visible;
   width: 100%;
@@ -185,8 +185,8 @@ defineExpose({
   text-align: left;
   transition: background 0.2s;
   min-height: 44px; /* Minimum header height for touch target */
-  font-family: 'Roboto Mono';
-  border-radius: 8px;
+  font-family: var(--kb1-font-family);
+  border-radius: var(--kb1-radius-lg);
 }
 
 .accordion-section.is-open .accordion-header {
@@ -274,11 +274,11 @@ defineExpose({
 
 .accordion-title-text {
   margin: 0;
-  font-size: 0.8125rem; /* 13px */
-  font-weight: 500;
+  font-size: var(--kb1-font-input); /* 13px */
+  font-weight: var(--kb1-font-weight-medium);
   color: #848484;
-  text-transform: uppercase;
-  font-family: 'Roboto Mono';
+  text-transform: var(--kb1-text-transform-uppercase);
+  font-family: var(--kb1-font-family);
   transition: color 0.2s;
   flex: 1;
   min-width: 0;
@@ -291,8 +291,8 @@ defineExpose({
 .title-suffix {
   color: var(--ui-highlight);
   margin-left: 0.5rem;
-  font-weight: 500;
-  text-transform: none;
+  font-weight: var(--kb1-font-weight-medium);
+  text-transform: var(--kb1-text-transform-none);
   opacity: 1;
   transition: none;
 }
@@ -303,38 +303,38 @@ defineExpose({
 }
 
 .accordion-section.is-open .accordion-title-text {
-  font-weight: 700;
+  font-weight: var(--kb1-font-weight-bold);
   color: #EAEAEA;
 }
 
 .accordion-subtitle {
   margin-top: 0.125rem;
-  font-size: 0.8125rem; /* 13px */
+  font-size: var(--kb1-font-input); /* 13px */
   color: var(--color-text-muted);
   line-height: 1.4;
-  font-family: 'Roboto Mono';
+  font-family: var(--kb1-font-family);
   white-space: nowrap;
   overflow: visible;
   width: 100%;
 }
 
 .midi-cc-display {
-  font-size: 0.8125rem; /* 13px */
-  font-weight: 400;
+  font-size: var(--kb1-font-input); /* 13px */
+  font-weight: var(--kb1-font-weight-normal);
   color: #848484;
-  font-family: 'Roboto Mono';
+  font-family: var(--kb1-font-family);
   flex-shrink: 0;
   white-space: nowrap;
 }
 
 .midi-cc-number {
   color: var(--ui-highlight);
-  font-weight: 600;
+  font-weight: var(--kb1-font-weight-semibold);
 }
 
 .accordion-icon {
-  font-size: 0.8125rem; /* 13px */
-  font-weight: 300;
+  font-size: var(--kb1-font-input); /* 13px */
+  font-weight: var(--kb1-font-weight-light);
   color: var(--color-text-muted);
   transition: transform 0.2s;
   min-width: 24px;

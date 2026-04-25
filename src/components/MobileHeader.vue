@@ -126,11 +126,11 @@ function handleBatteryAlert(event: Event) {
   padding: 0.75rem 1.5rem;
   background: transparent;
   border: 2px solid #47708E;
-  border-radius: 6px;
+  border-radius: var(--kb1-radius-md);
   color: #47708E;
-  font-family: 'Roboto Mono';
-  font-weight: 700;
-  text-transform: uppercase;
+  font-family: var(--kb1-font-family);
+  font-weight: var(--kb1-font-weight-bold);
+  text-transform: var(--kb1-text-transform-uppercase);
   cursor: pointer;
   transition: all 0.2s;
   white-space: nowrap;
@@ -173,7 +173,7 @@ function handleBatteryAlert(event: Event) {
   
   .bluetooth-connect-btn {
     padding: 0.6rem 1.2rem;
-    font-size: 0.875rem;
+    font-size: var(--kb1-font-medium);
   }
   
   .header-top:not(:has(.bluetooth-connect-btn)) .battery-meter {

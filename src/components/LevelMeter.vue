@@ -386,7 +386,7 @@ const labels = computed<Label[]>(() => {
   width: 5px;
   height: 5px;
   background: var(--ui-highlight);
-  border-radius: 50%;
+  border-radius: var(--kb1-radius-full);
   transform: translateX(-50%) translateY(4px);
   transition: opacity 0.2s ease;
 }
@@ -416,8 +416,8 @@ const labels = computed<Label[]>(() => {
 .label {
   position: absolute;
   transform: translateX(-50%);
-  font-family: 'Roboto Mono';
-  font-size: 0.8125rem; /* 13px */
+  font-family: var(--kb1-font-family);
+  font-size: var(--kb1-font-input); /* 13px */
   color: var(--color-text-muted);
   white-space: nowrap;
 }

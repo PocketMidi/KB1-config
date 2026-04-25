@@ -20,43 +20,43 @@
         </svg>
         
         <!-- Lever icon - active version (when open) - used by both Lever 1 and Lever 2 -->
-        <svg v-if="(showLever1Icon || showLever2Icon) && isOpen" class="accordion-icon-img accordion-icon-lever1 is-open" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 232.57 161.95">
-          <path fill="#eaeaea" d="M97.45,79.9c0,1.1-.65,2.1-1.65,2.57-9.16,4.33-14.34,15.85-14.34,26.38,0,3.16,0,5.68,0,5.68,0,2.9-1.57,4.47-3.51,4.47h-19.52c-1.94,0-3.51-1.57-3.51-3.51v-2.67c0-26.37,15.88-48.86,39.09-53.88,1.79-.39,3.49.97,3.48,2.8l-.06,18.15Z"/>
-          <path fill="#eaeaea" d="M127.15,79.9c0,1.1.65,2.1,1.65,2.57,9.16,4.33,14.34,15.85,14.34,26.38,0,3.16,0,5.68,0,5.68,0,2.9,1.57,4.47,3.51,4.47h19.52c1.94,0,3.51-1.57,3.51-3.51v-2.67c0-26.37-15.88-48.86-39.09-53.88-1.79-.39-3.49.97-3.48,2.8l.06,18.15Z"/>
-          <circle fill="#eaeaea" cx="112.3" cy="111.34" r="15.91"/>
-          <line stroke="#eaeaea" stroke-linecap="round" stroke-miterlimit="10" stroke-width="15" x1="112.15" y1="36.27" x2="112.22" y2="110.68" fill="none"/>
+        <svg v-if="(showLever1Icon || showLever2Icon) && isOpen" class="accordion-icon-img accordion-icon-lever1 is-open" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128.48 99.43">
+          <path fill="none" stroke="#eaeaea" stroke-linecap="round" stroke-miterlimit="10" stroke-width="10" d="M73.98,31.89c26.03,1.76,46.6,23.43,46.6,49.9"/>
+          <path fill="none" stroke="#eaeaea" stroke-linecap="round" stroke-miterlimit="10" stroke-width="10" d="M35.51,46.12c-9.23,9.07-14.96,21.71-14.96,35.68"/>
+          <line stroke="#eaeaea" stroke-linecap="round" stroke-miterlimit="10" stroke-width="10" x1="69.9" y1="79.34" x2="39.89" y2="3.98" fill="none"/>
+          <circle fill="#eaeaea" cx="70" cy="80" r="15.91"/>
         </svg>
         <!-- Lever icon - inactive version (when closed) - used by both Lever 1 and Lever 2 -->
-        <svg v-if="(showLever1Icon || showLever2Icon) && !isOpen" class="accordion-icon-img accordion-icon-lever1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 232.57 161.95">
-          <path fill="none" stroke="#eaeaea" stroke-linecap="round" stroke-miterlimit="10" stroke-width="15" d="M98.43,65.2c4.55-1.36,9.36-2.09,14.35-2.09,27.62,0,50.02,22.39,50.02,50.02"/>
-          <path fill="none" stroke="#eaeaea" stroke-linecap="round" stroke-miterlimit="10" stroke-width="15" d="M62.76,113.13c0-6.08,1.08-11.9,3.07-17.29"/>
-          <line stroke="#eaeaea" stroke-linecap="round" stroke-miterlimit="10" stroke-width="15" x1="112.3" y1="110.68" x2="49.32" y2="47.34" fill="none"/>
-          <circle fill="#eaeaea" cx="112.3" cy="111.34" r="15.91"/>
+        <svg v-if="(showLever1Icon || showLever2Icon) && !isOpen" class="accordion-icon-img accordion-icon-lever1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128.48 99.43">
+          <path fill="none" stroke="#eaeaea" stroke-linecap="round" stroke-miterlimit="10" stroke-width="10" d="M56.61,33.86c4.55-1.36,9.36-2.09,14.35-2.09,27.62,0,50.02,22.39,50.02,50.02"/>
+          <path fill="none" stroke="#eaeaea" stroke-linecap="round" stroke-miterlimit="10" stroke-width="10" d="M20.94,81.79c0-6.08,1.08-11.9,3.07-17.29"/>
+          <line stroke="#eaeaea" stroke-linecap="round" stroke-miterlimit="10" stroke-width="10" x1="69.9" y1="79.34" x2="7.5" y2="16" fill="none"/>
+          <circle fill="#eaeaea" cx="70" cy="80" r="15.91"/>
         </svg>
         
         
         <!-- Press icon - active version (when open) - used by both Press 1 and Press 2 -->
         <svg v-if="(showPress1Icon || showPress2Icon) && isOpen" class="accordion-icon-img accordion-icon-press1 is-open" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 252.31 161.04">
-          <polyline fill="none" stroke="#eaeaea" stroke-linecap="round" stroke-miterlimit="10" stroke-width="18" points="193.93 102.27 180.37 102.27 75.29 102.27 61.74 102.27"/>
-          <path fill="#eaeaea" stroke="#eaeaea" stroke-linecap="round" stroke-miterlimit="10" stroke-width="18" d="M94.17,82h70.22c4.97,0,9,3,9,7v13.27h-88.22v-13.27c0-4,4.03-7,9-7Z"/>
+          <polyline fill="none" stroke="#eaeaea" stroke-linecap="round" stroke-miterlimit="10" stroke-width="12" points="193.93 102.27 180.37 102.27 75.29 102.27 61.74 102.27"/>
+          <path fill="#eaeaea" stroke="#eaeaea" stroke-linecap="round" stroke-miterlimit="10" stroke-width="12" d="M94.17,82h70.22c4.97,0,9,3,9,7v13.27h-88.22v-13.27c0-4,4.03-7,9-7Z"/>
         </svg>
         <!-- Press icon - inactive version (when closed) - used by both Press 1 and Press 2 -->
         <svg v-if="(showPress1Icon || showPress2Icon) && !isOpen" class="accordion-icon-img accordion-icon-press1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 252.31 161.04">
-          <polyline fill="none" stroke="#eaeaea" stroke-linecap="round" stroke-miterlimit="10" stroke-width="18" points="193.93 102.27 180.37 102.27 75.29 102.27 61.74 102.27"/>
-          <path fill="none" stroke="#eaeaea" stroke-linecap="round" stroke-miterlimit="10" stroke-width="18" d="M97.17,61.1h64.22c6.62,0,12,5.38,12,12v29.17h-88.22v-29.17c0-6.62,5.38-12,12-12Z"/>
+          <polyline fill="none" stroke="#eaeaea" stroke-linecap="round" stroke-miterlimit="10" stroke-width="12" points="193.93 102.27 180.37 102.27 75.29 102.27 61.74 102.27"/>
+          <path fill="none" stroke="#eaeaea" stroke-linecap="round" stroke-miterlimit="10" stroke-width="12" d="M97.17,61.1h64.22c6.62,0,12,5.38,12,12v29.17h-88.22v-29.17c0-6.62,5.38-12,12-12Z"/>
         </svg>
         
         <!-- Touch icon - active version (when open) -->
         <svg v-if="showTouchIcon && isOpen" class="accordion-icon-img accordion-icon-touch is-open" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72.89 73.92">
-          <circle fill="none" stroke="#eaeaea" stroke-linecap="round" stroke-miterlimit="10" stroke-width="8" cx="36.88" cy="36.95" r="16.85"/>
-          <path fill="none" stroke="#eaeaea" stroke-linecap="round" stroke-miterlimit="10" stroke-width="8" d="M60.19,60.26c-12.87,12.87-33.74,12.87-46.61,0"/>
-          <path fill="none" stroke="#eaeaea" stroke-linecap="round" stroke-miterlimit="10" stroke-width="8" d="M13.58,13.65C26.45.78,47.32.78,60.19,13.65"/>
-          <line stroke="#eaeaea" stroke-linecap="round" stroke-miterlimit="10" stroke-width="8" x1="4" y1="34.26" x2="4" y2="37.17"/>
-          <line stroke="#eaeaea" stroke-linecap="round" stroke-miterlimit="10" stroke-width="8" x1="68.89" y1="34.26" x2="68.89" y2="37.17"/>
+          <circle fill="none" stroke="#eaeaea" stroke-linecap="round" stroke-miterlimit="10" stroke-width="6" cx="36.88" cy="36.95" r="16.85"/>
+          <path fill="none" stroke="#eaeaea" stroke-linecap="round" stroke-miterlimit="10" stroke-width="6" d="M60.19,60.26c-12.87,12.87-33.74,12.87-46.61,0"/>
+          <path fill="none" stroke="#eaeaea" stroke-linecap="round" stroke-miterlimit="10" stroke-width="6" d="M13.58,13.65C26.45.78,47.32.78,60.19,13.65"/>
+          <line stroke="#eaeaea" stroke-linecap="round" stroke-miterlimit="10" stroke-width="6" x1="4" y1="34.26" x2="4" y2="37.17"/>
+          <line stroke="#eaeaea" stroke-linecap="round" stroke-miterlimit="10" stroke-width="6" x1="68.89" y1="34.26" x2="68.89" y2="37.17"/>
         </svg>
         <!-- Touch icon - inactive version (when closed) -->
         <svg v-if="showTouchIcon && !isOpen" class="accordion-icon-img accordion-icon-touch" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 63.04 63.04">
-          <circle fill="none" stroke="#eaeaea" stroke-linecap="round" stroke-miterlimit="10" stroke-width="8" cx="31.52" cy="31.52" r="27.52"/>
+          <circle fill="none" stroke="#eaeaea" stroke-linecap="round" stroke-miterlimit="10" stroke-width="6" cx="31.52" cy="31.52" r="27.52"/>
           <circle fill="#eaeaea" cx="31.52" cy="31.52" r="14.14"/>
         </svg>
         
@@ -72,7 +72,7 @@
           <circle fill="#eaeaea" cx="122.02" cy="100.94" r="9.47"/>
           <line fill="none" stroke="#eaeaea" stroke-linecap="round" stroke-miterlimit="10" stroke-width="8" x1="99.47" y1="77.21" x2="161.07" y2="77.21"/>
           <circle fill="#eaeaea" cx="138.68" cy="77.49" r="9.47"/>
-          <rect fill="none" stroke="#eaeaea" stroke-linecap="round" stroke-miterlimit="10" stroke-width="8" x="83.59" y="29.93" width="94.02" height="95" rx="7.58" ry="7.58"/>
+          <rect fill="none" stroke="#eaeaea" stroke-linecap="round" stroke-miterlimit="10" stroke-width="6" x="83.59" y="29.93" width="94.02" height="95" rx="7.58" ry="7.58"/>
         </svg>
         
         <!-- System icon - active version (when open) -->
@@ -88,8 +88,8 @@
         </svg>
         <!-- System icon - inactive version (when closed) -->
         <svg v-if="showSystemIcon && !isOpen" class="accordion-icon-img accordion-icon-system" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 108.78 110.75">
-          <path fill="none" stroke="#eaeaea" stroke-miterlimit="10" stroke-width="6" d="M73.36,73.19c-2.04-.15-6.42-.66-10.63-2.14-1.39-.49-2.89.17-3.55,1.49-2.83,5.67-9,9.37-15.94,8.53-7.28-.88-13.06-6.94-13.63-14.25-.51-6.5,2.97-12.23,8.24-15.05,1.05-.56,1.47-1.83,1-2.92-1.65-3.78-2.74-7.86-3.17-12.13-.14-1.42-1.59-2.29-2.91-1.76-1.66.67-3.25,1.46-4.75,2.38l-8.61-5.17c-3.34,2.58-6.28,5.65-8.71,9.10l5.55,8.37c-1.39,2.52-2.45,5.24-3.15,8.11l-9.75,2.43c-.22,1.76-.35,3.55-.35,5.37,0,2.46.22,4.87.63,7.22l9.85,2c.82,2.83,2,5.50,3.50,7.96l-5.17,8.61c2.58,3.34,5.65,6.28,9.10,8.71l8.37-5.55c2.52,1.39,5.24,2.45,8.11,3.15l2.43,9.75c1.76.22,3.55.35,5.37.35,2.46,0,4.87-.22,7.22-.63l2-9.85c2.83-.82,5.50-2,7.96-3.50l8.61,5.17c3.34-2.58,6.28-5.65,8.71-9.10l-5.55-8.37c.63-1.14,1.33-2.91,1.92-4.51.65-1.78-.62-3.68-2.52-3.76h-.18Z"/>
-          <path fill="none" stroke="#eaeaea" stroke-miterlimit="10" stroke-width="4.81" d="M99.66,13.61c-.8-.99-1.66-1.94-2.61-2.84-1.27-1.22-2.63-2.29-4.05-3.25l-5.90,4.11c-1.87-.97-3.84-1.69-5.85-2.13l-1.89-6.93c-3-.32-6.04-.18-9.01.40l-1.27,7.07c-1.96.62-3.86,1.50-5.64,2.64l-6.24-3.56c-.99.80-1.94,1.66-2.84,2.61-1.22,1.27-2.29,2.63-3.25,4.05l4.11,5.90c-.97,1.87-1.69,3.84-2.13,5.85l-6.93,1.89c-.32,3-.18,6.04.40,9.01l7.07,1.27c.62,1.96,1.50,3.86,2.64,5.64l-3.56,6.24c.80.99,1.66,1.94,2.61,2.84,1.27,1.22,2.63,2.29,4.05,3.25l5.90-4.11c1.87.97,3.84,1.69,5.85,2.13l1.89,6.93c3,.32,6.04.18,9.01-.40l1.27-7.07c1.96-.62,3.86-1.50,5.64-2.64l6.24,3.56c.99-.80,1.94-1.66,2.84-2.61,1.22-1.27,2.29-2.63,3.25-4.05l-4.11-5.90c.97-1.87,1.69-3.84,2.13-5.85l6.93-1.89c.32-3,.18-6.04-.40-9.01l-7.07-1.27c-.62-1.96-1.50-3.86-2.64-5.64l3.56-6.24h0ZM83.04,39.14c-3.61,3.78-9.61,3.92-13.39.30s-3.92-9.61-.30-13.39,9.61-3.92,13.39-.30c3.78,3.61,3.92,9.61.30,13.39Z"/>
+          <path fill="none" stroke="#eaeaea" stroke-miterlimit="10" stroke-width="4.5" d="M73.36,73.19c-2.04-.15-6.42-.66-10.63-2.14-1.39-.49-2.89.17-3.55,1.49-2.83,5.67-9,9.37-15.94,8.53-7.28-.88-13.06-6.94-13.63-14.25-.51-6.5,2.97-12.23,8.24-15.05,1.05-.56,1.47-1.83,1-2.92-1.65-3.78-2.74-7.86-3.17-12.13-.14-1.42-1.59-2.29-2.91-1.76-1.66.67-3.25,1.46-4.75,2.38l-8.61-5.17c-3.34,2.58-6.28,5.65-8.71,9.10l5.55,8.37c-1.39,2.52-2.45,5.24-3.15,8.11l-9.75,2.43c-.22,1.76-.35,3.55-.35,5.37,0,2.46.22,4.87.63,7.22l9.85,2c.82,2.83,2,5.50,3.50,7.96l-5.17,8.61c2.58,3.34,5.65,6.28,9.10,8.71l8.37-5.55c2.52,1.39,5.24,2.45,8.11,3.15l2.43,9.75c1.76.22,3.55.35,5.37.35,2.46,0,4.87-.22,7.22-.63l2-9.85c2.83-.82,5.50-2,7.96-3.50l8.61,5.17c3.34-2.58,6.28-5.65,8.71-9.10l-5.55-8.37c.63-1.14,1.33-2.91,1.92-4.51.65-1.78-.62-3.68-2.52-3.76h-.18Z"/>
+          <path fill="none" stroke="#eaeaea" stroke-miterlimit="10" stroke-width="4.5" d="M99.66,13.61c-.8-.99-1.66-1.94-2.61-2.84-1.27-1.22-2.63-2.29-4.05-3.25l-5.90,4.11c-1.87-.97-3.84-1.69-5.85-2.13l-1.89-6.93c-3-.32-6.04-.18-9.01.40l-1.27,7.07c-1.96.62-3.86,1.50-5.64,2.64l-6.24-3.56c-.99.80-1.94,1.66-2.84,2.61-1.22,1.27-2.29,2.63-3.25,4.05l4.11,5.90c-.97,1.87-1.69,3.84-2.13,5.85l-6.93,1.89c-.32,3-.18,6.04.40,9.01l7.07,1.27c.62,1.96,1.50,3.86,2.64,5.64l-3.56,6.24c.80.99,1.66,1.94,2.61,2.84,1.27,1.22,2.63,2.29,4.05,3.25l5.90-4.11c1.87.97,3.84,1.69,5.85,2.13l1.89,6.93c3,.32,6.04.18,9.01-.40l1.27-7.07c1.96-.62,3.86-1.50,5.64-2.64l6.24,3.56c.99-.80,1.94-1.66,2.84-2.61,1.22-1.27,2.29-2.63,3.25-4.05l-4.11-5.90c.97-1.87,1.69-3.84,2.13-5.85l6.93-1.89c.32-3,.18-6.04-.40-9.01l-7.07-1.27c-.62-1.96-1.50-3.86-2.64-5.64l3.56-6.24h0ZM83.04,39.14c-3.61,3.78-9.61,3.92-13.39.30s-3.92-9.61-.30-13.39,9.61-3.92,13.39-.30c3.78,3.61,3.92,9.61.30,13.39Z"/>
         </svg>
         
         <div class="accordion-text-content">
@@ -240,9 +240,9 @@ defineExpose({
 }
 
 .accordion-icon-lever1 {
-  height: 25px; /* Lever icon height - used by both Lever 1 and Lever 2 */
-  margin-left: -.75rem; /* Space from left edge */
-  margin-right: -.7rem; /* Space between icon and text */
+  height: 16px; /* Lever icon height - used by both Lever 1 and Lever 2 */
+  margin-left: -.1rem; /* Space from left edge */
+  margin-right: -.2rem; /* Space between icon and text */
 }
 
 .accordion-icon-press1 {
@@ -258,8 +258,8 @@ defineExpose({
 }
 .accordion-icon-preset {
   height: 34px; /* Preset icon height */
-  margin-left: -1.2rem; /* Space from left edge */
-  margin-right: -1rem; /* Space between icon and text */
+  margin-left: -1.25rem; /* Space from left edge */
+  margin-right: -1.1rem; /* Space between icon and text */
 }
 
 .accordion-icon-system {

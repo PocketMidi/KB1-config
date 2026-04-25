@@ -134,7 +134,7 @@ body.android-device {
   --kb1-font-small: 0.7rem; /* 11.2px - small secondary text */
   --kb1-font-label: 0.75rem; /* 12px - STANDARD labels, controls, body text */
   --kb1-font-body: 0.75rem; /* 12px - same as label for consistency */
-  --kb1-font-input: 0.8125rem; /* 13px - input fields (legacy size, may deprecate) */
+  --kb1-font-input: 0.75rem; /* 12px - NOW MATCHES LABEL (was 13px, change back to 0.8125rem if needed) */
   --kb1-font-medium: 0.875rem; /* 14px - slightly larger body text */
   --kb1-font-large: 0.9375rem; /* 15px - emphasized text */
   --kb1-font-subhead: 1rem; /* 16px - section subheadings */

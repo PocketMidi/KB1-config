@@ -70,7 +70,7 @@ onMounted(() => {
 
 .toast-message {
   flex: 1;
-  line-height: 1.4;
+  line-height: var(--kb1-line-height-compact);
 }
 
 .toast-success {

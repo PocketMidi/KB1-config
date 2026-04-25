@@ -363,11 +363,11 @@ function isRootNote(midiNote: number): boolean {
 }
 
 .note-label {
-  line-height: 1;
+  line-height: var(--kb1-line-height-tight);
 }
 
 .note-label-alt {
-  line-height: 1;
+  line-height: var(--kb1-line-height-tight);
   font-size: var(--kb1-font-tiny); /* 10px */
 }
 

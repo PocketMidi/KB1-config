@@ -1840,8 +1840,8 @@ function increaseSteps() {
 
 .help-modal-header h3 {
   margin: 0;
-  font-size: var(--kb1-font-label); /* 12px */
-  font-weight: var(--kb1-font-weight-semibold);
+  font-size: var(--kb1-font-medium);
+  font-weight: var(--kb1-font-weight-bold);
   color: #EAEAEA;
   text-transform: var(--kb1-text-transform-uppercase);
   letter-spacing: var(--kb1-letter-spacing-wide);
@@ -1874,8 +1874,8 @@ function increaseSteps() {
 
 .help-modal-body p {
   margin: 0 0 1rem 0;
-  font-size: var(--kb1-font-label);
-  line-height: 1.6;
+  font-size: var(--kb1-font-input);
+  line-height: var(--kb1-line-height-relaxed);
   color: var(--color-text);
 }
 

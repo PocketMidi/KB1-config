@@ -1363,7 +1363,7 @@ function downloadJSON(json: string, filename: string) {
 .help-section p {
   margin: 0;
   font-size: var(--kb1-font-input);
-  line-height: 1.5;
+  line-height: var(--kb1-line-height-normal);
   color: #CDCDCD;
   font-family: var(--kb1-font-family);
 }
@@ -1417,7 +1417,7 @@ function downloadJSON(json: string, filename: string) {
 
 .modal-header h3 {
   margin: 0;
-  font-size: var(--kb1-font-input);
+  font-size: var(--kb1-font-medium);
   font-weight: var(--kb1-font-weight-semibold);
   color: #EAEAEA;
   text-transform: var(--kb1-text-transform-uppercase);
@@ -1445,7 +1445,7 @@ function downloadJSON(json: string, filename: string) {
   margin: 0;
   font-size: var(--kb1-font-input);
   color: #848484;
-  line-height: 1.5;
+  line-height: var(--kb1-line-height-normal);
 }
 
 /* Cloud Dialog - Export + Import Unified */
@@ -1766,7 +1766,7 @@ function downloadJSON(json: string, filename: string) {
 .btn-menu {
   padding: 0.375rem 0.5rem;
   font-size: var(--kb1-font-subhead);
-  line-height: 1;
+  line-height: var(--kb1-line-height-tight);
 }
 
 .btn-delete {
@@ -1901,9 +1901,9 @@ function downloadJSON(json: string, filename: string) {
 
 .modal-dialog h3 {
   margin: 0 0 1rem 0;
-  font-size: var(--kb1-font-subhead);
+  font-size: var(--kb1-font-medium);
   color: #EAEAEA;
-  font-weight: var(--kb1-font-weight-medium);
+  font-weight: var(--kb1-font-weight-bold);
 }
 
 .form-group {
@@ -1926,7 +1926,7 @@ function downloadJSON(json: string, filename: string) {
   font-size: var(--kb1-font-label);
   font-family: var(--kb1-font-family);
   color: #EAEAEA;
-  line-height: 1.6;
+  line-height: var(--kb1-line-height-relaxed);
   white-space: pre-line;
   word-break: break-word;
 }
@@ -2047,7 +2047,7 @@ textarea.input-text {
 
 .import-dialog .modal-header h3 {
   margin: 0;
-  font-size: var(--kb1-font-input);
+  font-size: var(--kb1-font-medium);
   font-weight: var(--kb1-font-weight-semibold);
   color: #EAEAEA;
   text-transform: var(--kb1-text-transform-uppercase);
@@ -2063,7 +2063,7 @@ textarea.input-text {
 .export-intro {
   font-size: var(--kb1-font-input);
   color: #848484;
-  line-height: 1.5;
+  line-height: var(--kb1-line-height-normal);
   margin-bottom: var(--kb1-spacing-lg);
   margin-top: var(--kb1-spacing-sm);
 }
@@ -2296,8 +2296,8 @@ textarea.input-text {
 
 .help-modal-header h3 {
   margin: 0;
-  font-size: var(--kb1-font-input);
-  font-weight: var(--kb1-font-weight-semibold);
+  font-size: var(--kb1-font-medium);
+  font-weight: var(--kb1-font-weight-bold);
   color: #EAEAEA;
   text-transform: var(--kb1-text-transform-uppercase);
   letter-spacing: var(--kb1-letter-spacing-wide);
@@ -2331,7 +2331,7 @@ textarea.input-text {
 .help-modal-body p {
   margin: 0;
   font-size: var(--kb1-font-input);
-  line-height: 1.6;
+  line-height: var(--kb1-line-height-relaxed);
   color: var(--color-text);
 }
 

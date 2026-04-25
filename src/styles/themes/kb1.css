@@ -171,9 +171,10 @@ body.android-device {
   --kb1-text-transform-capitalize: capitalize;
   
   /* Line Heights = LEADING (vertical space between lines of text) */
-  --kb1-line-height-tight: 1.2;      /* Tight leading (dense text blocks) */
-  --kb1-line-height-normal: 1.5;     /* Normal leading (comfortable reading) */
-  --kb1-line-height-relaxed: 1.75;   /* Relaxed leading (airy, open text) */
+  --kb1-line-height-tight: 1;        /* Tight leading (icons, compact UI) */
+  --kb1-line-height-compact: 1.4;    /* Compact leading (buttons, cards) */
+  --kb1-line-height-normal: 1.5;     /* Normal leading (standard text) */
+  --kb1-line-height-relaxed: 1.6;    /* Relaxed leading (body copy, help modals) */
   
   /* ===== Spacing ===== */
   /* Layout Spacing (padding, margin, gap) - Used for BOTH horizontal & vertical */

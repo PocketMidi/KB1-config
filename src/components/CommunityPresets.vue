@@ -274,7 +274,7 @@ defineExpose({
   font-size: var(--kb1-font-caption);
   color: #6B6B6B;
   font-family: var(--kb1-font-family);
-  line-height: 1.4;
+  line-height: var(--kb1-line-height-compact);
   white-space: pre-line;
   margin: 0.25rem 0;
   opacity: 0.8;
@@ -283,7 +283,7 @@ defineExpose({
 .preset-description {
   font-size: var(--kb1-font-label);
   color: #848484;
-  line-height: 1.3;
+  line-height: var(--kb1-line-height-compact);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;

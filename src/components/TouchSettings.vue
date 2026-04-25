@@ -1066,8 +1066,8 @@ function dismissHelp() {
 
 .help-modal-header h3 {
   margin: 0;
-  font-size: var(--kb1-font-subhead);
-  font-weight: var(--kb1-font-weight-medium);
+  font-size: var(--kb1-font-medium);
+  font-weight: var(--kb1-font-weight-bold);
   text-transform: var(--kb1-text-transform-uppercase);
   letter-spacing: var(--kb1-letter-spacing-wide);
 }
@@ -1084,7 +1084,7 @@ function dismissHelp() {
   display: flex;
   align-items: center;
   justify-content: center;
-  line-height: 1;
+  line-height: var(--kb1-line-height-tight);
   transition: color 0.2s;
 }
 
@@ -1094,7 +1094,7 @@ function dismissHelp() {
 
 .help-modal-body {
   padding: var(--kb1-spacing-md);
-  line-height: 1.6;
+  line-height: var(--kb1-line-height-relaxed);
 }
 
 .help-modal-body p {

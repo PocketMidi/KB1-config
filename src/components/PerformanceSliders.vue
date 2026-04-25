@@ -2929,7 +2929,7 @@ defineExpose({
   margin: 0;
   padding: var(--kb1-spacing-md);
   font-size: var(--kb1-font-input);
-  line-height: 1.6;
+  line-height: var(--kb1-line-height-relaxed);
   color: var(--color-text, #EAEAEA);
   font-weight: var(--kb1-font-weight-normal);
 }
@@ -3250,7 +3250,7 @@ defineExpose({
   color: var(--kb1-text-primary);
   font-size: var(--kb1-font-heading);
   font-weight: var(--kb1-font-weight-normal);
-  line-height: 1;
+  line-height: var(--kb1-line-height-tight);
   border-radius: var(--kb1-radius-sm);
   cursor: pointer;
   transition: all 0.2s ease;
@@ -3371,9 +3371,9 @@ defineExpose({
 
 .preset-modal-dialog h3 {
   margin: 0 0 1rem 0;
-  font-size: var(--kb1-font-subhead);
+  font-size: var(--kb1-font-medium);
   color: #EAEAEA;
-  font-weight: var(--kb1-font-weight-medium);
+  font-weight: var(--kb1-font-weight-bold);
 }
 
 .form-group {
@@ -3493,7 +3493,7 @@ textarea.input-text {
   border: none;
   color: #848484;
   font-size: var(--kb1-font-display-sm);
-  line-height: 1;
+  line-height: var(--kb1-line-height-tight);
   cursor: pointer;
   transition: color 0.2s ease;
   padding: 0;
@@ -3510,8 +3510,8 @@ textarea.input-text {
 
 .mode-info-title {
   font-family: var(--kb1-font-family);
-  font-size: var(--kb1-font-heading);
-  font-weight: var(--kb1-font-weight-semibold);
+  font-size: var(--kb1-font-medium);
+  font-weight: var(--kb1-font-weight-bold);
   color: #EAEAEA;
   margin: 0 0 1.5rem 0;
   text-transform: var(--kb1-text-transform-uppercase);
@@ -3520,8 +3520,8 @@ textarea.input-text {
 
 .mode-info-content {
   color: #EAEAEA;
-  font-size: var(--kb1-font-large);
-  line-height: 1.6;
+  font-size: var(--kb1-font-input);
+  line-height: var(--kb1-line-height-relaxed);
   margin-bottom: var(--kb1-spacing-xl);
 }
 
@@ -3535,7 +3535,7 @@ textarea.input-text {
 
 .mode-info-section h4 {
   font-family: var(--kb1-font-family);
-  font-size: var(--kb1-font-medium);
+  font-size: var(--kb1-font-input);
   font-weight: var(--kb1-font-weight-semibold);
   color: #b9aa5f;
   margin: 0 0 0.5rem 0;

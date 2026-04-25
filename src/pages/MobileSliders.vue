@@ -235,8 +235,8 @@ defineExpose({
 .modal-dialog h3 {
   margin: 0 0 0.5rem 0;
   color: #EAEAEA;
-  font-size: var(--kb1-font-subhead);
-  font-weight: 500;
+  font-size: var(--kb1-font-medium);
+  font-weight: var(--kb1-font-weight-bold);
 }
 
 .form-group {

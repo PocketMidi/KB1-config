@@ -515,7 +515,7 @@ function dismissSpeakerHelp() {
 
 .modal-header h2 {
   margin: 0;
-  font-size: var(--kb1-font-input);
+  font-size: var(--kb1-font-medium);
   font-weight: var(--kb1-font-weight-semibold);
   color: #EAEAEA;
 }
@@ -536,7 +536,7 @@ function dismissSpeakerHelp() {
   border: none;
   color: #9ca3af;
   font-size: 32px;
-  line-height: 1;
+  line-height: var(--kb1-line-height-tight);
   cursor: pointer;
   padding: 0;
   width: 32px;
@@ -742,8 +742,8 @@ function dismissSpeakerHelp() {
 
 .help-modal-header h3 {
   margin: 0;
-  font-size: var(--kb1-font-input);
-  font-weight: var(--kb1-font-weight-semibold);
+  font-size: var(--kb1-font-medium);
+  font-weight: var(--kb1-font-weight-bold);
   color: #EAEAEA;
   text-transform: var(--kb1-text-transform-uppercase);
   letter-spacing: var(--kb1-letter-spacing-wide);
@@ -777,7 +777,7 @@ function dismissSpeakerHelp() {
 .help-modal-body p {
   margin: 0 0 1rem 0;
   font-size: var(--kb1-font-input);
-  line-height: 1.6;
+  line-height: var(--kb1-line-height-relaxed);
   color: var(--color-text);
 }
 
@@ -841,7 +841,7 @@ function dismissSpeakerHelp() {
 .action-description {
   font-size: var(--kb1-font-input);
   color: #9ca3af;
-  line-height: 1.4;
+  line-height: var(--kb1-line-height-compact);
 }
 
 .sync-button-primary {
@@ -885,7 +885,7 @@ function dismissSpeakerHelp() {
 
 .sync-icon {
   font-size: var(--kb1-font-input);
-  line-height: 1;
+  line-height: var(--kb1-line-height-tight);
 }
 
 .sync-icon.spinning {
@@ -956,7 +956,7 @@ function dismissSpeakerHelp() {
 .toggle-description {
   font-size: var(--kb1-font-input);
   color: #9ca3af;
-  line-height: 1.4;
+  line-height: var(--kb1-line-height-compact);
 }
 
 .toggle-text {
@@ -1068,7 +1068,7 @@ input:checked + .toggle-slider:before {
 .charging-steps li {
   font-size: var(--kb1-font-input);
   color: #d1d5db;
-  line-height: 1.6;
+  line-height: var(--kb1-line-height-relaxed);
   margin-bottom: 8px;
 }
 
@@ -1101,7 +1101,7 @@ input:checked + .toggle-slider:before {
   padding-left: 20px;
   color: #d1d5db;
   font-size: var(--kb1-font-input);
-  line-height: 1.6;
+  line-height: var(--kb1-line-height-relaxed);
 }
 
 .instruction-list li {
@@ -1158,7 +1158,7 @@ input:checked + .toggle-slider:before {
 .charging-subtitle {
   font-size: var(--kb1-font-input);
   color: #9ca3af;
-  line-height: 1.5;
+  line-height: var(--kb1-line-height-normal);
 }
 
 .charging-progress-actions {
@@ -1215,7 +1215,7 @@ input:checked + .toggle-slider:before {
 .warning-text {
   font-size: var(--kb1-font-input);
   color: #d1d5db;
-  line-height: 1.6;
+  line-height: var(--kb1-line-height-relaxed);
 }
 
 .warning-text strong {
@@ -1257,7 +1257,7 @@ input:checked + .toggle-slider:before {
   margin: 0 0 20px 0;
   font-size: var(--kb1-font-input);
   color: #d1d5db;
-  line-height: 1.6;
+  line-height: var(--kb1-line-height-relaxed);
 }
 
 .resetting-state {
@@ -1348,7 +1348,7 @@ input:checked + .toggle-slider:before {
   background: rgba(255, 255, 255, 0.1);
   color: #9ca3af;
   font-size: var(--kb1-font-heading);
-  line-height: 1;
+  line-height: var(--kb1-line-height-tight);
   border-radius: var(--kb1-radius-sm);
   cursor: pointer;
   transition: all 0.2s ease;

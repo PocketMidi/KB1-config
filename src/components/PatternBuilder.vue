@@ -620,7 +620,7 @@ function getTemplateForChordType(chordType: number): number {
   font-family: var(--kb1-font-family);
   text-align: left;
   letter-spacing: 0.02em;
-  line-height: 1.4;
+  line-height: var(--kb1-line-height-compact);
 }
 
 .build-mode-desc {

@@ -162,7 +162,7 @@ function handleBackdropClick() {
   display: flex;
   align-items: center;
   justify-content: center;
-  line-height: 1;
+  line-height: var(--kb1-line-height-tight);
 }
 
 .close-button:hover {
@@ -185,7 +185,7 @@ function handleBackdropClick() {
 }
 
 .modal-title {
-  font-size: var(--kb1-font-input); /* 13px */
+  font-size: var(--kb1-font-medium); /* 14px */
   font-weight: var(--kb1-font-weight-bold);
   color: #EAEAEA;
   margin: 0;
@@ -196,7 +196,7 @@ function handleBackdropClick() {
   font-size: var(--kb1-font-input); /* 13px */
   color: rgba(234, 234, 234, 0.7);
   margin: 0;
-  line-height: 1.5;
+  line-height: var(--kb1-line-height-normal);
 }
 
 .modal-actions {
@@ -277,7 +277,7 @@ function handleBackdropClick() {
   }
   
   .modal-title {
-    font-size: var(--kb1-font-input); /* 13px */
+    font-size: var(--kb1-font-input); /* 12px - mobile override */
   }
   
   .modal-description {
@@ -295,7 +295,7 @@ function handleBackdropClick() {
   }
   
   .modal-title {
-    font-size: var(--kb1-font-input); /* 13px */
+    font-size: var(--kb1-font-input); /* 12px - mobile override */
   }
   
   .modal-description {

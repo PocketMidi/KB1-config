@@ -311,7 +311,7 @@ defineExpose({
   margin-top: 0.125rem;
   font-size: var(--kb1-font-input); /* 13px */
   color: var(--color-text-muted);
-  line-height: 1.4;
+  line-height: var(--kb1-line-height-compact);
   font-family: var(--kb1-font-family);
   white-space: nowrap;
   overflow: visible;

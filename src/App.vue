@@ -564,7 +564,7 @@ body {
   font-size: 13px;
   background: var(--color-background);
   color: var(--color-text);
-  line-height: 1.6;
+  line-height: var(--kb1-line-height-relaxed);
   touch-action: manipulation; /* Disable double-tap zoom */
   -webkit-text-size-adjust: 100%; /* Prevent font scaling in Safari/iOS */
   -moz-text-size-adjust: 100%; /* Prevent font scaling in Firefox */
@@ -1188,7 +1188,7 @@ body {
   border-radius: 6px;
   padding: 1rem;
   font-size: 0.8125rem;
-  line-height: 1.6;
+  line-height: var(--kb1-line-height-relaxed);
 }
 
 .dev-mode-warning p {

@@ -72,11 +72,9 @@
         :max="userMax"
         :current="currentPattern"
       />
-      <img 
+      <ResetPressProfile
         v-else-if="isResetMode"
-        :src="resetProfileImage" 
-        alt="Profile Graph" 
-        class="profile-graph" 
+        class="profile-graph"
       />
       <IncrementalPressProfile 
         v-else-if="currentProfileType === 'inc'"
@@ -282,6 +280,7 @@ import ExponentialPressProfile from './ExponentialPressProfile.vue'
 import LogarithmicPressProfile from './LogarithmicPressProfile.vue'
 import PeakDecayPressProfile from './PeakDecayPressProfile.vue'
 import IncrementalPressProfile from './IncrementalPressProfile.vue'
+import ResetPressProfile from './ResetPressProfile.vue'
 import { useHaptics } from '../composables/useHaptics'
 import { useUIPreferences } from '../composables/useUIPreferences'
 
@@ -634,12 +633,6 @@ const currentProfileType = computed(() => {
     else return 'lin'
   }
   return 'lin' // default
-})
-
-// Reset profile (still using SVG file)
-const resetProfileImage = computed(() => {
-  const BASE_PATH = import.meta.env.BASE_URL || '/'
-  return `${BASE_PATH}lever_profiles/reset_animated.svg`
 })
 
 // Computed properties to determine which controls to show
@@ -1299,7 +1292,8 @@ function dismissHelp() {
   height: auto;
 }
 
-.profile-visualization img {
+.profile-visualization img,
+.profile-visualization svg {
   width: 100%;
   height: auto;
   display: block;

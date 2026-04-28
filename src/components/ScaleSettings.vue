@@ -38,18 +38,17 @@
 
     <!-- Mapping Toggle and Visualization -->
     <div class="mapping-toggle-row">
-      <div class="toggle-container" :class="{ disabled: isChromatic }">
-        <img 
-          :src="toggleImage" 
-          alt="Mapping Toggle"
-          :title="toggleTooltip"
-          class="toggle-image"
-          :class="{ disabled: isChromatic }"
-          @click="handleToggleClick"
-          @mouseenter="toggleHovered = true"
-          @mouseleave="toggleHovered = false"
-        />
-      </div>
+      <button
+        class="toggle-button"
+        :class="{ disabled: isChromatic }"
+        :title="toggleTooltip"
+        :disabled="isChromatic"
+        @click="handleToggleClick"
+      >
+        <span :class="{ active: isNatural }">NATURAL</span>
+        <span class="divider">|</span>
+        <span :class="{ active: !isNatural }">COMPACT</span>
+      </button>
       
       <div class="dots-visualization" :class="{ 'wide-spacing': isNatural }">
         <div v-for="i in 12" :key="i" class="dot"></div>
@@ -92,7 +91,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, onBeforeUnmount, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import NotePickerControl from './NotePickerControl.vue'
 import OptionWheelPicker from './OptionWheelPicker.vue'
 
@@ -152,36 +151,13 @@ const selectedScaleLabel = computed(() => {
   return scale?.label || 'Unknown'
 })
 
-// Constants
-const BASE_PATH = '/KB1-config'
-const TOGGLE_ANIMATION_DURATION = 60 // milliseconds for toggle transition
-
-// Toggle state and animation
-const toggleHovered = ref(false)
+// Toggle animation
 const isAnimating = ref(false)
-const animationTimeoutId = ref<number | null>(null)
 const transitionDirection = ref<'left-to-right' | 'right-to-left' | null>(null)
 
 // Computed properties for toggle state
 const isNatural = computed(() => model.value.keyMapping === 0)
 const isChromatic = computed(() => model.value.scaleType === 0)
-
-const toggleImage = computed(() => {
-  const mode = isNatural.value ? 'l' : 'r'
-  
-  if (isAnimating.value && transitionDirection.value) {
-    // During animation, show transition frames
-    return transitionDirection.value === 'left-to-right'
-      ? `${BASE_PATH}/keys_toggle/l-r.svg`
-      : `${BASE_PATH}/keys_toggle/r-l.svg`
-  }
-  
-  if (toggleHovered.value && !isChromatic.value) {
-    return `${BASE_PATH}/keys_toggle/${mode}_flot.svg`
-  }
-  
-  return `${BASE_PATH}/keys_toggle/${mode}_activ.svg`
-})
 
 const toggleTooltip = computed(() => {
   if (isChromatic.value) {
@@ -203,20 +179,11 @@ const handleToggleClick = () => {
   const newMappingName = isCurrentlyNatural ? 'Efficient Mode' : 'Mapped Mode'
   emit('mappingChanged', newMappingName)
   
-  animationTimeoutId.value = window.setTimeout(() => {
-    model.value = { ...model.value, keyMapping: isCurrentlyNatural ? 1 : 0 }
-    isAnimating.value = false
-    transitionDirection.value = null
-    animationTimeoutId.value = null
-  }, TOGGLE_ANIMATION_DURATION)
+  // Update immediately (no transition animation needed for text button)
+  model.value = { ...model.value, keyMapping: isCurrentlyNatural ? 1 : 0 }
+  isAnimating.value = false
+  transitionDirection.value = null
 }
-
-// Cleanup timeout on unmount
-onBeforeUnmount(() => {
-  if (animationTimeoutId.value !== null) {
-    clearTimeout(animationTimeoutId.value)
-  }
-})
 
 // Scale theory - intervals in semitones from root note
 // Must match ScaleType enum order from firmware
@@ -384,26 +351,47 @@ function isRootNote(midiNote: number): boolean {
   flex-shrink: 0;
 }
 
-.toggle-container.disabled {
-  opacity: 0.3;
-  pointer-events: none;
-}
-
-.toggle-image {
-  display: block;
-  height: 22px;
-  width: auto;
+/* Mapping Toggle Button */
+.toggle-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0.75rem;
+  background: rgba(106, 104, 83, 0.2);
+  border: 1px solid rgba(106, 104, 83, 0.3);
+  border-radius: var(--kb1-radius-md);
+  font-family: var(--kb1-font-family-mono);
+  font-size: var(--kb1-font-label);
+  font-weight: var(--kb1-font-weight-normal);
+  letter-spacing: var(--kb1-letter-spacing-wide);
+  color: var(--kb1-text-secondary);
   cursor: pointer;
-  transition: opacity 0.3s ease-in-out;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
 }
 
-.toggle-image:hover:not(.disabled) {
-  opacity: 0.85;
+.toggle-button:hover:not(:disabled) {
+  background: rgba(106, 104, 83, 0.35);
+  border-color: rgba(106, 104, 83, 0.5);
 }
 
-.toggle-image.disabled {
+.toggle-button:disabled {
+  opacity: 0.3;
   cursor: not-allowed;
-  opacity: 0.5;
+}
+
+.toggle-button span {
+  transition: color 0.2s ease, font-weight 0.2s ease;
+}
+
+.toggle-button span.active {
+  color: var(--kb1-text-primary);
+  font-weight: var(--kb1-font-weight-semibold);
+}
+
+.toggle-button .divider {
+  color: rgba(106, 104, 83, 0.5);
+  font-weight: var(--kb1-font-weight-normal);
 }
 
 /* Dots Visualization */

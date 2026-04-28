@@ -1,5 +1,5 @@
 <template>
-  <svg :width="583" :height="svgHeight" :viewBox="`0 0 583 ${svgHeight}`" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <svg width="100%" :viewBox="`0 0 583 ${svgHeight}`" fill="none" xmlns="http://www.w3.org/2000/svg">
     <!-- Profile shape -->
     <path :opacity="isBipolar ? 0.9 : 0.68" :d="shapePath" :fill="gradientUrl"/>
     

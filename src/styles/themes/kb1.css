@@ -117,7 +117,17 @@ body.android-device {
   --key-text-active: #0F0F0F; /* Text on active keys */
   --key-text-inactive: rgba(255, 255, 255, 0.4); /* Text on inactive keys */
   
-  --label-gray: #848484; /* Original gray */
+  /* ===== Touch Profile Colors ===== */
+  --touch-profile-bg: #1a161a; /* Background for touch visualizations */
+  --touch-profile-highlight: #784e72; /* Center/highlight - muted purple */
+  --touch-profile-ring-1: #573b54; /* Lightest ring layer */
+  --touch-profile-ring-2: #4c394a; /* Light-medium ring layer */
+  --touch-profile-ring-3: #3a2e3a; /* Medium-dark ring layer */
+  --touch-profile-ring-4: #2f2a30; /* Darkest ring layer */
+  --touch-profile-stroke: #6a4864; /* Stroke color for inner circles */
+    /* ===== Reset Profile Colors ===== */
+  --reset-profile-color: #9F9C80; /* Tan/gold breathing diamond */
+    --label-gray: #848484; /* Original gray */
   
   /* ===== SVG Icon Filters (dark mode) ===== */
   --svg-icon-filter: none;

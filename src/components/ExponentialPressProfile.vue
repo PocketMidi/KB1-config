@@ -1,5 +1,5 @@
 <template>
-  <svg width="583" height="61" viewBox="0 0 583 61" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <svg width="100%" viewBox="0 0 583 61" fill="none" xmlns="http://www.w3.org/2000/svg">
     <!-- Profile shape -->
     <path opacity="0.7" d="M567 50V6C467.239 40.9744 198.345 47.5556 16 50H567Z" :fill="gradientUrl"/>
     

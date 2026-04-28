@@ -52,12 +52,9 @@
         :min="userMin"
         :max="userMax"
       />
-      <img 
-        v-else
-        :src="modeImage" 
-        alt="Touch Mode" 
-        class="mode-graph" 
-      />
+      <GateTouchProfile v-else-if="model.functionMode === 0" />
+      <ToggleTouchProfile v-else-if="model.functionMode === 1" />
+      <ContinuousTouchProfile v-else-if="model.functionMode === 2" />
     </div>
 
     <!-- Level Meter -->
@@ -182,6 +179,9 @@ import ValueControl from './ValueControl.vue'
 import LevelMeter from './LevelMeter.vue'
 import OptionWheelPicker from './OptionWheelPicker.vue'
 import PatternSelector from './PatternSelector.vue'
+import ContinuousTouchProfile from './ContinuousTouchProfile.vue'
+import ToggleTouchProfile from './ToggleTouchProfile.vue'
+import GateTouchProfile from './GateTouchProfile.vue'
 import { useUIPreferences } from '../composables/useUIPreferences'
 import { useHaptics } from '../composables/useHaptics'
 
@@ -218,8 +218,6 @@ const model = computed({
 // UI Preferences
 const { unipolarStepSize } = useUIPreferences()
 
-const BASE_PATH = import.meta.env.BASE_URL || '/'
-
 // Mode names for events
 const MODE_NAMES = {
   0: 'Open Gate',
@@ -232,18 +230,6 @@ function selectMode(mode: number) {
   model.value = { ...model.value, functionMode: mode }
   emit('modeChanged', MODE_NAMES[mode as keyof typeof MODE_NAMES])
 }
-
-// Mode visualization
-const modeImage = computed(() => {
-  // Function mode 0 = Gate, 1 = Toggle, 2 = Continuous
-  if (model.value.functionMode === 1) {
-    return `${BASE_PATH}touch/togg_animated.svg`
-  } else if (model.value.functionMode === 2) {
-    return `${BASE_PATH}touch/cont_animated.svg`
-  }
-  // Default to Gate (mode 0)
-  return `${BASE_PATH}touch/gate_animated.svg`
-})
 
 // Check if current parameter is a cycling/discrete parameter (uses REV/FWD toggle)
 const isCyclingParameter = computed(() => {
@@ -1003,7 +989,8 @@ function dismissHelp() {
   height: auto;
 }
 
-.mode-visualization img {
+.mode-visualization img,
+.mode-visualization svg {
   width: 100%;
   height: auto;
   display: block;

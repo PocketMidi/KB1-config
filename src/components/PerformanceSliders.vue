@@ -1692,7 +1692,7 @@ defineExpose({
                 <CustomCCDropdown
                   :model-value="slider.cc"
                   :options="CC_OPTIONS"
-                  :min-width="'110px'"
+                  :min-width="'108px'"
                   @update:model-value="handleCCChange(index, $event)"
                 />
               </template>
@@ -1707,26 +1707,24 @@ defineExpose({
               <div v-if="sliderExplainerTexts[index]" class="explainer-label" :class="{ fading: sliderExplainerFading[index] }">
                 {{ sliderExplainerTexts[index] }}
               </div>
-              <CustomCCDropdown
-                v-else
-                :model-value="getFxParamDisplayValue(slider)"
-                :options="FX_PARAMS.map(p => ({ cc: p.id, label: `${p.abbr}` }))"
-                :min-width="'100px'"
-                :disabled="controlMode === 'combo' && !(slider.cc >= 51 && slider.cc <= 62)"
-                @update:model-value="handleFxParamChange(index, $event)"
-              />
+              <Transition v-else name="dropdown-fade" mode="out-in">
+                <CustomCCDropdown
+                  :model-value="getFxParamDisplayValue(slider)"
+                  :options="FX_PARAMS.map(p => ({ cc: p.id, label: `${p.abbr}` }))"
+                  :min-width="'108px'"
+                  :disabled="controlMode === 'combo' && !(slider.cc >= 51 && slider.cc <= 62)"
+                  @update:model-value="handleFxParamChange(index, $event)"
+                />
+              </Transition>
             </div>
             
             <!-- Inline toggles -->
-            <div class="slider-toggle-inline" :class="{ 'combo-mode-toggles': controlMode === 'combo' }">
-              <!-- Mom/Lat toggle -->
-              <button class="slider-toggle-btn" @click="toggleMomentary(index)">
-                <span :class="{ active: slider.momentary }">MOM</span>
-                <span class="toggle-divider">|</span>
-                <span :class="{ active: !slider.momentary }">LAT</span>
-              </button>
-              
-              <!-- Polarity toggle (hidden in mixer mode) -->
+            <div class="slider-toggle-inline" :class="{ 
+              'fx-mode-toggles': controlMode === 'fx',
+              'mix-mode-toggles': controlMode === 'mix',
+              'combo-mode-toggles': controlMode === 'combo' 
+            }">
+              <!-- Polarity toggle (hidden in mixer mode) - now first -->
               <button 
                 v-if="controlMode === 'fx'"
                 class="slider-toggle-btn"
@@ -1735,6 +1733,13 @@ defineExpose({
                 <span :class="{ active: !slider.bipolar }">UNI</span>
                 <span class="toggle-divider">|</span>
                 <span :class="{ active: slider.bipolar }">BI</span>
+              </button>
+              
+              <!-- Mom/Lat toggle - now second (rightmost) -->
+              <button class="slider-toggle-btn" @click="toggleMomentary(index)">
+                <span :class="{ active: slider.momentary }">MOM</span>
+                <span class="toggle-divider">|</span>
+                <span :class="{ active: !slider.momentary }">LAT</span>
               </button>
             </div>
           </div>
@@ -2278,6 +2283,7 @@ defineExpose({
   border-radius: var(--kb1-radius-md);
   transition: background 0.2s;
   position: relative;
+  min-height: 30px; /* Consistent height across all modes */
 }
 
 .slider-row.mix-mode-row {
@@ -2286,7 +2292,6 @@ defineExpose({
 
 .slider-row.combo-mode-row {
   gap: 0; /* Remove flex gap for absolute positioning */
-  min-height: 30px; /* Match height of FX/MIX modes */
 }
 
 .slider-row:hover {
@@ -2478,14 +2483,14 @@ defineExpose({
 .fx-param-section {
   display: flex;
   align-items: center;
-  margin-left: 0.2rem;
+  margin-left: 0.1rem;
   margin-right: 0.35rem;
 }
 
 .fx-param-section.combo-mode {
   position: absolute;
-  left: 175px;
-  width: 100px;
+  left: 173px;
+
   margin-right: 0;
 }
 
@@ -2499,14 +2504,27 @@ defineExpose({
   font-weight: var(--kb1-font-weight-medium);
   font-family: var(--kb1-font-family);
   cursor: default;
-  min-width: 100px;
+  min-width: 108px;
   text-align: center;
   transition: none;
 }
 
 .explainer-label.fading {
   color: transparent;
-  transition: color 1s ease-out;
+  transition: color .5s ease-out;
+}
+
+/* Dropdown fade-in transition */
+.dropdown-fade-enter-active {
+  transition: opacity 0.5s ease-in;
+}
+
+.dropdown-fade-enter-from {
+  opacity: 0;
+}
+
+.dropdown-fade-enter-to {
+  opacity: 1;
 }
 
 .fx-param-dropdown {
@@ -2542,21 +2560,29 @@ defineExpose({
 }
 
 .slider-toggle-inline {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
   display: flex;
   flex-direction: row;
   gap: var(--kb1-spacing-sm);
-  flex: 1; /* Allow container to grow proportionally */
-  justify-content: flex-start;
-  min-height: 26px; /* Match button height to prevent collapse */
+  min-height: 26px;
   align-items: center;
 }
 
+/* FX Mode: Two toggles (UNI/BI + MOM/LAT) */
+.slider-toggle-inline.fx-mode-toggles {
+  left: 223px; /* Adjust this value to align FX mode toggles */
+}
+
+/* MIX Mode: One toggle (MOM/LAT only) */
+.slider-toggle-inline.mix-mode-toggles {
+  left: 288px; /* Adjust this value to align MIX mode toggles */
+}
+
+/* COMBO Mode: One toggle (MOM/LAT only) */
 .slider-toggle-inline.combo-mode-toggles {
-  position: absolute;
-  left: 288px;
-  top: 50%;
-  transform: translateY(-50%);
-  margin-left: 0;
+  left: 288px; /* Adjust this value to align COMBO mode toggles */
 }
 
 .slider-toggle-btn {

@@ -39,20 +39,6 @@ body.android-device {
   --kb1-text-primary: #EAEAEA;
   --kb1-text-secondary: rgba(234, 234, 234, 0.32);
   
-  /* ===== Panel Backgrounds ===== */
-  /* These would reference Figma-exported images for each settings section */
-  --lever-panel-bg: url('/src/assets/ui/lever-panel.svg');
-  --lever-push-panel-bg: url('/src/assets/ui/lever-push-panel.svg');
-  --touch-panel-bg: url('/src/assets/ui/touch-panel.svg');
-  --scale-panel-bg: url('/src/assets/ui/scale-panel.svg');
-  
-  /* ===== Fader Elements ===== */
-  /* Designers can export specific fader track and thumb images */
-  --fader-track-bg: url('/src/assets/ui/fader-track.svg');
-  --fader-thumb-bg: url('/src/assets/ui/fader-thumb.svg');
-  --fader-track-height: 200px;
-  --fader-thumb-size: 24px;
-  
   /* ===== Button States ===== */
   /* Primary buttons (Apply, Save, etc.) */
   --btn-primary-bg: linear-gradient(135deg, #3d4f77 0%, #2f3d5c 100%);

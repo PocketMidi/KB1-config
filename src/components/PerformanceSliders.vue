@@ -1718,6 +1718,15 @@ defineExpose({
               </Transition>
             </div>
             
+            <!-- Floating Explainer Label (MIX mode only) -->
+            <Transition name="explainer-float-fade">
+              <div v-if="controlMode === 'mix' && sliderExplainerTexts[index]" 
+                   class="explainer-label-floating" 
+                   :class="{ fading: sliderExplainerFading[index] }">
+                {{ sliderExplainerTexts[index] }}
+              </div>
+            </Transition>
+            
             <!-- Inline toggles -->
             <div class="slider-toggle-inline" :class="{ 
               'fx-mode-toggles': controlMode === 'fx',
@@ -2512,6 +2521,38 @@ defineExpose({
 .explainer-label.fading {
   color: transparent;
   transition: color .5s ease-out;
+}
+
+/* Floating Explainer Label (MIX mode) */
+.explainer-label-floating {
+  position: absolute;
+  left: 65%;
+  transform: translateX(-50%);
+  color: #b9aa5f;
+  font-size: var(--kb1-font-small);
+  font-weight: var(--kb1-font-weight-medium);
+  font-family: var(--kb1-font-family);
+  cursor: default;
+  text-align: center;
+  z-index: 10;
+  pointer-events: none;
+  transition: none;
+}
+
+.explainer-label-floating.fading {
+  color: transparent;
+  transition: color .5s ease-out;
+}
+
+/* Floating explainer fade transition */
+.explainer-float-fade-enter-active,
+.explainer-float-fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.explainer-float-fade-enter-from,
+.explainer-float-fade-leave-to {
+  opacity: 0;
 }
 
 /* Dropdown fade-in transition */

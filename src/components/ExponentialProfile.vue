@@ -1,14 +1,14 @@
 <template>
   <svg width="583" height="128" viewBox="0 0 583 128" fill="none" xmlns="http://www.w3.org/2000/svg">
     <!-- Profile shape -->
-    <path :opacity="isBipolar ? 0.9 : 0.7" :d="shapePath" :fill="gradientUrl"/>
+    <path :opacity="isBipolar ? undefined : 0.7" :d="shapePath" :fill="gradientUrl"/>
     
     <!-- Grid lines -->
     <ProfileGrid />
     
     <!-- Animated dot(s) -->
     <circle v-if="!isBipolar" cx="0" cy="0" r="3.0" fill="#F9AC20">
-      <animateMotion dur="1.2s" repeatCount="indefinite" keyPoints="0;1" keyTimes="0;1" calcMode="spline" keySplines="0.4 0 1 1">
+      <animateMotion dur="1.75s" repeatCount="indefinite" keyPoints="0;1" keyTimes="0;1" calcMode="spline" keySplines="0.4 0 1 1">
         <mpath :href="`#exp-curve-uni-${uid}`"/>
       </animateMotion>
     </circle>
@@ -29,14 +29,14 @@
     
     <defs>
       <!-- Animation paths -->
-      <path v-if="!isBipolar" :id="`exp-curve-uni-${uid}`" d="M16 117 C135.5 117 233.5 51.649 291.5 0 C348.658 50.034 447 117 567 117"/>
+      <path v-if="!isBipolar" :id="`exp-curve-uni-${uid}`" d="M16 117 C198.345 110.833 467.239 94.2308 567 6"/>
       <template v-else>
         <path :id="`exp-curve-left-${uid}`" d="M291.5 118 C165.343 118 43.4085 52.9942 16 0"/>
         <path :id="`exp-curve-right-${uid}`" d="M291.5 118 C444.934 118 541.053 50.1679 567 0"/>
       </template>
       
       <!-- Gradients -->
-      <linearGradient v-if="!isBipolar" :id="`exp-gradient-uni-${uid}`" x1="16" y1="62" x2="567" y2="62" gradientUnits="userSpaceOnUse">
+      <linearGradient v-if="!isBipolar" :id="`exp-gradient-uni-${uid}`" x1="16" y1="61.5" x2="567" y2="61.5" gradientUnits="userSpaceOnUse">
         <stop stop-color="#9F9C80"/>
         <stop offset="1" stop-color="#24231F"/>
       </linearGradient>
@@ -64,8 +64,8 @@ const shapePath = computed(() => {
     // Bipolar: exponential curves from both sides
     return 'M16 118V0C43.4085 52.9942 165.343 118 291.5 118C444.934 118 541.053 50.1679 567 0V118H291.5H16Z'
   } else {
-    // Unipolar: exponential curve from left to right
-    return 'M16 117V0C135.5 0 233.5 51.649 291.5 117C348.658 50.034 447 0 567 0V117H291.5H16Z'
+    // Unipolar: exponential curve from bottom-left to top-right (slow start, fast end)
+    return 'M567 117V6C467.239 94.2308 198.345 110.833 16 117H567Z'
   }
 })
 

@@ -8,7 +8,7 @@
     
     <!-- Animated dot(s) -->
     <circle v-if="!isBipolar" cx="0" cy="0" r="3.0" fill="#F9AC20">
-      <animateMotion dur="1.2s" repeatCount="indefinite" keyPoints="0;1" keyTimes="0;1" calcMode="spline" keySplines="0 0 0.6 1">
+      <animateMotion dur="1.75s" repeatCount="indefinite" keyPoints="0;1" keyTimes="0;1" calcMode="spline" keySplines="0 0 0.6 1">
         <mpath :href="`#log-curve-uni-${uid}`"/>
       </animateMotion>
     </circle>
@@ -29,14 +29,14 @@
     
     <defs>
       <!-- Animation paths -->
-      <path v-if="!isBipolar" :id="`log-curve-uni-${uid}`" d="M16 6 C135.5 6 233.5 23 291.5 117 C348.658 24.034 447 6 567 6"/>
+      <path v-if="!isBipolar" :id="`log-curve-uni-${uid}`" d="M16 117 C250.538 -7.68259 511.504 6.48582 567 6.48593"/>
       <template v-else>
         <path :id="`log-curve-left-${uid}`" d="M291.5 118 C233.5 22.6491 135.5 6 16 6"/>
         <path :id="`log-curve-right-${uid}`" d="M291.5 118 C348.658 24.0339 447 6 567 6"/>
       </template>
       
       <!-- Gradients -->
-      <linearGradient v-if="!isBipolar" :id="`log-gradient-uni-${uid}`" x1="16" y1="62" x2="567" y2="62" gradientUnits="userSpaceOnUse">
+      <linearGradient v-if="!isBipolar" :id="`log-gradient-uni-${uid}`" x1="16" y1="61.5" x2="567" y2="61.5" gradientUnits="userSpaceOnUse">
         <stop stop-color="#9F9C80"/>
         <stop offset="1" stop-color="#24231F"/>
       </linearGradient>
@@ -64,8 +64,8 @@ const shapePath = computed(() => {
     // Bipolar: logarithmic curves from both sides
     return 'M16 118V6C135.5 6 233.5 22.6491 291.5 118C348.658 24.0339 447 6 567 6V118H291.5H16Z'
   } else {
-    // Unipolar: logarithmic curve from left to right
-    return 'M16 117V6C135.5 6 233.5 23 291.5 117C348.658 24.034 447 6 567 6V117H291.5H16Z'
+    // Unipolar: logarithmic curve from bottom-left to top-right (fast start, slow end)
+    return 'M567 117V6.48593C511.504 6.48582 250.538 -7.68259 15.9999 117H567Z'
   }
 })
 

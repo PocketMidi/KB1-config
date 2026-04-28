@@ -73,10 +73,35 @@
         :current="currentPattern"
       />
       <img 
-        v-else
-        :src="profileImage" 
+        v-else-if="isResetMode"
+        :src="resetProfileImage" 
         alt="Profile Graph" 
         class="profile-graph" 
+      />
+      <IncrementalPressProfile 
+        v-else-if="currentProfileType === 'inc'"
+        :steps="12"
+        class="profile-graph"
+      />
+      <LinearPressProfile 
+        v-else-if="currentProfileType === 'lin'"
+        :is-latched="isMomentary"
+        class="profile-graph"
+      />
+      <ExponentialPressProfile 
+        v-else-if="currentProfileType === 'exp'"
+        :is-latched="isMomentary"
+        class="profile-graph"
+      />
+      <LogarithmicPressProfile 
+        v-else-if="currentProfileType === 'log'"
+        :is-latched="isMomentary"
+        class="profile-graph"
+      />
+      <PeakDecayPressProfile 
+        v-else-if="currentProfileType === 'pd'"
+        :is-latched="isMomentary"
+        class="profile-graph"
       />
     </div>
 
@@ -252,10 +277,13 @@ import ValueControl from './ValueControl.vue'
 import LevelMeter from './LevelMeter.vue'
 import OptionWheelPicker from './OptionWheelPicker.vue'
 import PatternSelector from './PatternSelector.vue'
+import LinearPressProfile from './LinearPressProfile.vue'
+import ExponentialPressProfile from './ExponentialPressProfile.vue'
+import LogarithmicPressProfile from './LogarithmicPressProfile.vue'
+import PeakDecayPressProfile from './PeakDecayPressProfile.vue'
+import IncrementalPressProfile from './IncrementalPressProfile.vue'
 import { useHaptics } from '../composables/useHaptics'
 import { useUIPreferences } from '../composables/useUIPreferences'
-
-const BASE_PATH = import.meta.env.BASE_URL || '/'
 
 type ProfileType = 'lin' | 'exp' | 'log' | 'pd' | 'inc'
 
@@ -593,35 +621,25 @@ const selectProfile = (profile: ProfileType) => {
   emit('profileChanged', profileName)
 }
 
-// Profile visualization
-const profileImage = computed(() => {
-  let profile = 'lin' // default
-  
-  if (model.value.functionMode === 3) {
-    // Reset mode - show animated breathing diamond
-    return `${BASE_PATH}lever_profiles/reset_animated.svg`
-  } else if (model.value.functionMode === 2) {
-    profile = 'inc'
+// Profile type determination for component-based rendering
+const currentProfileType = computed(() => {
+  if (model.value.functionMode === 2) {
+    return 'inc'
   } else if (model.value.functionMode === 1) {
-    profile = 'pd'
+    return 'pd'
   } else if (model.value.functionMode === 0) {
     // Interpolated mode - check type
-    if (model.value.onsetType === 1) profile = 'exp'
-    else if (model.value.onsetType === 2) profile = 'log'
-    else profile = 'lin'
+    if (model.value.onsetType === 1) return 'exp'
+    else if (model.value.onsetType === 2) return 'log'
+    else return 'lin'
   }
-  
-  // Use animated versions for lin, exp, log, and pd
-  // In momentary mode (offsetTime === 0), use back-and-forth animation (press/release)
-  // In latched mode (offsetTime > 0), use one-way animation (toggle on/off states)
-  const isMomentary = model.value.offsetTime === 0
-  let animated = ''
-  if (profile === 'lin' || profile === 'exp' || profile === 'log' || profile === 'pd') {
-    animated = isMomentary ? '_latched_animated' : '_animated'
-  }
-  
-  // Push profile SVG files use _p suffix
-  return `${BASE_PATH}lever_profiles/${profile}_p${animated}.svg`
+  return 'lin' // default
+})
+
+// Reset profile (still using SVG file)
+const resetProfileImage = computed(() => {
+  const BASE_PATH = import.meta.env.BASE_URL || '/'
+  return `${BASE_PATH}lever_profiles/reset_animated.svg`
 })
 
 // Computed properties to determine which controls to show

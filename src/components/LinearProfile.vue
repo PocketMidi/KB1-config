@@ -1,7 +1,7 @@
 <template>
   <svg width="583" height="128" viewBox="0 0 583 128" fill="none" xmlns="http://www.w3.org/2000/svg">
     <!-- Profile shape -->
-    <path :opacity="isBipolar ? 0.9 : 0.7" :d="shapePath" :fill="gradientUrl"/>
+    <path :opacity="isBipolar ? undefined : 0.7" :d="shapePath" :fill="gradientUrl"/>
     
     <!-- Grid lines -->
     <ProfileGrid />
@@ -16,12 +16,12 @@
     <!-- Bipolar: two dots -->
     <template v-else>
       <circle cx="0" cy="0" r="3.0" fill="#F9AC20">
-        <animateMotion dur="1.75s" repeatCount="indefinite" keyPoints="0;1" keyTimes="0;1" calcMode="linear">
+        <animateMotion dur="1s" repeatCount="indefinite" keyPoints="0;1" keyTimes="0;1" calcMode="linear">
           <mpath :href="`#lin-curve-left-${uid}`"/>
         </animateMotion>
       </circle>
       <circle cx="0" cy="0" r="3.0" fill="#F9AC20">
-        <animateMotion dur="1.75s" repeatCount="indefinite" keyPoints="0;1" keyTimes="0;1" calcMode="linear">
+        <animateMotion dur="1s" repeatCount="indefinite" keyPoints="0;1" keyTimes="0;1" calcMode="linear">
           <mpath :href="`#lin-curve-right-${uid}`"/>
         </animateMotion>
       </circle>

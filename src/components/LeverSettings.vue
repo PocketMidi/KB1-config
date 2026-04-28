@@ -66,17 +66,31 @@
     <!-- Profile Visualization -->
     <div class="profile-visualization">
       <IncrementalProfile 
-        v-if="isIncrementalMode"
+        v-if="currentProfileType === 'inc'"
         :key="`inc-${model.ccNumber}-${visualStepsCount}`"
         :steps="visualStepsCount"
         :is-bipolar="model.valueMode === 1"
         class="profile-graph"
       />
-      <img 
-        v-else
-        :src="profileImage" 
-        alt="Profile visualization" 
-        class="profile-graph" 
+      <LinearProfile 
+        v-else-if="currentProfileType === 'lin'"
+        :is-bipolar="model.valueMode === 1"
+        class="profile-graph"
+      />
+      <ExponentialProfile 
+        v-else-if="currentProfileType === 'exp'"
+        :is-bipolar="model.valueMode === 1"
+        class="profile-graph"
+      />
+      <LogarithmicProfile 
+        v-else-if="currentProfileType === 'log'"
+        :is-bipolar="model.valueMode === 1"
+        class="profile-graph"
+      />
+      <PeakDecayProfile 
+        v-else-if="currentProfileType === 'pd'"
+        :is-bipolar="model.valueMode === 1"
+        class="profile-graph"
       />
     </div>
 
@@ -291,6 +305,10 @@ import ValueControl from './ValueControl.vue'
 import LevelMeter from './LevelMeter.vue'
 import OptionWheelPicker from './OptionWheelPicker.vue'
 import IncrementalProfile from './IncrementalProfile.vue'
+import LinearProfile from './LinearProfile.vue'
+import ExponentialProfile from './ExponentialProfile.vue'
+import LogarithmicProfile from './LogarithmicProfile.vue'
+import PeakDecayProfile from './PeakDecayProfile.vue'
 import { useHaptics } from '../composables/useHaptics'
 import { useUIPreferences } from '../composables/useUIPreferences'
 
@@ -336,9 +354,6 @@ const { tap, snap, isSupported } = useHaptics()
 
 // UI Preferences
 const { unipolarStepSize } = useUIPreferences()
-
-// Constants
-const BASE_PATH = '/KB1-config'
 
 // Help modal system
 const showHelpModal = ref(false)
@@ -454,27 +469,19 @@ const selectProfile = (profile: ProfileType) => {
   emit('profileChanged', profileName)
 }
 
-// Profile visualization
-const profileImage = computed(() => {
-  const polarity = model.value.valueMode === 1 ? 'bi' : 'uni'
-  let profile = 'lin' // default
-  
+// Profile type determination for component-based rendering
+const currentProfileType = computed(() => {
   if (model.value.functionMode === 2) {
-    profile = 'inc'
+    return 'inc'
   } else if (model.value.functionMode === 1) {
-    profile = 'pd'
+    return 'pd'
   } else if (model.value.functionMode === 0) {
     // Interpolated mode - check type
-    if (model.value.onsetType === 1) profile = 'exp'
-    else if (model.value.onsetType === 2) profile = 'log'
-    else profile = 'lin'
+    if (model.value.onsetType === 1) return 'exp'
+    else if (model.value.onsetType === 2) return 'log'
+    else return 'lin'
   }
-  
-  // Use animated versions for lin, exp, log, and pd profiles
-  const animated = (profile === 'lin' || profile === 'exp' || profile === 'log' || profile === 'pd') ? '_animated' : ''
-  
-  // All lever profile SVG files use underscore separator
-  return `${BASE_PATH}/lever_profiles/${profile}_${polarity}${animated}.svg`
+  return 'lin' // default
 })
 
 // Initialize selectedCategory from current ccNumber's category (fallback to first available category)
@@ -1358,7 +1365,8 @@ function increaseSteps() {
 }
 
 .profile-visualization img,
-.profile-visualization object {
+.profile-visualization object,
+.profile-visualization svg {
   width: 100%;
   height: auto;
   display: block;
@@ -1391,7 +1399,7 @@ function increaseSteps() {
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;
-  margin-top: var(--kb1-spacing-lg);
+  margin-top: var(--kb1-spacing-xs);
 }
 
 .input-divider {

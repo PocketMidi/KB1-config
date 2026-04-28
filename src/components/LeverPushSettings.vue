@@ -252,7 +252,6 @@ import ValueControl from './ValueControl.vue'
 import LevelMeter from './LevelMeter.vue'
 import OptionWheelPicker from './OptionWheelPicker.vue'
 import PatternSelector from './PatternSelector.vue'
-import IncrementalProfile from './IncrementalProfile.vue'
 import { useHaptics } from '../composables/useHaptics'
 import { useUIPreferences } from '../composables/useUIPreferences'
 
@@ -326,14 +325,6 @@ const CYCLING_PARAMS = [201, 204, 205, 206]  // Pattern, Scale Type, Chord Type,
 
 // Parameters that require incremental mode only
 const INCREMENTAL_ONLY_PARAMS = [200, 204, 205, 206]  // Strum Speed, Scale Type, Chord Type, Root Note
-
-// Visual step counts for discrete parameters (used by IncrementalProfile display)
-const VISUAL_STEPS: Record<number, number> = {
-  201: 6,   // Pattern Selector: 1-6 (6 values)
-  204: 21,  // Scale Type: 0-20 (21 values)
-  205: 15,  // Chord Type: 0-14 (15 values)
-  206: 12   // Root Note: 0-11 (12 values)
-}
 
 // Initialize selectedCategory from current ccNumber's category (fallback to first available category)
 // Special case: If functionMode is RESET, start with 'Reset' category
@@ -635,18 +626,10 @@ const profileImage = computed(() => {
 
 // Computed properties to determine which controls to show
 const isResetMode = computed(() => model.value.functionMode === FUNCTION_MODE_RESET)
-const isIncrementalMode = computed(() => model.value.functionMode === FUNCTION_MODE_STATIC)
 const isPatternSelector = computed(() => model.value.ccNumber === KB1_EXPRESSION_CC.PATTERN)
 
 // Check if current parameter is a cycling/discrete parameter (uses REV/FWD toggle)
 const isCyclingParameter = computed(() => CYCLING_PARAMS.includes(model.value.ccNumber))
-
-// Visual steps for IncrementalProfile display
-const visualStepsCount = computed(() => {
-  const cc = model.value.ccNumber
-  // Use lookup table for discrete parameters, otherwise use 20 for standard 0-100 range
-  return VISUAL_STEPS[cc] || 20
-})
 
 // Check if current parameter requires incremental mode
 const isIncrementalOnly = computed(() => INCREMENTAL_ONLY_PARAMS.includes(model.value.ccNumber))

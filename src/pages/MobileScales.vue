@@ -566,20 +566,14 @@ function getLeverPushSubtitle(leverPush: LeverPushSettingsType): string {
   const ccInfo = ccMap.get(leverPush.ccNumber);
   const paramName = ccInfo?.parameter || `CC ${leverPush.ccNumber}`;
   
-  // Cycling parameters (Pattern Selector, Scale Type, Chord Type, Root Note) - show direction
-  const isCyclingParameter = leverPush.ccNumber === 201 || leverPush.ccNumber === 204 || 
-                             leverPush.ccNumber === 205 || leverPush.ccNumber === 206;
-  
-  if (isCyclingParameter) {
-    const direction = leverPush.offsetTime === 0 ? 'FWD' : 'REV';
-    return `${paramName} | ${direction}`;
-  }
-  
-  // Show full interpolation profile name for other parameters
+  // Show full interpolation profile name
   let profile = 'Linear'; // default
   if (leverPush.functionMode === 3) {
     // Reset mode
     profile = 'Reset';
+  } else if (leverPush.functionMode === 2) {
+    // Incremental mode (always show "Incremental", even for cycling parameters)
+    profile = 'Incremental';
   } else if (leverPush.functionMode === 1) {
     // Peak & Decay mode
     profile = 'Peak & Decay';

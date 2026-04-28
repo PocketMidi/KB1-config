@@ -336,10 +336,6 @@ function isRootNote(midiNote: number): boolean {
   font-weight: var(--kb1-font-weight-medium);
   transition: background-color 0.2s ease, color 0.2s ease;
   flex-shrink: 0;
-}
-
-/* Inactive keys - dark gray */
-.key {
   background-color: #1A1A1A;
   color: rgba(255, 255, 255, 0.3);
 }
@@ -369,11 +365,6 @@ function isRootNote(midiNote: number): boolean {
 .note-label-alt {
   line-height: var(--kb1-line-height-tight);
   font-size: var(--kb1-font-tiny); /* 10px */
-}
-
-/* Top row (sharps/flats) styling */
-.top-row {
-  /* Centered along with bottom row */
 }
 
 /* Mapping Toggle Row */

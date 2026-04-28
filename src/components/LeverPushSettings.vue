@@ -72,13 +72,6 @@
         :max="userMax"
         :current="currentPattern"
       />
-      <IncrementalProfile 
-        v-else-if="isIncrementalMode && isCyclingParameter"
-        :key="`inc-${model.ccNumber}-${visualStepsCount}`"
-        :steps="visualStepsCount"
-        :is-bipolar="false"
-        class="profile-graph"
-      />
       <img 
         v-else
         :src="profileImage" 
@@ -313,6 +306,35 @@ const FUNCTION_MODE_PEAK_DECAY = 1
 const FUNCTION_MODE_STATIC = 2
 const FUNCTION_MODE_RESET = 3
 
+// KB1 Expression Parameters (CC 200-206): Firmware built-in arpeggiator/expression controls
+// These need special handling because they have custom value ranges and discrete stepping
+const KB1_EXPRESSION_CC = {
+  STRUM_SPEED: 200,      // 5-100% UI → 4-360ms firmware timing
+  PATTERN: 201,          // 1-6 discrete arp patterns
+  SWING: 202,            // 50-100% (not 0-100%)
+  VELOCITY_SPREAD: 203,  // 8-100% minimum
+  SCALE_TYPE: 204,       // 0-20 discrete scale types
+  CHORD_TYPE: 205,       // 0-14 discrete chord types
+  ROOT_NOTE: 206         // 0-11 (C through B)
+}
+
+// Parameters that must use STATIC mode (can't interpolate between discrete values)
+const DISCRETE_PARAMS = [201, 204, 205, 206]  // Pattern, Scale Type, Chord Type, Root Note
+
+// Parameters that support cycling (REV/FWD toggle)
+const CYCLING_PARAMS = [201, 204, 205, 206]  // Pattern, Scale Type, Chord Type, Root Note
+
+// Parameters that require incremental mode only
+const INCREMENTAL_ONLY_PARAMS = [200, 204, 205, 206]  // Strum Speed, Scale Type, Chord Type, Root Note
+
+// Visual step counts for discrete parameters (used by IncrementalProfile display)
+const VISUAL_STEPS: Record<number, number> = {
+  201: 6,   // Pattern Selector: 1-6 (6 values)
+  204: 21,  // Scale Type: 0-20 (21 values)
+  205: 15,  // Chord Type: 0-14 (15 values)
+  206: 12   // Root Note: 0-11 (12 values)
+}
+
 // Initialize selectedCategory from current ccNumber's category (fallback to first available category)
 // Special case: If functionMode is RESET, start with 'Reset' category
 const initialCategory = computed(() => {
@@ -413,45 +435,25 @@ watch(() => model.value.ccNumber, (cc) => {
   if (cat) selectedCategory.value = cat
   
   // KB1 Expression parameters: Clamp to valid ranges
-  if (cc === 200) {
+  if (cc === KB1_EXPRESSION_CC.STRUM_SPEED) {
     // Strum Speed: 5-100% displayed (maps to 360ms-4ms)
     // Store MIDI values in ascending order even though UI presents them inverted
     model.value = { ...model.value, minCCValue: 0, maxCCValue: 127 }
-  } else if (cc === 201) {
+  } else if (cc === KB1_EXPRESSION_CC.PATTERN) {
     // Pattern Selector: 1-6 (discrete values)
     // Force STATIC mode to prevent ramping through all patterns
     // Default to FWD (forward) cycling: offsetTime = 0
     model.value = { ...model.value, functionMode: FUNCTION_MODE_STATIC, minCCValue: 0, maxCCValue: 127, offsetTime: 0 }
-  } else if (cc === 202) {
+  } else if (cc === KB1_EXPRESSION_CC.SWING) {
     // Swing: 0-100%
     model.value = { ...model.value, minCCValue: 0, maxCCValue: 127 }
-  } else if (cc === 203) {
+  } else if (cc === KB1_EXPRESSION_CC.VELOCITY_SPREAD) {
     // Velocity Spread: 8-100%
     const min = Math.round((8 / 100) * 127)   // 8 -> ~10 MIDI
     const max = Math.round((100 / 100) * 127) // 100 -> 127 MIDI
     model.value = { ...model.value, minCCValue: min, maxCCValue: max }
-  } else if (cc === 204) {
-    // Scale Type: 0-20, STATIC mode for discrete selection
-    // Default to FWD (forward) cycling: offsetTime = 0
-    model.value = {
-      ...model.value,
-      functionMode: FUNCTION_MODE_STATIC,
-      minCCValue: 0,
-      maxCCValue: 127,
-      offsetTime: 0
-    }
-  } else if (cc === 205) {
-    // Chord Type: 0-14, STATIC mode for discrete selection
-    // Default to FWD (forward) cycling: offsetTime = 0
-    model.value = {
-      ...model.value,
-      functionMode: FUNCTION_MODE_STATIC,
-      minCCValue: 0,
-      maxCCValue: 127,
-      offsetTime: 0
-    }
-  } else if (cc === 206) {
-    // Root Note: 0-11, STATIC mode for discrete selection
+  } else if (DISCRETE_PARAMS.includes(cc)) {
+    // Scale Type / Chord Type / Root Note: STATIC mode for discrete selection
     // Default to FWD (forward) cycling: offsetTime = 0
     model.value = {
       ...model.value,
@@ -634,33 +636,20 @@ const profileImage = computed(() => {
 // Computed properties to determine which controls to show
 const isResetMode = computed(() => model.value.functionMode === FUNCTION_MODE_RESET)
 const isIncrementalMode = computed(() => model.value.functionMode === FUNCTION_MODE_STATIC)
-const isPatternSelector = computed(() => model.value.ccNumber === 201)
+const isPatternSelector = computed(() => model.value.ccNumber === KB1_EXPRESSION_CC.PATTERN)
 
 // Check if current parameter is a cycling/discrete parameter (uses REV/FWD toggle)
-const isCyclingParameter = computed(() => {
-  const cc = model.value.ccNumber
-  return cc === 201 || cc === 204 || cc === 205 || cc === 206
-})
+const isCyclingParameter = computed(() => CYCLING_PARAMS.includes(model.value.ccNumber))
 
 // Visual steps for IncrementalProfile display
 const visualStepsCount = computed(() => {
   const cc = model.value.ccNumber
-  
-  // Discrete parameters: show exact number of values
-  if (cc === 201) return 6   // Pattern Selector: 1-6 (6 values)
-  if (cc === 204) return 21  // Scale Type: 0-20 (21 values)
-  if (cc === 205) return 15  // Chord Type: 0-14 (15 values)
-  if (cc === 206) return 12  // Root Note: 0-11 (12 values)
-  
-  // Default (shouldn't reach here for cycling parameters)
-  return 10
+  // Use lookup table for discrete parameters, otherwise use 20 for standard 0-100 range
+  return VISUAL_STEPS[cc] || 20
 })
 
-// Check if current parameter requires incremental mode (CC 200, 204, 205, 206)
-const isIncrementalOnly = computed(() => {
-  const cc = model.value.ccNumber
-  return cc === 200 || cc === 204 || cc === 205 || cc === 206
-})
+// Check if current parameter requires incremental mode
+const isIncrementalOnly = computed(() => INCREMENTAL_ONLY_PARAMS.includes(model.value.ccNumber))
 
 // Watch for cycling parameter activation to emit initial direction state
 watch(isCyclingParameter, (isActive) => {
@@ -860,7 +849,7 @@ const userMin = computed({
       value = midiToUnipolar(model.value.minCCValue)
     }
     // Snap displayed value to user preference step size (except discrete parameters)
-    if (model.value.ccNumber !== 201 && model.value.ccNumber !== 204 && model.value.ccNumber !== 205 && model.value.ccNumber !== 206) {
+    if (!DISCRETE_PARAMS.includes(model.value.ccNumber)) {
       return Math.round(value / unipolarStepSize.value) * unipolarStepSize.value
     }
     return value
@@ -868,7 +857,7 @@ const userMin = computed({
   set: (userValue: number) => {
     // Snap to step increments before converting to MIDI
     let snappedValue = userValue
-    if (model.value.ccNumber !== 201 && model.value.ccNumber !== 204 && model.value.ccNumber !== 205 && model.value.ccNumber !== 206) {
+    if (!DISCRETE_PARAMS.includes(model.value.ccNumber)) {
       snappedValue = Math.round(userValue / unipolarStepSize.value) * unipolarStepSize.value
     }
     
@@ -910,7 +899,7 @@ const userMax = computed({
       value = midiToUnipolar(model.value.maxCCValue)
     }
     // Snap displayed value to user preference step size (except discrete parameters)
-    if (model.value.ccNumber !== 201 && model.value.ccNumber !== 204 && model.value.ccNumber !== 205 && model.value.ccNumber !== 206) {
+    if (!DISCRETE_PARAMS.includes(model.value.ccNumber)) {
       return Math.round(value / unipolarStepSize.value) * unipolarStepSize.value
     }
     return value
@@ -918,7 +907,7 @@ const userMax = computed({
   set: (userValue: number) => {
     // Snap to step increments before converting to MIDI
     let snappedValue = userValue
-    if (model.value.ccNumber !== 201 && model.value.ccNumber !== 204 && model.value.ccNumber !== 205 && model.value.ccNumber !== 206) {
+    if (!DISCRETE_PARAMS.includes(model.value.ccNumber)) {
       snappedValue = Math.round(userValue / unipolarStepSize.value) * unipolarStepSize.value
     }
     
@@ -961,7 +950,7 @@ const resetValue = computed({
       value = midiToUnipolar(model.value.minCCValue)
     }
     // Snap displayed value to user preference step size (except discrete parameters)
-    if (model.value.ccNumber !== 201 && model.value.ccNumber !== 204 && model.value.ccNumber !== 205 && model.value.ccNumber !== 206) {
+    if (!DISCRETE_PARAMS.includes(model.value.ccNumber)) {
       return Math.round(value / unipolarStepSize.value) * unipolarStepSize.value
     }
     return value
@@ -969,7 +958,7 @@ const resetValue = computed({
   set: (userValue: number) => {
     // Snap to step increments before converting to MIDI
     let snappedValue = userValue
-    if (model.value.ccNumber !== 201 && model.value.ccNumber !== 204 && model.value.ccNumber !== 205 && model.value.ccNumber !== 206) {
+    if (!DISCRETE_PARAMS.includes(model.value.ccNumber)) {
       snappedValue = Math.round(userValue / unipolarStepSize.value) * unipolarStepSize.value
     }
     

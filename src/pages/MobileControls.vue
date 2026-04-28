@@ -394,6 +394,9 @@ function getLeverPushSubtitle(leverPush: LeverPushSettingsType): string {
   if (leverPush.functionMode === 3) {
     // Reset mode
     profile = 'Reset';
+  } else if (leverPush.functionMode === 2) {
+    // Incremental mode
+    profile = 'Incremental';
   } else if (leverPush.functionMode === 1) {
     // Peak & Decay mode
     profile = 'Peak & Decay';

@@ -1484,11 +1484,8 @@ function handleKeyClick(midiNote: number) {
   font-family: var(--kb1-font-family);
   font-size: var(--kb1-font-caption);
   font-weight: var(--kb1-font-weight-medium);
-  transition: background-color 0.2s ease, color 0.2s ease;
+  transition: background-color 0.2s ease, color 0.2-s ease;
   flex-shrink: 0;
-}
-
-.key {
   background-color: var(--key-inactive);
   color: var(--key-text-inactive);
 }

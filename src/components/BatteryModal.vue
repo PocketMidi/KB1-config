@@ -619,7 +619,7 @@ function dismissPowerModeHelp() {
   background: none;
   border: none;
   color: #9ca3af;
-  font-size: 32px;
+  font-size: var(--kb1-font-title);
   line-height: var(--kb1-line-height-tight);
   cursor: pointer;
   padding: 0;
@@ -795,15 +795,17 @@ function dismissPowerModeHelp() {
   color: #9ca3af;
   font-size: 10px;
   font-weight: var(--kb1-font-weight-semibold);
+  font-family: 'Roboto Mono', monospace;
   cursor: pointer;
   transition: all 0.2s ease;
+  padding: 0;
   flex-shrink: 0;
 }
 
 .help-icon:hover {
   background: rgba(156, 163, 175, 0.3);
-  border-color: rgba(156, 163, 175, 0.5);
-  color: #EAEAEA;
+  border-color: #5dad6b;
+  color: #5dad6b;
 }
 
 .duration-control-wrapper {
@@ -1455,7 +1457,7 @@ input:checked + .toggle-slider:before {
   border: none;
   background: rgba(255, 255, 255, 0.1);
   color: #9ca3af;
-  font-size: var(--kb1-font-heading);
+  font-size: var(--kb1-font-title);
   line-height: var(--kb1-line-height-tight);
   border-radius: var(--kb1-radius-sm);
   cursor: pointer;

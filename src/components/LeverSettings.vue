@@ -1858,7 +1858,7 @@ function increaseSteps() {
 .close-btn {
   background: none;
   border: none;
-  font-size: var(--kb1-font-subhead);
+  font-size: var(--kb1-font-title);
   color: #848484;
   cursor: pointer;
   padding: 0;

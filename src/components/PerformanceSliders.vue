@@ -3559,7 +3559,7 @@ textarea.input-text {
   background: transparent;
   border: none;
   color: #848484;
-  font-size: var(--kb1-font-display-sm);
+  font-size: var(--kb1-font-title);
   line-height: var(--kb1-line-height-tight);
   cursor: pointer;
   transition: color 0.2s ease;

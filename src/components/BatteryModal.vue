@@ -344,7 +344,7 @@ const powerModes = [
 ];
 
 // Selected power mode (persisted in localStorage)
-const selectedPowerMode = ref<string>(localStorage.getItem('kb1-battery-power-mode') || 'config');
+const selectedPowerMode = ref<string>(localStorage.getItem('kb1-battery-power-mode') || 'idle');
 
 // Watch for changes and persist to localStorage
 watch(selectedPowerMode, (newMode) => {

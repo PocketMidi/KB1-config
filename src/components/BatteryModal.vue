@@ -82,20 +82,39 @@
 
         <!-- Details -->
         <div class="battery-details">
+          <!-- Power Mode Selector -->
+          <div class="detail-row">
+            <span class="power-mode-text">{{ selectedModeName }}</span>
+            <div class="power-mode-radios">
+              <button
+                v-for="mode in powerModes"
+                :key="mode.id"
+                class="power-mode-radio"
+                :class="{ active: selectedPowerMode === mode.id }"
+                :style="{ '--mode-color': mode.color }"
+                @click="selectedPowerMode = mode.id"
+                :title="mode.label"
+              >
+                <div class="radio-circle"></div>
+              </button>
+            </div>
+          </div>
+          
           <!-- Estimated Runtime -->
           <div class="detail-row">
-            <span class="detail-label">Estimated Runtime:</span>
-            <span class="detail-value">{{ formattedRemainingTime }}</span>
-          </div>
-
-          <!-- Last Updated -->
-          <div class="detail-row">
-            <span class="detail-label">Last Synced:</span>
-            <span class="detail-value">{{ timeSinceSync }}</span>
+            <div class="detail-label-with-info">
+              <span class="detail-label">Estimated Runtime:</span>
+              <button 
+                class="power-mode-info-icon"
+                @click="showPowerModeHelp = true"
+                title="What is this?"
+              >i</button>
+            </div>
+            <span class="detail-value">{{ calculatedRemainingTime }}</span>
           </div>
         </div>
           
-        <!-- Speaker Compensation -->
+        <!-- Speaker Usage -->
         <div class="speaker-compensation-section">
           <div class="speaker-meter">
             <div 
@@ -113,19 +132,19 @@
               <!-- Active overlay (darkens unused portion) -->
               <div 
                 class="speaker-bar-inactive"
-                :style="{ left: `${Math.max(2, (speakerMinutes / 420) * 100)}%`, width: `${100 - Math.max(2, (speakerMinutes / 420) * 100)}%` }"
+                :style="{ left: `${Math.max(2, minutesToBarPercentage(speakerMinutes))}%`, width: `${100 - Math.max(2, minutesToBarPercentage(speakerMinutes))}%` }"
               ></div>
             </div>
           </div>
           
           <div class="speaker-controls">
             <div class="speaker-label-with-help">
-              <label>SPEAKER COMPENSATION</label>
+              <label>SPEAKER USAGE</label>
               <button 
                 class="help-icon"
                 @click="showSpeakerHelp = true"
                 title="What is this?"
-              >?</button>
+              >i</button>
             </div>
             <div class="duration-control-wrapper">
               <ValueControl
@@ -151,7 +170,7 @@
             <button 
               class="action-button dev-button"
               @click="handleSetBatteryPercent"
-              :disabled="!props.isConnected || isSettingBattery"
+              :disabled="!props.isConnected || isSettingBattery || devBatteryPercent === 0"
             >
               {{ isSettingBattery ? 'Setting...' : 'Set' }}
             </button>
@@ -169,32 +188,6 @@
           </div>
         </div>
 
-        <!-- Actions -->
-        <div class="modal-actions">
-          <div class="action-row">
-            <button 
-              class="action-button" 
-              :class="estimatedPercentage === 254 ? 'sync-button-secondary' : 'sync-button-primary'"
-              @click="handleSync"
-              :disabled="isSyncing"
-            >
-              {{ isSyncing ? 'Syncing...' : 'Sync Now' }}
-            </button>
-            <div class="action-description">Battery status update</div>
-          </div>
-
-          <div class="action-row">
-            <button 
-              class="action-button recalibrate-button"
-              @click="handleRecalibrate"
-              :disabled="isRecalibrating || estimatedPercentage === 254"
-            >
-              {{ isRecalibrating ? 'Resetting...' : 'Recalibrate' }}
-            </button>
-            <div class="action-description">Prior tracking cleared</div>
-          </div>
-        </div>
-        
         <!-- Show Percentage Toggle Switch -->
         <div class="percentage-toggle-section">
           <label class="toggle-switch-label">
@@ -209,6 +202,20 @@
             </div>
           </label>
           <div class="toggle-description">Numeric display</div>
+        </div>
+
+        <!-- Recalibrate Button -->
+        <div class="recalibrate-section">
+          <div class="action-row">
+            <button 
+              class="action-button recalibrate-button"
+              @click="handleRecalibrate"
+              :disabled="isRecalibrating || estimatedPercentage === 254"
+            >
+              {{ isRecalibrating ? 'Resetting...' : 'Recalibrate' }}
+            </button>
+            <div class="action-description">Prior tracking cleared</div>
+          </div>
         </div>
 
         <!-- Charging Instructions (always visible, dimmed when calibrated) -->
@@ -248,7 +255,7 @@
       <div v-if="showSpeakerHelp" class="help-modal-overlay" @click.stop="dismissSpeakerHelp">
         <div class="help-modal" @click.stop>
           <div class="help-modal-header">
-            <h3>SPEAKER COMPENSATION</h3>
+            <h3>SPEAKER USAGE</h3>
             <button class="close-btn" @click="dismissSpeakerHelp">×</button>
           </div>
           <div class="help-modal-body">
@@ -256,11 +263,38 @@
               Since speaker usage is analog and can't be automatically tracked, use this slider to manually report how long you've used the speakers. This helps provide a more accurate battery estimate.
             </p>
             <p>
-              The color bar reflects real battery behavior: <strong style="color: #22c55e">green</strong> and <strong style="color: #eab308">yellow</strong> zones are full volume. <strong style="color: #f97316">Orange</strong> is where volume starts tapering. <strong style="color: #ef4444">Red</strong> means low volume but MIDI still works. A full battery lasts about 3.5 hours with speakers.
+              The color bar shows usage time: <strong style="color: #22c55e">green</strong> covers typical short sessions (0-45 min), while <strong style="color: #eab308">yellow</strong>, <strong style="color: #f97316">orange</strong>, and <strong style="color: #ef4444">red</strong> represent progressively longer usage. A full battery lasts about 3.5 hours with speakers at full volume.
             </p>
           </div>
           <div class="help-modal-footer">
             <button class="btn-primary" @click="dismissSpeakerHelp">Got it</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Power Mode Help Modal -->
+      <div v-if="showPowerModeHelp" class="help-modal-overlay" @click.stop="dismissPowerModeHelp">
+        <div class="help-modal" @click.stop>
+          <div class="help-modal-header">
+            <h3>POWER CONSUMPTION</h3>
+            <button class="close-btn" @click="dismissPowerModeHelp">×</button>
+          </div>
+          <div class="help-modal-body">
+            <p>
+              Use the mode selector to estimate battery runtime for different usage scenarios. Select a mode to see how long the current battery charge would last at that power consumption rate.
+            </p>
+            <p>
+              <strong>BLE Disconnected (35mA):</strong> Bluetooth off, longest battery life<br>
+              <strong>BLE Idle Connected (50mA):</strong> Connected but not actively used<br>
+              <strong>BLE Configuration (60mA):</strong> Connected to config app<br>
+              <strong>BLE Live Performance (95mA):</strong> Maximum responsiveness for real-time playing
+            </p>
+            <p>
+              This planning tool helps predict battery life for different activities before starting them.
+            </p>
+          </div>
+          <div class="help-modal-footer">
+            <button class="btn-primary" @click="dismissPowerModeHelp">Got it</button>
           </div>
         </div>
       </div>
@@ -269,7 +303,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { useBatteryStatus } from '../composables/useBatteryStatus';
 import { useToast } from '../composables/useToast';
 import { bleClient } from '../ble/bleClient';
@@ -292,8 +326,6 @@ const {
   batteryColor,
   estimatedPercentage,
   showPercentage,
-  timeSinceSync,
-  formattedRemainingTime,
   speakerMinutes,
   syncBatteryStatus,
   resetBattery,
@@ -303,14 +335,61 @@ const {
 
 const toast = useToast();
 
-const isSyncing = ref(false);
+// Power modes for battery estimation (planning tool)
+const powerModes = [
+  { id: 'disconnected', label: 'BLE Disconnected', drainMa: 35, color: '#4d5f7e' },  // Lowest - BLE off
+  { id: 'idle', label: 'BLE Idle Connected', drainMa: 50, color: '#7c694c' },        // BLE on but idle
+  { id: 'config', label: 'BLE Configuration', drainMa: 60, color: '#8e5078' },
+  { id: 'live', label: 'BLE Live Performance', drainMa: 95, color: '#a1483d' },
+];
+
+// Selected power mode (persisted in localStorage)
+const selectedPowerMode = ref<string>(localStorage.getItem('kb1-battery-power-mode') || 'config');
+
+// Watch for changes and persist to localStorage
+watch(selectedPowerMode, (newMode) => {
+  localStorage.setItem('kb1-battery-power-mode', newMode);
+});
+
+// Computed: Selected mode display name
+const selectedModeName = computed(() => {
+  const mode = powerModes.find(m => m.id === selectedPowerMode.value);
+  return mode ? mode.label : 'BLE Configuration';
+});
+
+// Computed: Calculate runtime based on selected power mode
+const calculatedRemainingTime = computed(() => {
+  const percentage = estimatedPercentage.value;
+  
+  // Special cases
+  if (percentage === 254) return 'Uncalibrated';
+  if (percentage === 255) return 'Charging';
+  if (percentage < 0 || percentage > 100) return '--';
+  
+  // Find selected mode
+  const mode = powerModes.find(m => m.id === selectedPowerMode.value);
+  if (!mode) return '--';
+  
+  // Calculate runtime: (percentage * capacity) / drain = hours
+  const BATTERY_CAPACITY_MAH = 420;
+  const remainingMah = (percentage / 100.0) * BATTERY_CAPACITY_MAH;
+  const remainingHours = remainingMah / mode.drainMa;
+  const totalMinutes = Math.round(remainingHours * 60);
+  
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  
+  return `${hours}h ${minutes.toString().padStart(2, '0')}m`;
+});
+
 const isRecalibrating = ref(false);
 const showConfirmation = ref(false);
 const showSpeakerHelp = ref(false);
+const showPowerModeHelp = ref(false);
 
 // Dev Mode: Secret menu for manual battery % setting
 const devModeUnlocked = ref(false);
-const devBatteryPercent = ref(80);
+const devBatteryPercent = ref(0);  // Start at 0 to force user selection
 const isSettingBattery = ref(false);
 const clickCount = ref(0);
 const clickTimer = ref<number | null>(null);
@@ -323,26 +402,27 @@ const fillWidthLarge = computed(() => {
   return Math.max(0, Math.min(90, (percentage / 100) * 90));
 });
 
+// Speaker usage bar exponential curve helpers
+// Exponent 0.62 makes first 45min = 25% (green segment)
+const SPEAKER_CURVE_EXPONENT = 0.62;
+const MAX_SPEAKER_MINUTES = 420;
+
+// Convert minutes to bar percentage (exponential)
+function minutesToBarPercentage(minutes: number): number {
+  return Math.pow(minutes / MAX_SPEAKER_MINUTES, SPEAKER_CURVE_EXPONENT) * 100;
+}
+
+// Convert bar percentage to minutes (inverse exponential)
+function barPercentageToMinutes(percentage: number): number {
+  return Math.pow(percentage / 100, 1 / SPEAKER_CURVE_EXPONENT) * MAX_SPEAKER_MINUTES;
+}
+
 function close() {
   emit('close');
 }
 
 function handleOverlayClick() {
   close();
-}
-
-async function handleSync() {
-  if (!props.isConnected) { emit('needs-connect'); return; }
-  if (isSyncing.value) return;
-  
-  isSyncing.value = true;
-  try {
-    await syncBatteryStatus();
-  } catch (error) {
-    console.error('Battery sync failed:', error);
-  } finally {
-    isSyncing.value = false;
-  }
 }
 
 function handleRecalibrate() {
@@ -388,7 +468,7 @@ function handleBatteryClick() {
   // 5 clicks within 2 seconds = unlock
   if (clickCount.value >= 5) {
     devModeUnlocked.value = true;
-    devBatteryPercent.value = estimatedPercentage.value ?? 80;
+    devBatteryPercent.value = 0;  // Force user to set a value (Set button disabled at 0)
     clickCount.value = 0;
     return;
   }
@@ -406,8 +486,8 @@ async function handleSetBatteryPercent() {
     return;
   }
   
-  if (devBatteryPercent.value < 0 || devBatteryPercent.value > 100) {
-    toast.warning('Battery % must be between 0-100');
+  if (devBatteryPercent.value < 1 || devBatteryPercent.value > 100) {
+    toast.warning('Battery % must be between 1-100');
     return;
   }
   
@@ -433,7 +513,7 @@ const speakerMinutesModel = computed({
 
 function updateSpeakerFromPosition(clientX: number, rect: DOMRect) {
   const percentage = Math.max(0, Math.min(100, ((clientX - rect.left) / rect.width) * 100));
-  const minutes = Math.round((percentage / 100) * 420 / 5) * 5; // snap to step 5
+  const minutes = Math.round(barPercentageToMinutes(percentage) / 5) * 5; // snap to step 5
   setSpeakerMinutes(minutes);
 }
 
@@ -468,6 +548,10 @@ function handleBarTouchStart(event: TouchEvent) {
 
 function dismissSpeakerHelp() {
   showSpeakerHelp.value = false;
+}
+
+function dismissPowerModeHelp() {
+  showPowerModeHelp.value = false;
 }
 
 </script>
@@ -563,7 +647,7 @@ function dismissSpeakerHelp() {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  margin-bottom: 15px;
+  margin-bottom: 12px;
   padding: 12px;
   background-color: rgba(0, 0, 0, 0.3);
   border-radius: var(--kb1-radius-lg);
@@ -581,16 +665,47 @@ function dismissSpeakerHelp() {
   font-weight: var(--kb1-font-weight-medium);
 }
 
+.detail-label-with-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .detail-value {
   color: #EAEAEA;
   font-weight: var(--kb1-font-weight-semibold);
   font-family: var(--kb1-font-family);
 }
 
-/* Speaker Compensation Section */
+/* Power Mode Info Icon */
+.power-mode-info-icon {
+  background: rgba(156, 163, 175, 0.2);
+  border: 1px solid rgba(156, 163, 175, 0.3);
+  border-radius: var(--kb1-radius-full);
+  width: 16px;
+  height: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #9ca3af;
+  font-size: 10px;
+  font-weight: var(--kb1-font-weight-semibold);
+  font-family: 'Roboto Mono', monospace;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  padding: 0;
+  flex-shrink: 0;
+}
+
+.power-mode-info-icon:hover {
+  background: rgba(156, 163, 175, 0.3);
+  border-color: #5dad6b;
+  color: #5dad6b;
+}
+
+/* Speaker Usage Section */
 .speaker-compensation-section {
-  margin-top: 12px;
-  margin-bottom: 15px;
+  margin-bottom: 12px;
   padding: 12px;
   background-color: rgba(0, 0, 0, 0.3);
   border-radius: var(--kb1-radius-lg);
@@ -657,7 +772,7 @@ function dismissSpeakerHelp() {
 .speaker-label-with-help {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
 }
 
 .speaker-label-with-help label {
@@ -810,16 +925,61 @@ function dismissSpeakerHelp() {
 }
 
 .modal-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
   margin-bottom: 12px;
 }
+
+/* Power Mode Selector (inside battery-details) */
+.power-mode-text {
+  font-family: 'Roboto Mono', monospace;
+  font-size: 0.75rem;
+  font-weight: 400;
+  letter-spacing: 0.03em;
+  color: #9ca3af;
+}
+
+.power-mode-radios {
+  display: flex;
+  gap: 16px;
+}
+
+.power-mode-radio {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* OUTLINE COLOR ADJUSTMENT:
+   To change the outline appearance when selected, see the .active styles below.
+   - Outline color: Set 'outline-color' to desired color (currently matches dot)
+   - Outline width: Adjust '2px' in 'outline' property
+   - Gap between dot and outline: Adjust 'outline-offset' value */
+.radio-circle {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--mode-color);
+  opacity: 0.3;
+  border: none;
+  transition: all 0.2s ease;
+}
+
+.power-mode-radio.active .radio-circle {
+  opacity: 1;
+  /* Outline ring with gap - adjust values as noted in comment above */
+  outline: 2px solid var(--mode-color);
+  outline-offset: 2px;
+}
+
+/* Remove old power-mode-selector styles */
 
 .action-row {
   display: flex;
   align-items: center;
-  gap: 9px;
+  gap: 8px;
 }
 
 .action-button {
@@ -842,63 +1002,6 @@ function dismissSpeakerHelp() {
   font-size: var(--kb1-font-input);
   color: #9ca3af;
   line-height: var(--kb1-line-height-compact);
-}
-
-.sync-button-primary {
-  background: linear-gradient(135deg, var(--kb1-color-primary) 0%, var(--kb1-color-primary) 100%);
-  border: none;
-  color: #EAEAEA;
-  font-weight: var(--kb1-font-weight-bold);
-}
-
-.sync-button-primary:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(74, 158, 255, 0.4);
-}
-
-.sync-button-primary:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  color: rgba(255, 255, 255, 0.6);
-  font-weight: var(--kb1-font-weight-normal);
-}
-
-.sync-button-secondary {
-  background: rgba(106, 104, 83, 0.35);
-  border: 1px solid rgba(106, 104, 83, 0.4);
-  color: #EAEAEA;
-  font-weight: var(--kb1-font-weight-normal);
-}
-
-.sync-button-secondary:hover:not(:disabled) {
-  background: rgba(106, 104, 83, 0.6);
-  border-color: rgba(106, 104, 83, 0.7);
-  transform: translateY(-2px);
-}
-
-.sync-button-secondary:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  color: #848484;
-  font-weight: var(--kb1-font-weight-normal);
-}
-
-.sync-icon {
-  font-size: var(--kb1-font-input);
-  line-height: var(--kb1-line-height-tight);
-}
-
-.sync-icon.spinning {
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
 }
 
 .calibrate-button {
@@ -937,11 +1040,16 @@ function dismissSpeakerHelp() {
 .percentage-toggle-section {
   display: flex;
   align-items: center;
-  gap: 9px;
+  gap: 8px;
   padding: 12px;
-  margin-bottom: 8px;
+  margin-bottom: 12px;
   background-color: rgba(255, 255, 255, 0.03);
   border-radius: var(--kb1-radius-lg);
+}
+
+/* Recalibrate Section */
+.recalibrate-section {
+  margin-bottom: 12px;
 }
 
 .toggle-switch-label {
@@ -1322,7 +1430,7 @@ input:checked + .toggle-slider:before {
 
 /* Dev Mode */
 .dev-mode-section {
-  margin-bottom: 8px;
+  margin-bottom: 12px;
   padding: 12px;
   background-color: rgba(106, 104, 83, 0.15);
   border: 1px solid rgba(106, 104, 83, 0.3);

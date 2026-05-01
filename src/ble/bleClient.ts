@@ -1141,7 +1141,7 @@ export class BLEClient {
 
   /**
    * Handle keep-alive status notification (10-byte packet from firmware)
-   * Format: [battery][flags][pattern][octave][scale][root][reserved×4]
+   * Format: [battery][flags][pattern][octave][scale][root][powerMode][reserved×3]
    */
   private onKeepAliveStatusReceived(event: Event): void {
     const characteristic = event.target as BluetoothRemoteGATTCharacteristic;
@@ -1159,14 +1159,15 @@ export class BLEClient {
     // byte 3: octave offset (reserved, unused until v1.6.3+)
     const scale = value.getUint8(4);          // 0-19 scale type
     const root = value.getUint8(5);           // 0-11 root note
-    // bytes 6-9 reserved for future use
+    const powerMode = value.getUint8(6);      // 1=LIVE(95mA), 2=CONFIG(60mA), 3=IDLE(35mA)
+    // bytes 7-9 reserved for future use
     
     const usbConnected = (flags & 0x01) !== 0;
     
-    console.log(`💓 bat:${battery}% usb:${usbConnected} pat:${pattern} scale:${scale} root:${root}`);
+    console.log(`💓 bat:${battery}% usb:${usbConnected} pat:${pattern} scale:${scale} root:${root} pwr:${powerMode}`);
     
     // Update battery status automatically (no manual sync needed!)
-    updateBatteryFromKeepAlive(battery, usbConnected);
+    updateBatteryFromKeepAlive(battery, usbConnected, powerMode);
     
     // Update pattern/scale/root in device state if callback is registered
     if (this.onKeepAliveState) {

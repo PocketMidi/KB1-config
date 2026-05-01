@@ -27,6 +27,10 @@ const batteryStatus = ref<BatteryStatus | null>(null);
 const lastSyncTime = ref<number>(0);
 const isAvailable = ref(false);
 
+// Power mode tracking (from keep-alive packets)
+// 0=disconnected(50mA), 1=live(95mA), 2=config(60mA), 3=idle(35mA)
+const powerMode = ref<number>(0);
+
 // UI preference: show percentage in icon
 const PREF_KEY = 'kb1-battery-show-percentage';
 const showPercentage = ref<boolean>(localStorage.getItem(PREF_KEY) === 'true');
@@ -35,12 +39,12 @@ const showPercentage = ref<boolean>(localStorage.getItem(PREF_KEY) === 'true');
 const lastAlertPercentage = ref<number>(100);
 
 // Constants
-const ACTIVE_DRAIN_MA = 95; // Active mode current draw
+const ACTIVE_DRAIN_MA = 35; // BLE disconnected mode current draw (lowest)
 const BATTERY_CAPACITY_MAH = 420;
 
 // Speaker compensation: flat 50mA additional draw from PAM8406 amp
 // Observed: ~48mA amp draw (sleep test: 99% → 8hr 15min with 2mA system sleep)
-// During active use, this stacks with 95mA base drain = ~145mA total
+// During active use, this stacks with 35mA base drain = ~85mA total
 const SPEAKER_DRAIN_MA = 50;
 
 /**
@@ -292,7 +296,7 @@ function formatSpeakerTime(): string {
  * Update battery percentage directly (called from keep-alive notifications)
  * This provides automatic battery updates without manual sync
  */
-export function updateBatteryFromKeepAlive(percentage: number, usbConnected?: boolean) {
+export function updateBatteryFromKeepAlive(percentage: number, usbConnected?: boolean, blePowerMode?: number) {
   if (!batteryStatus.value) {
     batteryStatus.value = {
       percentage,
@@ -307,6 +311,12 @@ export function updateBatteryFromKeepAlive(percentage: number, usbConnected?: bo
       batteryStatus.value.usbConnected = usbConnected;
     }
   }
+  
+  // Update power mode if provided (1=LIVE, 2=CONFIG, 3=IDLE)
+  if (blePowerMode !== undefined && blePowerMode > 0) {
+    powerMode.value = blePowerMode;
+  }
+  
   // Keep-alive delivers real battery data — mark as available so the icon renders
   isAvailable.value = true;
   
@@ -318,6 +328,27 @@ export function updateBatteryFromKeepAlive(percentage: number, usbConnected?: bo
   }
 }
 
+/**
+ * Get user-friendly power mode label
+ * Shows recent power consumption with mode context
+ */
+function getPowerModeLabel(): string {
+  if (isDevMode()) return 'Evaluation Mode';
+  
+  const connected = bleClient.isConnected();
+  if (!connected) {
+    return '50mA • Disconnected';
+  }
+  
+  // Show last known BLE power mode (emphasis on consumption)
+  switch(powerMode.value) {
+    case 1: return '95mA • BLE Live Performance';
+    case 2: return '60mA • BLE Configuration';
+    case 3: return '35mA • BLE Idle Connected';
+    default: return 'BLE Connected';
+  }
+}
+
 export function useBatteryStatus() {
   return {
     // State
@@ -326,6 +357,7 @@ export function useBatteryStatus() {
     showPercentage,
     lastSyncTime,
     speakerMinutes,
+    powerMode,
     
     // Computed
     batteryLevel,
@@ -335,6 +367,7 @@ export function useBatteryStatus() {
     formattedRemainingTime: computed(() => formatRemainingTime(getEstimatedRemainingSeconds())),
     timeSinceSync: computed(() => getTimeSinceSync()),
     formattedSpeakerTime: computed(() => formatSpeakerTime()),
+    powerModeLabel: computed(() => getPowerModeLabel()),
     
     // Methods
     initBatteryStatus,

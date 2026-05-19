@@ -29,7 +29,7 @@
     </div>
 
     <!-- Keyboard Visualization -->
-    <div v-if="playMode === 'scale' || playMode === 'chord' || playMode === 'arp'" ref="keyboardRef" class="keyboard-visual" :class="{ 'chromatic-mode': isChromatic, 'arp-user-mode': playMode === 'arp' && isArpUserMode, 'chord-display-mode': playMode === 'chord' || (playMode === 'arp' && !isArpUserMode) }">
+    <div v-if="playMode === 'scale' || playMode === 'chord' || playMode === 'arp'" ref="keyboardRef" class="keyboard-visual" :class="{ 'chromatic-mode': isChromatic, 'arp-user-mode': playMode === 'arp' && isArpUserMode, 'chord-display-mode': playMode === 'chord', 'arp-chord-display-mode': playMode === 'arp' && !isArpUserMode }">
       <!-- Octave meter bars (only in CHORD mode and Arp CHORD sub-mode) - positioned from left -->
       <div v-if="playMode === 'chord' || (playMode === 'arp' && !isArpUserMode)" ref="octaveMeterRef" class="octave-meter" :class="{ 'position-ready': meterPositionReady }" :style="{ left: meterLeftPosition, right: 'auto' }">
         <button
@@ -52,10 +52,11 @@
           v-for="note in topRowNotes" 
           :key="note.midi"
           class="key sharp-key clickable"
+          :ref="(el) => registerKey(el as HTMLElement | null, note.midi)"
           :class="{ 
             active: isNoteActive(note.midi),
             'gap-after': note.gapAfter,
-            'root-note': isRootNote(note.midi),
+            'root-note': isRootNote(note.midi) && playMode === 'scale',
             'chromatic-disabled': isChromatic
           }"
           @click="handleKeyClick(note.midi)"
@@ -72,10 +73,11 @@
           v-for="note in bottomRowNotes" 
           :key="note.midi"
           class="key natural-key clickable"
+          :ref="(el) => registerKey(el as HTMLElement | null, note.midi)"
           :class="{ 
             active: isNoteActive(note.midi),
             'gap-after': note.gapAfter,
-            'root-note': isRootNote(note.midi),
+            'root-note': isRootNote(note.midi) && playMode === 'scale',
             'chromatic-disabled': isChromatic,
             'last-f-key': note.midi === 77
           }"
@@ -222,7 +224,7 @@
       <!-- Chord Swing Control (uses gateValue field for BLE compatibility) -->
       <div class="group gate-control" :class="{ disabled: isChordStyle }">
         <label>
-          SWING
+          CHORD SWING
           <span class="info-icon" @click.stop="showHelp('chordSwing')">i</span>
         </label>
         <div class="duration-control-wrapper">
@@ -250,7 +252,7 @@
     <div v-if="playMode === 'scale' || playMode === 'chord'" class="inputs">
       <div class="group" :class="{ 'root-range-group': playMode === 'chord' }">
         <label>
-          {{ playMode === 'chord' ? 'RANGE' : 'ROOT NOTE' }}
+          {{ playMode === 'chord' ? 'OCTAVE RANGE' : 'ROOT NOTE' }}
           <span v-if="playMode === 'chord'" 
                 class="info-icon" 
                 @click.stop="showHelp('voicing')">
@@ -376,7 +378,7 @@
         <!-- Swing/Glide Control -->
         <div class="swing-control">
           <label>
-            SWING
+            ARP SWING
             <span class="info-icon" @click.stop="showHelp('swing')">i</span>
           </label>
           <div class="duration-control-wrapper">
@@ -398,7 +400,7 @@
       <div v-if="!isArpUserMode" class="arp-type-selectors inputs">
         <div class="group root-range-group">
           <label>
-            RANGE
+            OCTAVE RANGE
             <span class="info-icon" @click.stop="showHelp('voicing')">i</span>
           </label>
           <div class="root-range-row">
@@ -604,6 +606,182 @@ const userClosedPanel = ref(false) // Track if user manually closed the panel
 
 const { doubleTap } = useHaptics()
 
+// ======================== CHORD / ARP KEYBOARD ANIMATION (rAF, direct DOM) ========================
+// Uses requestAnimationFrame + direct element.style writes — NO reactive state changes during
+// animation, so Vue never re-renders and CSS transitions are never involved. Eliminates pops.
+
+// Registry of key DOM elements by MIDI note (plain Map, not reactive)
+const keyElementMap = new Map<number, HTMLElement>()
+function registerKey(el: HTMLElement | null, midiNote: number) {
+  if (el) keyElementMap.set(midiNote, el)
+  else keyElementMap.delete(midiNote)
+}
+
+// ======================== TIMING CONSTANTS (adjust here) ========================
+// ROOT_CYCLE_MS: ms per semitone advance — 2000ms = ~24 sec full cycle through all 12 roots
+const ROOT_CYCLE_MS = 3000
+// ARP_PULSE_MS: ms per sequence step — 700ms = relaxed pulse
+const ARP_PULSE_MS = 3000
+// ===============================================================================
+
+// Animation progress (plain numbers, NOT reactive — never read by Vue template)
+let animRootFloat = 0   // 0..12, floor = current root semitone (0=C, 11=B)
+let arpPulseFloat = 0   // 0..seqLen, floor = current step index
+let chordAnimFrameId: number | null = null
+let arpAnimFrameId: number | null = null
+let chordAnimLastTime = 0
+let arpAnimLastTime = 0
+
+const lerp = (a: number, b: number, t: number) => a + (b - a) * t
+// Key active color RGB — must match --key-active: #4b736a in kb1.css
+const KAR = 75, KAG = 115, KAB = 106
+
+function applyChordKeyStyles(rootFloat: number) {
+  const currentRoot = Math.floor(rootFloat) % 12
+  const nextRoot = (currentRoot + 1) % 12
+  const progress = rootFloat % 1
+  // Cosine easing: converts linear 0→1 into an S-curve with zero slope at both endpoints.
+  // This means opacity approaches the floor value with zero velocity — no hard landing.
+  // eased=0 at progress=0 (full brightness), eased=1 at progress=1 (floor brightness).
+  const eased = 0.5 * (1 - Math.cos(Math.PI * progress))
+  const intervals = (chordIntervals[model.value.chord.chordType] || []).map((i: number) => i % 12)
+  for (const note of [...topRowNotes, ...bottomRowNotes]) {
+    const el = keyElementMap.get(note.midi)
+    if (!el) continue
+    const nc = note.midi % 12
+    const inCur = intervals.some((i: number) => (i + currentRoot) % 12 === nc)
+    const inNxt = intervals.some((i: number) => (i + nextRoot) % 12 === nc)
+    const op = inCur && inNxt ? 1
+      : inCur ? lerp(1, 0.15, eased)    // fade-out: eased curve, zero-slope arrival at floor
+      : inNxt ? lerp(0.15, 1, eased)    // fade-in: eased curve, zero-slope departure from floor
+      : 0.15
+    el.style.backgroundColor = `rgba(${KAR},${KAG},${KAB},${op.toFixed(3)})`
+    el.style.color = `rgba(255,255,255,${Math.max(0.28, op).toFixed(3)})`
+    // Outline follows the same eased curve — seamless at both ends
+    const outlineOp = nc === currentRoot ? 1 - eased : nc === nextRoot ? eased : 0
+    // Use CSS outline (not box-shadow) so the ring renders outside the key's layout box —
+    // keys stay exactly the same size as scale mode. outline-offset creates the gap.
+    // Set alpha=0 when invisible to avoid toggling outline on/off (prevents pop).
+    el.style.outline = `1.5px solid rgba(139,167,147,${(outlineOp * 0.5).toFixed(3)})`
+    el.style.outlineOffset = '2px'
+  }
+}
+
+function startChordAnim() {
+  if (chordAnimFrameId !== null) return
+  chordAnimLastTime = 0
+  const tick = (ts: number) => {
+    if (chordAnimLastTime === 0) { chordAnimLastTime = ts }
+    else {
+      // Cap delta to 100ms so a hidden tab resuming doesn't jump
+      const delta = Math.min(ts - chordAnimLastTime, 100)
+      chordAnimLastTime = ts
+      animRootFloat = (animRootFloat + delta / ROOT_CYCLE_MS) % 12
+      applyChordKeyStyles(animRootFloat)
+    }
+    chordAnimFrameId = requestAnimationFrame(tick)
+  }
+  chordAnimFrameId = requestAnimationFrame(tick)
+}
+
+function stopChordAnim() {
+  if (chordAnimFrameId !== null) { cancelAnimationFrame(chordAnimFrameId); chordAnimFrameId = null }
+  chordAnimLastTime = 0
+}
+
+// Returns chord tone semitone offsets (from C=0) ordered for the selected arp pattern
+function getArpDisplaySequence(): number[] {
+  const intervals = (chordIntervals[model.value.chord.chordType] || []).map((i: number) => i % 12)
+  const sorted = [...intervals].sort((a: number, b: number) => a - b)
+  const pattern = model.value.chord.strumPattern
+  switch (pattern) {
+    case 2: return [...sorted].reverse()
+    case 3: { const down = sorted.slice(1, -1).reverse(); return [...sorted, ...down] }
+    case 4: {
+      const result: number[] = []; let lo = 0, hi = sorted.length - 1
+      while (lo <= hi) { result.push(sorted[lo++]); if (lo <= hi) result.push(sorted[hi--]) }
+      return result
+    }
+    case 5: {
+      const result: number[] = []; const mid = Math.floor(sorted.length / 2)
+      result.push(sorted[mid]); let lo = mid - 1, hi = mid + 1
+      while (lo >= 0 || hi < sorted.length) {
+        if (lo >= 0) result.push(sorted[lo--])
+        if (hi < sorted.length) result.push(sorted[hi++])
+      }
+      return result
+    }
+    default: return sorted
+  }
+}
+
+function applyArpKeyStyles(absTimeMs: number) {
+  const intervals = (chordIntervals[model.value.chord.chordType] || []).map((i: number) => i % 12)
+  // Center of the display keyboard in MIDI (G4 = 67 sits roughly in the middle of our layout)
+  const CENTER_MIDI = 67
+  // Max distance from center across our keyboard layout (B=59 to F=77, so 10 semitones)
+  const MAX_DIST = 10
+  // ======================== TIMING CONSTANTS (adjust here) ========================
+  // ARP wave: each chord tone gets a continuous sine with a center-out phase offset.
+  // CENTER → EDGE phase spread: 0.5 means edge keys lag center by half a cycle (50% overlap).
+  const PHASE_SPREAD = 0.5   // ← 0=all in sync, 1.0=full cycle spread edge-to-edge
+  const BASE_OP = 0.40       // ← resting floor brightness for chord tones
+  const PEAK_OP = 0.95       // ← peak brightness at top of each wave
+  // ===============================================================================
+  for (const note of [...topRowNotes, ...bottomRowNotes]) {
+    const el = keyElementMap.get(note.midi)
+    if (!el) continue
+    const noteOffset = (note.midi - 60 + 120) % 12
+    if (!intervals.some((i: number) => (i % 12) === noteOffset)) {
+      el.style.backgroundColor = `rgba(${KAR},${KAG},${KAB},0.18)`
+      el.style.color = 'rgba(255,255,255,0.30)'
+      el.style.boxShadow = ''
+      continue
+    }
+    // Phase offset: center=0, edge=PHASE_SPREAD (in full-cycle fractions)
+    const dist = Math.abs(note.midi - CENTER_MIDI)
+    const phaseOffset = (dist / MAX_DIST) * PHASE_SPREAD
+    // sin mapped from [-1,1] to [0,1] then scaled to [BASE_OP, PEAK_OP]
+    const sinT = 0.5 + 0.5 * Math.sin(2 * Math.PI * (absTimeMs / ARP_PULSE_MS - phaseOffset))
+    const brightness = BASE_OP + (PEAK_OP - BASE_OP) * sinT
+    el.style.backgroundColor = `rgba(${KAR},${KAG},${KAB},${brightness.toFixed(3)})`
+    el.style.color = `rgba(255,255,255,${Math.max(0.28, brightness).toFixed(3)})`
+    el.style.boxShadow = ''
+  }
+}
+
+function startArpAnim() {
+  if (arpAnimFrameId !== null) return
+  arpAnimLastTime = 0
+  const tick = (ts: number) => {
+    if (arpAnimLastTime === 0) { arpAnimLastTime = ts }
+    else {
+      const delta = Math.min(ts - arpAnimLastTime, 100)
+      arpAnimLastTime = ts
+      arpPulseFloat = (arpPulseFloat + delta) % (ARP_PULSE_MS * 1000) // track absolute ms
+      applyArpKeyStyles(arpPulseFloat)
+    }
+    arpAnimFrameId = requestAnimationFrame(tick)
+  }
+  arpAnimFrameId = requestAnimationFrame(tick)
+}
+
+function stopArpAnim() {
+  if (arpAnimFrameId !== null) { cancelAnimationFrame(arpAnimFrameId); arpAnimFrameId = null }
+  arpAnimLastTime = 0; arpPulseFloat = 0
+}
+
+// Clear all inline styles from key elements (when leaving chord/arp modes)
+function clearKeyStyles() {
+  for (const el of keyElementMap.values()) {
+    el.style.backgroundColor = ''
+    el.style.color = ''
+    el.style.boxShadow = ''
+    el.style.outline = ''
+    el.style.outlineOffset = ''
+  }
+}
+
 // Track clicks in chromatic mode to show helpful hint banner
 const inactiveKeyClicks = ref(0)
 const inactiveClickTimer = ref<number | null>(null)
@@ -672,12 +850,17 @@ onMounted(() => {
 
 // Initialize meter position and listen for resize
 onMounted(() => {
+  // Start animation based on initial play mode
+  if (playMode.value === 'chord') startChordAnim()
+  else if (playMode.value === 'arp' && !isArpUserMode.value) startArpAnim()
   updateMeterPosition()
   window.addEventListener('resize', updateMeterPosition)
 })
 
 onUnmounted(() => {
   window.removeEventListener('resize', updateMeterPosition)
+  stopChordAnim()
+  stopArpAnim()
 })
 
 // Watch for mode changes and update position
@@ -927,6 +1110,29 @@ const arpReversed = computed({
 watch(isArpUserMode, () => {
   updateMeterPosition()
 })
+
+// Start/stop keyboard animations when playMode or arp sub-mode changes
+// NOTE: isArpUserMode must be defined above this watch; NOT immediate (DOM not ready at that point)
+watch(
+  [playMode, isArpUserMode],
+  ([mode, userMode]) => {
+    if (mode === 'chord') {
+      stopArpAnim(); clearKeyStyles(); startChordAnim()
+    } else if (mode === 'arp' && !userMode) {
+      stopChordAnim(); clearKeyStyles(); arpPulseFloat = 0; startArpAnim()
+    } else {
+      stopChordAnim(); stopArpAnim(); clearKeyStyles()
+    }
+  }
+)
+
+// Reset arp pulse to beginning when chord type or pattern changes
+watch(
+  [() => model.value.chord.chordType, () => model.value.chord.strumPattern],
+  () => {
+    if (playMode.value === 'arp' && !isArpUserMode.value) arpPulseFloat = 0
+  }
+)
 
 // Display formatter for arp speed - always show positive value
 const arpDisplayFormatter = (value: number): string => {
@@ -1780,32 +1986,32 @@ const bottomRowNotes = [
 ]
 
 function isNoteActive(midiNote: number): boolean {
-  const rootNote = model.value.scale.rootNote // Always use scale.rootNote (shared for both modes)
-  
   if (playMode.value === 'scale') {
-    // Scale mode: show active scale notes
+    // Scale mode: show active scale notes against the user's chosen root
+    const rootNote = model.value.scale.rootNote
     const scaleType = model.value.scale.scaleType
     const intervals = scaleIntervals[scaleType] || []
     const noteOffset = (midiNote - rootNote + 120) % 12
     return intervals.includes(noteOffset)
   } else if (playMode.value === 'chord') {
-    // Chord mode: show chord tones
-    const chordType = model.value.chord.chordType
-    const intervals = chordIntervals[chordType] || []
-    const noteOffset = (midiNote - rootNote + 120) % 12
-    return intervals.includes(noteOffset)
-  } else if (playMode.value === 'arp') {
-    // Arp mode: show chord tones (same as chord mode)
-    const chordType = model.value.chord.chordType
-    const intervals = chordIntervals[chordType] || []
-    const noteOffset = (midiNote - rootNote + 120) % 12
-    return intervals.includes(noteOffset)
+    // Chord/arp-chord modes: rAF owns all styling via direct DOM writes.
+    // Always return false so Vue never toggles the 'active' CSS class, which would
+    // momentarily apply a CSS background-color and cause a visible pop.
+    return false
+  } else if (playMode.value === 'chord_UNUSED') {
+    // (dead branch kept for reference — rAF replaced this)
+    const intervals = chordIntervals[model.value.chord.chordType] || []
+    const noteOffset = (midiNote - 60 + 120) % 12
+    return intervals.some((i: number) => (i % 12) === noteOffset)
+  } else if (playMode.value === 'arp' && !isArpUserMode.value) {
+    // Arp CHORD mode: rAF owns all styling. Always return false — same reason as chord above.
+    return false
   }
   return false
 }
 
 function isRootNote(midiNote: number): boolean {
-  // Force C (60) as root when Chromatic scale is selected in SCALE mode only
+  // Only used for scale mode yellow outline — chord/arp roots are handled by rAF direct DOM
   const rootNote = (model.value.scale.scaleType === 0 && model.value.mode === 'scale') ? 60 : model.value.scale.rootNote
   return (midiNote % 12) === (rootNote % 12)
 }
@@ -1981,9 +2187,9 @@ function handleKeyClick(midiNote: number) {
   animation: none;
 }
 
-/* Remove root-note outlines in arp user mode (same as chromatic) */
+/* Remove root-note outlines in arp user/chord display modes (root-note class not used there) */
 .arp-user-mode .key.root-note,
-.chord-display-mode .key.root-note {
+.arp-chord-display-mode .key.root-note {
   box-shadow: none;
   animation: none;
 }
@@ -2114,71 +2320,30 @@ function handleKeyClick(midiNote: number) {
 .chromatic-mode .top-row .key:nth-child(7) .note-label-alt,
 .chromatic-mode .top-row .key:nth-child(7) { animation-delay: 1.05s; }
 
-/* Chord / Arp-Chord mode - keyboard shows ambient pulse (root note is set by playing a key) */
+/* ---- Chord mode (Block / Strum): initial state only — rAF direct DOM takes over on mount ---- */
+/* active class is NEVER toggled in chord mode (isNoteActive returns false). Both rules use     */
+/* the same uniform floor value so even the first frame before rAF starts is pop-free.          */
 .chord-display-mode .key {
   pointer-events: none;
+  /* No CSS transition — all animation is handled by rAF writing element.style directly */
 }
-
 .chord-display-mode .key.active,
 .chord-display-mode .key:not(.active) {
-  background-color: rgba(var(--key-active-rgb), 0.25);
-  color: rgba(255, 255, 255, 0.85);
-  animation: chromatic-key-pulse 4s ease-in-out infinite;
+  background-color: rgba(75, 115, 106, 0.15); /* uniform floor — rAF overrides immediately */
+  color: rgba(255, 255, 255, 0.28);
 }
 
-.chord-display-mode .key .note-label,
-.chord-display-mode .key .note-label-alt {
-  animation: chromatic-text-pulse 4s ease-in-out infinite;
+/* ---- Arp CHORD mode: initial state only — rAF direct DOM takes over on mount ---- */
+/* active class is NEVER toggled in arp-chord mode. Uniform floor prevents any pre-rAF flash. */
+.arp-chord-display-mode .key {
+  pointer-events: none;
+  /* No CSS transition — rAF handles pulse with sine breathing */
 }
-
-/* Center-out timing for Chord Display Mode: Bottom row */
-.chord-display-mode .bottom-row .key:nth-child(6) .note-label,
-.chord-display-mode .bottom-row .key:nth-child(6) { animation-delay: 0s; }
-.chord-display-mode .bottom-row .key:nth-child(5) .note-label,
-.chord-display-mode .bottom-row .key:nth-child(5),
-.chord-display-mode .bottom-row .key:nth-child(7) .note-label,
-.chord-display-mode .bottom-row .key:nth-child(7) { animation-delay: 0.3s; }
-.chord-display-mode .bottom-row .key:nth-child(4) .note-label,
-.chord-display-mode .bottom-row .key:nth-child(4),
-.chord-display-mode .bottom-row .key:nth-child(8) .note-label,
-.chord-display-mode .bottom-row .key:nth-child(8) { animation-delay: 0.6s; }
-.chord-display-mode .bottom-row .key:nth-child(3) .note-label,
-.chord-display-mode .bottom-row .key:nth-child(3),
-.chord-display-mode .bottom-row .key:nth-child(9) .note-label,
-.chord-display-mode .bottom-row .key:nth-child(9) { animation-delay: 0.9s; }
-.chord-display-mode .bottom-row .key:nth-child(2) .note-label,
-.chord-display-mode .bottom-row .key:nth-child(2),
-.chord-display-mode .bottom-row .key:nth-child(10) .note-label,
-.chord-display-mode .bottom-row .key:nth-child(10) { animation-delay: 1.2s; }
-.chord-display-mode .bottom-row .key:nth-child(1) .note-label,
-.chord-display-mode .bottom-row .key:nth-child(1),
-.chord-display-mode .bottom-row .key:nth-child(11) .note-label,
-.chord-display-mode .bottom-row .key:nth-child(11) { animation-delay: 1.5s; }
-.chord-display-mode .bottom-row .key:nth-child(12) .note-label,
-.chord-display-mode .bottom-row .key:nth-child(12) { animation-delay: 1.8s; }
-
-/* Center-out timing for Chord Display Mode: Top row */
-.chord-display-mode .top-row .key:nth-child(4) .note-label,
-.chord-display-mode .top-row .key:nth-child(4) .note-label-alt,
-.chord-display-mode .top-row .key:nth-child(4) { animation-delay: 0.15s; }
-.chord-display-mode .top-row .key:nth-child(3) .note-label,
-.chord-display-mode .top-row .key:nth-child(3) .note-label-alt,
-.chord-display-mode .top-row .key:nth-child(3),
-.chord-display-mode .top-row .key:nth-child(5) .note-label,
-.chord-display-mode .top-row .key:nth-child(5) .note-label-alt,
-.chord-display-mode .top-row .key:nth-child(5) { animation-delay: 0.45s; }
-.chord-display-mode .top-row .key:nth-child(2) .note-label,
-.chord-display-mode .top-row .key:nth-child(2) .note-label-alt,
-.chord-display-mode .top-row .key:nth-child(2),
-.chord-display-mode .top-row .key:nth-child(6) .note-label,
-.chord-display-mode .top-row .key:nth-child(6) .note-label-alt,
-.chord-display-mode .top-row .key:nth-child(6) { animation-delay: 0.75s; }
-.chord-display-mode .top-row .key:nth-child(1) .note-label,
-.chord-display-mode .top-row .key:nth-child(1) .note-label-alt,
-.chord-display-mode .top-row .key:nth-child(1),
-.chord-display-mode .top-row .key:nth-child(7) .note-label,
-.chord-display-mode .top-row .key:nth-child(7) .note-label-alt,
-.chord-display-mode .top-row .key:nth-child(7) { animation-delay: 1.05s; }
+.arp-chord-display-mode .key.active,
+.arp-chord-display-mode .key:not(.active) {
+  background-color: rgba(75, 115, 106, 0.18); /* uniform floor — rAF overrides immediately */
+  color: rgba(255, 255, 255, 0.30);
+}
 
 /* Arp User Mode - keyboard grayed out with pulse (like chromatic) */
 .arp-user-mode .key {

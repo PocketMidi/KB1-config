@@ -32,9 +32,9 @@
         </button>
       </div>
 
-      <!-- Cycling Parameter Direction Toggle (REV/FWD) -->
+      <!-- Continuous or Cycling Parameter Direction Toggle (REV/FWD) -->
       <button 
-        v-if="isCyclingParameter"
+        v-if="showFwdRevButton"
         class="toggle-btn" 
         @click="handleToggleClick"
         :title="toggleTooltip"
@@ -51,6 +51,8 @@
         v-if="isPatternSelector"
         :min="userMin"
         :max="userMax"
+        :reverse="!isMomentary"
+        :is-user-mode="props.arpUserMode === 1"
       />
       <GateTouchProfile v-else-if="model.functionMode === 0" />
       <ToggleTouchProfile v-else-if="model.functionMode === 1" />
@@ -66,6 +68,7 @@
       :min-allowed="minRange"
       :max-allowed="maxRange"
       :step-size="isCyclingParameter ? 1 : 5"
+      :note-range="model.ccNumber === 205"
       @update:min="userMin = $event"
       @update:max="userMax = $event"
     />
@@ -84,13 +87,14 @@
       </div>
       <div class="input-divider"></div>
 
-      <div class="group">
+      <div class="group" :class="{ 'disabled-hint': isRootNoteDisabled }">
         <label>PARAMETER<span class="info-icon" @click.stop="showHelp('parameter')">i</span></label>
         <button 
           ref="parameterTriggerRef"
           class="picker-trigger"
           :class="{ 'picker-open': parameterPickerOpen }"
-          @click="parameterPickerOpen = true"
+          :disabled="isRootNoteDisabled"
+          @click="!isRootNoteDisabled && (parameterPickerOpen = true)"
         >
           {{ selectedParameterLabel }}
         </button>
@@ -201,7 +205,10 @@ const props = defineProps<{
   ccMapByNumber: Map<number, CCEntry>
   categories: string[]
   functionModes: { value: number, label: string }[]
-  playMode?: number // 0 = Scale mode, 1 = Chord mode
+  playMode?: number // 0 = Scale, 1 = Chord, 2 = ARP
+  arpUserMode?: number // Arp mode: 0 = CHORD, 1 = USER (for pattern selector icon swapping)
+  strumEnabled?: boolean  // Chord mode: false = Block, true = Strum
+  scaleType?: number // Current scale type; 0 = Chromatic (root note has no meaning)
 }>()
 
 const emit = defineEmits<{
@@ -231,10 +238,20 @@ function selectMode(mode: number) {
   emit('modeChanged', MODE_NAMES[mode as keyof typeof MODE_NAMES])
 }
 
+// Root Note (CC206) is meaningless in Chromatic scale — gray out but keep visible
+const isRootNoteDisabled = computed(() =>
+  props.playMode === 0 && props.scaleType === 0 && model.value.ccNumber === 206
+)
+
 // Check if current parameter is a cycling/discrete parameter (uses REV/FWD toggle)
 const isCyclingParameter = computed(() => {
   const cc = model.value.ccNumber
   return cc === 201 || cc === 204 || cc === 205 || cc === 206
+})
+
+// Show REV/FWD button for cycling parameters OR continuous mode
+const showFwdRevButton = computed(() => {
+  return isCyclingParameter.value || model.value.functionMode === 2
 })
 
 // Legacy alias for backward compatibility
@@ -286,21 +303,23 @@ watch(() => props.ccMapByNumber.size, () => {
 const filteredOptions = computed(() => {
   let options = props.ccOptions.filter(opt => opt.group === selectedCategory.value)
   
-  // For KB1 Expression category, only show touch-compatible parameters
   if (selectedCategory.value === 'KB1 Expression') {
-    // Remove continuous/lever-only parameters (Strum Speed, Swing, Velocity Spread)
-    options = options.filter(opt => {
-      const cc = opt.value
-      return cc !== 200 && cc !== 202 && cc !== 203 // Keep 201, 204, 205, 206
-    })
-    
-    // Context-aware filtering based on play mode
-    if (props.playMode === 0) {
-      // Scale mode: Show Pattern, Scale Type, Root Note (exclude Chord Type)
-      options = options.filter(opt => opt.value !== 205)
-    } else if (props.playMode === 1) {
-      // Chord mode: Show Pattern, Chord Type, Root Note (exclude Scale Type)
-      options = options.filter(opt => opt.value !== 204)
+    const mode = props.playMode
+
+    if (mode === 0) {
+      // Scale: Root Note only
+      options = options.filter(opt => opt.value === 206)
+    } else if (mode === 1 && props.strumEnabled === false) {
+      // Chord/Block: Note Range only
+      options = options.filter(opt => opt.value === 205)
+    } else if (mode === 1) {
+      // Chord/Strum: Note Range only (Pattern Selector removed per design matrix)
+      options = options.filter(opt => opt.value === 205)
+    } else if (mode === 2) {
+      // ARP: Pattern Selector + Latch only
+      options = options.filter(opt => opt.value === 201 || opt.value === 207)
+    } else {
+      options = []
     }
   }
   
@@ -334,25 +353,17 @@ watch(() => model.value.ccNumber, (cc) => {
       offsetTime: 100        // REV mode (reverse cycling)
     }
   } else if (cc === 204) {
-    // Scale Type: 0-20 (21 discrete values)
-    // Force TOGGLE mode for cycling
-    // Default to REV (reverse) mode for touch controls
-    model.value = {
-      ...model.value,
-      functionMode: 1,       // TOGGLE
-      minCCValue: 0,         // Scale type 0
-      maxCCValue: 127,       // Scale type 20
-      offsetTime: 100        // REV mode (reverse cycling)
-    }
+    // CC 204 = Chord Swing — lever-only, not available in touch (no-op)
+    // Handled here only if somehow selected; filteredOptions prevents this
   } else if (cc === 205) {
-    // Chord Type: 0-14 (15 discrete values)
+    // Note Range: 1-3 (octave spread / voicing)
     // Force TOGGLE mode for cycling
     // Default to REV (reverse) mode for touch controls
     model.value = {
       ...model.value,
       functionMode: 1,       // TOGGLE
-      minCCValue: 0,         // Chord type 0
-      maxCCValue: 127,       // Chord type 14
+      minCCValue: 0,         // Voicing 1 (1x octave)
+      maxCCValue: 127,       // Voicing 3 (3x octave)
       offsetTime: 100        // REV mode (reverse cycling)
     }
   } else if (cc === 206) {
@@ -399,6 +410,15 @@ watch(selectedCategory, (cat) => {
   }
   isUpdatingInternally.value = false
 })
+
+// Auto-correct ccNumber when mode/strumEnabled changes and current param is no longer valid
+watch(filteredOptions, (opts) => {
+  const currentInList = opts.some(o => o.value === model.value.ccNumber)
+  if (!currentInList && opts.length > 0) {
+    const first = opts[0]
+    if (first) model.value = { ...model.value, ccNumber: first.value }
+  }
+}, { immediate: true })
 
 // Conversion functions
 function unipolarToMidi(userValue: number): number {
@@ -484,8 +504,8 @@ const minRange = computed(() => {
   if (cc === 201) return 1   // Pattern Selector: 1-6
   if (cc === 202) return 50  // Swing: 50-100%
   if (cc === 203) return 8   // Velocity Spread: 8-100%
-  if (cc === 204) return 0    // Scale Type: 0-20
-  if (cc === 205) return 0    // Chord Type: 0-14
+  if (cc === 204) return 0    // Chord Swing: 0 mapped to 50%
+  if (cc === 205) return 1    // Note Range: 1-3
   if (cc === 206) return 0    // Root Note: 0-11
   return 0  // Default minimum
 })
@@ -493,8 +513,8 @@ const minRange = computed(() => {
 const maxRange = computed(() => {
   const cc = model.value.ccNumber
   if (cc === 201) return 6   // Pattern Selector: 1-6 (discrete)
-  if (cc === 204) return 20  // Scale Type: 0-20 (21 discrete types)
-  if (cc === 205) return 14  // Chord Type: 0-14 (15 discrete types)
+  if (cc === 204) return 20  // Chord Swing: stored as gateValue (10-100)
+  if (cc === 205) return 3   // Note Range: 1-3 (3 octave spread options)
   if (cc === 206) return 11  // Root Note: 0-11 (12 discrete notes)
   return 100  // Default maximum
 })
@@ -628,10 +648,13 @@ const userThreshold = computed({
 // Momentary/Reverse Toggle (using offset time: 0 = momentary/FWD, >0 = latched/REV)
 const isMomentary = computed(() => (model.value.offsetTime ?? 0) === 0)
 
-// Toggle tooltip (depends on isCyclingParameter)
+// Toggle tooltip (depends on mode)
 const toggleTooltip = computed(() => {
   if (isCyclingParameter.value) {
     return 'Toggle cycling direction: REV (reverse) or FWD (forward)'
+  }
+  if (model.value.functionMode === 2) {
+    return 'REV: release returns to max value — FWD: release returns to min value'
   }
   return ''
 })
@@ -824,6 +847,12 @@ function dismissHelp() {
 
 .picker-trigger:hover {
   background: rgba(234, 234, 234, 0.05);
+}
+
+.group.disabled-hint label,
+.group.disabled-hint .picker-trigger {
+  opacity: 0.35;
+  cursor: default;
 }
 
 .picker-trigger.picker-open {

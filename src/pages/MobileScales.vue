@@ -22,7 +22,10 @@
         :show-keyboard-icon="true"
       >
         <template #header-right>
-          <div class="root-note-display">
+          <div v-if="playMode === 'arp' && arpUserMode" class="root-note-display">
+            8 Notes Max
+          </div>
+          <div v-else class="root-note-display">
             Root Note <span class="root-note-value">{{ currentRootNoteLabel }}</span>
           </div>
         </template>
@@ -35,6 +38,7 @@
           @mappingChanged="handleMappingChange"
           @chordStyleChanged="handleChordStyleChange"
           @chromaticWarning="handleChromaticWarning"
+          @arpLatchChanged="handleArpLatchChange"
         />
       </AccordionSection>
       
@@ -61,6 +65,7 @@
           :valueModes="valueModes"
           :strum-speed="localSettings.chord.strumSpeed"
           :play-mode="localSettings.chord.playMode"
+          :strum-enabled="localSettings.chord.strumEnabled"
           @update:modelValue="markChanged"
           @valueModeChanged="handleLever1ValueModeChanged"
         />
@@ -88,6 +93,10 @@
           :functionModes="leverPushFunctionModes"
           :interpolations="interpolations"
           :play-mode="localSettings.chord.playMode"
+          :arp-user-mode="localSettings.chord.arpUserMode"
+          :strum-enabled="localSettings.chord.strumEnabled"
+          :scale-type="localSettings.scale.scaleType"
+          :strum-pattern="localSettings.chord.strumPattern"
           @update:modelValue="markChanged"
           @behaviourChanged="handleLeverPush1BehaviourChanged"
         />
@@ -116,6 +125,7 @@
           :valueModes="valueModes"
           :strum-speed="localSettings.chord.strumSpeed"
           :play-mode="localSettings.chord.playMode"
+          :strum-enabled="localSettings.chord.strumEnabled"
           @update:modelValue="markChanged"
           @valueModeChanged="handleLever2ValueModeChanged"
         />
@@ -143,6 +153,10 @@
           :functionModes="leverPushFunctionModes"
           :interpolations="interpolations"
           :play-mode="localSettings.chord.playMode"
+          :arp-user-mode="localSettings.chord.arpUserMode"
+          :strum-enabled="localSettings.chord.strumEnabled"
+          :scale-type="localSettings.scale.scaleType"
+          :strum-pattern="localSettings.chord.strumPattern"
           @update:modelValue="markChanged"
           @behaviourChanged="handleLeverPush2BehaviourChanged"
         />
@@ -166,6 +180,9 @@
           :categories="categories"
           :functionModes="touchFunctionModes"
           :play-mode="localSettings.chord.playMode"
+          :arp-user-mode="localSettings.chord.arpUserMode"
+          :strum-enabled="localSettings.chord.strumEnabled"
+          :scale-type="localSettings.scale.scaleType"
           @update:modelValue="markChanged"
         />
       </AccordionSection>
@@ -267,6 +284,10 @@ const localSettings = ref<DeviceSettings>(JSON.parse(JSON.stringify(deviceSettin
 const hasChanges = ref(false);
 const isMounted = ref(false);
 
+// Arp mode state (frontend-only until backend implements)
+const arpUserMode = ref(false);
+const arpLatchMode = ref(false);
+
 // Active preset tracking
 const activePresetId = ref<string | null>(PresetStore.getActivePresetId());
 const activePresetName = ref<string>('');
@@ -314,6 +335,15 @@ onMounted(async () => {
   isMounted.value = true;
 });
 
+// Sync arpUserMode and arpLatchMode refs when chord settings change (e.g., device load)
+watch(() => localSettings.value.chord.arpUserMode, (newValue) => {
+  arpUserMode.value = (newValue ?? 1) === 1;
+}, { immediate: true });
+
+watch(() => localSettings.value.chord.arpLatchMode, (newValue) => {
+  arpLatchMode.value = (newValue ?? 1) === 1;
+}, { immediate: true });
+
 // Cleanup timeouts on unmount
 onBeforeUnmount(() => {
   if (keyboardFadeTimeoutId) clearTimeout(keyboardFadeTimeoutId);
@@ -359,6 +389,8 @@ const leverPushFunctionModes = [
   { value: 3, label: 'Reset' },
 ];
 
+// Keep "Gate" wording for touch function mode 0.
+// Chord timing was repurposed to Swing elsewhere, but touch mode remains Gate.
 const touchFunctionModes = [
   { value: 0, label: 'Gate' },
   { value: 1, label: 'Toggle' },
@@ -444,16 +476,27 @@ const rootNotes = [
 ];
 
 // Keyboard play mode (reactive state computed from chord settings)
-const playMode = computed<'scale' | 'chord'>({
-  get: () => localSettings.value.chord.playMode === 1 ? 'chord' : 'scale',
-  set: (mode: 'scale' | 'chord') => {
-    localSettings.value.chord.playMode = mode === 'chord' ? 1 : 0;
+const playMode = computed<'scale' | 'chord' | 'arp'>({
+  get: () => {
+    const mode = localSettings.value.chord.playMode;
+    if (mode === 2) return 'arp';
+    if (mode === 1) return 'chord';
+    return 'scale';
+  },
+  set: (mode: 'scale' | 'chord' | 'arp') => {
+    if (mode === 'arp') {
+      localSettings.value.chord.playMode = 2;
+    } else if (mode === 'chord') {
+      localSettings.value.chord.playMode = 1;
+    } else {
+      localSettings.value.chord.playMode = 0;
+    }
   }
 });
 
 // Keyboard model that wraps scale and chord data for the component
 const keyboardModel = computed<{ 
-  mode: 'scale' | 'chord', 
+  mode: 'scale' | 'chord' | 'arp', 
   scale: ScaleSettings, 
   chord: { 
     chordType: number, 
@@ -463,9 +506,19 @@ const keyboardModel = computed<{
     strumIntervals: number[],
     buildMode: string,
     strumSwing: number,
+    gateValue: number,
     strumPattern: number,
     voicing: number
-  } 
+  },
+  arp: {
+    chordType: number,
+    intervals: number[],
+    buildMode: string,
+    swing: number,
+    speed: number,
+    userMode: boolean,
+    latchMode: boolean
+  }
 }>({
   get: () => ({
     mode: playMode.value,
@@ -477,9 +530,19 @@ const keyboardModel = computed<{
       strumSpeed: localSettings.value.chord.strumSpeed,
       strumIntervals: localSettings.value.chord.strumIntervals || [0, 4, 7, 12],
       buildMode: localSettings.value.chord.buildMode || 'up',
-      strumSwing: localSettings.value.chord.strumSwing || 0,
-      strumPattern: localSettings.value.chord.strumPattern || 0,
-      voicing: localSettings.value.chord.voicing || 1,
+      strumSwing: localSettings.value.chord.strumSwing ?? 15,
+      gateValue: localSettings.value.chord.gateValue ?? 35,
+      strumPattern: localSettings.value.chord.strumPattern ?? 0,
+      voicing: localSettings.value.chord.voicing ?? 1,
+    },
+    arp: {
+      chordType: localSettings.value.chord.chordType,
+      intervals: localSettings.value.chord.strumIntervals || [0, 4, 7, 12],
+      buildMode: localSettings.value.chord.buildMode || 'up',
+      swing: localSettings.value.chord.strumSwing ?? 15,
+      speed: localSettings.value.chord.strumSpeed || 80,
+      userMode: (localSettings.value.chord.arpUserMode ?? 1) === 1, // Read from chord settings
+      latchMode: (localSettings.value.chord.arpLatchMode ?? 1) === 1, // Read from chord settings
     }
   }),
   set: (v) => {
@@ -490,13 +553,40 @@ const keyboardModel = computed<{
     // Update chord settings
     localSettings.value.chord.chordType = v.chord.chordType;
     localSettings.value.chord.velocitySpread = v.chord.velocitySpread;
+    const strumChanged = localSettings.value.chord.strumEnabled !== v.chord.strumEnabled;
     localSettings.value.chord.strumEnabled = v.chord.strumEnabled;
+    // Auto-switch lever KB1 Expression parameter when BLOCK|STRUM is toggled
+    if (strumChanged) {
+      const targetCC = v.chord.strumEnabled ? 200 : 203; // Strum=Rate(200), Block=Velocity Spread(203)
+      const isKB1Expr = (cc: number) => ccMapByNumber.value.get(cc)?.category === 'KB1 Expression';
+      if (isKB1Expr(localSettings.value.lever1.ccNumber)) {
+        localSettings.value.lever1 = { ...localSettings.value.lever1, ccNumber: targetCC };
+      }
+      if (isKB1Expr(localSettings.value.lever2.ccNumber)) {
+        localSettings.value.lever2 = { ...localSettings.value.lever2, ccNumber: targetCC };
+      }
+    }
     localSettings.value.chord.strumSpeed = v.chord.strumSpeed;
     localSettings.value.chord.voicing = v.chord.voicing;
     localSettings.value.chord.strumIntervals = v.chord.strumIntervals;
     localSettings.value.chord.buildMode = v.chord.buildMode;
     localSettings.value.chord.strumSwing = v.chord.strumSwing;
+    localSettings.value.chord.gateValue = v.chord.gateValue;
     localSettings.value.chord.strumPattern = v.chord.strumPattern;
+    // Note: Arp settings currently stored in chord structure for backend compatibility
+    // When arp mode is active, arp values will update the chord structure
+    if (v.mode === 'arp') {
+      localSettings.value.chord.chordType = v.arp.chordType;
+      localSettings.value.chord.strumIntervals = v.arp.intervals;
+      localSettings.value.chord.buildMode = v.arp.buildMode;
+      localSettings.value.chord.strumSwing = v.arp.swing;
+      localSettings.value.chord.strumSpeed = v.arp.speed;
+      arpUserMode.value = v.arp.userMode; // Store frontend-only state
+      arpLatchMode.value = v.arp.latchMode; // Store frontend-only state
+      // Update chord.arpUserMode so PatternSelector icons update in PRESS/TOUCH
+      localSettings.value.chord.arpUserMode = v.arp.userMode ? 1 : 0;
+      localSettings.value.chord.arpLatchMode = v.arp.latchMode ? 1 : 0;
+    }
     markChanged();
   }
 });
@@ -527,6 +617,8 @@ const keyboardSubtitle = computed(() => {
   // Show current mode and type
   if (playMode.value === 'chord') {
     return `Chord | ${currentChordLabel.value}`;
+  } else if (playMode.value === 'arp') {
+    return arpUserMode.value ? 'Arp | User' : 'Arp | Chord';
   }
   return `Scale | ${currentScaleLabel.value}`;
 });
@@ -602,7 +694,7 @@ function getTouchSubtitle(touch: TouchSettingsType): string {
   }
   
   // Show function mode for other parameters
-  let mode = 'Gate'; // default
+  let mode = 'Gate'; // default touch mode label
   if (touch.functionMode === 1) {
     mode = 'Toggle';
   } else if (touch.functionMode === 2) {
@@ -650,12 +742,10 @@ watch(lastDeviceLoadTime, () => {
 watch(() => localSettings.value.chord.strumPattern, (newPattern, oldPattern) => {
   // Detect transition from shape mode (>0) to normal chord mode (0)
   if (oldPattern > 0 && newPattern === 0) {
-    console.log('SHAPE panel closed - resetting pattern controls to defaults');
-    
     // Default CC assignments from firmware defaults
     const defaults = {
       lever1: 3,
-      leverPush1: 24,
+      leverPush1: 209,
       lever2: 128,
       leverPush2: 128,
       touch: 1
@@ -663,27 +753,22 @@ watch(() => localSettings.value.chord.strumPattern, (newPattern, oldPattern) => 
     
     // Reset any control still assigned to CC 201/202
     if (localSettings.value.lever1.ccNumber === 201 || localSettings.value.lever1.ccNumber === 202) {
-      console.log(`Resetting Lever 1 from CC ${localSettings.value.lever1.ccNumber} to CC ${defaults.lever1}`);
       localSettings.value.lever1.ccNumber = defaults.lever1;
     }
     
     if (localSettings.value.leverPush1.ccNumber === 201 || localSettings.value.leverPush1.ccNumber === 202) {
-      console.log(`Resetting Press 1 from CC ${localSettings.value.leverPush1.ccNumber} to CC ${defaults.leverPush1}`);
       localSettings.value.leverPush1.ccNumber = defaults.leverPush1;
     }
     
     if (localSettings.value.lever2.ccNumber === 201 || localSettings.value.lever2.ccNumber === 202) {
-      console.log(`Resetting Lever 2 from CC ${localSettings.value.lever2.ccNumber} to CC ${defaults.lever2}`);
       localSettings.value.lever2.ccNumber = defaults.lever2;
     }
     
     if (localSettings.value.leverPush2.ccNumber === 201 || localSettings.value.leverPush2.ccNumber === 202) {
-      console.log(`Resetting Press 2 from CC ${localSettings.value.leverPush2.ccNumber} to CC ${defaults.leverPush2}`);
       localSettings.value.leverPush2.ccNumber = defaults.leverPush2;
     }
     
     if (localSettings.value.touch.ccNumber === 201 || localSettings.value.touch.ccNumber === 202) {
-      console.log(`Resetting Touch from CC ${localSettings.value.touch.ccNumber} to defaults`);
       localSettings.value.touch = {
         ...localSettings.value.touch,
         ccNumber: 1,
@@ -712,7 +797,6 @@ watch(() => localSettings.value.chord.strumSpeed, (newSpeed) => {
     const leverMax = midiToStrumSpeed(localSettings.value.lever1.maxCCValue);
     
     if (magnitude < leverMin || magnitude > leverMax) {
-      console.log(`Lever 1: Expanding range to accommodate strum speed ${newSpeed}ms`);
       localSettings.value.lever1 = {
         ...localSettings.value.lever1,
         minCCValue: 0,   // 5ms
@@ -727,7 +811,6 @@ watch(() => localSettings.value.chord.strumSpeed, (newSpeed) => {
     const leverMax = midiToStrumSpeed(localSettings.value.lever2.maxCCValue);
     
     if (magnitude < leverMin || magnitude > leverMax) {
-      console.log(`Lever 2: Expanding range to accommodate strum speed ${newSpeed}ms`);
       localSettings.value.lever2 = {
         ...localSettings.value.lever2,
         minCCValue: 0,   // 5ms
@@ -782,6 +865,22 @@ function handleChromaticWarning(message: string) {
   if (keyboardFadeTimeoutId) clearTimeout(keyboardFadeTimeoutId);
   if (keyboardClearTimeoutId) clearTimeout(keyboardClearTimeoutId);
   keyboardSuffix.value = ` ${message}`;
+  keyboardSuffixFading.value = false;
+  keyboardFadeTimeoutId = window.setTimeout(() => {
+    keyboardSuffixFading.value = true;
+    keyboardFadeTimeoutId = null;
+  }, 500);
+  keyboardClearTimeoutId = window.setTimeout(() => {
+    keyboardSuffix.value = '';
+    keyboardSuffixFading.value = false;
+    keyboardClearTimeoutId = null;
+  }, 2500);
+}
+
+function handleArpLatchChange(latchName: string) {
+  if (keyboardFadeTimeoutId) clearTimeout(keyboardFadeTimeoutId);
+  if (keyboardClearTimeoutId) clearTimeout(keyboardClearTimeoutId);
+  keyboardSuffix.value = ` ${latchName}`;
   keyboardSuffixFading.value = false;
   keyboardFadeTimeoutId = window.setTimeout(() => {
     keyboardSuffixFading.value = true;
@@ -851,7 +950,6 @@ function handleLeverPush2BehaviourChanged(behaviourName: string) {
 }
 
 function handlePresetLoad(settings: DeviceSettings) {
-  console.log('📂 Preset loaded - settings loaded, Send button armed');
   localSettings.value = JSON.parse(JSON.stringify(settings));
   
   // Ensure offsetTime has a default value for older presets that don't have it

@@ -181,6 +181,7 @@ Before submitting changes:
 ## When In Doubt
 
 - Check `.github/skills/kb1-design/` for complete design system
+- Check `.github/skills/kb1-vue-patterns/` for Vue architecture patterns and cross-component state
 - Reference `LeverSettings.vue` for component patterns
 - Ask before violating documented design standards
 

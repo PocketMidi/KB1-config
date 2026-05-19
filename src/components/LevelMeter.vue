@@ -57,6 +57,8 @@ const props = withDefaults(defineProps<{
   minAllowed?: number  // Dynamic minimum for KB1 Expression parameters
   maxAllowed?: number  // Dynamic maximum for KB1 Expression parameters (e.g., Pattern 1-7)
   stepSize?: number    // Step increment for snapping values (e.g., 5, 10, 15, 25)
+  noteRange?: boolean  // Note Range (CC 205): show labels 1/2/3 instead of 0-14
+  pitchBend?: boolean  // Pitch Bend: show cents range (-100 to +100), interactive
 }>(), {
   mode: 'range',
   value: 70,
@@ -78,6 +80,23 @@ const MIN_MAX_BUFFER = 5
 
 // Direct marker interaction handlers
 const updateValueFromPosition = (clientX: number, rect: DOMRect) => {
+  if (props.pitchBend) {
+    // Snap to nearest 10-cent position (0%=-100, 100%=+100)
+    const percentage = Math.max(0, Math.min(100, ((clientX - rect.left) / rect.width) * 100))
+    const cents = Math.round((((percentage / 100) * 200) - 100) / 10) * 10
+    const distToMin = Math.abs(cents - props.min)
+    const distToMax = Math.abs(cents - props.max)
+    if (distToMin <= distToMax) {
+      const newMin = Math.min(cents, props.max - 10)
+      emit('update:min', newMin)
+    } else {
+      const newMax = Math.max(cents, props.min + 10)
+      emit('update:max', newMax)
+    }
+    if (isSupported.value) light()
+    return
+  }
+
   const rangeMin = props.minAllowed ?? (props.isBipolar ? -100 : 0)
   const rangeMax = props.maxAllowed ?? 100
   const rangeSpan = rangeMax - rangeMin
@@ -185,6 +204,20 @@ interface Label {
 
 // Generate markers (dots or triangles) based on mode and polarity
 const markers = computed<Marker[]>(() => {
+  // Pitch Bend: 21 fixed dots at -100..+100 cents in 10-cent steps
+  if (props.pitchBend) {
+    const result: Marker[] = []
+    for (let cents = -100; cents <= 100; cents += 10) {
+      const position = ((cents + 100) / 200) * 100
+      result.push({
+        position,
+        value: cents,
+        highlighted: cents >= props.min && cents <= props.max,
+      })
+    }
+    return result
+  }
+
   const rangeMin = props.minAllowed ?? (props.isBipolar ? -100 : 0)
   const rangeMax = props.maxAllowed ?? 100
   const rangeSpan = rangeMax - rangeMin
@@ -197,6 +230,8 @@ const markers = computed<Marker[]>(() => {
   const isScaleType = rangeMin === 0 && rangeMax === 20
   // Special case: Root Note (0-11) shows exactly 12 dots
   const isRootNote = rangeMin === 0 && rangeMax === 11
+  // Special case: Note Range (CC205 as 1-3 voicing) shows exactly 15 dots with labels 1/2/3
+  const isNoteRange = props.noteRange === true && rangeMin === 1 && rangeMax === 3
   
   const result: Marker[] = []
   
@@ -217,6 +252,23 @@ const markers = computed<Marker[]>(() => {
         highlighted = distanceToMin <= 0.5 || distanceToMax <= 0.5
       }
       
+      result.push({ position, value, highlighted })
+    }
+  } else if (isNoteRange) {
+    // Note Range (1-3 voicing): 15 evenly spaced dots across the range
+    const count = 15
+    for (let i = 0; i < count; i++) {
+      const value = 1 + (i / (count - 1)) * 2  // 1.0 to 3.0
+      const position = (i / (count - 1)) * 100
+      const tolerance = 0.1  // half a step (~0.143) to avoid false positives
+
+      let highlighted = false
+      if (props.mode === 'reset') {
+        highlighted = Math.abs(value - props.value) <= tolerance
+      } else {
+        highlighted = Math.abs(value - props.min) <= tolerance || Math.abs(value - props.max) <= tolerance
+      }
+
       result.push({ position, value, highlighted })
     }
   } else if (isChordType || isScaleType || isRootNote) {
@@ -279,6 +331,17 @@ const markers = computed<Marker[]>(() => {
 
 // Generate labels based on polarity
 const labels = computed<Label[]>(() => {
+  // Pitch Bend: cents labels
+  if (props.pitchBend) {
+    return [
+      { value: -100, position: 0,   text: '-100' },
+      { value: -50,  position: 25,  text: '-50'  },
+      { value: 0,    position: 50,  text: '0'    },
+      { value: 50,   position: 75,  text: '50'   },
+      { value: 100,  position: 100, text: '100'  },
+    ]
+  }
+
   if (props.isBipolar) {
     return [
       { value: -100, position: 0, text: '-100' },
@@ -296,8 +359,25 @@ const labels = computed<Label[]>(() => {
     const isChordType = rangeMin === 0 && rangeMax === 14
     const isScaleType = rangeMin === 0 && rangeMax === 20
     const isRootNote = rangeMin === 0 && rangeMax === 11
-    
+    const isNoteRange = props.noteRange === true && rangeMin === 1 && rangeMax === 3
+
+    if (isNoteRange) {
+      return [
+        { value: 1, position: 0, text: '1' },
+        { value: 2, position: 50, text: '2' },
+        { value: 3, position: 100, text: '3' }
+      ]
+    }
+
     if (isChordType) {
+      if (props.noteRange) {
+        // Note Range (CC 205): 3 voicings (1 octave, 2 octaves, 3 octaves)
+        return [
+          { value: 0, position: 0, text: '1' },
+          { value: 7, position: 50, text: '2' },
+          { value: 14, position: 100, text: '3' }
+        ]
+      }
       // Chord Type: show 0, 4, 7, 11, 14 (evenly spaced from 15 values)
       return [
         { value: 0, position: 0, text: '0' },

@@ -19,7 +19,7 @@
         <button 
           class="profile-btn"
           :class="{ active: isProfileActive('lin') }"
-          :disabled="isResetMode || isIncrementalOnly"
+          :disabled="isResetMode || isIncrementalOnly || isPatternSelector || isSustainMode"
           @click="selectProfile('lin')"
           title="Linear"
         >
@@ -28,7 +28,7 @@
         <button 
           class="profile-btn"
           :class="{ active: isProfileActive('exp') }"
-          :disabled="isResetMode || isIncrementalOnly"
+          :disabled="isResetMode || isIncrementalOnly || isPatternSelector || isSustainMode"
           @click="selectProfile('exp')"
           title="Exponential"
         >
@@ -37,7 +37,7 @@
         <button 
           class="profile-btn"
           :class="{ active: isProfileActive('log') }"
-          :disabled="isResetMode || isIncrementalOnly"
+          :disabled="isResetMode || isIncrementalOnly || isPatternSelector"
           @click="selectProfile('log')"
           title="Logarithmic"
         >
@@ -46,7 +46,7 @@
         <button 
           class="profile-btn"
           :class="{ active: isProfileActive('pd') }"
-          :disabled="isResetMode || isIncrementalOnly"
+          :disabled="isResetMode || isIncrementalOnly || isPatternSelector || isSustainMode"
           @click="selectProfile('pd')"
           title="Peak & Decay"
         >
@@ -55,7 +55,7 @@
         <button 
           class="profile-btn"
           :class="{ active: isProfileActive('inc') }"
-          :disabled="isResetMode"
+          :disabled="isResetMode || isSustainMode"
           @click="selectProfile('inc')"
           :title="isIncrementalOnly ? 'This parameter uses incremental mode for immediate response' : 'Incremental'"
         >
@@ -71,9 +71,17 @@
         :min="userMin"
         :max="userMax"
         :current="currentPattern"
+        :reverse="!isMomentary"
+        :is-user-mode="props.arpUserMode === 1"
+        :show-range="model.functionMode !== FUNCTION_MODE_STATIC"
       />
       <ResetPressProfile
         v-else-if="isResetMode"
+        class="profile-graph"
+      />
+      <LogarithmicPressProfile
+        v-else-if="isSustainMode"
+        :is-latched="isMomentary"
         class="profile-graph"
       />
       <IncrementalPressProfile 
@@ -104,7 +112,8 @@
     </div>
 
     <!-- Level Meter -->
-    <LevelMeter 
+    <LevelMeter
+      v-if="!isSustainMode"
       :min="userMin" 
       :max="userMax" 
       :is-bipolar="false"
@@ -113,6 +122,7 @@
       :min-allowed="minRange"
       :max-allowed="maxRange"
       :step-size="isPatternSelector ? 1 : 5"
+      :note-range="model.ccNumber === 205"
       @update:min="userMin = $event"
       @update:max="userMax = $event"
       @update:value="resetValue = $event"
@@ -132,45 +142,89 @@
       </div>
       <div class="input-divider"></div>
 
-      <div class="group">
+      <div class="group" :class="{ 'disabled-hint': isRootNoteDisabled }">
         <label>PARAMETER<span class="info-icon" @click.stop="showHelp('parameter')">i</span></label>
         <button 
           ref="parameterTriggerRef"
           class="picker-trigger"
           :class="{ 'picker-open': parameterPickerOpen }"
-          @click="parameterPickerOpen = true"
+          :disabled="isRootNoteDisabled"
+          @click="!isRootNoteDisabled && (parameterPickerOpen = true)"
         >
           {{ selectedParameterLabel }}
         </button>
       </div>
       <div class="input-divider"></div>
 
-      <div class="group">
-        <label :for="`push-min-${lever}`">MIN</label>
-        <ValueControl
-          v-model="userMin"
-          :min="minRange"
-          :max="constrainedMaxForMin"
-          :step="isPatternSelector ? 1 : unipolarStepSize"
-          :small-step="isPatternSelector ? 1 : unipolarStepSize"
-          :large-step="isPatternSelector ? 1 : unipolarStepSize * 2"
-          :disabled="isResetMode"
-        />
-      </div>
-      <div class="input-divider"></div>
+      <template v-if="!isSustainMode">
+        <div class="group">
+          <label :for="`push-min-${lever}`">MIN</label>
+          <ValueControl
+            v-model="userMin"
+            :min="minRange"
+            :max="constrainedMaxForMin"
+            :step="isPatternSelector ? 1 : unipolarStepSize"
+            :small-step="isPatternSelector ? 1 : unipolarStepSize"
+            :large-step="isPatternSelector ? 1 : unipolarStepSize * 2"
+            :disabled="isResetMode"
+          />
+        </div>
+        <div class="input-divider"></div>
 
-      <div class="group">
-        <label :for="`push-max-${lever}`">MAX</label>
-        <ValueControl
-          v-model="userMax"
-          :min="constrainedMinForMax"
-          :max="maxRange"
-          :step="isPatternSelector ? 1 : unipolarStepSize"
-          :small-step="isPatternSelector ? 1 : unipolarStepSize"
-          :large-step="isPatternSelector ? 1 : unipolarStepSize * 2"
-          :disabled="isResetMode"
-        />
-      </div>
+        <div class="group">
+          <label :for="`push-max-${lever}`">MAX</label>
+          <ValueControl
+            v-model="userMax"
+            :min="constrainedMinForMax"
+            :max="maxRange"
+            :step="isPatternSelector ? 1 : unipolarStepSize"
+            :small-step="isPatternSelector ? 1 : unipolarStepSize"
+            :large-step="isPatternSelector ? 1 : unipolarStepSize * 2"
+            :disabled="isResetMode"
+          />
+        </div>
+      </template>
+
+      <!-- Sustain release tail duration -->
+      <template v-if="isSustainMode">
+        <div class="duration-container">
+          <div class="duration-meter">
+            <div
+              class="meter-bar-container"
+              @mousedown="handleDurationBarMouseDown"
+              @touchstart="handleDurationBarTouchStart"
+            >
+              <div class="meter-divider" :class="{ thick: !isMomentary }"></div>
+              <div class="meter-bar-wrapper">
+                <div class="meter-bar pink-bar-base"></div>
+                <div
+                  class="meter-bar pink-bar-active"
+                  :style="{ width: (10 + ((sustainDuration - 100) / 1900) * 90) + '%' }"
+                ></div>
+                <div
+                  v-if="!isMomentary"
+                  class="latch-indicator-end"
+                  :style="{ left: (10 + ((sustainDuration - 100) / 1900) * 90) + '%' }"
+                ></div>
+              </div>
+            </div>
+          </div>
+          <div class="group">
+            <label :for="`push-sustain-duration-${lever}`">DURATION</label>
+            <div class="duration-control-wrapper">
+              <ValueControl
+                v-model="sustainDuration"
+                :min="100"
+                :max="2000"
+                :step="25"
+                :small-step="25"
+                :large-step="100"
+              />
+              <span class="unit-label">ms</span>
+            </div>
+          </div>
+        </div>
+      </template>
 
       <!-- Duration control - visible only for Interpolated and Peak & Decay modes -->
       <template v-if="showTimingControls">
@@ -306,8 +360,12 @@ const props = defineProps<{
   categories: string[]
   functionModes: { value: number, label: string }[]
   interpolations: { value: number, label: string }[]
-  playMode?: number // 0 = Scale mode, 1 = Chord mode
-}>()
+  playMode?: number // 0 = Scale, 1 = Chord, 2 = ARP
+  arpUserMode?: number // Arp mode: 0 = CHORD, 1 = USER (for pattern selector icon swapping)
+  strumEnabled?: boolean  // Chord mode: false = Block, true = Strum
+  scaleType?: number // Current scale type; 0 = Chromatic (root note has no meaning)
+  strumPattern?: number // Current running strumPattern (1-6) from chord settings
+}>() 
 
 const emit = defineEmits<{
   (e: 'update:modelValue', v: LeverPushModel): void
@@ -320,6 +378,11 @@ const model = computed({
   set: v => emit('update:modelValue', v)
 })
 
+// Root Note (CC206) is meaningless in Chromatic scale — gray out but keep visible
+const isRootNoteDisabled = computed(() =>
+  props.playMode === 0 && props.scaleType === 0 && model.value.ccNumber === 206
+)
+
 // Haptics
 const { snap, isSupported } = useHaptics()
 
@@ -331,6 +394,7 @@ const FUNCTION_MODE_INTERPOLATED = 0
 const FUNCTION_MODE_PEAK_DECAY = 1
 const FUNCTION_MODE_STATIC = 2
 const FUNCTION_MODE_RESET = 3
+const FUNCTION_MODE_SUSTAIN = 4
 
 // KB1 Expression Parameters (CC 200-206): Firmware built-in arpeggiator/expression controls
 // These need special handling because they have custom value ranges and discrete stepping
@@ -340,18 +404,18 @@ const KB1_EXPRESSION_CC = {
   SWING: 202,            // 50-100% (not 0-100%)
   VELOCITY_SPREAD: 203,  // 8-100% minimum
   SCALE_TYPE: 204,       // 0-20 discrete scale types
-  CHORD_TYPE: 205,       // 0-14 discrete chord types
+  NOTE_RANGE: 205,       // 1-3 voicing (octave spread)
   ROOT_NOTE: 206         // 0-11 (C through B)
 }
 
 // Parameters that must use STATIC mode (can't interpolate between discrete values)
-const DISCRETE_PARAMS = [201, 204, 205, 206]  // Pattern, Scale Type, Chord Type, Root Note
+const DISCRETE_PARAMS = [201, 204, 205, 206]  // Pattern, Scale Type, Note Range, Root Note
 
 // Parameters that support cycling (REV/FWD toggle)
-const CYCLING_PARAMS = [201, 204, 205, 206]  // Pattern, Scale Type, Chord Type, Root Note
+const CYCLING_PARAMS = [201, 204, 205, 206]  // Pattern, Scale Type, Note Range, Root Note
 
 // Parameters that require incremental mode only
-const INCREMENTAL_ONLY_PARAMS = [200, 204, 205, 206]  // Strum Speed, Scale Type, Chord Type, Root Note
+const INCREMENTAL_ONLY_PARAMS = [200, 204, 205, 206]  // Strum Speed, Scale Type, Note Range, Root Note
 
 // Initialize selectedCategory from current ccNumber's category (fallback to first available category)
 // Special case: If functionMode is RESET, start with 'Reset' category
@@ -423,21 +487,21 @@ const filteredOptions = computed(() => {
   
   let options = props.ccOptions.filter(opt => opt.group === selectedCategory.value)
   
-  // For KB1 Expression category in press mode, only show press-compatible parameters
+  // For KB1 Expression category in press mode, restrict by keyboard mode
   if (selectedCategory.value === 'KB1 Expression') {
-    // Remove continuous/lever-only parameters (Strum Speed, Swing, Velocity Spread)
-    options = options.filter(opt => {
-      const cc = opt.value
-      return cc !== 200 && cc !== 202 && cc !== 203 // Keep 201, 204, 205, 206
-    })
-    
-    // Context-aware filtering based on play mode
-    if (props.playMode === 0) {
-      // Scale mode: Show Pattern, Scale Type, Root Note (exclude Chord Type)
-      options = options.filter(opt => opt.value !== 205)
-    } else if (props.playMode === 1) {
-      // Chord mode: Show Pattern, Chord Type, Root Note (exclude Scale Type)
-      options = options.filter(opt => opt.value !== 204)
+    const mode = props.playMode
+    if (mode === 0) {
+      // Scale: Sustain + Root Note
+      options = options.filter(opt => opt.value === 209 || opt.value === 206)
+    } else if (mode === 1 && props.strumEnabled === false) {
+      // Chord/Block: Note Range only
+      options = options.filter(opt => opt.value === 205)
+    } else if (mode === 1) {
+      // Chord/Strum: Note Range only
+      options = options.filter(opt => opt.value === 205)
+    } else {
+      // ARP: Pattern Selector only
+      options = options.filter(opt => opt.value === 201)
     }
   }
   
@@ -480,15 +544,42 @@ watch(() => model.value.ccNumber, (cc) => {
       maxCCValue: 127,
       offsetTime: 0
     }
+  } else if (cc === 209) {
+    // Sustain: SUSTAIN function mode, Log profile, MOM by default (offsetTime=0)
+    // Duration (onsetTime) controls release tail; default 500ms
+    const onset = (model.value.onsetTime > 0 && model.value.onsetTime <= 2000)
+      ? model.value.onsetTime : 500
+    model.value = {
+      ...model.value,
+      functionMode: FUNCTION_MODE_SUSTAIN,
+      onsetType: 2,  // Logarithmic
+      offsetType: 2,
+      onsetTime: onset,
+      offsetTime: 0, // Start as Momentary
+      minCCValue: 0,
+      maxCCValue: 127
+    }
   } else {
     // For all other parameters (Global, Velocity, Aftertouch, etc.)
-    // If currently in RESET mode, switch to INTERPOLATED mode
+    // Exit special locked modes when switching to a regular CC
     if (model.value.functionMode === FUNCTION_MODE_RESET) {
+      model.value = { ...model.value, functionMode: FUNCTION_MODE_INTERPOLATED }
+    } else if (model.value.functionMode === FUNCTION_MODE_SUSTAIN) {
       model.value = { ...model.value, functionMode: FUNCTION_MODE_INTERPOLATED }
     }
   }
   
   isUpdatingInternally.value = false
+}, { immediate: true })
+
+// Auto-correct ccNumber when mode/strumEnabled changes and current param is no longer valid
+watch(filteredOptions, (opts) => {
+  if (selectedCategory.value === 'Reset') return
+  const currentInList = opts.some(o => o.value === model.value.ccNumber)
+  if (!currentInList && opts.length > 0) {
+    const first = opts[0]
+    if (first) model.value = { ...model.value, ccNumber: first.value }
+  }
 }, { immediate: true })
 
 // Watch selectedCategory to handle Reset mode and parameter selection
@@ -637,6 +728,7 @@ const currentProfileType = computed(() => {
 
 // Computed properties to determine which controls to show
 const isResetMode = computed(() => model.value.functionMode === FUNCTION_MODE_RESET)
+const isSustainMode = computed(() => model.value.ccNumber === 209 || model.value.functionMode === FUNCTION_MODE_SUSTAIN)
 const isPatternSelector = computed(() => model.value.ccNumber === KB1_EXPRESSION_CC.PATTERN)
 
 // Check if current parameter is a cycling/discrete parameter (uses REV/FWD toggle)
@@ -697,8 +789,9 @@ watch([isMomentary, isPatternSelector], ([momentary, patternSelector]) => {
 }, { immediate: true })
 
 const showTimingControls = computed(() => {
-  // Hide timing controls for Pattern Selector
+  // Hide timing controls for Pattern Selector and Sustain (sustain has its own duration)
   if (isPatternSelector.value) return false
+  if (isSustainMode.value) return false
   return model.value.functionMode === FUNCTION_MODE_INTERPOLATED || model.value.functionMode === FUNCTION_MODE_PEAK_DECAY
 })
 
@@ -711,7 +804,7 @@ const minRange = computed(() => {
   if (cc === 202) return 50  // Swing: 50-100%
   if (cc === 203) return 8   // Velocity Spread: 8-100%
   if (cc === 204) return 0    // Scale Type: 0-20
-  if (cc === 205) return 0    // Chord Type: 0-14
+  if (cc === 205) return 1    // Note Range: 1-3
   if (cc === 206) return 0    // Root Note: 0-11
   return 0  // Default minimum
 })
@@ -720,7 +813,7 @@ const maxRange = computed(() => {
   const cc = model.value.ccNumber
   if (cc === 201) return 6   // Pattern Selector: 1-6 (discrete)
   if (cc === 204) return 20  // Scale Type: 0-20 (21 discrete types)
-  if (cc === 205) return 14  // Chord Type: 0-14 (15 discrete types)
+  if (cc === 205) return 3   // Note Range: 1-3 (3 octave spread options)
   if (cc === 206) return 11  // Root Note: 0-11 (12 discrete notes)
   return 100  // Default maximum
 })
@@ -801,15 +894,15 @@ function midiToScaleType(midiValue: number): number {
   return Math.round((midiValue / 127) * 20)
 }
 
-// Special conversion for Chord Type (CC 205): 0-14 discrete values
-function chordTypeToMidi(chordType: number): number {
-  // Map 0-14 to MIDI 0-127
-  return Math.round((chordType / 14) * 127)
+// Special conversion for Note Range (CC 205): 1-3 voicing values
+function chordTypeToMidi(voicing: number): number {
+  // Map 1-3 to MIDI 0-127
+  return Math.round(((voicing - 1) / 2) * 127)
 }
 
 function midiToChordType(midiValue: number): number {
-  // Map MIDI 0-127 to 0-14
-  return Math.round((midiValue / 127) * 14)
+  // Map MIDI 0-127 to 1-3
+  return Math.round((midiValue / 127) * 2) + 1
 }
 
 // Special conversion for Root Note (CC 206): 0-11 discrete values (C to B)
@@ -1013,8 +1106,8 @@ const resetValue = computed({
 // Shows which pattern is currently set (defaults to min on first load)
 const currentPattern = computed(() => {
   if (model.value.ccNumber !== 201) return undefined
-  // For pattern selector, show min as the starting pattern
-  return userMin.value
+  // Show the actual running pattern from chord settings if available, otherwise fall back to min
+  return props.strumPattern ?? userMin.value
 })
 
 // Computed property to gang both onset and offset times as "Duration"
@@ -1030,6 +1123,18 @@ const duration = computed({
       }
     } else {
       model.value = { ...model.value, onsetTime: value }
+    }
+  }
+})
+
+// Sustain mode: release tail duration stored in onsetTime
+const sustainDuration = computed({
+  get: () => model.value.onsetTime,
+  set: (value: number) => {
+    model.value = { ...model.value, onsetTime: value }
+    // Also keep offsetTime in sync if latched
+    if (model.value.offsetTime > 0) {
+      model.value = { ...model.value, offsetTime: value }
     }
   }
 })
@@ -1512,6 +1617,12 @@ function dismissHelp() {
 
 .picker-trigger:hover {
   background: rgba(234, 234, 234, 0.05);
+}
+
+.group.disabled-hint label,
+.group.disabled-hint .picker-trigger {
+  opacity: 0.35;
+  cursor: default;
 }
 
 .picker-trigger.picker-open {

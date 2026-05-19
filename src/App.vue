@@ -169,7 +169,6 @@ async function requestWakeLock() {
   try {
     if ('wakeLock' in navigator) {
       wakeLock = await (navigator as any).wakeLock.request('screen');
-      console.log('Wake Lock active - screen will not auto-dim');
     }
   } catch (err) {
     // Silently fail if Wake Lock is not supported or permission denied

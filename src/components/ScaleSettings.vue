@@ -49,6 +49,7 @@
         <span class="divider">|</span>
         <span :class="{ active: !isNatural }">COMPACT</span>
       </button>
+      <span class="info-icon" @click.stop="showMappingHelp = true" title="About key mapping">i</span>
       
       <div class="dots-visualization" :class="{ 'wide-spacing': isNatural }">
         <div v-for="i in 12" :key="i" class="dot"></div>
@@ -87,6 +88,18 @@
       :trigger-el="scaleTriggerRef"
       title="CATEGORY"
     />
+
+    <!-- Key Mapping Help Modal -->
+    <Transition name="modal-fade">
+      <div v-if="showMappingHelp" class="help-modal-overlay" @click.self="showMappingHelp = false">
+        <div class="help-modal">
+          <button class="help-modal-close" @click="showMappingHelp = false">×</button>
+          <h3>Key Mapping</h3>
+          <p><strong>Natural (Mapped):</strong> Keys follow piano layout — naturals and sharps in position. Some keys inactive depending on scale.</p>
+          <p><strong>Compact (Efficient):</strong> Scale notes only, packed consecutively. No inactive keys — every key plays a note.</p>
+        </div>
+      </div>
+    </Transition>
   </div>
 </template>
 
@@ -144,6 +157,7 @@ watch(() => model.value.scaleType, (newScaleType) => {
 // Wheel picker state
 const scalePickerOpen = ref(false)
 const scaleTriggerRef = ref<HTMLElement | null>(null)
+const showMappingHelp = ref(false)
 
 // Get selected scale label
 const selectedScaleLabel = computed(() => {
@@ -473,5 +487,70 @@ function isRootNote(midiNote: number): boolean {
 
 .picker-trigger.picker-open {
   color: transparent;
+}
+
+/* Key Mapping Help Modal */
+.help-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.help-modal {
+  background: #1a1a1a;
+  border: 1px solid rgba(205, 205, 205, 0.15);
+  border-radius: var(--kb1-radius-md);
+  padding: 1.25rem;
+  max-width: 320px;
+  width: calc(100% - 2rem);
+  position: relative;
+}
+
+.help-modal h3 {
+  font-family: var(--kb1-font-family);
+  font-size: var(--kb1-font-medium);
+  font-weight: var(--kb1-font-weight-medium);
+  text-transform: uppercase;
+  letter-spacing: var(--kb1-letter-spacing-wide);
+  color: var(--kb1-text-primary);
+  margin: 0 0 0.75rem;
+}
+
+.help-modal p {
+  font-family: var(--kb1-font-family);
+  font-size: var(--kb1-font-input);
+  color: rgba(205, 205, 205, 0.8);
+  line-height: 1.5;
+  margin: 0 0 0.5rem;
+}
+
+.help-modal p:last-child {
+  margin-bottom: 0;
+}
+
+.help-modal-close {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  background: none;
+  border: none;
+  color: rgba(205, 205, 205, 0.5);
+  font-size: 1.25rem;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.modal-fade-enter-active,
+.modal-fade-leave-active {
+  transition: opacity 0.15s ease;
+}
+
+.modal-fade-enter-from,
+.modal-fade-leave-to {
+  opacity: 0;
 }
 </style>

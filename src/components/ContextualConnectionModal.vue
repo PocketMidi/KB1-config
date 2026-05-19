@@ -149,18 +149,18 @@ function handleBackdropClick() {
 
 .close-button {
   position: absolute;
-  top: 12px;
-  right: 12px;
+  top: 16px;
+  right: 16px;
   background: transparent;
   border: none;
   color: #EAEAEA;
-  font-size: var(--kb1-font-input); /* 13px */
+  font-size: var(--kb1-font-title);
   cursor: pointer;
   opacity: 0.5;
   transition: opacity 0.2s;
   padding: 0;
-  width: 24px;
-  height: 24px;
+  width: 32px;
+  height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;

@@ -461,7 +461,7 @@ export class BLEClient {
 
   /**
    * Parse chord data from DataView (little-endian int32)
-   * Struct: playMode(4), chordType(4), strumEnabled(4), velocitySpread(4), strumSpeed(4), strumPattern(4), strumSwing(4), voicing(4) = 32 bytes
+   * Struct: playMode(4), chordType(4), strumEnabled(4), velocitySpread(4), strumSpeed(4), strumPattern(4), strumSwing(4), gateValue(4), voicing(4), arpUserMode(4), arpLatchMode(4) = 44 bytes
    */
   private parseChordData(data: DataView): ChordSettings {
     return {
@@ -472,7 +472,10 @@ export class BLEClient {
       strumSpeed: data.getInt32(16, true),
       strumPattern: data.getInt32(20, true),
       strumSwing: data.getInt32(24, true),
-      voicing: data.getInt32(28, true),
+      gateValue: data.getInt32(28, true),
+      voicing: data.getInt32(32, true),
+      arpUserMode: data.getInt32(36, true),
+      arpLatchMode: data.getInt32(40, true),
     };
   }
 
@@ -600,10 +603,10 @@ export class BLEClient {
 
   /**
    * Encode chord settings to binary format for writing to device
-   * Struct: playMode(4), chordType(4), strumEnabled(4), velocitySpread(4), strumSpeed(4), strumPattern(4), strumSwing(4), voicing(4) = 32 bytes
+   * Struct: playMode(4), chordType(4), strumEnabled(4), velocitySpread(4), strumSpeed(4), strumPattern(4), strumSwing(4), gateValue(4), voicing(4), arpUserMode(4), arpLatchMode(4) = 44 bytes
    */
   private encodeChordData(settings: ChordSettings): ArrayBuffer {
-    const buffer = new ArrayBuffer(32); // 8 int32 values = 32 bytes
+    const buffer = new ArrayBuffer(44); // 11 int32 values = 44 bytes
     const view = new DataView(buffer);
     view.setInt32(0, settings.playMode, true);
     view.setInt32(4, settings.chordType, true);
@@ -612,7 +615,11 @@ export class BLEClient {
     view.setInt32(16, settings.strumSpeed, true);
     view.setInt32(20, settings.strumPattern, true);
     view.setInt32(24, settings.strumSwing, true);
-    view.setInt32(28, settings.voicing, true);
+    // Protocol slot remains gateValue for backward compatibility; behavior is CHORD swing.
+    view.setInt32(28, settings.gateValue ?? 35, true);  // Raw 35 maps to ~64% displayed chord swing
+    view.setInt32(32, settings.voicing, true);
+    view.setInt32(36, settings.arpUserMode ?? 0, true);  // Default to CHORD mode
+    view.setInt32(40, settings.arpLatchMode ?? 1, true); // Default to LATCHED
     return buffer;
   }
 
@@ -735,11 +742,11 @@ export class BLEClient {
     }
 
     try {
-      // If custom strum intervals are provided AND pattern is not explicitly 0,
-      // set strumPattern to 7 (custom pattern) and write them to the strum intervals characteristic
-      // Pattern 0 = always use chord type intervals (advanced panel closed)
-      if (settings.strumIntervals && settings.strumIntervals.length > 0 && settings.strumPattern !== 0) {
-        // Auto-set pattern to 7 (custom) when intervals are provided
+      // Only write custom strum intervals when pattern is explicitly 7 (user-built custom shape).
+      // Patterns 0-6 let the firmware use chord type intervals or its own built-in patterns.
+      // Bug was: `!== 0` caught the firmware default (5), force-writing major fallback
+      // intervals and overriding chordType with pattern 7.
+      if (settings.strumIntervals && settings.strumIntervals.length > 0 && settings.strumPattern === 7) {
         const modifiedSettings = { ...settings, strumPattern: 7 };
         
         // Write custom intervals first
@@ -754,6 +761,7 @@ export class BLEClient {
         const data = this.encodeChordData(settings);
         await this.chordCharacteristic.writeValue(data);
         console.log('Chord settings written to device:', settings);
+        console.log('  strumPattern:', settings.strumPattern, '| chordType:', settings.chordType, '| playMode:', settings.playMode);
       }
     } catch (error) {
       console.error('Failed to write chord settings:', error);

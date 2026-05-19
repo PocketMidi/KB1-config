@@ -7,7 +7,7 @@
         class="toggle-btn" 
         @click="handleToggleClick"
         :title="toggleTooltip"
-        :disabled="isKB1Expression"
+        :disabled="isKB1Expression && !isPitchBendMode"
       >
         <span :class="{ active: model.valueMode === 0 }">UNI</span>
         <span class="toggle-divider">|</span>
@@ -21,7 +21,7 @@
           :class="{ active: isProfileActive('lin') }"
           @click="selectProfile('lin')"
           title="Linear"
-          :disabled="isIncrementalOnly"
+          :disabled="isIncrementalOnly || isPitchBendMode"
         >
           Lin
         </button>
@@ -39,7 +39,7 @@
           :class="{ active: isProfileActive('log') }"
           @click="selectProfile('log')"
           title="Logarithmic"
-          :disabled="isIncrementalOnly"
+          :disabled="isIncrementalOnly || isPitchBendMode"
         >
           Log
         </button>
@@ -48,7 +48,7 @@
           :class="{ active: isProfileActive('pd') }"
           @click="selectProfile('pd')"
           title="Peak & Decay"
-          :disabled="isIncrementalOnly"
+          :disabled="isIncrementalOnly || isPitchBendMode"
         >
           P&D
         </button>
@@ -57,6 +57,7 @@
           :class="{ active: isProfileActive('inc') }"
           @click="selectProfile('inc')"
           :title="isIncrementalOnly ? 'This parameter uses incremental mode for immediate response' : 'Incremental'"
+          :disabled="isPitchBendMode"
         >
           Inc
         </button>
@@ -95,13 +96,16 @@
     </div>
 
     <!-- Level Meter -->
-    <LevelMeter 
+    <LevelMeter
+      v-if="!isPitchBendMode"
       :min="userMin" 
       :max="userMax" 
       :is-bipolar="model.valueMode === 1"
       :min-allowed="minRange"
       :max-allowed="maxRange"
       :step-size="minMaxStepSize"
+      :note-range="model.ccNumber === 205"
+      :pitch-bend="isPitchBendMode"
       @update:min="userMin = $event"
       @update:max="userMax = $event"
     />
@@ -132,40 +136,87 @@
           ref="parameterTriggerRef"
           class="picker-trigger"
           :class="{ 'picker-open': parameterPickerOpen }"
-          @click="parameterPickerOpen = true"
+          :disabled="filteredOptions.length <= 1"
+          @click="filteredOptions.length > 1 && (parameterPickerOpen = true)"
         >
           {{ selectedParameterLabel }}
         </button>
       </div>
       <div class="input-divider"></div>
 
-      <div class="group">
-        <label :for="`lever-min-${lever}`">MIN</label>
-        <ValueControl
-          v-model="userMin"
-          :min="minRange"
-          :max="constrainedMaxForMin"
-          :step="minMaxStepSize"
-          :small-step="minMaxStepSize"
-          :large-step="minMaxStepSize * 2"
-        />
-      </div>
-      <div class="input-divider"></div>
+      <template v-if="!isPitchBendMode">
+        <div class="group">
+          <label :for="`lever-min-${lever}`">MIN</label>
+          <ValueControl
+            v-model="userMin"
+            :min="minRange"
+            :max="constrainedMaxForMin"
+            :step="minMaxStepSize"
+            :small-step="minMaxStepSize"
+            :large-step="minMaxStepSize * 2"
+          />
+        </div>
+        <div class="input-divider"></div>
 
-      <div class="group">
-        <label :for="`lever-max-${lever}`">MAX</label>
-        <ValueControl
-          v-model="userMax"
-          :min="constrainedMinForMax"
-          :max="maxRange"
-          :step="minMaxStepSize"
-          :small-step="minMaxStepSize"
-          :large-step="minMaxStepSize * 2"
-        />
-      </div>
+        <div class="group">
+          <label :for="`lever-max-${lever}`">MAX</label>
+          <ValueControl
+            v-model="userMax"
+            :min="constrainedMinForMax"
+            :max="maxRange"
+            :step="minMaxStepSize"
+            :small-step="minMaxStepSize"
+            :large-step="minMaxStepSize * 2"
+          />
+        </div>
+      </template>
+
+      <!-- Pitch Bend overlap duration -->
+      <template v-if="isPitchBendMode">
+        <div class="duration-container">
+          <div class="duration-meter">
+            <div
+              class="meter-bar-container"
+              @mousedown="handleDurationBarMouseDown"
+              @touchstart="handleDurationBarTouchStart"
+            >
+              <!-- Bipolar style: blue left, pink right, both expand together -->
+              <div class="meter-bar-wrapper">
+                <div class="meter-bar blue-bar-base"></div>
+                <div
+                  class="meter-bar blue-bar-active"
+                  :style="{ width: `${Math.max(5, (pitchBendOverlapMs / 100) * 100)}%` }"
+                ></div>
+              </div>
+              <div class="meter-divider"></div>
+              <div class="meter-bar-wrapper">
+                <div class="meter-bar pink-bar-base"></div>
+                <div
+                  class="meter-bar pink-bar-active"
+                  :style="{ width: `${Math.max(5, (pitchBendOverlapMs / 100) * 100)}%` }"
+                ></div>
+              </div>
+            </div>
+          </div>
+          <div class="group">
+            <label :for="`lever-overlap-${lever}`">DURATION</label>
+            <div class="duration-control-wrapper">
+              <ValueControl
+                v-model="pitchBendOverlapMs"
+                :min="0"
+                :max="100"
+                :step="5"
+                :small-step="5"
+                :large-step="25"
+              />
+              <span class="unit-label">ms</span>
+            </div>
+          </div>
+        </div>
+      </template>
 
       <!-- Duration for non-incremental modes, Steps for incremental mode -->
-      <template v-if="!isIncrementalMode">
+      <template v-if="!isIncrementalMode && !isPitchBendMode">
         <div class="duration-container">
           <!-- Duration Meter Visual -->
           <div class="duration-meter">
@@ -223,8 +274,8 @@
         </div>
       </template>
 
-      <!-- Steps for Incremental mode -->
-      <template v-else>
+      <!-- Steps for Incremental mode (not shown for Pitch Bend) -->
+      <template v-else-if="isIncrementalMode">
         <div class="group">
           <label :for="`lever-steps-${lever}`">STEPS</label>
           <div class="steps-control">
@@ -335,7 +386,8 @@ const props = defineProps<{
   functionModes: { value: number, label: string }[]
   valueModes: { value: number, label: string }[]
   strumSpeed?: number
-  playMode?: number  // 0 = Scale mode, 1 = Chord mode
+  playMode?: number  // 0 = Scale, 1 = Chord, 2 = ARP
+  strumEnabled?: boolean  // Chord mode: false = Block, true = Strum
 }>()
 
 const emit = defineEmits<{
@@ -386,7 +438,7 @@ function dismissHelp() {
 // Check if current parameter is KB1 Expression (unipolar only)
 const isKB1Expression = computed(() => {
   const cc = model.value.ccNumber
-  return cc === 200 || cc === 201 || cc === 202 || cc === 203 || cc === 204 || cc === 205
+  return cc === 200 || cc === 201 || cc === 202 || cc === 203 || cc === 204 || cc === 205 || cc === 208
 })
 
 // Check if current parameter requires incremental mode (Strum Speed, Scale Type, Chord Type)
@@ -394,6 +446,10 @@ const isIncrementalOnly = computed(() => {
   const cc = model.value.ccNumber
   return cc === 200 || cc === 204 || cc === 205
 })
+
+// Check if pitch bend mode is active
+// Also key off CC 208 in case functionMode is stale from older presets.
+const isPitchBendMode = computed(() => model.value.functionMode === 3 || model.value.ccNumber === 208)
 
 // Toggle tooltip
 const toggleTooltip = computed(() => {
@@ -404,7 +460,8 @@ const toggleTooltip = computed(() => {
 })
 
 const handleToggleClick = () => {
-  if (isKB1Expression.value) return // Prevent toggle for KB1 Expression
+  if (isKB1Expression.value && !isPitchBendMode.value) return // Prevent toggle for KB1 Expression (not pitch bend)
+  if (isPitchBendMode.value) return // Pitch Bend is always bipolar
   
   if (isSupported.value) snap()
   
@@ -426,7 +483,9 @@ onBeforeUnmount(() => {
 type ProfileType = 'lin' | 'exp' | 'log' | 'pd' | 'inc'
 
 const isProfileActive = (profile: ProfileType): boolean => {
-  if (model.value.functionMode === 2) {
+  if (isPitchBendMode.value) {
+    return profile === 'exp'  // Pitch Bend always shows Exp as active
+  } else if (model.value.functionMode === 2) {
     return profile === 'inc'
   } else if (model.value.functionMode === 1) {
     return profile === 'pd'
@@ -440,6 +499,8 @@ const isProfileActive = (profile: ProfileType): boolean => {
 
 // Active profile name (full description)
 const selectProfile = (profile: ProfileType) => {
+  if (isPitchBendMode.value && profile === 'exp') return // Pitch Bend is locked to Exp
+  if (isPitchBendMode.value) return // Ignore all other profile clicks in pitch bend mode
   if (isSupported.value) snap()
   
   // Calculate profile name for emission BEFORE updating model
@@ -471,7 +532,9 @@ const selectProfile = (profile: ProfileType) => {
 
 // Profile type determination for component-based rendering
 const currentProfileType = computed(() => {
-  if (model.value.functionMode === 2) {
+  if (isPitchBendMode.value) {
+    return 'exp'  // Pitch Bend locks to Exp visualization
+  } else if (model.value.functionMode === 2) {
     return 'inc'
   } else if (model.value.functionMode === 1) {
     return 'pd'
@@ -533,22 +596,33 @@ const filteredOptions = computed(() => {
     // Filter by selected category
     if (opt.group !== selectedCategory.value) return false
     
-    // Pattern Selector (201) excluded from levers - discrete values better suited for press controls
-    if (opt.value === 201) return false
+    // Pattern Selector (201), Note Range (205) and Latch (207) excluded from levers
+    if (opt.value === 201 || opt.value === 205 || opt.value === 207) return false
     
     // Context-aware KB1 Expression filtering based on play mode
     if (props.playMode !== undefined && opt.group === 'KB1 Expression') {
       const isScaleMode = props.playMode === 0
       const isChordMode = props.playMode === 1
+      const isArpMode = props.playMode === 2
       
       if (isScaleMode) {
-        // Scale mode: ONLY Scale Type (204) available
-        return opt.value === 204
+        // Scale mode: Pitch Bend (208) only
+        return opt.value === 208
       }
       
       if (isChordMode) {
-        // Chord mode: All EXCEPT Scale Type (204) available
-        return opt.value !== 204
+        if (props.strumEnabled === false) {
+          // Chord/Block: Vel. Spread (203) only
+          return opt.value === 203
+        } else {
+          // Chord/Strum: Rate (200) + Chord Swing (204)
+          return opt.value === 200 || opt.value === 204
+        }
+      }
+      
+      if (isArpMode) {
+        // ARP: Rate (200) + ARP Swing (202)
+        return opt.value === 200 || opt.value === 202
       }
     }
     
@@ -563,9 +637,11 @@ watch(() => model.value.ccNumber, (cc) => {
   const cat = props.ccMapByNumber.get(cc)?.category
   if (cat) selectedCategory.value = cat
   
-  // KB1 Expression parameters: Force specific modes and clamp to valid ranges
+  // KB1 Expression parameters: Force specific modes and clamp to valid ranges.
+  // All in one if/else chain so the pitch-bend reset doesn't fire when switching
+  // from pitch bend to another KB1 CC (stale model.value.functionMode bug).
   if (cc === 200) {
-    // Strum Speed: Unipolar 0-127, INCREMENTAL only for immediate tempo response
+    // Rate (Strum Speed): Unipolar, INCREMENTAL
     model.value = {
       ...model.value,
       valueMode: VALUE_MODE_UNIPOLAR,
@@ -574,36 +650,36 @@ watch(() => model.value.ccNumber, (cc) => {
       maxCCValue: 127
     }
   } else if (cc === 202) {
-    // Swing: 50-100% (UI) maps to 0-100 (firmware)
-    model.value = {
-      ...model.value,
-      valueMode: VALUE_MODE_UNIPOLAR,
-      minCCValue: 0,    // 50% UI
-      maxCCValue: 127   // 100% UI
-    }
-  } else if (cc === 203) {
-    // Velocity Spread: 10-100%
-    const min = Math.round((10 / 100) * 127)   // 10 -> ~13 MIDI
-    const max = Math.round((100 / 100) * 127) // 100 -> 127 MIDI
-    model.value = {
-      ...model.value,
-      valueMode: VALUE_MODE_UNIPOLAR,
-      minCCValue: min,
-      maxCCValue: max
-    }
-  } else if (cc === 204) {
-    // Scale Type: 0-20, INCREMENTAL only for discrete selection
-    const min = 0
-    const max = 20
+    // ARP Swing: Unipolar, INCREMENTAL
     model.value = {
       ...model.value,
       valueMode: VALUE_MODE_UNIPOLAR,
       functionMode: 2, // Force INCREMENTAL
-      minCCValue: Math.round((min / max) * 127),
+      minCCValue: 0,
+      maxCCValue: 127
+    }
+  } else if (cc === 203) {
+    // Velocity Spread: 10-100%
+    const min = Math.round((10 / 100) * 127)
+    const max = Math.round((100 / 100) * 127)
+    model.value = {
+      ...model.value,
+      valueMode: VALUE_MODE_UNIPOLAR,
+      functionMode: 2, // Force INCREMENTAL
+      minCCValue: min,
+      maxCCValue: max
+    }
+  } else if (cc === 204) {
+    // Chord Swing: Unipolar, INCREMENTAL
+    model.value = {
+      ...model.value,
+      valueMode: VALUE_MODE_UNIPOLAR,
+      functionMode: 2, // Force INCREMENTAL
+      minCCValue: 0,
       maxCCValue: 127
     }
   } else if (cc === 205) {
-    // Chord Type: 0-14, INCREMENTAL only for discrete selection
+    // Note Range: voicing 1-3, INCREMENTAL for discrete cycling
     const min = 0
     const max = 14
     model.value = {
@@ -613,11 +689,42 @@ watch(() => model.value.ccNumber, (cc) => {
       minCCValue: Math.round((min / max) * 127),
       maxCCValue: 127
     }
+  } else if (cc === 208) {
+    // Pitch Bend: bipolar, PITCH_BEND function mode
+    const overlapMs = (model.value.onsetTime > 0 && model.value.onsetTime <= 500)
+      ? model.value.onsetTime
+      : 25
+    model.value = {
+      ...model.value,
+      valueMode: VALUE_MODE_BIPOLAR,
+      functionMode: 3, // Force PITCH_BEND
+      minCCValue: 0,
+      maxCCValue: 127,
+      onsetTime: overlapMs,
+      offsetTime: overlapMs
+    }
+  } else if (model.value.functionMode === 3) {
+    // Leaving Pitch Bend — reset to Incremental, unipolar
+    model.value = {
+      ...model.value,
+      functionMode: 2,
+      valueMode: VALUE_MODE_UNIPOLAR,
+    }
   }
   // Note: Pattern Selector (201) filtered out for levers - handled by press controls only
-  
   isUpdatingInternally.value = false
-})
+}, { immediate: true })
+
+// When filtering changes and current option is no longer valid, auto-select first available
+watch(filteredOptions, (opts) => {
+  const currentInList = opts.some(o => o.value === model.value.ccNumber)
+  if (!currentInList && opts.length > 0) {
+    const first = opts[0]
+    if (first) {
+      model.value = { ...model.value, ccNumber: first.value }
+    }
+  }
+}, { immediate: true })
 
 // Watch selectedCategory to ensure a valid parameter is selected
 watch(selectedCategory, (cat) => {
@@ -733,6 +840,7 @@ const minRange = computed(() => {
   if (cc === 203) return 10   // Velocity Spread: 10-100%
   if (cc === 204) return 0    // Scale Type: 0-20
   if (cc === 205) return 0    // Chord Type: 0-14
+  if (cc === 208) return -100 // Pitch Bend: -100 to +100 cents
   
   return 0  // Default unipolar minimum
 })
@@ -749,6 +857,7 @@ const maxRange = computed(() => {
   if (cc === 201) return 6   // Pattern Selector: 1-6 (discrete)
   if (cc === 204) return 20  // Scale Type: 0-20 (21 discrete types)
   if (cc === 205) return 14  // Chord Type: 0-14 (15 discrete types)
+  if (cc === 208) return 100  // Pitch Bend: -100 to +100 cents
   return 100  // Default maximum
 })
 
@@ -758,6 +867,9 @@ const MIN_MAX_BUFFER = computed(() => {
   const cc = model.value.ccNumber
   if (cc === 201 || cc === 204 || cc === 205) {
     return 1  // Discrete parameters: minimum 1-step buffer
+  }
+  if (cc === 208) {
+    return 10 // Pitch bend cents: minimum 10-cent buffer
   }
   return 5  // Default: 5 units buffer
 })
@@ -780,6 +892,9 @@ const minMaxStepSize = computed(() => {
   // Discrete parameters: allow single-step precision for exact selection
   if (cc === 201 || cc === 204 || cc === 205) {
     return 1
+  }
+  if (cc === 208) {
+    return 10
   }
   
   // In incremental mode, match the STEPS percentage (5%, 10%, 15%, 25%)
@@ -865,6 +980,16 @@ function strumSpeedToMidi(speedMs: number): number {
   return Math.round((Math.abs(speedMs) - 5) / 355 * 127)
 }
 
+// Pitch Bend (CC 208): -100..+100 cents ↔ MIDI 0-127
+function centsToMidi(cents: number): number {
+  return Math.round(((cents + 100) / 200) * 127)
+}
+
+function midiToCents(midiValue: number): number {
+  const cents = Math.round((midiValue / 127) * 200) - 100
+  return Math.round(cents / 10) * 10
+}
+
 function midiToStrumSpeed(midiValue: number): number {
   // Map MIDI 0-127 to magnitude 5-360ms
   const magnitude = Math.round(5 + (midiValue / 127) * 355)
@@ -899,7 +1024,9 @@ function midiToChordType(midiValue: number): number {
 const userMin = computed({
   get: () => {
     let value: number
-    if (model.value.ccNumber === 200) {
+    if (model.value.ccNumber === 208) {
+      return midiToCents(model.value.minCCValue)
+    } else if (model.value.ccNumber === 200) {
       value = midiToStrumSpeed(model.value.minCCValue)
     } else if (model.value.ccNumber === 201) {
       value = midiToPattern(model.value.minCCValue)
@@ -920,7 +1047,11 @@ const userMin = computed({
   },
   set: (userValue: number) => {
     const snappedValue = snapToStepIncrement(userValue)
-    if (model.value.ccNumber === 200) {
+    if (model.value.ccNumber === 208) {
+      const clamped = Math.max(-100, Math.min(100, snappedValue))
+      const snappedCents = Math.round(clamped / 10) * 10
+      model.value = { ...model.value, minCCValue: centsToMidi(snappedCents) }
+    } else if (model.value.ccNumber === 200) {
       model.value = { ...model.value, minCCValue: strumSpeedToMidi(snappedValue) }
     } else if (model.value.ccNumber === 201) {
       model.value = { ...model.value, minCCValue: patternToMidi(snappedValue) }
@@ -942,7 +1073,9 @@ const userMin = computed({
 const userMax = computed({
   get: () => {
     let value: number
-    if (model.value.ccNumber === 200) {
+    if (model.value.ccNumber === 208) {
+      return midiToCents(model.value.maxCCValue)
+    } else if (model.value.ccNumber === 200) {
       value = midiToStrumSpeed(model.value.maxCCValue)
     } else if (model.value.ccNumber === 201) {
       value = midiToPattern(model.value.maxCCValue)
@@ -963,7 +1096,11 @@ const userMax = computed({
   },
   set: (userValue: number) => {
     const snappedValue = snapToStepIncrement(userValue)
-    if (model.value.ccNumber === 200) {
+    if (model.value.ccNumber === 208) {
+      const clamped = Math.max(-100, Math.min(100, snappedValue))
+      const snappedCents = Math.round(clamped / 10) * 10
+      model.value = { ...model.value, maxCCValue: centsToMidi(snappedCents) }
+    } else if (model.value.ccNumber === 200) {
       model.value = { ...model.value, maxCCValue: strumSpeedToMidi(snappedValue) }
     } else if (model.value.ccNumber === 201) {
       model.value = { ...model.value, maxCCValue: patternToMidi(snappedValue) }
@@ -1024,6 +1161,14 @@ const duration = computed({
   }
 })
 
+// Pitch bend mode: overlap duration (ms) stored in onsetTime
+const pitchBendOverlapMs = computed({
+  get: () => model.value.onsetTime,
+  set: (value: number) => {
+    model.value = { ...model.value, onsetTime: value, offsetTime: value }
+  }
+})
+
 // Duration bar direct interaction handlers
 const updateDurationFromPosition = (clientX: number, rect: DOMRect) => {
   const dividerWidth = 4
@@ -1055,12 +1200,18 @@ const updateDurationFromPosition = (clientX: number, rect: DOMRect) => {
   
   // Clamp percentage to 0-100
   percentage = Math.max(0, Math.min(100, percentage))
-  
-  // Reverse the visual formula: width = 10 + ((duration - 100) / 1900) * 90
-  // So: percentage = 10 + ((duration - 100) / 1900) * 90
-  // Solve for duration:
-  const newValue = Math.round(100 + ((percentage - 10) / 90) * 1900)
-  duration.value = Math.max(100, Math.min(2000, newValue))
+
+  if (isPitchBendMode.value) {
+    // Pitch bend: linear 0-100ms
+    const newValue = Math.round((percentage / 100) * 100)
+    pitchBendOverlapMs.value = Math.max(0, Math.min(100, newValue))
+  } else {
+    // Reverse the visual formula: width = 10 + ((duration - 100) / 1900) * 90
+    // So: percentage = 10 + ((duration - 100) / 1900) * 90
+    // Solve for duration:
+    const newValue = Math.round(100 + ((percentage - 10) / 90) * 1900)
+    duration.value = Math.max(100, Math.min(2000, newValue))
+  }
 }
 
 const handleDurationBarMouseDown = (e: MouseEvent) => {
@@ -1373,6 +1524,20 @@ function increaseSteps() {
   max-width: 100%;
   pointer-events: none; /* Prevent interaction with SVG */
   /* NO min-width - allow scaling */
+}
+
+.pitch-bend-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Roboto Mono';
+  font-size: 0.8125rem;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--ui-highlight);
+  opacity: 0.7;
+  height: 48px;
 }
 
 /* Tablet and mobile-specific sizing */

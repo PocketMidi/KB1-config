@@ -60,6 +60,7 @@ const props = withDefaults(defineProps<{
   onRightClick?: () => void  // Custom handler for right button
   dragMapper?: (percentage: number) => number  // Map position (0-100%) to value (replaces delta drag)
   displayFormatter?: (value: number) => string  // Optional formatter for display value
+  displayParser?: (displayValue: string) => number  // Optional parser for formatted display input
   leftDisabled?: boolean   // Explicitly disable left button
   rightDisabled?: boolean  // Explicitly disable right button
 }>(), {
@@ -77,6 +78,7 @@ const props = withDefaults(defineProps<{
   onRightClick: undefined,
   dragMapper: undefined,
   displayFormatter: undefined,
+  displayParser: undefined,
   leftDisabled: false,
   rightDisabled: false
 })
@@ -132,7 +134,7 @@ function increaseSmall() {
 function handleInput(event: Event) {
   if (props.readOnly) return // Block typing when read-only
   const target = event.target as HTMLInputElement
-  const value = parseFloat(target.value)
+  const value = props.displayParser ? props.displayParser(target.value) : parseFloat(target.value)
   
   if (!isNaN(value)) {
     emit('update:modelValue', clamp(snapToStep(value)))
@@ -142,13 +144,13 @@ function handleInput(event: Event) {
 function validateAndUpdate(event: Event) {
   if (props.readOnly) return // Block validation when read-only
   const target = event.target as HTMLInputElement
-  const value = parseFloat(target.value)
+  const value = props.displayParser ? props.displayParser(target.value) : parseFloat(target.value)
   
   if (isNaN(value)) {
-    target.value = String(props.modelValue)
+    target.value = displayValue.value
   } else {
     const clamped = clamp(snapToStep(value))
-    target.value = String(clamped)
+    target.value = props.displayFormatter ? props.displayFormatter(clamped) : String(clamped)
     emit('update:modelValue', clamped)
   }
 }

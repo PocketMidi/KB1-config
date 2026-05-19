@@ -51,6 +51,7 @@ const connectionStatus = ref<BLEConnectionStatus>({
 const ccMappings = ref<CCMapping[]>([]);
 const deviceSettings = ref<DeviceSettings>(kb1Protocol.createDefaultSettings());
 const isLoading = ref(false);
+
 const firmwareVersionRef = ref<string | null>(devMode.value ? '1.1.2' : null);
 const lastDeviceLoadTime = ref<number>(0);
 
@@ -99,7 +100,8 @@ bleClient.onKeepAliveState = (pattern, scale, root) => {
   if (deviceSettings.value) {
     deviceSettings.value.chord.strumPattern = pattern;
     deviceSettings.value.scale.scaleType = scale;
-    deviceSettings.value.scale.rootNote = root;
+    // Keep-alive sends root as 0-11 (pitch class); settings store as MIDI note 60-71
+    deviceSettings.value.scale.rootNote = 60 + (root % 12);
   }
 };
 
@@ -740,5 +742,6 @@ export function useDeviceState() {
     // Evaluation Mode
     devMode: readonly(devMode),
     setDevMode,
+
   };
 }

@@ -195,30 +195,25 @@ async function parsePolyendCSV(csvText: string): Promise<void> {
           }
 
           // Add KB1 Expression category for direct device control (not MIDI CC)
+          // Order: live performance value only — preset-style params (Scale/Chord Type) excluded
           const kb1ExpressionGroup: CCGroup = {
             category: 'KB1 Expression',
             entries: [
               {
-                ccNumber: 204,
-                parameter: 'Scale Type',
+                ccNumber: 208,
+                parameter: 'Pitch Bend',
                 category: 'KB1 Expression',
-                range: { min: 0, max: 20, text: '0 to 20' },
+                range: { min: -2, max: 2, text: '-2 to 2' },
               },
               {
-                ccNumber: 205,
-                parameter: 'Chord Type',
+                ccNumber: 209,
+                parameter: 'Sustain',
                 category: 'KB1 Expression',
-                range: { min: 0, max: 14, text: '0 to 14' },
-              },
-              {
-                ccNumber: 206,
-                parameter: 'Root Note',
-                category: 'KB1 Expression',
-                range: { min: 0, max: 11, text: '0 to 11' },
+                range: { min: 0, max: 1, text: '0 to 1' },
               },
               {
                 ccNumber: 200,
-                parameter: 'Strum Speed',
+                parameter: 'Rate',
                 category: 'KB1 Expression',
                 range: { min: -100, max: 100, text: '-100 to 100' },
               },
@@ -229,8 +224,20 @@ async function parsePolyendCSV(csvText: string): Promise<void> {
                 range: { min: 1, max: 6, text: '1 to 6' },
               },
               {
+                ccNumber: 205,
+                parameter: 'Note Range',
+                category: 'KB1 Expression',
+                range: { min: 1, max: 3, text: '1 to 3' },
+              },
+              {
+                ccNumber: 207,
+                parameter: 'Latch',
+                category: 'KB1 Expression',
+                range: { min: 0, max: 1, text: '0 to 1' },
+              },
+              {
                 ccNumber: 202,
-                parameter: 'Swing',
+                parameter: 'ARP Swing',
                 category: 'KB1 Expression',
                 range: { min: 50, max: 100, text: '50 to 100' },
               },
@@ -239,6 +246,18 @@ async function parsePolyendCSV(csvText: string): Promise<void> {
                 parameter: 'Velocity Spread',
                 category: 'KB1 Expression',
                 range: { min: 10, max: 100, text: '10 to 100' },
+              },
+              {
+                ccNumber: 204,
+                parameter: 'Chord Swing',
+                category: 'KB1 Expression',
+                range: { min: 50, max: 100, text: '50 to 100' },
+              },
+              {
+                ccNumber: 206,
+                parameter: 'Root Note',
+                category: 'KB1 Expression',
+                range: { min: 0, max: 11, text: '0 to 11' },
               },
             ],
           };

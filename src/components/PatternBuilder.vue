@@ -2,8 +2,22 @@
   <div class="strum-builder">
     <!-- Template Info (Read-Only) -->
     <div class="template-info">
-      <div class="build-mode-desc" v-if="selectedMode && selectedMode !== 'custom'">
-        {{ getModeDescription(selectedMode) }}
+      <div class="build-mode-desc-row" v-if="selectedMode && selectedMode !== 'custom'">
+        <div class="build-mode-desc">
+          {{ getModeDescription(selectedMode) }}
+        </div>
+        <!-- MOM|LAT toggle (inline) -->
+        <div v-if="latchMode !== undefined" class="latch-toggle-row">
+          <button 
+            class="latch-toggle-inline"
+            @click.stop="$emit('latch-toggle')"
+          >
+            <span :class="{ active: !latchMode }">MOM</span>
+            <span class="toggle-divider">|</span>
+            <span :class="{ active: latchMode }">LAT</span>
+          </button>
+          <span class="info-icon" @click.stop="$emit('show-latch-help', isUserMode ? 'latchModeUser' : 'latchModeChord')">i</span>
+        </div>
       </div>
     </div>
 
@@ -18,10 +32,10 @@
 
         <!-- Connection line between notes -->
         <polyline
-          v-if="intervals.length > 1"
+          v-if="intervals.length > 1 && selectedMode !== 'user'"
           :points="getPathPoints()"
           fill="none"
-          :stroke="activeDotColor"
+          stroke="var(--ui-highlight)"
           stroke-width="1.5"
           opacity="0.6"
           class="connection-line"
@@ -29,7 +43,64 @@
 
         <!-- Note dots (clickable) -->
         <g v-for="(interval, idx) in intervals" :key="`dot-${idx}`">
-          <template v-if="shouldSplitDot(idx)">
+          <template v-if="selectedMode === 'user'">
+            <!-- User mode: straight line with crosshairs -->
+            <!-- Crosshair lines (gate-controlled length) -->
+            <g v-if="idx > 0">
+              <!-- Left crosshair (toward previous dot) -->
+              <line
+                :x1="getXPosition(idx)"
+                :y1="57.5"
+                :x2="getXPosition(idx) - getGateLineLength(idx, idx - 1)"
+                :y2="57.5"
+                stroke="var(--ui-highlight)"
+                stroke-width="1.5"
+                opacity="0.6"
+              />
+              <!-- Left tip dot -->
+              <circle
+                :cx="getXPosition(idx) - getGateLineLength(idx, idx - 1)"
+                :cy="57.5"
+                :r="2"
+                fill="var(--ui-highlight)"
+                opacity="0.8"
+              />
+            </g>
+            <g v-if="idx < intervals.length - 1">
+              <!-- Right crosshair (toward next dot) -->
+              <line
+                :x1="getXPosition(idx)"
+                :y1="57.5"
+                :x2="getXPosition(idx) + getGateLineLength(idx, idx + 1)"
+                :y2="57.5"
+                stroke="var(--ui-highlight)"
+                stroke-width="1.5"
+                opacity="0.6"
+              />
+              <!-- Right tip dot -->
+              <circle
+                :cx="getXPosition(idx) + getGateLineLength(idx, idx + 1)"
+                :cy="57.5"
+                :r="2"
+                fill="var(--ui-highlight)"
+                opacity="0.8"
+              />
+            </g>
+            <!-- Dot centered vertically -->
+            <circle
+              :cx="getXPosition(idx)"
+              :cy="57.5"
+              :r="3"
+              fill="var(--ui-highlight)"
+              stroke="var(--ui-highlight)"
+              stroke-width="0.5"
+              class="note-dot"
+              @click.stop="removeNote(idx)"
+              @mouseenter="hoverNote(idx)"
+              @mouseleave="unhoverNote()"
+            />
+          </template>
+          <template v-else-if="shouldSplitDot(idx)">
             <!-- Swing split dots -->
             <line
               :x1="getXPosition(idx) - getSwingOffset()"
@@ -133,11 +204,15 @@ const props = defineProps<{
   chordType?: number  // Chord type from parent to sync template
   swingValue?: number  // Swing amount 50-100% (50 = straight, 100 = max swing)
   reverse?: boolean    // Whether strum is in reverse (for color indication)
+  isUserMode?: boolean // Whether in USER mode (for swapping Expand/User Order at position 4)
+  latchMode?: boolean  // Whether latched (true) or momentary (false) - optional (only for arp mode)
 }>()
 
 const emit = defineEmits<{
   (e: 'update:modelValue', value: number[]): void
   (e: 'update:mode', value: string): void
+  (e: 'latch-toggle'): void
+  (e: 'show-latch-help', mode: string): void
 }>()
 
 // Intervals (semitones from root)
@@ -164,8 +239,8 @@ const activeDotColor = computed(() => {
   return props.reverse ? 'var(--strum-reverse)' : 'var(--ui-highlight)'
 })
 
-// Build modes with embedded SVG content
-const buildModes = ref<BuildMode[]>([
+// All build modes (7 total, but only 6 shown at a time)
+const allBuildModes: BuildMode[] = [
   {
     id: 'up',
     description: 'Up (Ascending)',
@@ -175,33 +250,55 @@ const buildModes = ref<BuildMode[]>([
     id: 'down',
     description: 'Down (Descending)',
     viewBox: '0 0 45 50',
-    svg: '<path d="M18.8202 30.9152L26.835 20.0952C27.3238 19.4353 26.8527 18.5 26.0314 18.5L23.0166 18.5C22.4643 18.5 22.0166 18.0523 22.0166 17.5L22.0166 0.999999C22.0166 0.447715 21.5689 -5.63677e-07 21.0166 -6.11959e-07L15.0166 -1.1365e-06C14.4643 -1.18478e-06 14.0166 0.447715 14.0166 0.999999L14.0166 17.5C14.0166 18.0523 13.5689 18.5 13.0166 18.5L10.0018 18.5C9.18051 18.5 8.70939 19.4353 9.19826 20.0952L17.2131 30.9152C17.6128 31.4549 18.4204 31.4549 18.8202 30.9152Z" fill="#b9aa5f" transform="translate(12, 10)"/>'
-  },
+    svg: '<path d="M18.8202 30.9152L26.835 20.0952C27.3238 19.4353 26.8527 18.5 26.0314 18.5L23.0166 18.5C22.4643 18.5 22.0166 18.0523 22.0166 17.5L22.0166 0.999999C22.0166 0.447715 21.5689 -5.63677e-07 21.0166 -6.11959e-07L15.0166 -1.1365e-06C14.4643 -1.18478e-06 14.0166 0.447715 14.0166 0.999999L14.0166 17.5C14.0166 18.0523 13.5689 18.5 13.0166 18.5L10.0018 18.5C9.18051 18.5 8.70939 19.4353 9.19826 20.0952L17.2131 30.9152C17.6128 31.4549 18.4204 31.4549 18.8202 30.9152Z" fill="#b9aa5f" transform="translate(12, 10)"/>'  },
   {
     id: 'updown',
     description: 'Bounce (Back and Forth)',
     viewBox: '0 0 45 50',
-    svg: '<path d="M9.19644 1.0848L1.18165 11.9048C0.692786 12.5647 1.1639 13.5 1.98521 13.5H5C5.55228 13.5 6 13.9477 6 14.5V31C6 31.5523 6.44772 32 7 32H13C13.5523 32 14 31.5523 14 31V14.5C14 13.9477 14.4477 13.5 15 13.5H18.0148C18.8361 13.5 19.3072 12.5647 18.8183 11.9048L10.8036 1.0848C10.4038 0.545106 9.59622 0.545106 9.19644 1.0848Z" fill="#b9aa5f" transform="translate(3.5, 9)"/><path d="M28.8036 31.9152L36.8183 21.0952C37.3072 20.4353 36.8361 19.5 36.0148 19.5L33 19.5C32.4477 19.5 32 19.0523 32 18.5L32 2C32 1.44772 31.5523 0.999999 31 0.999999L25 0.999999C24.4477 0.999999 24 1.44771 24 2L24 18.5C24 19.0523 23.5523 19.5 23 19.5L19.9852 19.5C19.1639 19.5 18.6928 20.4353 19.1817 21.0952L27.1964 31.9152C27.5962 32.4549 28.4038 32.4549 28.8036 31.9152Z" fill="#b9aa5f" transform="translate(3.5, 9)"/>'
-  },
-  {
-    id: 'inclusive',
-    description: 'Inclusive (Center Outward)',
-    viewBox: '0 0 45 50',
-    svg: '<path d="M9.19644 1.0848L1.18165 11.9048C0.692786 12.5647 1.1639 13.5 1.98521 13.5H5C5.55228 13.5 6 13.9477 6 14.5V21C6 21.5523 6.44772 22 7 22H13C13.5523 22 14 21.5523 14 21V14.5C14 13.9477 14.4477 13.5 15 13.5H18.0148C18.8361 13.5 19.3072 12.5647 18.8183 11.9048L10.8036 1.0848C10.4038 0.545106 9.59622 0.545106 9.19644 1.0848Z" fill="#b9aa5f" transform="translate(12.5, 1.5)"/><path d="M10.8036 45.9152L18.8184 35.0952C19.3072 34.4353 18.8361 33.5 18.0148 33.5L15 33.5C14.4477 33.5 14 33.0523 14 32.5L14 26C14 25.4477 13.5523 25 13 25L7 25C6.44772 25 6 25.4477 6 26L6 32.5C6 33.0523 5.55229 33.5 5 33.5L1.98521 33.5C1.16391 33.5 0.69279 34.4353 1.18166 35.0952L9.19644 45.9152C9.59622 46.4549 10.4038 46.4549 10.8036 45.9152Z" fill="#b9aa5f" transform="translate(12.5, 1.5)"/>'
-  },
+    svg: '<path d="M9.19644 1.0848L1.18165 11.9048C0.692786 12.5647 1.1639 13.5 1.98521 13.5H5C5.55228 13.5 6 13.9477 6 14.5V31C6 31.5523 6.44772 32 7 32H13C13.5523 32 14 31.5523 14 31V14.5C14 13.9477 14.4477 13.5 15 13.5H18.0148C18.8361 13.5 19.3072 12.5647 18.8183 11.9048L10.8036 1.0848C10.4038 0.545106 9.59622 0.545106 9.19644 1.0848Z" fill="#b9aa5f" transform="translate(3.5, 9)"/><path d="M28.8036 31.9152L36.8183 21.0952C37.3072 20.4353 36.8361 19.5 36.0148 19.5L33 19.5C32.4477 19.5 32 19.0523 32 18.5L32 2C32 1.44772 31.5523 0.999999 31 0.999999L25 0.999999C24.4477 0.999999 24 1.44771 24 2L24 18.5C24 19.0523 23.5523 19.5 23 19.5L19.9852 19.5C19.1639 19.5 18.6928 20.4353 19.1817 21.0952L27.1964 31.9152C27.5962 32.4549 28.4038 32.4549 28.8036 31.9152Z" fill="#b9aa5f" transform="translate(3.5, 9)"/>'  },
   {
     id: 'exclusive',
-    description: 'Exclusive (Outward to Center)',
+    description: 'Contract (Edges to Center)',
     viewBox: '0 0 45 50',
-    svg: '<path d="M9.19644 24.0848L1.18165 34.9048C0.692786 35.5647 1.1639 36.5 1.98521 36.5H5C5.55228 36.5 6 36.9477 6 37.5V44C6 44.5523 6.44772 45 7 45H13C13.5523 45 14 44.5523 14 44V37.5C14 36.9477 14.4477 36.5 15 36.5H18.0148C18.8361 36.5 19.3072 35.5647 18.8183 34.9048L10.8036 24.0848C10.4038 23.5451 9.59622 23.5451 9.19644 24.0848Z" fill="#b9aa5f" transform="translate(12.5, 2.5)"/><path d="M10.8036 20.9152L18.8184 10.0952C19.3072 9.43526 18.8361 8.5 18.0148 8.5L15 8.5C14.4477 8.5 14 8.05228 14 7.5L14 0.999999C14 0.447715 13.5523 -5.63677e-07 13 -6.11959e-07L7 -1.1365e-06C6.44772 -1.18478e-06 6 0.447715 6 0.999999L6 7.5C6 8.05228 5.55229 8.5 5 8.5L1.98521 8.5C1.16391 8.5 0.69279 9.43526 1.18166 10.0952L9.19644 20.9152C9.59622 21.4549 10.4038 21.4549 10.8036 20.9152Z" fill="#b9aa5f" transform="translate(12.5, 2.5)"/>'
-  },
+    svg: '<path d="M9.19644 24.0848L1.18165 34.9048C0.692786 35.5647 1.1639 36.5 1.98521 36.5H5C5.55228 36.5 6 36.9477 6 37.5V44C6 44.5523 6.44772 45 7 45H13C13.5523 45 14 44.5523 14 44V37.5C14 36.9477 14.4477 36.5 15 36.5H18.0148C18.8361 36.5 19.3072 35.5647 18.8183 34.9048L10.8036 24.0848C10.4038 23.5451 9.59622 23.5451 9.19644 24.0848Z" fill="#b9aa5f" transform="translate(12.5, 2.5)"/><path d="M10.8036 20.9152L18.8184 10.0952C19.3072 9.43526 18.8361 8.5 18.0148 8.5L15 8.5C14.4477 8.5 14 8.05228 14 7.5L14 0.999999C14 0.447715 13.5523 -5.63677e-07 13 -6.11959e-07L7 -1.1365e-06C6.44772 -1.18478e-06 6 0.447715 6 0.999999L6 7.5C6 8.05228 5.55229 8.5 5 8.5L1.98521 8.5C1.16391 8.5 0.69279 9.43526 1.18166 10.0952L9.19644 20.9152C9.59622 21.4549 10.4038 21.4549 10.8036 20.9152Z" fill="#b9aa5f" transform="translate(12.5, 2.5)"/>'  },
+  {
+    id: 'inclusive',
+    description: 'Expand (Center Outward)',
+    viewBox: '0 0 45 50',
+    svg: '<path d="M9.19644 1.0848L1.18165 11.9048C0.692786 12.5647 1.1639 13.5 1.98521 13.5H5C5.55228 13.5 6 13.9477 6 14.5V21C6 21.5523 6.44772 22 7 22H13C13.5523 22 14 21.5523 14 21V14.5C14 13.9477 14.4477 13.5 15 13.5H18.0148C18.8361 13.5 19.3072 12.5647 18.8183 11.9048L10.8036 1.0848C10.4038 0.545106 9.59622 0.545106 9.19644 1.0848Z" fill="#b9aa5f" transform="translate(12.5, 1.5)"/><path d="M10.8036 45.9152L18.8184 35.0952C19.3072 34.4353 18.8361 33.5 18.0148 33.5L15 33.5C14.4477 33.5 14 33.0523 14 32.5L14 26C14 25.4477 13.5523 25 13 25L7 25C6.44772 25 6 25.4477 6 26L6 32.5C6 33.0523 5.55229 33.5 5 33.5L1.98521 33.5C1.16391 33.5 0.69279 34.4353 1.18166 35.0952L9.19644 45.9152C9.59622 46.4549 10.4038 46.4549 10.8036 45.9152Z" fill="#b9aa5f" transform="translate(12.5, 1.5)"/>'  },
+  {
+    id: 'user',
+    description: 'User Order',
+    viewBox: '0 0 45 50',
+    svg: '<g transform="translate(4, 6.5) scale(1)"><path d="M1.0848 19.3038L9.03243 25.1909C9.6924 25.6798 10.6277 25.2087 10.6277 24.3874L10.6277 22.6492C10.6277 22.0969 11.0754 21.6492 11.6277 21.6492L16.3192 21.6492C16.8714 21.6492 17.3192 21.2014 17.3192 20.6492L17.3192 16.3513C17.3192 15.799 16.8714 15.3513 16.3192 15.3513L11.6277 15.3513C11.0754 15.3513 10.6277 14.9036 10.6277 14.3513L10.6277 12.6131C10.6277 11.7918 9.6924 11.3207 9.03243 11.8095L1.0848 17.6967C0.545107 18.0964 0.545107 18.904 1.0848 19.3038Z" fill="#b9aa5f"/><path d="M35.9152 17.6967L27.9676 11.8096C27.3076 11.3207 26.3723 11.7918 26.3723 12.6131L26.3723 14.3513C26.3723 14.9036 25.9246 15.3513 25.3723 15.3513L16.5 15.3513C15.9477 15.3513 15.5 15.799 15.5 16.3513L15.5 20.6492C15.5 21.2015 15.9477 21.6492 16.5 21.6492L25.3723 21.6492C25.9246 21.6492 26.3723 22.0969 26.3723 22.6492L26.3723 24.3874C26.3723 25.2087 27.3076 25.6798 27.9676 25.191L35.9152 19.3038C36.4549 18.9041 36.4549 18.0965 35.9152 17.6967Z" fill="#b9aa5f"/><path d="M18.0688 1.0848L12.1817 9.03243C11.6928 9.6924 12.1639 10.6277 12.9852 10.6277H14.7234C15.2757 10.6277 15.7234 11.0754 15.7234 11.6277V16.3192C15.7234 16.8714 16.1711 17.3192 16.7234 17.3192H21.0213C21.5736 17.3192 22.0213 16.8714 22.0213 16.3192V11.6277C22.0213 11.0754 22.469 10.6277 23.0213 10.6277H24.7595C25.5808 10.6277 26.0519 9.6924 25.563 9.03243L19.6759 1.0848C19.2761 0.545107 18.4686 0.545107 18.0688 1.0848Z" fill="#b9aa5f"/><path d="M19.6758 35.9152L25.563 27.9676C26.0518 27.3076 25.5807 26.3723 24.7594 26.3723L23.0212 26.3723C22.4689 26.3723 22.0212 25.9246 22.0212 25.3723L22.0212 16.5C22.0212 15.9477 21.5735 15.5 21.0212 15.5L16.7234 15.5C16.1711 15.5 15.7234 15.9477 15.7234 16.5L15.7234 25.3723C15.7234 25.9246 15.2756 26.3723 14.7234 26.3723L12.9852 26.3723C12.1639 26.3723 11.6927 27.3076 12.1816 27.9676L18.0687 35.9152C18.4685 36.4549 19.2761 36.4549 19.6758 35.9152Z" fill="#b9aa5f"/></g>'  },
   {
     id: 'random',
     description: 'Random Order',
     viewBox: '0 0 45 50',
-    svg: '<g transform="translate(-0.5, 5.5) scale(0.98)"><path d="M43.7641 8.71431L34.5522 1.89064C33.7298 1.2815 33.3187 0.976937 32.9748 0.985518C32.6756 0.992987 32.3955 1.13411 32.2113 1.37011C31.9998 1.64128 31.9998 2.15297 31.9998 3.17633V4.4C31.9998 4.96005 31.9998 5.24008 31.8908 5.45399C31.7949 5.64215 31.6419 5.79513 31.4538 5.89101C31.2399 6 30.9598 6 30.3998 6L24.9139 6C23.6707 6.00004 22.4756 6.46343 21.5584 7.29395L21.4709 7.37716C21.4363 7.41002 21.4191 7.42645 21.4026 7.44366C21.388 7.45896 21.3739 7.47472 21.3602 7.49092C21.3449 7.50914 21.3304 7.52809 21.3015 7.566L8.48027 24.3705C8.3041 24.6014 8.21601 24.7169 8.10501 24.8001C8.00669 24.8738 7.89562 24.9288 7.77738 24.9622C7.64388 25 7.49866 25 7.20823 25H1.75625C1.1962 25 0.916171 25 0.70226 25.109C0.514098 25.2049 0.361117 25.3578 0.265244 25.546C0.15625 25.7599 0.15625 26.0399 0.15625 26.6V31.4C0.15625 31.9601 0.15625 32.2401 0.265244 32.454C0.361117 32.6422 0.514098 32.7951 0.70226 32.891C0.916171 33 1.1962 33 1.75625 33H9.24219C10.5682 33 11.8397 32.4728 12.7773 31.5352L25.6758 14.6295L25.6758 14.6295C25.8519 14.3986 25.94 14.2831 26.051 14.1999C26.1494 14.1262 26.2604 14.0712 26.3787 14.0378C26.5122 14 26.6574 14 26.9478 14H30.3998C30.9598 14 31.2399 14 31.4538 14.109C31.6419 14.2049 31.7949 14.3578 31.8908 14.546C31.9998 14.7599 31.9998 15.0399 31.9998 15.6V16.8237C31.9998 17.847 31.9998 18.3587 32.2113 18.6299C32.3955 18.8659 32.6756 19.007 32.9748 19.0145C33.3187 19.0231 33.7298 18.7185 34.5522 18.1094L43.7641 11.2857C44.3521 10.8502 44.646 10.6324 44.7509 10.3647C44.8427 10.1302 44.8427 9.86977 44.7509 9.63531C44.646 9.36759 44.3521 9.14983 43.7641 8.71431Z" fill="#b9aa5f"/><path d="M43.5644 30.2857L34.3524 37.1094C33.5301 37.7185 33.1189 38.0231 32.7751 38.0145C32.4759 38.007 32.1957 37.8659 32.0116 37.6299C31.8001 37.3587 31.8001 36.847 31.8001 35.8237V34.6C31.8001 34.0399 31.8001 33.7599 31.6911 33.546C31.5952 33.3578 31.4422 33.2049 31.254 33.109C31.0401 33 30.7601 33 30.2001 33L26.7141 33C25.4709 33 24.2758 32.5366 23.3586 31.7061L23.179 31.5352L20.044 28.8928C19.6303 28.5441 19.4235 28.3698 19.33 28.1552C19.2478 27.9664 19.2259 27.7568 19.2673 27.555C19.3143 27.3258 19.4806 27.1124 19.8132 26.6857L22.7778 22.8826C23.1293 22.4316 23.305 22.2062 23.5265 22.1045C23.7213 22.015 23.9396 21.9905 24.1493 22.0345C24.3879 22.0846 24.6092 22.2655 25.052 22.6272L27.5145 24.639C27.6782 24.7728 27.76 24.8396 27.8515 24.8872C27.9327 24.9294 28.0193 24.9603 28.1088 24.979C28.2098 25 28.3154 25 28.5268 25H30.2001C30.7601 25 31.0401 25 31.254 24.891C31.4422 24.7951 31.5952 24.6422 31.6911 24.454C31.8001 24.2401 31.8001 23.9601 31.8001 23.4V22.1763C31.8001 21.153 31.8001 20.6413 32.0116 20.3701C32.1957 20.1341 32.4759 19.993 32.7751 19.9855C33.1189 19.9769 33.5301 20.2815 34.3524 20.8906L34.3524 20.8906L43.5644 27.7143C44.1523 28.1498 44.4463 28.3676 44.5512 28.6353C44.643 28.8698 44.643 29.1302 44.5512 29.3647C44.4463 29.6324 44.1523 29.8502 43.5644 30.2857Z" fill="#b9aa5f"/><path d="M9.08594 6.00031C10.412 6.00035 11.6834 6.5275 12.6211 7.46515L14.857 9.47337C15.2586 9.83411 15.4594 10.0145 15.5461 10.2315C15.6224 10.4225 15.6379 10.6323 15.5906 10.8324C15.5368 11.0598 15.3647 11.2678 15.0206 11.6837L11.9467 15.3986C11.5815 15.8401 11.3988 16.0608 11.174 16.156C10.9764 16.2397 10.7571 16.2577 10.5485 16.2071C10.3112 16.1496 10.0952 15.9614 9.66311 15.5851L8.29553 14.3938C8.12834 14.2482 8.04474 14.1754 7.95013 14.1235C7.86621 14.0775 7.77612 14.0437 7.68262 14.0233C7.5772 14.0003 7.46634 14.0003 7.24462 14.0003H1.6C1.03995 14.0003 0.759921 14.0003 0.546009 13.8913C0.357847 13.7954 0.204867 13.6425 0.108993 13.4543C0 13.2404 0 12.9604 0 12.4003V7.60031C0 7.04025 0 6.76023 0.108993 6.54632C0.204867 6.35815 0.357847 6.20517 0.546009 6.1093C0.759921 6.00031 1.03995 6.00031 1.6 6.00031H9.08594Z" fill="#b9aa5f"/></g>'
-  }
-])
+    svg: '<g transform="translate(-0.5, 5.5) scale(0.98)"><path d="M43.7641 8.71431L34.5522 1.89064C33.7298 1.2815 33.3187 0.976937 32.9748 0.985518C32.6756 0.992987 32.3955 1.13411 32.2113 1.37011C31.9998 1.64128 31.9998 2.15297 31.9998 3.17633V4.4C31.9998 4.96005 31.9998 5.24008 31.8908 5.45399C31.7949 5.64215 31.6419 5.79513 31.4538 5.89101C31.2399 6 30.9598 6 30.3998 6L24.9139 6C23.6707 6.00004 22.4756 6.46343 21.5584 7.29395L21.4709 7.37716C21.4363 7.41002 21.4191 7.42645 21.4026 7.44366C21.388 7.45896 21.3739 7.47472 21.3602 7.49092C21.3449 7.50914 21.3304 7.52809 21.3015 7.566L8.48027 24.3705C8.3041 24.6014 8.21601 24.7169 8.10501 24.8001C8.00669 24.8738 7.89562 24.9288 7.77738 24.9622C7.64388 25 7.49866 25 7.20823 25H1.75625C1.1962 25 0.916171 25 0.70226 25.109C0.514098 25.2049 0.361117 25.3578 0.265244 25.546C0.15625 25.7599 0.15625 26.0399 0.15625 26.6V31.4C0.15625 31.9601 0.15625 32.2401 0.265244 32.454C0.361117 32.6422 0.514098 32.7951 0.70226 32.891C0.916171 33 1.1962 33 1.75625 33H9.24219C10.5682 33 11.8397 32.4728 12.7773 31.5352L25.6758 14.6295L25.6758 14.6295C25.8519 14.3986 25.94 14.2831 26.051 14.1999C26.1494 14.1262 26.2604 14.0712 26.3787 14.0378C26.5122 14 26.6574 14 26.9478 14H30.3998C30.9598 14 31.2399 14 31.4538 14.109C31.6419 14.2049 31.7949 14.3578 31.8908 14.546C31.9998 14.7599 31.9998 15.0399 31.9998 15.6V16.8237C31.9998 17.847 31.9998 18.3587 32.2113 18.6299C32.3955 18.8659 32.6756 19.007 32.9748 19.0145C33.3187 19.0231 33.7298 18.7185 34.5522 18.1094L43.7641 11.2857C44.3521 10.8502 44.646 10.6324 44.7509 10.3647C44.8427 10.1302 44.8427 9.86977 44.7509 9.63531C44.646 9.36759 44.3521 9.14983 43.7641 8.71431Z" fill="#b9aa5f"/><path d="M43.5644 30.2857L34.3524 37.1094C33.5301 37.7185 33.1189 38.0231 32.7751 38.0145C32.4759 38.007 32.1957 37.8659 32.0116 37.6299C31.8001 37.3587 31.8001 36.847 31.8001 35.8237V34.6C31.8001 34.0399 31.8001 33.7599 31.6911 33.546C31.5952 33.3578 31.4422 33.2049 31.254 33.109C31.0401 33 30.7601 33 30.2001 33L26.7141 33C25.4709 33 24.2758 32.5366 23.3586 31.7061L23.179 31.5352L20.044 28.8928C19.6303 28.5441 19.4235 28.3698 19.33 28.1552C19.2478 27.9664 19.2259 27.7568 19.2673 27.555C19.3143 27.3258 19.4806 27.1124 19.8132 26.6857L22.7778 22.8826C23.1293 22.4316 23.305 22.2062 23.5265 22.1045C23.7213 22.015 23.9396 21.9905 24.1493 22.0345C24.3879 22.0846 24.6092 22.2655 25.052 22.6272L27.5145 24.639C27.6782 24.7728 27.76 24.8396 27.8515 24.8872C27.9327 24.9294 28.0193 24.9603 28.1088 24.979C28.2098 25 28.3154 25 28.5268 25H30.2001C30.7601 25 31.0401 25 31.254 24.891C31.4422 24.7951 31.5952 24.6422 31.6911 24.454C31.8001 24.2401 31.8001 23.9601 31.8001 23.4V22.1763C31.8001 21.153 31.8001 20.6413 32.0116 20.3701C32.1957 20.1341 32.4759 19.993 32.7751 19.9855C33.1189 19.9769 33.5301 20.2815 34.3524 20.8906L34.3524 20.8906L43.5644 27.7143C44.1523 28.1498 44.4463 28.3676 44.5512 28.6353C44.643 28.8698 44.643 29.1302 44.5512 29.3647C44.4463 29.6324 44.1523 29.8502 43.5644 30.2857Z" fill="#b9aa5f"/><path d="M9.08594 6.00031C10.412 6.00035 11.6834 6.5275 12.6211 7.46515L14.857 9.47337C15.2586 9.83411 15.4594 10.0145 15.5461 10.2315C15.6224 10.4225 15.6379 10.6323 15.5906 10.8324C15.5368 11.0598 15.3647 11.2678 15.0206 11.6837L11.9467 15.3986C11.5815 15.8401 11.3988 16.0608 11.174 16.156C10.9764 16.2397 10.7571 16.2577 10.5485 16.2071C10.3112 16.1496 10.0952 15.9614 9.66311 15.5851L8.29553 14.3938C8.12834 14.2482 8.04474 14.1754 7.95013 14.1235C7.86621 14.0775 7.77612 14.0437 7.68262 14.0233C7.5772 14.0003 7.46634 14.0003 7.24462 14.0003H1.6C1.03995 14.0003 0.759921 14.0003 0.546009 13.8913C0.357847 13.7954 0.204867 13.6425 0.108993 13.4543C0 13.2404 0 12.9604 0 12.4003V7.60031C0 7.04025 0 6.76023 0.108993 6.54632C0.204867 6.35815 0.357847 6.20517 0.546009 6.1093C0.759921 6.00031 1.03995 6.00031 1.6 6.00031H9.08594Z" fill="#b9aa5f"/></g>'  }
+]
+
+// Display build modes (6 at a time, swap position 4 based on USER/CHORD mode)
+const buildModes = computed((): BuildMode[] => {
+  const modes = props.isUserMode
+    ? [
+        allBuildModes[0], // up
+        allBuildModes[1], // down
+        allBuildModes[2], // updown
+        allBuildModes[3], // exclusive
+        allBuildModes[5], // user (replaces inclusive)
+        allBuildModes[6]  // random
+      ]
+    : [
+        allBuildModes[0], // up
+        allBuildModes[1], // down
+        allBuildModes[2], // updown
+        allBuildModes[3], // exclusive
+        allBuildModes[4], // inclusive
+        allBuildModes[6]  // random
+      ]
+  return modes.filter((m): m is BuildMode => m !== undefined)
+})
 
 // Interval templates with musical descriptors
 const templates = ref<Template[]>([
@@ -368,6 +465,19 @@ function getPathPoints(): string {
     .join(' ')
 }
 
+// Get gate line length for user mode crosshairs
+// Maps gate value (50-100%) to line extension length
+// Lines never fully connect - max 34.5% of distance to leave gap
+function getGateLineLength(fromIdx: number, toIdx: number): number {
+  const gate = props.swingValue || 50
+  const distanceBetweenDots = Math.abs(getXPosition(toIdx) - getXPosition(fromIdx))
+  // Map gate 50-100% to 10-34.5% of distance (never reaches 50% = never connects)
+  // At 50% gate: lines are 10% of distance (very short)
+  // At 100% gate: lines are 34.5% of distance (close but not touching)
+  const percentage = ((gate - 50) / 50) * 0.245 + 0.1
+  return distanceBetweenDots * percentage
+}
+
 // Check if dot should split for swing visualization
 function shouldSplitDot(index: number): boolean {
   const swing = props.swingValue || 50
@@ -423,6 +533,10 @@ function selectBuildMode(mode: string) {
     const sorted = [...baseIntervals.value].sort((a, b) => a - b)
     
     switch (mode) {
+      case 'user':
+        // User order: keep original input sequence (don't sort)
+        intervals.value = [...baseIntervals.value]
+        break
       case 'up':
         intervals.value = sorted
         break
@@ -455,7 +569,7 @@ function selectBuildMode(mode: string) {
         }
         break
       case 'exclusive':
-        // Outward inward: start from edges and converge to center
+        // Contract: start from edges and converge to center
         {
           const result: number[] = []
           let left = 0
@@ -550,9 +664,8 @@ function getTemplateForChordType(chordType: number): number {
 
 .build-modes-row {
   display: flex;
-  gap: var(--kb1-spacing-sm);
   padding: 0.25rem 0;
-  margin-right: 2rem;  /* Adjust to shift icons left/right */
+  margin-right: 2rem;
   justify-content: center;
   align-items: center;
 }
@@ -563,8 +676,8 @@ function getTemplateForChordType(chordType: number): number {
   justify-content: center;
   width: 48px;
   height: 48px;
-  min-width: 32px;
-  min-height: 32px;
+  min-width: 40px;
+  min-height: 40px;
   max-width: 48px;
   max-height: 48px;
   padding: 0;
@@ -574,6 +687,31 @@ function getTemplateForChordType(chordType: number): number {
   transition: all 0.2s ease;
   flex-shrink: 1;
   opacity: 0.3;
+}
+
+/* Individual spacing for each icon */
+.mode-btn:nth-child(1) {
+  margin-right: -0.25rem;  /* First icon - less padding */
+}
+
+.mode-btn:nth-child(2) {
+  margin-right: 0.5rem;  /* Second icon - less padding */
+}
+
+.mode-btn:nth-child(3) {
+  margin-right: 0.5rem;   /* Third icon - normal padding */
+}
+
+.mode-btn:nth-child(4) {
+  margin-right: 0.25rem;   /* Fourth icon - normal padding */
+}
+
+.mode-btn:nth-child(5) {
+  margin-right: 0.75rem;   /* Fifth icon - normal padding */
+}
+
+.mode-btn:nth-child(6) {
+  margin-right: 0;        /* Last icon - no padding */
 }
 
 .mode-btn:hover {
@@ -629,4 +767,75 @@ function getTemplateForChordType(chordType: number): number {
   font-family: var(--kb1-font-family);
   font-style: italic;
 }
+
+.build-mode-desc-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.latch-toggle-inline {
+  padding: 0.25rem 0.5rem;
+  background: rgba(234, 234, 234, 0.05);
+  border: 1px solid rgba(234, 234, 234, 0.15);
+  border-radius: 4px;
+  font-family: var(--kb1-font-family);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  color: rgba(234, 234, 234, 0.5);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.latch-toggle-inline:hover {
+  background: rgba(234, 234, 234, 0.08);
+  border-color: rgba(234, 234, 234, 0.25);
+}
+
+.latch-toggle-inline span {
+  transition: color 0.15s ease;
+}
+
+.latch-toggle-inline span.active {
+  color: #EAEAEA;
+}
+
+.latch-toggle-inline .toggle-divider {
+  margin: 0 0.25rem;
+  color: rgba(234, 234, 234, 0.3);
+}
+
+.latch-toggle-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-shrink: 0;
+}
+
+.info-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 1px solid #848484;
+  font-family: var(--kb1-font-family);
+  font-size: var(--kb1-font-tiny);
+  color: #848484;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.2s;
+  user-select: none;
+}
+
+.info-icon:hover {
+  color: var(--key-active-hover);
+  border-color: var(--key-active-hover);
+}
+
 </style>

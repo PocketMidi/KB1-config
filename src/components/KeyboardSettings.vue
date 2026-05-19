@@ -18,12 +18,20 @@
       >
         Chord
       </button>
+      <button 
+        class="mode-btn"
+        :class="{ active: playMode === 'arp' }"
+        @click="selectMode('arp')"
+        title="Arp Mode"
+      >
+        Arp
+      </button>
     </div>
 
     <!-- Keyboard Visualization -->
-    <div ref="keyboardRef" class="keyboard-visual" :class="{ 'chromatic-mode': isChromatic }">
-      <!-- Octave meter bars (only in CHORD mode) - positioned from left -->
-      <div v-if="playMode === 'chord'" ref="octaveMeterRef" class="octave-meter" :style="{ left: meterLeftPosition, right: 'auto' }">
+    <div v-if="playMode === 'scale' || playMode === 'chord' || playMode === 'arp'" ref="keyboardRef" class="keyboard-visual" :class="{ 'chromatic-mode': isChromatic, 'arp-user-mode': playMode === 'arp' && isArpUserMode, 'chord-display-mode': playMode === 'chord' || (playMode === 'arp' && !isArpUserMode) }">
+      <!-- Octave meter bars (only in CHORD mode and Arp CHORD sub-mode) - positioned from left -->
+      <div v-if="playMode === 'chord' || (playMode === 'arp' && !isArpUserMode)" ref="octaveMeterRef" class="octave-meter" :class="{ 'position-ready': meterPositionReady }" :style="{ left: meterLeftPosition, right: 'auto' }">
         <button
           v-for="n in 3"
           :key="n"
@@ -106,6 +114,7 @@
         <span class="toggle-divider">|</span>
         <span :class="{ active: !isNatural }">COMPACT</span>
       </button>
+      <span class="info-icon" @click.stop="showHelp('keyMapping')">i</span>
       
       <div class="dots-visualization" :class="{ 'wide-spacing': isNatural }">
         <div 
@@ -118,27 +127,27 @@
       </div>
     </div>
 
-    <!-- Chord Mode: Chord/Strum Toggle and Smart Slider -->
+    <!-- Chord Mode: Block/Strum Toggle and Smart Slider -->
     <div v-else-if="playMode === 'chord'" class="chord-controls">
-      <!-- Chord/Strum Toggle -->
+      <!-- Block/Strum Toggle -->
       <div class="mapping-toggle-row">
         <button 
           class="toggle-btn" 
           @click="handleChordToggleClick"
           :title="chordToggleTooltip"
         >
-          <span :class="{ active: isChordStyle }">CHORD</span>
+          <span :class="{ active: isChordStyle }">BLOCK</span>
           <span class="toggle-divider">|</span>
           <span :class="{ active: !isChordStyle }">STRUM</span>
         </button>
         
-        <!-- Interactive Visual: gradient bar for chord, adaptive dots for strum -->
+        <!-- Interactive Visual: gradient bar for block, adaptive dots for strum -->
         <div 
           class="chord-visualization-interactive"
           @mousedown="handleVisualizationMouseDown"
           @touchstart="handleVisualizationTouchStart"
         >
-          <!-- Chord: Velocity Gradient Bar (center-out) -->
+          <!-- Block: Velocity Gradient Bar (center-out) -->
           <div v-if="isChordStyle" class="chord-gradient-bar">
             <div class="velocity-gradient" :style="{ 
               background: createVelocityBands(visualSpread)
@@ -210,17 +219,38 @@
         </div>
       </div>
 
-      <!-- Strum Builder (only for STRUM mode) -->
-      <div v-if="!isChordStyle" class="strum-builder-section">
-        <!-- Strum builder content removed - SHAPE section moved below -->
+      <!-- Chord Swing Control (uses gateValue field for BLE compatibility) -->
+      <div class="group gate-control" :class="{ disabled: isChordStyle }">
+        <label>
+          SWING
+          <span class="info-icon" @click.stop="showHelp('chordSwing')">i</span>
+        </label>
+        <div class="duration-control-wrapper">
+          <ValueControl
+            v-model="chordSwingValue"
+            :min="10"
+            :max="100"
+            :step="5"
+            :small-step="5"
+            :large-step="10"
+            :reset-value="35"
+            :display-formatter="chordSwingDisplayFormatter"
+            :display-parser="chordSwingDisplayParser"
+          />
+          <span class="unit-label">%</span>
+          <svg class="gate-pie-chart" width="26" height="26" viewBox="0 0 26 26" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="13" cy="13" r="11" stroke="rgba(185, 170, 95, 1)" stroke-width="1.5" fill="none" />
+            <path :d="chordSwingPieChartPath" fill="#b9aa5f" />
+          </svg>
+        </div>
       </div>
     </div>
 
-    <!-- Type/Root Note Selectors (for SCALE mode or CHORD/STRUM styles) -->
+    <!-- Type/Root Note Selectors (for SCALE mode or BLOCK/STRUM styles) -->
     <div v-if="playMode === 'scale' || playMode === 'chord'" class="inputs">
       <div class="group" :class="{ 'root-range-group': playMode === 'chord' }">
         <label>
-          {{ playMode === 'chord' ? 'ROOT NOTE/RANGE' : 'ROOT NOTE' }}
+          {{ playMode === 'chord' ? 'RANGE' : 'ROOT NOTE' }}
           <span v-if="playMode === 'chord'" 
                 class="info-icon" 
                 @click.stop="showHelp('voicing')">
@@ -233,28 +263,23 @@
           </span>
         </label>
         <div class="root-range-row">
+          <!-- Root note only applies in Scale mode; chord root is determined by which key is pressed -->
           <NotePickerControl
+            v-if="playMode === 'scale'"
             v-model.number="rootNoteValue"
             :notes="rootNotes"
             :disabled="isChromatic"
           />
           
-          <!-- Voicing dots control (for both CHORD and STRUM modes) -->
-          <div v-if="playMode === 'chord'" class="voicing-dots">
+          <!-- Voicing octave range selector (1, 2, or 3 octaves) -->
+          <div v-if="playMode === 'chord'" class="voicing-num-select">
             <button
               v-for="n in 3"
               :key="n"
-              class="dot-btn"
-              :class="{ active: voicingValue >= n }"
+              class="voicing-num-btn"
+              :class="{ active: voicingValue === n }"
               @click="voicingValue = n"
-              @mousedown="handleVoicingMouseDown"
-              @mouseenter="hoveredDot = n; handleVoicingMouseMove($event, n)"
-              @mouseleave="hoveredDot = 0"
-              @touchstart="handleVoicingTouchStart"
-              @touchmove="handleVoicingTouchMove($event, n)"
-            >
-              <span class="dot" :class="{ hovered: hoveredDot === n }"></span>
-            </button>
+            >{{ n }}</button>
           </div>
         </div>
       </div>
@@ -272,48 +297,140 @@
         </button>
       </div>
 
-      <!-- Static Mood Description Bar (for SCALE mode and CHORD style) -->
-      <div class="static-mood-bar" v-if="(playMode === 'scale' || isChordStyle) && currentMood">
+      <!-- Static Mood Description Bar (for SCALE mode, BLOCK style, and STRUM style) -->
+      <div class="static-mood-bar" v-if="(playMode === 'scale' || (playMode === 'chord' && currentMood)) && currentMood">
         <span class="mood-text" v-html="currentMood"></span>
       </div>
     </div>
 
-    <!-- Advanced Strum Collapsible Section (SHAPE - for STRUM mode) -->
-    <div v-if="playMode === 'chord' && !isChordStyle" class="advanced-strum-section" :class="{ 'active': advancedStrumOpen }">
-      <button 
-        class="advanced-strum-header"
-        @click="advancedStrumOpen = !advancedStrumOpen"
-      >
-        <span class="mood-text" v-html="currentMood"></span>
-        <div class="right-controls">
-          <span class="adv-label">SHAPE</span>
-          <span class="icon">{{ advancedStrumOpen ? '−' : '+' }}</span>
+    <!-- Arp Mode: CHORD/USER Toggle and Controls -->
+    <div v-if="playMode === 'arp'" class="arp-controls">
+      <!-- Mode toggles row -->
+      <div class="mapping-toggle-row">
+        <!-- Chord/User Toggle -->
+        <button 
+          class="toggle-btn" 
+          @click="toggleArpMode"
+          :title="arpModeTooltip"
+        >
+          <span :class="{ active: !isArpUserMode }">CHORD</span>
+          <span class="toggle-divider">|</span>
+          <span :class="{ active: isArpUserMode }">USER</span>
+        </button>
+        
+        <!-- Rate dots visualization (interactive) -->
+        <div 
+          class="chord-visualization-interactive"
+          @mousedown="handleArpDotsMouseDown"
+          @touchstart="handleArpDotsTouchStart"
+        >
+          <div class="strum-adaptive-dots">
+            <div 
+              v-for="i in 8" 
+              :key="`arp-dot-${i}`" 
+              class="dot active yellow"
+              :style="{ left: `${arpDotPositions[i-1]}%` }"
+            ></div>
+          </div>
         </div>
-      </button>
+      </div>
 
-      <div v-if="advancedStrumOpen" class="advanced-strum-content">
-        <PatternBuilder 
-          v-model="strumIntervals"
-          v-model:mode="buildMode"
-          :chord-type="typeValue"
-          :swing-value="swingValue"
-          :reverse="model.chord.strumSpeed < 0"
-        />
-
-        <!-- Swing Control -->
-        <div class="swing-control">
-          <label>SWING</label>
+      <!-- RATE Control (always shown, at top) -->
+      <div class="arp-rate-section">
+        <div class="group">
+          <label>RATE</label>
           <div class="duration-control-wrapper">
             <ValueControl
-              v-model="swingValue"
+              v-model="arpSpeedValue"
+              :min="5"
+              :max="360"
+              :step="5"
+              :small-step="5"
+              :large-step="10"
+              :reset-value="80"
+              :left-label="'<'"
+              :right-label="'>'"
+              :display-formatter="arpDisplayFormatter"
+              :left-disabled="arpLeftDisabled"
+              :right-disabled="arpRightDisabled"
+            />
+            <span class="unit-label">ms</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- SHAPE Controls (Pattern + Swing/Glide) -->
+      <div class="arp-shape-section">
+        <PatternBuilder 
+          v-model="arpIntervals"
+          v-model:mode="arpBuildMode"
+          :chord-type="arpChordType"
+          :swing-value="arpSwingValue"
+          :reverse="arpReversed"
+          :is-user-mode="isArpUserMode"
+          :latch-mode="isArpLatched"
+          @latch-toggle="toggleArpLatch"
+          @show-latch-help="(mode) => showHelp(mode as any)"
+        />
+
+        <!-- Swing/Glide Control -->
+        <div class="swing-control">
+          <label>
+            SWING
+            <span class="info-icon" @click.stop="showHelp('swing')">i</span>
+          </label>
+          <div class="duration-control-wrapper">
+            <ValueControl
+              v-model="arpSwingValue"
               :min="50"
               :max="100"
               :step="5"
               :small-step="5"
               :large-step="10"
+              :reset-value="65"
             />
             <span class="unit-label">%</span>
           </div>
+        </div>
+      </div>
+
+      <!-- Root Note/Range and Chord Type (only in CHORD mode) -->
+      <div v-if="!isArpUserMode" class="arp-type-selectors inputs">
+        <div class="group root-range-group">
+          <label>
+            RANGE
+            <span class="info-icon" @click.stop="showHelp('voicing')">i</span>
+          </label>
+          <div class="root-range-row">
+            <!-- Root note has no effect in Arp mode; the played key sets the root -->
+            <!-- Voicing octave range selector (1, 2, or 3 octaves) -->
+            <div class="voicing-num-select">
+              <button
+                v-for="n in 3"
+                :key="n"
+                class="voicing-num-btn"
+                :class="{ active: voicingValue === n }"
+                @click="voicingValue = n"
+              >{{ n }}</button>
+            </div>
+          </div>
+        </div>
+        <div class="input-divider"></div>
+
+        <div class="group">
+          <label>CHORD TYPE</label>
+          <button 
+            ref="typeTriggerRef"
+            class="picker-trigger"
+            @click="typePickerOpen = true"
+          >
+            {{ selectedTypeLabel }}
+          </button>
+        </div>
+
+        <!-- Static Mood Description Bar (for CHORD arp mode) -->
+        <div class="static-mood-bar" v-if="currentMood">
+          <span class="mood-text" v-html="currentMood"></span>
         </div>
       </div>
     </div>
@@ -365,16 +482,30 @@ type ChordModel = {
   strumEnabled: boolean
   strumSpeed: number
   strumPattern: number  // Kept for backward compatibility
-  strumSwing: number
+  strumSwing: number    // Swing for ARP mode (0-50 firmware, 50-100% UI)
+  gateValue: number     // CHORD swing amount (10-100 internal, shown as 50-100% UI)
   voicing: number       // 1-3 (octave range: 1x, 2x, 3x)
   strumIntervals?: number[]  // Array of semitone intervals
   buildMode?: string    // 'up', 'down', 'updown', 'custom', etc.
+  arpUserMode?: number  // Arp mode: 0 = CHORD, 1 = USER (synced for PatternSelector)
+  arpLatchMode?: number // Arp latch: 0 = MOMENTARY, 1 = LATCHED
+}
+
+type ArpModel = {
+  chordType: number          // Chord type for pattern generation
+  intervals: number[]        // Array of semitone intervals
+  buildMode: string          // 'up', 'down', 'updown', 'custom', etc.
+  swing: number              // 0-100 (firmware value)
+  speed: number              // -360 to -5 (reverse) or 5 to 360 (forward)
+  userMode: boolean          // false = chord-based, true = user-defined
+  latchMode: boolean         // false = momentary, true = latched
 }
 
 type KeyboardModel = {
-  mode: 'scale' | 'chord'
+  mode: 'scale' | 'chord' | 'arp'
   scale: ScaleModel
   chord: ChordModel
+  arp: ArpModel
 }
 
 const props = defineProps<{
@@ -389,6 +520,7 @@ const emit = defineEmits<{
   (e: 'mappingChanged', mappingName: string): void
   (e: 'chordStyleChanged', styleName: string): void
   (e: 'chromaticWarning', message: string): void
+  (e: 'arpLatchChanged', latchName: string): void
 }>()
 
 const model = computed({
@@ -399,13 +531,13 @@ const model = computed({
 // Play mode
 const playMode = computed({
   get: () => model.value.mode,
-  set: (v: 'scale' | 'chord') => {
+  set: (v: 'scale' | 'chord' | 'arp') => {
     const updated = { ...model.value, mode: v }
     emit('update:modelValue', updated)
   }
 })
 
-function selectMode(mode: 'scale' | 'chord') {
+function selectMode(mode: 'scale' | 'chord' | 'arp') {
   playMode.value = mode
 }
 
@@ -413,12 +545,10 @@ function selectMode(mode: 'scale' | 'chord') {
 const typePickerOpen = ref(false)
 const typeTriggerRef = ref<HTMLElement | null>(null)
 
-// Voicing dots hover state
-const hoveredDot = ref(0)
-
 // Octave meter positioning
 const keyboardRef = ref<HTMLElement | null>(null)
-const meterLeftPosition = ref('auto')
+const meterLeftPosition = ref('0px')
+const meterPositionReady = ref(false)
 
 // Help modal system
 const showHelpModal = ref(false)
@@ -430,12 +560,32 @@ const helpTexts = {
     description: 'The starting note of the scale. All other scale degrees are built from this fundamental pitch.'
   },
   voicing: {
-    title: 'Root Note and Range',
-    description: '<strong>Root Note:</strong> The starting note of the chord. All other chord notes are built from this fundamental pitch.<br><br><strong>Octave Range:</strong> Stack chord voicing across 1-3 octaves for fuller sound.'
+    title: 'Range',
+    description: '<strong>Octave Range:</strong> Stack chord voicing across 1-3 octaves for a fuller sound.'
   },
   velocitySpread: {
     title: 'Velocity Spread',
     description: 'Velocity envelope across chord notes. <strong>Lower values</strong> = tight envelope (punchy attack/decay). <strong>Higher values</strong> = gentle envelope (smooth blend).'
+  },
+  keyMapping: {
+    title: 'Key Mapping',
+    description: '<strong>Natural (Mapped):</strong> Keys follow piano layout — naturals and sharps in position. Some keys inactive depending on scale.<br><br><strong>Compact (Efficient):</strong> Scale notes only, packed consecutively. No inactive keys — every key plays a note.'
+  },
+  chordSwing: {
+    title: 'Swing',
+    description: 'Chord timing swing (long-short feel). <strong>10%</strong> = straight 50/50 timing. <strong>100%</strong> = swung timing close to 66/33 (triplet feel). This control shapes note spacing in chord strum timing, separate from ARP swing.'
+  },
+  swing: {
+    title: 'Swing',
+    description: 'Rhythmic timing humanization. <strong>50%</strong> = straight timing (robotic, metronomic). <strong>Higher values</strong> = delayed off-beat notes (shuffle, groove feel). Adds musical expression to arpeggios.'
+  },
+  latchModeChord: {
+    title: 'MOM / LAT',
+    description: '<strong>MOM (Momentary):</strong> Arpeggio plays while keys are held. Release all keys to stop.<br><br><strong>LAT (Latched):</strong> Arpeggio continues after keys are released. To stop, re-press the last key.'
+  },
+  latchModeUser: {
+    title: 'MOM / LAT',
+    description: '<strong>MOM (Momentary):</strong> Arpeggio plays while keys are held. Release all keys to stop.<br><br><strong>LAT (Latched):</strong> Arpeggio continues after keys are released. To stop, press and hold any single key until arpeggio stops.'
   }
 }
 
@@ -465,9 +615,19 @@ const hintDismissedPermanently = ref(localStorage.getItem(HINT_STORAGE_KEY) === 
 
 // Update octave meter position to align with last F key
 function updateMeterPosition() {
-  if (!keyboardRef.value || playMode.value !== 'chord') {
+  if (!keyboardRef.value) {
     return
   }
+  
+  // Only calculate position when meter is visible
+  const shouldShowMeter = playMode.value === 'chord' || (playMode.value === 'arp' && !isArpUserMode.value)
+  if (!shouldShowMeter) {
+    meterPositionReady.value = false
+    return
+  }
+  
+  // Hide meter while recalculating position
+  meterPositionReady.value = false
   
   // Use setTimeout to ensure layout is fully settled
   setTimeout(() => {
@@ -487,6 +647,7 @@ function updateMeterPosition() {
     const finalPosition = distanceFromLeft - 12
     
     meterLeftPosition.value = `${Math.max(0, finalPosition)}px`
+    meterPositionReady.value = true
   }, 100)
 }
 
@@ -563,13 +724,30 @@ watch(() => props.modelValue.chord, (newChord) => {
   latestChord.value = { ...newChord }
 }, { deep: true })
 
+// Local state to track latest arp values (prevents stale prop spreading)
+const latestArp = ref({ 
+  chordType: props.modelValue.arp?.chordType || 0,
+  intervals: props.modelValue.arp?.intervals || [0, 4, 7, 12],
+  buildMode: props.modelValue.arp?.buildMode || 'inclusive',
+  swing: props.modelValue.arp?.swing ?? 15,  // Default to 65% UI (15 firmware = subtle swing)
+  speed: props.modelValue.arp?.speed || 110,
+  userMode: props.modelValue.arp?.userMode ?? false,  // Default to CHORD mode
+  latchMode: props.modelValue.arp?.latchMode ?? false  // Default to MOMENTARY
+})
+
+// Sync latestArp when prop changes from parent
+watch(() => props.modelValue.arp, (newArp) => {
+  if (newArp) {
+    latestArp.value = { ...newArp }
+  }
+}, { deep: true })
+
 // Auto-open shape panel when loading preset with strumPattern > 0
 watch(() => props.modelValue.chord.strumPattern, (newPattern, oldPattern) => {
   // Detect preset load: transition from 0 to >0 means preset with shape mode loaded
   // Reset the manual close flag to allow auto-opening
   if (oldPattern === 0 && newPattern > 0) {
     userClosedPanel.value = false
-    console.log('Preset with shape mode loaded - clearing manual close flag')
   }
   
   // Don't auto-open if user manually closed the panel during this session
@@ -595,53 +773,263 @@ watch(() => props.modelValue.chord.strumPattern, (newPattern, oldPattern) => {
 })
 
 // Strum builder state
-const strumIntervals = computed({
-  get: () => {
-    const intervals = model.value.chord.strumIntervals || [0, 4, 7, 12]
-    return intervals
-  },
-  set: (v: number[]) => {
-    latestChord.value.strumIntervals = v
-    const updated = { ...model.value }
-    updated.chord = { ...latestChord.value }
-    emit('update:modelValue', updated)
-  }
-})
-
-const buildMode = computed({
-  get: () => {
-    const mode = model.value.chord.buildMode || 'up'
-    return mode
-  },
-  set: (v: string) => {
-    latestChord.value.buildMode = v
-    const updated = { ...model.value }
-    updated.chord = { ...latestChord.value }
-    emit('update:modelValue', updated)
-  }
-})
-
-// Swing control - UI displays 50-100%, firmware uses 0-100%
+// Swing control - UI displays 50-100%, firmware uses 0-50
 function swingUiToFirmware(uiValue: number): number {
-  // Map 50-100% (UI) to 0-100 (firmware)
-  return Math.max(0, Math.min(100, uiValue - 50))
+  // Map 50-100% (UI) to 0-50 (firmware)
+  return Math.max(0, Math.min(50, uiValue - 50))
 }
 
 function swingFirmwareToUi(firmwareValue: number): number {
-  // Map 0-100 (firmware) to 50-100% (UI)
+  // Map 0-50 (firmware) to 50-100% (UI)
   return Math.max(50, Math.min(100, firmwareValue + 50))
 }
 
-const swingValue = computed({
-  get: () => swingFirmwareToUi(model.value.chord.strumSwing || 0),
-  set: (v: number) => {
-    latestChord.value.strumSwing = swingUiToFirmware(v)
+// Arp mode computed properties
+const arpIntervals = computed({
+  get: () => latestArp.value.intervals,
+  set: (v: number[]) => {
+    latestArp.value.intervals = v
     const updated = { ...model.value }
-    updated.chord = { ...latestChord.value }
+    updated.arp = { ...latestArp.value }
+    // Mirror into chord. Also re-sync strumPattern and buildMode from latestArp —
+    // PatternBuilder emits update:mode then update:modelValue in the same tick.
+    // The second emit (intervals) reads stale model.value, so strumPattern set by
+    // the first emit would be lost. Using latestArp (already updated) avoids this.
+    updated.chord = {
+      ...updated.chord,
+      strumIntervals: v,
+      strumPattern: buildModeToStrumPattern(latestArp.value.buildMode, latestArp.value.userMode),
+      buildMode: latestArp.value.buildMode
+    }
     emit('update:modelValue', updated)
   }
 })
 
+const arpBuildMode = computed({
+  get: () => latestArp.value.buildMode,
+  set: (v: string) => {
+    latestArp.value.buildMode = v
+    const updated = { ...model.value }
+    updated.arp = { ...latestArp.value }
+    // Mirror into chord: strumPattern integer + buildMode string
+    updated.chord = {
+      ...updated.chord,
+      strumPattern: buildModeToStrumPattern(v, latestArp.value.userMode),
+      buildMode: v
+    }
+    emit('update:modelValue', updated)
+  }
+})
+
+const arpChordType = computed(() => {
+  return model.value.arp?.chordType || 0
+})
+
+const arpSwingValue = computed({
+  get: () => swingFirmwareToUi(latestArp.value.swing),
+  set: (v: number) => {
+    latestArp.value.swing = swingUiToFirmware(v)
+    const updated = { ...model.value }
+    updated.arp = { ...latestArp.value }
+    // Mirror into chord so both sections of MobileScales setter have the new value
+    updated.chord = { ...updated.chord, strumSwing: latestArp.value.swing }
+    emit('update:modelValue', updated)
+  }
+})
+
+// Arp mode: CHORD vs USER mode
+const isArpUserMode = computed({
+  get: () => latestArp.value.userMode,
+  set: (v: boolean) => {
+    latestArp.value.userMode = v
+    const updated = { ...model.value }
+    updated.arp = { ...latestArp.value }
+    // Update chord.arpUserMode so PatternSelector icons react to changes
+    updated.chord.arpUserMode = v ? 1 : 0
+    emit('update:modelValue', updated)
+  }
+})
+
+const arpModeTooltip = computed(() => {
+  return isArpUserMode.value ? 'Switch to Chord' : 'Switch to User'
+})
+
+// Maps UI build mode string to firmware strumPattern integer.
+// P1=Up, P2=Down, P3=Bounce, P4=Contract(Exclusive), P5=Expand(Inclusive)/UserOrder, P6=Random
+function buildModeToStrumPattern(mode: string, _userMode: boolean): number {
+  switch (mode) {
+    case 'up':        return 1
+    case 'down':      return 2
+    case 'updown':    return 3
+    case 'exclusive': return 4  // Contract / Edges-to-center — firmware P4
+    case 'inclusive': return 5  // Expand / Center-outward — firmware P5
+    case 'user':      return 5  // USER press order — firmware P5 (USER mode)
+    case 'random':    return 6  // Random shuffle — firmware P6
+    default:          return 1
+  }
+}
+
+function toggleArpMode() {
+  isArpUserMode.value = !isArpUserMode.value
+  
+  // Auto-switch to appropriate pattern when toggling modes
+  // Position 5 is 'inclusive' (expand) in CHORD mode and 'user' (press order) in USER mode
+  latestArp.value.buildMode = isArpUserMode.value ? 'user' : 'inclusive'
+  const updated = { ...model.value }
+  updated.arp = { ...latestArp.value }
+  // Both default to P5 (expand in CHORD, user-order in USER)
+  updated.chord.strumPattern = buildModeToStrumPattern(latestArp.value.buildMode, isArpUserMode.value)
+  // Update arpUserMode so PatternSelector icons update in PRESS/TOUCH settings
+  updated.chord.arpUserMode = isArpUserMode.value ? 1 : 0
+  emit('update:modelValue', updated)
+}
+
+// Arp mode: Momentary vs Latched
+const isArpLatched = computed({
+  get: () => latestArp.value.latchMode,
+  set: (v: boolean) => {
+    latestArp.value.latchMode = v
+    const updated = { ...model.value }
+    updated.arp = { ...latestArp.value }
+    emit('update:modelValue', updated)
+  }
+})
+
+function toggleArpLatch() {
+  isArpLatched.value = !isArpLatched.value
+  emit('arpLatchChanged', isArpLatched.value ? 'Latched' : 'Momentary')
+}
+
+// Arp speed control (similar to strum speed)
+const arpSpeedValue = computed({
+  get: () => Math.abs(latestArp.value.speed),
+  set: (v: number) => {
+    const isReversed = latestArp.value.speed < 0
+    latestArp.value.speed = isReversed ? -v : v
+    const updated = { ...model.value }
+    updated.arp = { ...latestArp.value }
+    emit('update:modelValue', updated)
+  }
+})
+
+const arpReversed = computed({
+  get: () => latestArp.value.speed < 0,
+  set: (v: boolean) => {
+    const currentSpeed = Math.abs(latestArp.value.speed)
+    latestArp.value.speed = v ? -currentSpeed : currentSpeed
+    const updated = { ...model.value }
+    updated.arp = { ...latestArp.value }
+    emit('update:modelValue', updated)
+  }
+})
+
+// Watch for arp user mode changes (affects meter visibility)
+watch(isArpUserMode, () => {
+  updateMeterPosition()
+})
+
+// Display formatter for arp speed - always show positive value
+const arpDisplayFormatter = (value: number): string => {
+  return `${value}`
+}
+
+// Disable arrows at actual extremes (5-360)
+const arpLeftDisabled = computed(() => {
+  return arpSpeedValue.value === 360 // Slow (max)
+})
+
+const arpRightDisabled = computed(() => {
+  return arpSpeedValue.value === 5 // Fast (min)
+})
+
+// Adaptive dot positions for arp rate visualization
+const arpDotPositions = computed(() => {
+  const speed = arpSpeedValue.value // 5 to 360 (always positive)
+  const positions: number[] = []
+  
+  // Map speed to spacing (same logic as strum mode)
+  const minUsage = 0.20  // Very tight at 5ms
+  const maxUsage = 0.95  // Wide at 360ms
+  const speedNormalized = (speed - 5) / 355 // 0.0 to 1.0
+  const usage = minUsage + speedNormalized * (maxUsage - minUsage)
+  
+  const totalWidth = 100 // percentage
+  const usedWidth = totalWidth * usage
+  const margin = (totalWidth - usedWidth) / 2
+  
+  // Distribute 8 dots evenly across usedWidth
+  for (let i = 0; i < 8; i++) {
+    const t = i / 7 // 0.0 to 1.0 (7 gaps for 8 dots)
+    positions.push(margin + t * usedWidth)
+  }
+  
+  return positions
+})
+
+// Arp rate dots drag handlers
+const updateArpValueFromPosition = (clientX: number, rect: DOMRect) => {
+  const percentage = Math.max(0, Math.min(100, ((clientX - rect.left) / rect.width) * 100))
+  
+  // Left = 5ms (fast, tight dots), right = 360ms (slow, wide dots)
+  const min = 5
+  const max = 360
+  const range = max - min
+  const rawValue = min + (percentage / 100) * range
+  
+  // Snap to multiples of 5ms (firmware requirement)
+  const snappedValue = Math.round(rawValue / 5) * 5
+  const clampedValue = Math.max(min, Math.min(max, snappedValue))
+  
+  if (clampedValue !== arpSpeedValue.value) {
+    arpSpeedValue.value = clampedValue
+  }
+}
+
+const handleArpDotsMouseDown = (e: MouseEvent) => {
+  e.preventDefault()
+  const target = e.currentTarget as HTMLElement
+  const rect = target.getBoundingClientRect()
+  updateArpValueFromPosition(e.clientX, rect)
+  
+  const handleMouseMove = (e: MouseEvent) => {
+    updateArpValueFromPosition(e.clientX, rect)
+  }
+  
+  const handleMouseUp = () => {
+    document.removeEventListener('mousemove', handleMouseMove)
+    document.removeEventListener('mouseup', handleMouseUp)
+  }
+  
+  document.addEventListener('mousemove', handleMouseMove)
+  document.addEventListener('mouseup', handleMouseUp)
+}
+
+const handleArpDotsTouchStart = (e: TouchEvent) => {
+  if (e.touches.length !== 1) return
+  const target = e.currentTarget as HTMLElement
+  const rect = target.getBoundingClientRect()
+  const touch = e.touches[0]
+  if (!touch) return
+  updateArpValueFromPosition(touch.clientX, rect)
+  
+  const handleTouchMove = (e: TouchEvent) => {
+    if (e.touches.length !== 1) return
+    const touch = e.touches[0]
+    if (!touch) return
+    e.preventDefault()
+    updateArpValueFromPosition(touch.clientX, rect)
+  }
+  
+  const handleTouchEnd = () => {
+    document.removeEventListener('touchmove', handleTouchMove)
+    document.removeEventListener('touchend', handleTouchEnd)
+  }
+  
+  document.addEventListener('touchmove', handleTouchMove)
+  document.addEventListener('touchend', handleTouchEnd)
+}
+
+// Adaptive dot positions for arp visualization (reuse strum logic)
 // Dynamic labels and values based on mode
 const leftLabel = computed(() => {
   return playMode.value === 'scale' ? 'SCALE TYPE' : 'CHORD TYPE'
@@ -664,6 +1052,11 @@ const typeValue = computed({
       }
     } else {
       updated.chord = { ...updated.chord, chordType: v }
+      // In arp mode, keep arp.chordType in sync — the MobileScales arp block
+      // overwrites chord.chordType from arp.chordType, so both must be updated.
+      if (playMode.value === 'arp' && updated.arp) {
+        updated.arp = { ...updated.arp, chordType: v }
+      }
     }
     emit('update:modelValue', updated)
   }
@@ -818,18 +1211,18 @@ const handleScaleToggleClick = () => {
 const isChordStyle = computed(() => !model.value.chord.strumEnabled)
 
 const chordToggleTooltip = computed(() => {
-  return isChordStyle.value ? 'Switch to Strum' : 'Switch to Chord'
+  return isChordStyle.value ? 'Switch to Strum' : 'Switch to Block'
 })
 
 const handleChordToggleClick = () => {
   const isCurrentlyChord = isChordStyle.value
-  const newStyleName = isCurrentlyChord ? 'Strum Mode' : 'Chord Mode'
+  const newStyleName = isCurrentlyChord ? 'Strum Mode' : 'Block Mode'
   emit('chordStyleChanged', newStyleName)
   
   const updated = { ...model.value }
   updated.chord = { ...updated.chord, strumEnabled: isCurrentlyChord }
   
-  // When switching TO CHORD mode (from strum), close shape panel and reset pattern
+  // When switching TO BLOCK mode (from strum), close shape panel and reset pattern
   if (!isCurrentlyChord) {
     advancedStrumOpen.value = false
     updated.chord.strumPattern = 0
@@ -870,7 +1263,67 @@ const smartSliderMin = computed(() => isChordStyle.value ? 10 : 5)
 const smartSliderMax = computed(() => isChordStyle.value ? 100 : 360)
 
 const smartSliderLabel = computed(() => {
-  return isChordStyle.value ? 'VELOCITY SPREAD' : 'STRUM SPEED'
+  return isChordStyle.value ? 'VELOCITY SPREAD' : 'RATE'
+})
+
+// Chord swing control (stored in gateValue field for BLE compatibility).
+// Important: touch mode terminology still uses "Gate" in touch-specific components/pages.
+const chordSwingValue = computed({
+  get: () => model.value.chord.gateValue ?? 35,
+  set: (v: number) => {
+    const updated = { ...model.value }
+    updated.chord = { ...updated.chord, gateValue: v }
+    emit('update:modelValue', updated)
+  }
+})
+
+// Display mapping only: firmware stores 10-100 in gateValue, UI shows 50-100 for continuity
+// with ARP swing text while keeping the same binary protocol field.
+const getChordSwingDisplayPercent = (value: number): number => {
+  const clamped = Math.max(10, Math.min(100, value))
+  return 50 + ((clamped - 10) * 50) / 90
+}
+
+const chordSwingDisplayFormatter = (value: number): string => {
+  return String(Math.round(getChordSwingDisplayPercent(value)))
+}
+
+const chordSwingDisplayParser = (displayValue: string): number => {
+  const parsed = parseFloat(displayValue)
+  if (Number.isNaN(parsed)) return NaN
+  const clampedDisplay = Math.max(50, Math.min(100, parsed))
+  const raw = 10 + ((clampedDisplay - 50) * 90) / 50
+  return raw
+}
+
+// Swing pie chart visualization
+const chordSwingPieChartPath = computed(() => {
+  const percentage = getChordSwingDisplayPercent(chordSwingValue.value) / 100 // 0.5 to 1.0
+  const angle = percentage * 360 // degrees
+  const radians = (angle - 90) * (Math.PI / 180) // Start from top (12 o'clock)
+  
+  const cx = 13 // center x (matches SVG circle)
+  const cy = 13 // center y (matches SVG circle)
+  const r = 11 // radius (matches SVG circle)
+  
+  // Start point (top of circle)
+  const startX = cx
+  const startY = cy - r
+  
+  // End point based on angle
+  const endX = cx + r * Math.cos(radians)
+  const endY = cy + r * Math.sin(radians)
+  
+  // Use large arc flag when angle > 180 degrees
+  const largeArcFlag = angle > 180 ? 1 : 0
+  
+  // Build path: Move to center, Line to start, Arc to end, close path
+  if (angle >= 360) {
+    // Full circle
+    return `M ${cx},${cy} m 0,-${r} a ${r},${r} 0 1,1 0,${2*r} a ${r},${r} 0 1,1 0,-${2*r} Z`
+  } else {
+    return `M ${cx},${cy} L ${startX},${startY} A ${r},${r} 0 ${largeArcFlag},1 ${endX},${endY} Z`
+  }
 })
 
 const smartSliderUnit = computed(() => {
@@ -1335,13 +1788,20 @@ function isNoteActive(midiNote: number): boolean {
     const intervals = scaleIntervals[scaleType] || []
     const noteOffset = (midiNote - rootNote + 120) % 12
     return intervals.includes(noteOffset)
-  } else {
+  } else if (playMode.value === 'chord') {
     // Chord mode: show chord tones
     const chordType = model.value.chord.chordType
     const intervals = chordIntervals[chordType] || []
     const noteOffset = (midiNote - rootNote + 120) % 12
     return intervals.includes(noteOffset)
+  } else if (playMode.value === 'arp') {
+    // Arp mode: show chord tones (same as chord mode)
+    const chordType = model.value.chord.chordType
+    const intervals = chordIntervals[chordType] || []
+    const noteOffset = (midiNote - rootNote + 120) % 12
+    return intervals.includes(noteOffset)
   }
+  return false
 }
 
 function isRootNote(midiNote: number): boolean {
@@ -1521,6 +1981,13 @@ function handleKeyClick(midiNote: number) {
   animation: none;
 }
 
+/* Remove root-note outlines in arp user mode (same as chromatic) */
+.arp-user-mode .key.root-note,
+.chord-display-mode .key.root-note {
+  box-shadow: none;
+  animation: none;
+}
+
 .key.clickable {
   cursor: pointer;
 }
@@ -1647,6 +2114,170 @@ function handleKeyClick(midiNote: number) {
 .chromatic-mode .top-row .key:nth-child(7) .note-label-alt,
 .chromatic-mode .top-row .key:nth-child(7) { animation-delay: 1.05s; }
 
+/* Chord / Arp-Chord mode - keyboard shows ambient pulse (root note is set by playing a key) */
+.chord-display-mode .key {
+  pointer-events: none;
+}
+
+.chord-display-mode .key.active,
+.chord-display-mode .key:not(.active) {
+  background-color: rgba(var(--key-active-rgb), 0.25);
+  color: rgba(255, 255, 255, 0.85);
+  animation: chromatic-key-pulse 4s ease-in-out infinite;
+}
+
+.chord-display-mode .key .note-label,
+.chord-display-mode .key .note-label-alt {
+  animation: chromatic-text-pulse 4s ease-in-out infinite;
+}
+
+/* Center-out timing for Chord Display Mode: Bottom row */
+.chord-display-mode .bottom-row .key:nth-child(6) .note-label,
+.chord-display-mode .bottom-row .key:nth-child(6) { animation-delay: 0s; }
+.chord-display-mode .bottom-row .key:nth-child(5) .note-label,
+.chord-display-mode .bottom-row .key:nth-child(5),
+.chord-display-mode .bottom-row .key:nth-child(7) .note-label,
+.chord-display-mode .bottom-row .key:nth-child(7) { animation-delay: 0.3s; }
+.chord-display-mode .bottom-row .key:nth-child(4) .note-label,
+.chord-display-mode .bottom-row .key:nth-child(4),
+.chord-display-mode .bottom-row .key:nth-child(8) .note-label,
+.chord-display-mode .bottom-row .key:nth-child(8) { animation-delay: 0.6s; }
+.chord-display-mode .bottom-row .key:nth-child(3) .note-label,
+.chord-display-mode .bottom-row .key:nth-child(3),
+.chord-display-mode .bottom-row .key:nth-child(9) .note-label,
+.chord-display-mode .bottom-row .key:nth-child(9) { animation-delay: 0.9s; }
+.chord-display-mode .bottom-row .key:nth-child(2) .note-label,
+.chord-display-mode .bottom-row .key:nth-child(2),
+.chord-display-mode .bottom-row .key:nth-child(10) .note-label,
+.chord-display-mode .bottom-row .key:nth-child(10) { animation-delay: 1.2s; }
+.chord-display-mode .bottom-row .key:nth-child(1) .note-label,
+.chord-display-mode .bottom-row .key:nth-child(1),
+.chord-display-mode .bottom-row .key:nth-child(11) .note-label,
+.chord-display-mode .bottom-row .key:nth-child(11) { animation-delay: 1.5s; }
+.chord-display-mode .bottom-row .key:nth-child(12) .note-label,
+.chord-display-mode .bottom-row .key:nth-child(12) { animation-delay: 1.8s; }
+
+/* Center-out timing for Chord Display Mode: Top row */
+.chord-display-mode .top-row .key:nth-child(4) .note-label,
+.chord-display-mode .top-row .key:nth-child(4) .note-label-alt,
+.chord-display-mode .top-row .key:nth-child(4) { animation-delay: 0.15s; }
+.chord-display-mode .top-row .key:nth-child(3) .note-label,
+.chord-display-mode .top-row .key:nth-child(3) .note-label-alt,
+.chord-display-mode .top-row .key:nth-child(3),
+.chord-display-mode .top-row .key:nth-child(5) .note-label,
+.chord-display-mode .top-row .key:nth-child(5) .note-label-alt,
+.chord-display-mode .top-row .key:nth-child(5) { animation-delay: 0.45s; }
+.chord-display-mode .top-row .key:nth-child(2) .note-label,
+.chord-display-mode .top-row .key:nth-child(2) .note-label-alt,
+.chord-display-mode .top-row .key:nth-child(2),
+.chord-display-mode .top-row .key:nth-child(6) .note-label,
+.chord-display-mode .top-row .key:nth-child(6) .note-label-alt,
+.chord-display-mode .top-row .key:nth-child(6) { animation-delay: 0.75s; }
+.chord-display-mode .top-row .key:nth-child(1) .note-label,
+.chord-display-mode .top-row .key:nth-child(1) .note-label-alt,
+.chord-display-mode .top-row .key:nth-child(1),
+.chord-display-mode .top-row .key:nth-child(7) .note-label,
+.chord-display-mode .top-row .key:nth-child(7) .note-label-alt,
+.chord-display-mode .top-row .key:nth-child(7) { animation-delay: 1.05s; }
+
+/* Arp User Mode - keyboard grayed out with pulse (like chromatic) */
+.arp-user-mode .key {
+  pointer-events: none;
+}
+
+/* All keys get uniform styling (no active/inactive distinction) */
+.arp-user-mode .key.active,
+.arp-user-mode .key:not(.active) {
+  background-color: rgba(var(--key-active-rgb), 0.25);
+  color: rgba(255, 255, 255, 0.85);
+  animation: chromatic-key-pulse 4s ease-in-out infinite;
+}
+
+.arp-user-mode .key .note-label,
+.arp-user-mode .key .note-label-alt {
+  animation: chromatic-text-pulse 4s ease-in-out infinite;
+}
+
+/* Center-out timing for Arp User Mode: Bottom row (12 keys, center at G = index 6) */
+.arp-user-mode .bottom-row .key:nth-child(6) .note-label,
+.arp-user-mode .bottom-row .key:nth-child(6) { animation-delay: 0s; } /* G - center */
+.arp-user-mode .bottom-row .key:nth-child(5) .note-label,
+.arp-user-mode .bottom-row .key:nth-child(5),
+.arp-user-mode .bottom-row .key:nth-child(7) .note-label,
+.arp-user-mode .bottom-row .key:nth-child(7) { animation-delay: 0.3s; }
+.arp-user-mode .bottom-row .key:nth-child(4) .note-label,
+.arp-user-mode .bottom-row .key:nth-child(4),
+.arp-user-mode .bottom-row .key:nth-child(8) .note-label,
+.arp-user-mode .bottom-row .key:nth-child(8) { animation-delay: 0.6s; }
+.arp-user-mode .bottom-row .key:nth-child(3) .note-label,
+.arp-user-mode .bottom-row .key:nth-child(3),
+.arp-user-mode .bottom-row .key:nth-child(9) .note-label,
+.arp-user-mode .bottom-row .key:nth-child(9) { animation-delay: 0.9s; }
+.arp-user-mode .bottom-row .key:nth-child(2) .note-label,
+.arp-user-mode .bottom-row .key:nth-child(2),
+.arp-user-mode .bottom-row .key:nth-child(10) .note-label,
+.arp-user-mode .bottom-row .key:nth-child(10) { animation-delay: 1.2s; }
+.arp-user-mode .bottom-row .key:nth-child(1) .note-label,
+.arp-user-mode .bottom-row .key:nth-child(1),
+.arp-user-mode .bottom-row .key:nth-child(11) .note-label,
+.arp-user-mode .bottom-row .key:nth-child(11) { animation-delay: 1.5s; }
+.arp-user-mode .bottom-row .key:nth-child(12) .note-label,
+.arp-user-mode .bottom-row .key:nth-child(12) { animation-delay: 1.8s; }
+
+/* Center-out timing for Arp User Mode: Top row (7 keys, center at G# = index 4) */
+.arp-user-mode .top-row .key:nth-child(4) .note-label,
+.arp-user-mode .top-row .key:nth-child(4) .note-label-alt,
+.arp-user-mode .top-row .key:nth-child(4) { animation-delay: 0.15s; } /* G# - center, offset slightly from bottom row */
+.arp-user-mode .top-row .key:nth-child(3) .note-label,
+.arp-user-mode .top-row .key:nth-child(3) .note-label-alt,
+.arp-user-mode .top-row .key:nth-child(3),
+.arp-user-mode .top-row .key:nth-child(5) .note-label,
+.arp-user-mode .top-row .key:nth-child(5) .note-label-alt,
+.arp-user-mode .top-row .key:nth-child(5) { animation-delay: 0.45s; }
+.arp-user-mode .top-row .key:nth-child(2) .note-label,
+.arp-user-mode .top-row .key:nth-child(2) .note-label-alt,
+.arp-user-mode .top-row .key:nth-child(2),
+.arp-user-mode .top-row .key:nth-child(6) .note-label,
+.arp-user-mode .top-row .key:nth-child(6) .note-label-alt,
+.arp-user-mode .top-row .key:nth-child(6) { animation-delay: 0.75s; }
+.arp-user-mode .top-row .key:nth-child(1) .note-label,
+.arp-user-mode .top-row .key:nth-child(1) .note-label-alt,
+.arp-user-mode .top-row .key:nth-child(1),
+.arp-user-mode .top-row .key:nth-child(7) .note-label,
+.arp-user-mode .top-row .key:nth-child(7) .note-label-alt,
+.arp-user-mode .top-row .key:nth-child(7) { animation-delay: 1.05s; }
+
+/* Arp Controls */
+.arp-controls {
+  display: flex;
+  flex-direction: column;
+  gap: var(--kb1-spacing-sm);
+}
+
+.arp-user-hint {
+  font-family: var(--kb1-font-family);
+  font-size: var(--kb1-font-caption);
+  color: #848484;
+  opacity: 0.6;
+  margin-left: auto;
+  font-style: italic;
+}
+
+.arp-speed-section {
+  padding-top: var(--kb1-spacing-sm);
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--color-divider);
+}
+
+.arp-speed-section .mapping-toggle-row {
+  margin-bottom: var(--kb1-spacing-sm);
+}
+
+.arp-speed-section .direction-toggle-wrapper {
+  margin-left: 0;
+  margin-right: auto;
+}
+
 /* Inactive Keys Hint Banner */
 .inactive-keys-hint {
   position: relative;
@@ -1761,6 +2392,10 @@ function handleKeyClick(midiNote: number) {
   margin-bottom: 0;
   padding-bottom: 0.75rem;
   border-top: 1px solid var(--color-divider);
+}
+
+.mapping-toggle-row > .info-icon {
+  margin-left: -6px; /* Tighten gap between toggle btn and (i) */
 }
 
 .toggle-btn {
@@ -2059,6 +2694,22 @@ function handleKeyClick(midiNote: number) {
   border-bottom: 1px solid var(--color-divider);
 }
 
+.gate-control {
+  padding-top: 0.75rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--color-divider);
+}
+
+.gate-control.disabled {
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+.gate-pie-chart {
+  margin-left: 0.5rem;
+  flex-shrink: 0;
+}
+
 .duration-control-wrapper {
   display: flex;
   align-items: center;
@@ -2091,6 +2742,57 @@ function handleKeyClick(midiNote: number) {
   padding: 0.25rem 0.75rem;
   background: rgba(234, 234, 234, 0.03);
   border-radius: var(--kb1-radius-sm);
+}
+
+/* Arp Shape Section - same styling as advanced strum content */
+.arp-shape-section {
+  margin-top: var(--kb1-spacing-sm);
+  animation: fadeIn 0.3s ease;
+}
+
+.arp-shape-section .swing-control {
+  margin-top: var(--kb1-spacing-md);
+  padding-bottom: var(--kb1-spacing-sm);
+  border-bottom: 1px solid var(--color-divider);
+}
+
+/* Arp Rate Section */
+.arp-rate-section {
+  padding-top: 0.25rem;  /* Add space to compensate for missing dots visualization */
+  border-bottom: 1px solid var(--color-divider);
+}
+
+/* Override group padding specifically for RATE row */
+.arp-rate-section .group {
+  padding: 0.5rem 0;  /* Single source for RATE row height */
+  min-height: 44px;
+}
+
+/* Arp Type Selectors (Root Note/Range + Chord Type) */
+.arp-type-selectors {
+  padding-top: 0rem;
+  padding-bottom: 0.75rem;
+}
+
+/* User Mode Disabled (grayed + pulse) - only affects pattern builder */
+.arp-shape-section.user-mode-disabled {
+  pointer-events: none;
+}
+
+/* Gray out pattern builder (everything except swing) */
+.arp-shape-section.user-mode-disabled > *:not(.swing-control) {
+  opacity: 0.3;
+}
+
+.arp-shape-section.user-mode-disabled label,
+.arp-shape-section.user-mode-disabled .pattern-row {
+  animation: chromatic-key-pulse 2s ease-in-out infinite;
+}
+
+/* Swing stays at full opacity and interactive in USER mode */
+.arp-shape-section.user-mode-disabled .swing-control {
+  opacity: 1;
+  pointer-events: auto;
 }
 
 .advanced-strum-header {
@@ -2195,12 +2897,14 @@ function handleKeyClick(midiNote: number) {
   width: 100%;
 }
 
+/* Base row styling (override per-section as needed, e.g., .arp-rate-section .group) */
 .group {
   display: flex;
   flex-direction: row;
   align-items: center;
   justify-content: space-between;
-  padding: 0.5rem 0;
+  padding: 0.125rem 0;
+  min-height: 40px;
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;
@@ -2208,6 +2912,8 @@ function handleKeyClick(midiNote: number) {
 }
 
 .group label {
+  display: flex;
+  align-items: center;
   font-weight: var(--kb1-font-weight-normal);
   font-size: var(--kb1-font-input);
   color: var(--label-gray);
@@ -2293,12 +2999,42 @@ function handleKeyClick(midiNote: number) {
   gap: var(--kb1-spacing-sm);
 }
 
-/* Voicing dots container */
+/* Voicing dots container (legacy, kept for safety) */
 .voicing-dots {
   display: flex;
   gap: calc(0.2rem + 2px);
   align-items: center;
   user-select: none;
+}
+
+/* Voicing 1/2/3 number selector */
+.voicing-num-select {
+  display: flex;
+  gap: 2px;
+  align-items: center;
+  user-select: none;
+}
+
+.voicing-num-btn {
+  background: none;
+  border: none;
+  padding: 0 .75rem;
+  cursor: pointer;
+  font-family: 'Roboto Mono', monospace;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.3);
+  transition: color 0.15s ease;
+  line-height: 1;
+}
+
+.voicing-num-btn:hover {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.voicing-num-btn.active {
+  color: var(--ui-highlight);
+  text-shadow: 0 0 6px rgba(var(--ui-highlight-rgb), 0.5);
 }
 
 /* Individual dot button */
@@ -2353,6 +3089,12 @@ function handleKeyClick(midiNote: number) {
   border-radius: var(--kb1-radius-sm);
   background-color: transparent;
   user-select: none;
+  visibility: hidden;
+  transition: visibility 0s linear 0s;
+}
+
+.octave-meter.position-ready {
+  visibility: visible;
 }
 
 .meter-bar {

@@ -1,34 +1,34 @@
 {
-    "id": "preset_1776741983317_chord-rootnote-control_heoifwx3p",
+    "id": "preset_1779149759582_chord-strum_8nohw7d1v",
     "metadata": {
-        "name": "Chord Cntrl",
+        "name": "Chord Strum",
+        "date": "2026-05-19",
+        "snapshot": "KB: Maj\/C \u2022 Strum\/Fwd\/Incl\nL1: Rate \u2022 Step \u2022 P1: ChordType\/FWD\nL2: Vel \u2022 Step \u2022 P2: Vel \u2022 Reset \u2022 Touch: ChordType\/REV",
         "author": "STARTER",
-        "date": "2026-04-21",
-        "snapshot": "KB: Maj\/? \u2022 Chord\nL1: Step\/Uni \u2022 P1: RootNote\/FWD\nL2: Step\/Bi \u2022 P2: Reset \u2022 Touch: RootNote\/REV",
-        "description": "cycle thru chords with L1 - cycle thru root notes fwd\/rev with P1\/Touch - 2 octave range"
+        "description": "cycle thru rate with L1 \ncycle thru note range \nfwd with P1, rev with Touch"
     },
     "settings": {
         "lever1": {
-            "ccNumber": 205,
+            "ccNumber": 200,
             "minCCValue": 0,
             "maxCCValue": 127,
-            "stepSize": 12,
+            "stepSize": 1,
             "functionMode": 2,
             "valueMode": 0,
-            "onsetTime": 100,
-            "offsetTime": 100,
+            "onsetTime": 60,
+            "offsetTime": 60,
             "onsetType": 0,
             "offsetType": 0
         },
         "leverPush1": {
-            "ccNumber": 206,
+            "ccNumber": 205,
             "minCCValue": 0,
             "maxCCValue": 127,
             "functionMode": 2,
-            "onsetTime": 100,
+            "onsetTime": 500,
             "offsetTime": 0,
-            "onsetType": 0,
-            "offsetType": 0
+            "onsetType": 2,
+            "offsetType": 2
         },
         "lever2": {
             "ccNumber": 128,
@@ -36,7 +36,7 @@
             "maxCCValue": 127,
             "stepSize": 6,
             "functionMode": 2,
-            "valueMode": 1,
+            "valueMode": 0,
             "onsetTime": 100,
             "offsetTime": 100,
             "onsetType": 0,
@@ -53,7 +53,7 @@
             "offsetType": 0
         },
         "touch": {
-            "ccNumber": 206,
+            "ccNumber": 205,
             "minCCValue": 0,
             "maxCCValue": 127,
             "functionMode": 1,
@@ -62,25 +62,28 @@
         },
         "scale": {
             "scaleType": 0,
-            "rootNote": 0,
+            "rootNote": 60,
             "keyMapping": 0
         },
         "chord": {
             "playMode": 1,
             "chordType": 0,
-            "strumEnabled": false,
-            "velocitySpread": 59,
-            "strumSpeed": 80,
-            "strumPattern": 0,
-            "strumSwing": 20,
+            "strumEnabled": true,
+            "velocitySpread": 10,
+            "strumSpeed": 110,
+            "strumPattern": 4,
+            "strumSwing": 15,
+            "gateValue": 35,
             "voicing": 2,
+            "arpUserMode": 0,
+            "arpLatchMode": 0,
+            "buildMode": "inclusive",
             "strumIntervals": [
                 0,
-                12,
                 4,
-                7
-            ],
-            "buildMode": "exclusive"
+                7,
+                12
+            ]
         },
         "system": {
             "lightSleepTimeout": 300,

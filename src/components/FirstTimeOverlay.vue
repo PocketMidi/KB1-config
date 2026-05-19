@@ -152,7 +152,7 @@ function handleBackdropClick() {
   background: transparent;
   border: none;
   color: #EAEAEA;
-  font-size: var(--kb1-font-input); /* 13px */
+  font-size: var(--kb1-font-title);
   cursor: pointer;
   opacity: 0.5;
   transition: opacity 0.2s;

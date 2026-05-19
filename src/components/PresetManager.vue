@@ -19,19 +19,12 @@
 
     <!-- Normal Mode Header -->
     <div class="normal-header" v-if="!selectionMode">
-      <span class="info-icon" @click="showHelpDialog = true" title="How to use presets">i</span>
+      <div class="header-actions">
+        <button class="btn-factory-defaults" @click.stop="loadFactoryDefaults" title="Load default starter presets">Load Defaults</button>
+        <span class="info-icon" @click="showHelpDialog = true" title="How to use presets">i</span>
+      </div>
       <button class="btn-select-action" @click="enterSelectionMode">Select</button>
     </div>
-
-    <!-- Factory Defaults Button (top with divider) -->
-    <button 
-      v-if="!selectionMode"
-      class="btn-factory-defaults"
-      @click.stop="loadFactoryDefaults"
-      title="Load default starter presets">
-      Load Defaults
-    </button>
-    <div v-if="!selectionMode" class="factory-divider"></div>
 
     <!-- 8-Slot Preset System -->
     <div class="preset-slots">
@@ -42,7 +35,8 @@
         :class="{ 
           empty: !getSlotPreset(slot - 1),
           active: activeSlot === (slot - 1),
-          'selection-mode': selectionMode
+          'selection-mode': selectionMode,
+          'just-saved': recentlySavedSlot === (slot - 1)
         }"
       >
         <!-- Selection Checkbox (when in selection mode) -->
@@ -99,7 +93,10 @@
     <!-- Slot Edit Dialog -->
     <div v-if="showSlotDialog" class="modal-overlay" @click.self.stop="showSlotDialog = false">
       <div class="modal-dialog">
-        <h3>{{ getSlotPreset(editingSlot) ? 'Edit Preset' : 'Save Preset' }}</h3>
+        <div class="modal-header">
+          <h3>{{ getSlotPreset(editingSlot) ? 'Edit Preset' : 'Save Preset' }}</h3>
+          <button class="close-btn" @click.stop="showSlotDialog = false">×</button>
+        </div>
         
         <div class="form-group">
           <label>Author (Optional)</label>
@@ -129,7 +126,13 @@
         </div>
         <div class="form-group">
           <label>Settings Snapshot</label>
-          <div class="settings-snapshot">{{ generateSettingsSnapshot(props.currentSettings) }}</div>
+          <div class="settings-snapshot">
+            <span
+              v-for="(line, i) in snapshotDiffLines"
+              :key="i"
+              :class="line.changed ? 'snapshot-line-changed' : 'snapshot-line-saved'"
+            >{{ line.text }}<br v-if="i < snapshotDiffLines.length - 1" /></span>
+          </div>
         </div>
         <div class="form-group">
           <label>Description (Optional)</label>
@@ -149,6 +152,12 @@
           >Delete</button>
           <div class="modal-buttons-right">
             <button class="btn-secondary" @click.stop="showSlotDialog = false">Cancel</button>
+            <button 
+              v-if="getSlotPreset(editingSlot)"
+              class="btn-secondary"
+              @click.stop="activateSlot(editingSlot); showSlotDialog = false"
+              title="Load these settings into the app"
+            >Apply</button>
             <button class="btn-primary" @click.stop="confirmSlotSave" :disabled="!slotName.trim()">
               Save
             </button>
@@ -271,6 +280,7 @@ import type { DeviceSettings } from '../ble/kb1Protocol';
 import { useDeviceState } from '../composables/useDeviceState';
 import { useToast } from '../composables/useToast';
 import { useConfirm } from '../composables/useConfirm';
+import { getCCMap } from '../data/ccMap';
 import { PRESET_UPLOAD_ENDPOINT } from '../constants';
 import CommunityPresets from './CommunityPresets.vue';
 
@@ -310,92 +320,83 @@ interface SlotPreset {
 
 const SLOTS_KEY = 'kb1_preset_slots';
 
-// Factory defaults - 4 presets showcasing KB1 Expression cycling parameters
+// No built-in starter presets for now. New presets are created manually by user.
 function getDefaultPresets(): (SlotPreset | null)[] {
   const now = Date.now();
-  
   return [
-    // Slot 1: Scale/RootNote Control
+    // Slot 1: Maj Scale + RootNote Control
     {
-      name: "Scale Cntrl",
+      name: "Maj Scale + RootNote Control",
+      description: "cycle thru root notes\n- fwd with P1\n- rev with Touch",
+      snapshot: "KB: Maj/C • Compact\nL1: PitchBend • P1: RootNote/FWD\nL2: Vel • Step • P2: Vel • Reset • Touch: RootNote/REV",
       author: "STARTER",
-      description: "cycle thru scales with L1 - cycle thru root notes fwd/rev with P1/Touch",
-      snapshot: "KB: Maj/C • Compact\nL1: Step/Uni • P1: RootNote/FWD\nL2: Step/Bi • P2: Reset • Touch: RootNote/REV",
       modifiedAt: now,
-      isFactoryDefault: true,
       settings: {
-        lever1: { ccNumber: 204, minCCValue: 0, maxCCValue: 127, stepSize: 1, functionMode: 2, valueMode: 0, onsetTime: 100, offsetTime: 100, onsetType: 0, offsetType: 0 },
-        leverPush1: { ccNumber: 206, minCCValue: 0, maxCCValue: 127, functionMode: 2, onsetTime: 100, offsetTime: 0, onsetType: 0, offsetType: 0 },
-        lever2: { ccNumber: 128, minCCValue: 13, maxCCValue: 127, stepSize: 6, functionMode: 2, valueMode: 1, onsetTime: 100, offsetTime: 100, onsetType: 0, offsetType: 0 },
+        lever1: { ccNumber: 208, minCCValue: 0, maxCCValue: 127, stepSize: 1, functionMode: 3, valueMode: 1, onsetTime: 60, offsetTime: 60, onsetType: 0, offsetType: 0 },
+        leverPush1: { ccNumber: 206, minCCValue: 0, maxCCValue: 127, functionMode: 2, onsetTime: 500, offsetTime: 0, onsetType: 2, offsetType: 2 },
+        lever2: { ccNumber: 128, minCCValue: 13, maxCCValue: 127, stepSize: 6, functionMode: 2, valueMode: 0, onsetTime: 100, offsetTime: 100, onsetType: 0, offsetType: 0 },
         leverPush2: { ccNumber: 128, minCCValue: 85, maxCCValue: 85, functionMode: 3, onsetTime: 100, offsetTime: 100, onsetType: 0, offsetType: 0 },
         touch: { ccNumber: 206, minCCValue: 0, maxCCValue: 127, functionMode: 1, threshold: 36800, offsetTime: 100 },
         scale: { scaleType: 1, rootNote: 60, keyMapping: 1 },
-        chord: { playMode: 0, chordType: 0, strumEnabled: false, velocitySpread: 10, strumSpeed: 80, strumPattern: 0, strumSwing: 0, voicing: 1, strumIntervals: [0, 4, 7, 12], buildMode: "up" },
+        chord: { playMode: 0, chordType: 0, strumEnabled: true, velocitySpread: 10, strumSpeed: 110, strumPattern: 4, strumSwing: 15, gateValue: 35, voicing: 2, arpUserMode: 0, arpLatchMode: 0, buildMode: "inclusive", strumIntervals: [0, 4, 7, 12] },
         system: { lightSleepTimeout: 300, deepSleepTimeout: 390, bleTimeout: 600 }
       }
     },
-    // Slot 2: Chord RootNote Control
+    // Slot 2: Chord Strum
     {
-      name: "Chord Cntrl",
+      name: "Chord Strum",
+      description: "cycle thru rate with L1 \ncycle thru note range \nfwd with P1, rev with Touch",
+      snapshot: "KB: Maj/C • Strum/Fwd/Incl\nL1: Rate • Step • P1: ChordType/FWD\nL2: Vel • Step • P2: Vel • Reset • Touch: ChordType/REV",
       author: "STARTER",
-      description: "cycle thru chords with L1 - cycle thru root notes fwd/rev with P1/Touch - 2 octave range",
-      snapshot: "KB: Maj/? • Chord\nL1: Step/Uni • P1: RootNote/FWD\nL2: Step/Bi • P2: Reset • Touch: RootNote/REV",
       modifiedAt: now,
-      isFactoryDefault: true,
       settings: {
-        lever1: { ccNumber: 205, minCCValue: 0, maxCCValue: 127, stepSize: 12, functionMode: 2, valueMode: 0, onsetTime: 100, offsetTime: 100, onsetType: 0, offsetType: 0 },
-        leverPush1: { ccNumber: 206, minCCValue: 0, maxCCValue: 127, functionMode: 2, onsetTime: 100, offsetTime: 0, onsetType: 0, offsetType: 0 },
-        lever2: { ccNumber: 128, minCCValue: 13, maxCCValue: 127, stepSize: 6, functionMode: 2, valueMode: 1, onsetTime: 100, offsetTime: 100, onsetType: 0, offsetType: 0 },
+        lever1: { ccNumber: 200, minCCValue: 0, maxCCValue: 127, stepSize: 1, functionMode: 2, valueMode: 0, onsetTime: 60, offsetTime: 60, onsetType: 0, offsetType: 0 },
+        leverPush1: { ccNumber: 205, minCCValue: 0, maxCCValue: 127, functionMode: 2, onsetTime: 500, offsetTime: 0, onsetType: 2, offsetType: 2 },
+        lever2: { ccNumber: 128, minCCValue: 13, maxCCValue: 127, stepSize: 6, functionMode: 2, valueMode: 0, onsetTime: 100, offsetTime: 100, onsetType: 0, offsetType: 0 },
         leverPush2: { ccNumber: 128, minCCValue: 85, maxCCValue: 85, functionMode: 3, onsetTime: 100, offsetTime: 100, onsetType: 0, offsetType: 0 },
-        touch: { ccNumber: 206, minCCValue: 0, maxCCValue: 127, functionMode: 1, threshold: 36800, offsetTime: 100 },
-        scale: { scaleType: 0, rootNote: 0, keyMapping: 0 },
-        chord: { playMode: 1, chordType: 0, strumEnabled: false, velocitySpread: 59, strumSpeed: 80, strumPattern: 0, strumSwing: 20, voicing: 2, strumIntervals: [0, 12, 4, 7], buildMode: "exclusive" },
+        touch: { ccNumber: 205, minCCValue: 0, maxCCValue: 127, functionMode: 1, threshold: 36800, offsetTime: 100 },
+        scale: { scaleType: 0, rootNote: 60, keyMapping: 0 },
+        chord: { playMode: 1, chordType: 0, strumEnabled: true, velocitySpread: 10, strumSpeed: 110, strumPattern: 4, strumSwing: 15, gateValue: 35, voicing: 2, arpUserMode: 0, arpLatchMode: 0, buildMode: "inclusive", strumIntervals: [0, 4, 7, 12] },
         system: { lightSleepTimeout: 300, deepSleepTimeout: 390, bleTimeout: 600 }
       }
     },
-    // Slot 3: Strum Control
+    // Slot 3: Chord Arp
     {
-      name: "Strum Cntrl",
+      name: "Chord Arp",
+      description: "cycle thru arp speeds with L1\ncycle thru patterns\nfwd with P1, rev with Touch",
+      snapshot: "KB: Chr/C • Natural\nL1: Rate • Step • P1: Pattern/FWD\nL2: Vel • Step • P2: Vel • Touch: Pattern/REV",
       author: "STARTER",
-      description: "cycle thru strum speeds with L1 - cycle thru patterns fwd/rev with P1/Touch - 2 octave range",
-      snapshot: "KB: Maj/? • Strum/Fwd/Cust\nL1: Step/Uni • P1: Pattern/FWD\nL2: Step/Bi • P2: Reset • Touch: Pattern/REV",
       modifiedAt: now,
-      isFactoryDefault: true,
       settings: {
-        lever1: { ccNumber: 200, minCCValue: 0, maxCCValue: 127, stepSize: 12, functionMode: 2, valueMode: 0, onsetTime: 100, offsetTime: 100, onsetType: 0, offsetType: 0 },
-        leverPush1: { ccNumber: 201, minCCValue: 0, maxCCValue: 127, functionMode: 2, onsetTime: 100, offsetTime: 0, onsetType: 0, offsetType: 0 },
-        lever2: { ccNumber: 128, minCCValue: 13, maxCCValue: 127, stepSize: 6, functionMode: 2, valueMode: 1, onsetTime: 100, offsetTime: 100, onsetType: 0, offsetType: 0 },
-        leverPush2: { ccNumber: 128, minCCValue: 85, maxCCValue: 85, functionMode: 3, onsetTime: 100, offsetTime: 100, onsetType: 0, offsetType: 0 },
+        lever1: { ccNumber: 200, minCCValue: 0, maxCCValue: 127, stepSize: 1, functionMode: 2, valueMode: 0, onsetTime: 60, offsetTime: 60, onsetType: 0, offsetType: 0 },
+        leverPush1: { ccNumber: 201, minCCValue: 0, maxCCValue: 127, functionMode: 2, onsetTime: 500, offsetTime: 0, onsetType: 2, offsetType: 2 },
+        lever2: { ccNumber: 128, minCCValue: 13, maxCCValue: 127, stepSize: 6, functionMode: 2, valueMode: 0, onsetTime: 100, offsetTime: 100, onsetType: 0, offsetType: 0 },
+        leverPush2: { ccNumber: 128, minCCValue: 85, maxCCValue: 85, functionMode: 0, onsetTime: 100, offsetTime: 100, onsetType: 0, offsetType: 0 },
         touch: { ccNumber: 201, minCCValue: 0, maxCCValue: 127, functionMode: 1, threshold: 36800, offsetTime: 100 },
-        scale: { scaleType: 0, rootNote: 0, keyMapping: 0 },
-        chord: { playMode: 1, chordType: 0, strumEnabled: true, velocitySpread: 59, strumSpeed: 80, strumPattern: 7, strumSwing: 20, voicing: 2, strumIntervals: [0, 4, 7, 12], buildMode: "up" },
+        scale: { scaleType: 0, rootNote: 60, keyMapping: 0 },
+        chord: { playMode: 2, chordType: 10, strumEnabled: true, velocitySpread: 10, strumSpeed: 110, strumPattern: 3, strumSwing: 0, gateValue: 35, voicing: 1, arpUserMode: 1, arpLatchMode: 0, buildMode: "user", strumIntervals: [0, 4, 7, 14, 7, 4, 0] },
         system: { lightSleepTimeout: 300, deepSleepTimeout: 390, bleTimeout: 600 }
       }
     },
-    // Slot 4: Strum Shape(arp) Control
+    // Slot 4: User Arp
     {
-      name: "Shape Cntrl",
+      name: "User Arp",
+      description: "cycle thru arp speeds with L1\ncycle thru patterns\nfwd with P1, rev with Touch",
+      snapshot: "KB: Chr/C • Natural\nL1: Rate • Step • P1: Pattern/FWD\nL2: Vel • Step • P2: Vel • Touch: Pattern/REV",
       author: "STARTER",
-      description: "cycle thru strum speeds with L1 - cycle thru shapes fwd/rev with P1/Touch - 2 octave range",
-      snapshot: "KB: Maj/? • Strum/Fwd/Cust\nL1: Step/Uni • P1: Pattern/FWD\nL2: Step/Bi • P2: Reset • Touch: Pattern/REV",
       modifiedAt: now,
-      isFactoryDefault: true,
       settings: {
-        lever1: { ccNumber: 200, minCCValue: 0, maxCCValue: 127, stepSize: 12, functionMode: 2, valueMode: 0, onsetTime: 100, offsetTime: 100, onsetType: 0, offsetType: 0 },
-        leverPush1: { ccNumber: 201, minCCValue: 0, maxCCValue: 127, functionMode: 2, onsetTime: 100, offsetTime: 0, onsetType: 0, offsetType: 0 },
-        lever2: { ccNumber: 128, minCCValue: 13, maxCCValue: 127, stepSize: 6, functionMode: 2, valueMode: 1, onsetTime: 100, offsetTime: 100, onsetType: 0, offsetType: 0 },
-        leverPush2: { ccNumber: 128, minCCValue: 85, maxCCValue: 85, functionMode: 3, onsetTime: 100, offsetTime: 100, onsetType: 0, offsetType: 0 },
+        lever1: { ccNumber: 200, minCCValue: 0, maxCCValue: 127, stepSize: 1, functionMode: 2, valueMode: 0, onsetTime: 60, offsetTime: 60, onsetType: 0, offsetType: 0 },
+        leverPush1: { ccNumber: 201, minCCValue: 0, maxCCValue: 127, functionMode: 2, onsetTime: 500, offsetTime: 0, onsetType: 2, offsetType: 2 },
+        lever2: { ccNumber: 128, minCCValue: 13, maxCCValue: 127, stepSize: 6, functionMode: 2, valueMode: 0, onsetTime: 100, offsetTime: 100, onsetType: 0, offsetType: 0 },
+        leverPush2: { ccNumber: 128, minCCValue: 85, maxCCValue: 85, functionMode: 0, onsetTime: 100, offsetTime: 100, onsetType: 0, offsetType: 0 },
         touch: { ccNumber: 201, minCCValue: 0, maxCCValue: 127, functionMode: 1, threshold: 36800, offsetTime: 100 },
-        scale: { scaleType: 0, rootNote: 0, keyMapping: 0 },
-        chord: { playMode: 1, chordType: 0, strumEnabled: true, velocitySpread: 59, strumSpeed: 80, strumPattern: 7, strumSwing: 20, voicing: 2, strumIntervals: [0, 4, 7, 12], buildMode: "up" },
+        scale: { scaleType: 0, rootNote: 60, keyMapping: 0 },
+        chord: { playMode: 2, chordType: 10, strumEnabled: true, velocitySpread: 10, strumSpeed: 165, strumPattern: 5, strumSwing: 40, gateValue: 35, voicing: 1, arpUserMode: 1, arpLatchMode: 0, buildMode: "user", strumIntervals: [0, 4, 7, 12, 7, 4, 0] },
         system: { lightSleepTimeout: 300, deepSleepTimeout: 390, bleTimeout: 600 }
       }
     },
-    // Slots 5-8: Empty
-    null,
-    null,
-    null,
-    null
+    null, null, null, null  // Slots 5-8 empty
   ];
 }
 
@@ -406,8 +407,8 @@ function loadSlotsFromStorage(): (SlotPreset | null)[] {
     if (stored) {
       return JSON.parse(stored);
     }
-    // First time - return factory defaults
-    console.log('Loading factory default presets (Slots 1-4)');
+    // First time - start with all empty slots
+    console.log('Loading empty preset slots');
     return getDefaultPresets();
   } catch (error) {
     console.error('Failed to load slots from localStorage:', error);
@@ -426,6 +427,7 @@ function saveSlotsToStorage(slots: (SlotPreset | null)[]) {
 
 const slots = ref<(SlotPreset | null)[]>(loadSlotsFromStorage());
 const activeSlot = ref<number | null>(null);
+const recentlySavedSlot = ref<number | null>(null);
 const hasAutoSynced = ref(false); // Track if we've done initial auto-sync
 
 // Dialog states
@@ -443,6 +445,22 @@ const slotName = ref('');
 const slotAuthor = ref('');
 const slotDescription = ref('');
 const exportingSlot = ref<number | null>(null);
+
+// Diff between saved preset snapshot and current live settings, line by line.
+// Changed lines (or all lines for empty slot) show in amber.
+const snapshotDiffLines = computed(() => {
+  const liveSnapshot = generateSettingsSnapshot(props.currentSettings);
+  const liveLines = liveSnapshot.split('\n');
+  const saved = getSlotPreset(editingSlot.value);
+  if (!saved) {
+    // Empty slot — everything is amber (preview of what will be written)
+    return liveLines.map(text => ({ text, changed: true }));
+  }
+  // Always regenerate from saved settings so format changes don't cause false diffs
+  const savedSnapshot = generateSettingsSnapshot(saved.settings);
+  const savedLines = savedSnapshot.split('\n');
+  return liveLines.map((text, i) => ({ text, changed: text !== (savedLines[i] ?? '') }));
+});
 
 // Export metadata (simplified)
 const exportMetadata = ref({
@@ -481,8 +499,8 @@ const chordNames: Record<number, string> = {
 };
 
 const rootNotes: Record<number, string> = {
-  60: 'C', 61: 'C#', 62: 'D', 63: 'D#', 64: 'E', 65: 'F',
-  66: 'F#', 67: 'G', 68: 'G#', 69: 'A', 70: 'A#', 71: 'B'
+  0: 'C', 1: 'C#', 2: 'D', 3: 'D#', 4: 'E', 5: 'F',
+  6: 'F#', 7: 'G', 8: 'G#', 9: 'A', 10: 'A#', 11: 'B'
 };
 
 const leverModes: Record<number, string> = {
@@ -494,6 +512,7 @@ const pushModes: Record<number, string> = {
 };
 
 const touchModes: Record<number, string> = {
+  // Touch mode 0 remains Gate; chord swing repurpose only affects chord timing control.
   0: 'Gate', 1: 'Toggle', 2: 'Smooth'
 };
 
@@ -501,9 +520,64 @@ const touchModes: Record<number, string> = {
 const kb1ExpressionParamNames: Record<number, string> = {
   201: 'Pattern',
   204: 'ScaleType',
-  205: 'ChordType',
+  205: 'NoteRange',
   206: 'RootNote'
 };
+
+// KB1 Expression CC names for lever snapshot display
+const kb1LeverCCNames: Record<number, string> = {
+  200: 'Rate',
+  201: 'Pattern',
+  202: 'Swing',
+  203: 'VelSpread',
+  204: 'ScaleType',
+  205: 'NoteRange',
+  206: 'RootNote',
+  207: 'Latch',
+  208: 'PitchBend',
+  209: 'Sustain'
+};
+
+function getLeverLabel(ccNumber: number, functionMode: number, valueMode: number): string {
+  if (ccNumber < 0) return 'Off';
+  if (ccNumber === 128) {
+    // Velocity
+    const mode = leverModes[functionMode];
+    return mode && mode !== 'Smooth' ? `Vel • ${mode}` : 'Vel';
+  }
+  if (ccNumber >= 200 && ccNumber <= 209) {
+    const name = kb1LeverCCNames[ccNumber] || `CC ${ccNumber}`;
+    const mode = leverModes[functionMode];
+    return mode && mode !== 'Smooth' ? `${name} • ${mode}` : name;
+  }
+  // Standard MIDI CC — look up friendly name from CSV map
+  const ccEntry = getCCMap().get(ccNumber);
+  const name = ccEntry?.label || `CC ${ccNumber}`;
+  const parts = [name];
+  if (valueMode === 1) parts.push('Bi');
+  const mode = leverModes[functionMode];
+  if (mode && mode !== 'Smooth') parts.push(mode);
+  return parts.join(' • ');
+}
+
+function getPushTouchLabel(ccNumber: number, functionMode: number): string {
+  if (ccNumber < 0) return 'Off';
+  if (ccNumber === 128) {
+    const mode = pushModes[functionMode];
+    return mode && mode !== 'Smooth' ? `Vel • ${mode}` : 'Vel';
+  }
+  if (ccNumber >= 200 && ccNumber <= 209) {
+    const name = kb1LeverCCNames[ccNumber] || `CC ${ccNumber}`;
+    const mode = pushModes[functionMode];
+    return mode && mode !== 'Smooth' ? `${name} • ${mode}` : name;
+  }
+  // Standard MIDI CC — look up friendly name
+  const ccEntry = getCCMap().get(ccNumber);
+  const name = ccEntry?.label || `CC ${ccNumber}`;
+  const mode = pushModes[functionMode];
+  if (!mode || mode === 'Smooth') return name;
+  return `${name} • ${mode}`;
+}
 
 const valueModeNames: Record<number, string> = {
   0: 'Uni', 1: 'Bi'
@@ -524,11 +598,11 @@ function generateSettingsSnapshot(settings: DeviceSettings): string {
   // Line 1: Keyboard mode with detailed info
   const isChordMode = settings.chord.playMode === 1;
   const scaleType = scaleNames[settings.scale.scaleType] || '?';
-  const rootNote = rootNotes[settings.scale.rootNote] || '?';
+  const rootNote = rootNotes[settings.scale.rootNote % 12] || '?';
   const chordType = chordNames[settings.chord.chordType] || '?';
   const keyMapping = keyMappingNames[settings.scale.keyMapping] || 'Nat';
   
-  let strumState = 'Chord';
+  let strumState = 'Block';
   if (settings.chord.strumEnabled) {
     const direction = settings.chord.strumSpeed < 0 ? 'Rev' : 'Fwd';
     // Only show pattern if strumPattern > 0 (pattern 0 = use chord type)
@@ -543,75 +617,49 @@ function generateSettingsSnapshot(settings: DeviceSettings): string {
   }
   
   // Line 2: Lever 1 + Push 1 (same physical control)
-  if (settings.lever1.ccNumber >= 0) {
-    const l1mode = leverModes[settings.lever1.functionMode] || '?';
-    const l1value = valueModeNames[settings.lever1.valueMode] || 'Uni';
-    let p1mode = 'Off';
-    if (settings.leverPush1.ccNumber >= 0) {
-      // Check if it's a cycling parameter (Pattern, ScaleType, ChordType, RootNote)
-      const isCyclingParam = [201, 204, 205, 206].includes(settings.leverPush1.ccNumber);
-      if (isCyclingParam) {
-        const direction = (settings.leverPush1.offsetTime ?? 0) === 0 ? 'FWD' : 'REV';
-        const paramName = kb1ExpressionParamNames[settings.leverPush1.ccNumber] || 'Cycle';
-        p1mode = `${paramName}/${direction}`;
-      } else {
-        p1mode = pushModes[settings.leverPush1.functionMode] || '?';
-      }
+  const l1label = getLeverLabel(settings.lever1.ccNumber, settings.lever1.functionMode, settings.lever1.valueMode);
+  let p1mode = 'Off';
+  if (settings.leverPush1.ccNumber >= 0) {
+    const isCyclingParam = [201, 204, 205, 206].includes(settings.leverPush1.ccNumber);
+    if (isCyclingParam) {
+      const direction = (settings.leverPush1.offsetTime ?? 0) === 0 ? 'FWD' : 'REV';
+      const paramName = kb1ExpressionParamNames[settings.leverPush1.ccNumber] || 'Cycle';
+      p1mode = `${paramName}/${direction}`;
+    } else {
+      p1mode = getPushTouchLabel(settings.leverPush1.ccNumber, settings.leverPush1.functionMode);
     }
-    lines.push(`L1: ${l1mode}/${l1value} • P1: ${p1mode}`);
-  } else {
-    let p1mode = 'Off';
-    if (settings.leverPush1.ccNumber >= 0) {
-      const isCyclingParam = [201, 204, 205, 206].includes(settings.leverPush1.ccNumber);
-      if (isCyclingParam) {
-        const direction = (settings.leverPush1.offsetTime ?? 0) === 0 ? 'FWD' : 'REV';
-        const paramName = kb1ExpressionParamNames[settings.leverPush1.ccNumber] || 'Cycle';
-        p1mode = `${paramName}/${direction}`;
-      } else {
-        p1mode = pushModes[settings.leverPush1.functionMode] || '?';
-      }
-    }
-    lines.push(`L1: Off • P1: ${p1mode}`);
   }
+  lines.push(`L1: ${l1label} • P1: ${p1mode}`);
   
   // Line 3: Lever 2 + Push 2 + Touch
   const l2parts: string[] = [];
   const p2parts: string[] = [];
   const tparts: string[] = [];
   
-  if (settings.lever2.ccNumber >= 0) {
-    const l2mode = leverModes[settings.lever2.functionMode] || '?';
-    const l2value = valueModeNames[settings.lever2.valueMode] || 'Uni';
-    l2parts.push(`L2: ${l2mode}/${l2value}`);
-  } else {
-    l2parts.push('L2: Off');
-  }
+  const l2label = getLeverLabel(settings.lever2.ccNumber, settings.lever2.functionMode, settings.lever2.valueMode);
+  l2parts.push(`L2: ${l2label}`);
   
   if (settings.leverPush2.ccNumber >= 0) {
-    // Check if it's a cycling parameter
     const isCyclingParam = [201, 204, 205, 206].includes(settings.leverPush2.ccNumber);
     if (isCyclingParam) {
       const direction = (settings.leverPush2.offsetTime ?? 0) === 0 ? 'FWD' : 'REV';
       const paramName = kb1ExpressionParamNames[settings.leverPush2.ccNumber] || 'Cycle';
       p2parts.push(`P2: ${paramName}/${direction}`);
     } else {
-      const p2mode = pushModes[settings.leverPush2.functionMode] || '?';
-      p2parts.push(`P2: ${p2mode}`);
+      p2parts.push(`P2: ${getPushTouchLabel(settings.leverPush2.ccNumber, settings.leverPush2.functionMode)}`);
     }
   } else {
     p2parts.push('P2: Off');
   }
   
   if (settings.touch.ccNumber >= 0) {
-    // Check if it's a cycling parameter
     const isCyclingParam = [201, 204, 205, 206].includes(settings.touch.ccNumber);
     if (isCyclingParam) {
       const direction = (settings.touch.offsetTime ?? 0) === 0 ? 'FWD' : 'REV';
       const paramName = kb1ExpressionParamNames[settings.touch.ccNumber] || 'Cycle';
       tparts.push(`Touch: ${paramName}/${direction}`);
     } else {
-      const tmode = touchModes[settings.touch.functionMode] || '?';
-      tparts.push(`Touch: ${tmode}`);
+      tparts.push(`Touch: ${getPushTouchLabel(settings.touch.ccNumber, settings.touch.functionMode)}`);
     }
   } else {
     tparts.push('Touch: Off');
@@ -763,6 +811,13 @@ function confirmSlotSave() {
   slots.value = newSlots;
   saveSlotsToStorage(newSlots);
   
+  // Pulse the slot card to confirm save
+  const savedSlotIndex = editingSlot.value;
+  recentlySavedSlot.value = savedSlotIndex;
+  setTimeout(() => {
+    if (recentlySavedSlot.value === savedSlotIndex) recentlySavedSlot.value = null;
+  }, 1200);
+  
   toast.success(`Saved to slot ${editingSlot.value + 1}: "${name}"`);
   showSlotDialog.value = false;
   slotName.value = '';
@@ -810,10 +865,7 @@ function loadFactoryDefaults() {
   activeSlot.value = null;
   activeDeviceSlot.value = null;
   
-  // Clear preset slots from localStorage and reload factory defaults
-  localStorage.removeItem(SLOTS_KEY);
-  slots.value = loadSlotsFromStorage(); // This will reload the 4 factory presets
-  
+  // Only deactivate the active slot — do NOT touch saved preset slots
   toast.success('Defaults loaded');
 }
 
@@ -1182,7 +1234,6 @@ function downloadJSON(json: string, filename: string) {
 }
 
 .btn-factory-defaults {
-  width: 100%;
   margin-bottom: 0;
   padding: var(--kb1-spacing-sm) var(--kb1-spacing-md);
   background: rgba(29, 29, 29, 0.5);
@@ -1231,6 +1282,17 @@ function downloadJSON(json: string, filename: string) {
 .preset-slot.active {
   border-color: #4A90E2;
   background: rgba(74, 144, 226, 0.05);
+}
+
+@keyframes slot-saved-pulse {
+  0%   { border-color: rgba(185, 170, 95, 0.3); background: rgba(29, 29, 29, 0.5); }
+  25%  { border-color: rgba(185, 170, 95, 0.9); background: rgba(185, 170, 95, 0.12); }
+  75%  { border-color: rgba(185, 170, 95, 0.6); background: rgba(185, 170, 95, 0.06); }
+  100% { border-color: rgba(205, 205, 205, 0.1); background: rgba(29, 29, 29, 0.5); }
+}
+
+.preset-slot.just-saved {
+  animation: slot-saved-pulse 1.2s ease-out forwards;
 }
 
 .preset-slot.empty {
@@ -1929,6 +1991,18 @@ function downloadJSON(json: string, filename: string) {
   line-height: var(--kb1-line-height-relaxed);
   white-space: pre-line;
   word-break: break-word;
+}
+
+.settings-snapshot.snapshot-new {
+  color: #b9aa5f;
+}
+
+.snapshot-line-changed {
+  color: #b9aa5f;
+}
+
+.snapshot-line-saved {
+  color: #EAEAEA;
 }
 
 .input-text {

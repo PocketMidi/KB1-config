@@ -5,13 +5,13 @@
  * messages sent to/from the device. It provides a clean abstraction over
  * the raw BLE data transfer.
  * 
- * BLE PROTOCOL VERSION: 3
- * Breaking changes from v2:
- * - Scale validation allows rootNote=0 for Chromatic mode
- * - Strum speed uses bipolar CC 200 mapping (-360 to +360)
+ * BLE PROTOCOL VERSION: 4
+ * Breaking changes from v3:
+ * - ChordSettings expanded from 32 to 40 bytes (added arpUserMode and arpLatchMode)
+ * - PlayMode now includes ARP (2) in addition to SCALE (0) and CHORD (1)
  */
 
-export const BLE_PROTOCOL_VERSION = 3;
+export const BLE_PROTOCOL_VERSION = 5;
 
 /**
  * Detailed validation result with error messages
@@ -90,14 +90,19 @@ export interface ScaleSettings {
  * Chord settings configuration
  */
 export interface ChordSettings {
-  playMode: number;        // 0 = SCALE, 1 = CHORD
+  playMode: number;        // 0 = SCALE, 1 = CHORD, 2 = ARP
   chordType: number;       // MAJOR=0, MINOR=1, DIMINISHED=2, AUGMENTED=3, SUS2=4, SUS4=5, POWER=6, MAJOR7=7, MINOR7=8, DOM7=9, MAJOR_ADD9=10, MINOR_ADD9=11, MAJOR6=12, MINOR6=13, MAJOR9=14
   strumEnabled: boolean;   // false = chord (all notes together), true = strum (cascaded)
   velocitySpread: number;  // 0-100 (percentage) - velocity variation for chord notes
   strumSpeed: number;      // -360 to -4 (reverse) or 4 to 360 (forward) - milliseconds delay, sign = direction
-  strumPattern: number;    // 0-7 - pattern index (0 = use chord type, 1-7 = interval patterns)
-  strumSwing: number;      // 0-100 (percentage) - swing amount for strum timing
+  strumPattern: number;    // 0-7 - pattern index (0 = use chord type, 1-7 = interval patterns) / arp build mode (0-5)
+  strumSwing: number;      // 0-50 (percentage) - swing timing for ARP mode (0 = straight 50% UI, 50 = max swing 100% UI)
+  // Kept as gateValue for binary protocol compatibility with firmware.
+  // Semantics were repurposed: this now drives CHORD swing timing (not touch Gate mode).
+  gateValue: number;       // 10-100 (percentage) - CHORD swing amount (10 = straight 50/50, 100 = swung ~66/33)
   voicing: number;         // 1-3 (octave range: 1x, 2x, 3x)
+  arpUserMode: number;     // 0 = CHORD mode (chord-based arp), 1 = USER mode (user-defined sequence)
+  arpLatchMode: number;    // 0 = MOMENTARY (stop on any key release), 1 = LATCHED (stop on last key release)
   strumIntervals?: number[]; // Custom interval pattern (semitones from root) - UI only
   buildMode?: string;      // Build mode: 'up', 'down', 'updown', 'inclusive', 'exclusive', 'random' - UI only
 }
@@ -219,6 +224,7 @@ export enum LeverFunctionMode {
   INTERPOLATED = 0,
   PEAK_DECAY = 1,
   INCREMENTAL = 2,
+  PITCH_BEND = 3,  // Lever morphs held notes ±2 semitones
 }
 
 /**
@@ -424,26 +430,26 @@ export class KB1Protocol {
   createDefaultDeviceSettings(): DeviceSettings {
     return {
       lever1: {
-        ccNumber: 3,
+        ccNumber: 208,
         minCCValue: 0,
         maxCCValue: 127,
         stepSize: 1,
-        functionMode: 0, // Interpolated
+        functionMode: 3, // PITCH_BEND
         valueMode: ValueMode.BIPOLAR,
-        onsetTime: 100,
-        offsetTime: 100,
+        onsetTime: 60,
+        offsetTime: 60,
         onsetType: InterpolationType.LINEAR,
         offsetType: InterpolationType.LINEAR,
       },
       leverPush1: {
-        ccNumber: 24,
-        minCCValue: 32,
+        ccNumber: 209,
+        minCCValue: 0,
         maxCCValue: 127,
-        functionMode: 0, // Interpolated
-        onsetTime: 100,
-        offsetTime: 100,
-        onsetType: InterpolationType.LINEAR,
-        offsetType: InterpolationType.LINEAR,
+        functionMode: 4, // Sustain
+        onsetTime: 500,  // 500ms release tail
+        offsetTime: 0,   // Momentary by default
+        onsetType: InterpolationType.LOGARITHMIC,
+        offsetType: InterpolationType.LOGARITHMIC,
       },
       lever2: {
         ccNumber: 128,
@@ -451,7 +457,7 @@ export class KB1Protocol {
         maxCCValue: 127,
         stepSize: 6,
         functionMode: 2, // Incremental
-        valueMode: ValueMode.BIPOLAR,
+        valueMode: ValueMode.UNIPOLAR,
         onsetTime: 100,
         offsetTime: 100,
         onsetType: InterpolationType.LINEAR,
@@ -469,11 +475,11 @@ export class KB1Protocol {
       },
       touch: {
         ccNumber: 1,
-        minCCValue: 64,
-        maxCCValue: 127,
+        minCCValue: 38,   // 30%
+        maxCCValue: 114,  // 90%
         functionMode: 2, // Continuous
         threshold: 36800,  // 20% on slider (range 30000-64000)
-        offsetTime: 0, // FWD mode (forward cycling) by default
+        offsetTime: 100, // REV mode (release returns to max)
       },
       scale: {
         scaleType: ScaleType.CHROMATIC,
@@ -483,12 +489,16 @@ export class KB1Protocol {
       chord: {
         playMode: 0, // SCALE mode by default
         chordType: 0, // MAJOR chord
-        strumEnabled: false, // Chord mode (not strum)
+        strumEnabled: true, // Strum mode (cascaded)
         velocitySpread: 10, // 10% velocity spread (minimum)
-        strumSpeed: 80, // 80ms forward (moderate-fast, range: -360 to -5 = reverse, 5 to 360 = forward, step: 5ms)
-        strumPattern: 0, // Use chord type (not pattern)
-        strumSwing: 0, // No swing by default
-        voicing: 1, // 1x octave range by default
+        strumSpeed: 110, // 110ms forward
+        strumPattern: 4, // Contract (P4)
+        strumSwing: 15, // 65% UI (15 firmware = subtle swing for ARP)
+        gateValue: 35, // Raw 35 maps to ~64% displayed chord swing (balanced default)
+        voicing: 2, // 2x octave range
+        arpUserMode: 0, // CHORD mode (chord-based arp)
+        arpLatchMode: 0, // MOMENTARY
+        buildMode: 'inclusive', // Expand (Center Outward)
       },
       system: {
         lightSleepTimeout: 300, // 300 seconds (5 minutes)
@@ -562,8 +572,8 @@ export class KB1Protocol {
       
       // Root note validation (except Chromatic mode)
       if (s.scaleType !== 0) {
-        if (s.rootNote < 60 || s.rootNote > 71) {
-          errors.push(`rootNote ${s.rootNote} out of range [60-71] (C to B). Chromatic mode allows any value.`);
+        if (s.rootNote < 0 || s.rootNote > 127) {
+          errors.push(`rootNote ${s.rootNote} out of range [0-127] (full MIDI range).`);
         }
       }
     }
@@ -586,12 +596,17 @@ export class KB1Protocol {
    * @deprecated Use validateSettingsDetailed() for error messages
    */
   validateSettings(settings: DeviceSettings): boolean {
+    // Auto-correct deepSleepTimeout before validation (should always be lightSleep + 90)
+    if (settings.system) {
+      settings.system.deepSleepTimeout = settings.system.lightSleepTimeout + 90;
+    }
+
     // Helper to validate lever settings
     const validateLever = (lever: LeverSettings): boolean => {
-      // ccNumber ranges: -1 (disabled), 0-128 (MIDI CC + Velocity), 200-206 (KB1 Expression)
+      // ccNumber ranges: -1 (disabled), 0-128 (MIDI CC + Velocity), 200-207 (KB1 Expression)
       const ccValid = lever.ccNumber === -1 || 
                       (lever.ccNumber >= 0 && lever.ccNumber <= 128) ||
-                      (lever.ccNumber >= 200 && lever.ccNumber <= 206);
+                      (lever.ccNumber >= 200 && lever.ccNumber <= 208);
       return (
         ccValid &&
         lever.minCCValue >= 0 && lever.minCCValue <= 127 &&
@@ -605,15 +620,16 @@ export class KB1Protocol {
 
     // Helper to validate lever push settings
     const validateLeverPush = (leverPush: LeverPushSettings): boolean => {
-      // ccNumber ranges: -1 (disabled), 0-128 (MIDI CC + Velocity), 200-206 (KB1 Expression)
+      // ccNumber ranges: -1 (disabled), 0-128 (MIDI CC + Velocity), 200-209 (KB1 Expression)
       const ccValid = leverPush.ccNumber === -1 || 
                       (leverPush.ccNumber >= 0 && leverPush.ccNumber <= 128) ||
-                      (leverPush.ccNumber >= 200 && leverPush.ccNumber <= 206);
+                      (leverPush.ccNumber >= 200 && leverPush.ccNumber <= 209);
       return (
         ccValid &&
         leverPush.minCCValue >= 0 && leverPush.minCCValue <= 127 &&
         leverPush.maxCCValue >= 0 && leverPush.maxCCValue <= 127 &&
         leverPush.minCCValue <= leverPush.maxCCValue &&
+        leverPush.functionMode >= 0 && leverPush.functionMode <= 4 &&
         leverPush.onsetTime >= 0 &&
         leverPush.offsetTime >= 0
       );
@@ -623,7 +639,7 @@ export class KB1Protocol {
     const validateTouch = (touch: TouchSettings): boolean => {
       return (
         ((touch.ccNumber >= -1 && touch.ccNumber <= 128) || // Support CC 128 for Velocity
-         (touch.ccNumber >= 200 && touch.ccNumber <= 206)) && // Support KB1 Expression CCs (200-206)
+         (touch.ccNumber >= 200 && touch.ccNumber <= 208)) && // Support KB1 Expression CCs (200-208)
         touch.minCCValue >= 0 && touch.minCCValue <= 127 &&
         touch.maxCCValue >= 0 && touch.maxCCValue <= 127 &&
         touch.minCCValue <= touch.maxCCValue
@@ -634,8 +650,9 @@ export class KB1Protocol {
     const validateScale = (scale: ScaleSettings): boolean => {
       // In Chromatic mode (scaleType 0), rootNote is not used by firmware
       // so don't validate it - allow any value including 0
+      // Non-chromatic: any valid MIDI note (0-127)
       const rootNoteValid = scale.scaleType === 0 || 
-                           (scale.rootNote >= 48 && scale.rootNote <= 84);
+                           (scale.rootNote >= 0 && scale.rootNote <= 127);
       
       return (
         scale.scaleType >= 0 &&
@@ -647,13 +664,13 @@ export class KB1Protocol {
     // Helper to validate chord settings
     const validateChord = (chord: ChordSettings): boolean => {
       return (
-        (chord.playMode === 0 || chord.playMode === 1) &&
+        (chord.playMode === 0 || chord.playMode === 1 || chord.playMode === 2) &&
         chord.chordType >= 0 && chord.chordType <= 14 &&
         typeof chord.strumEnabled === 'boolean' &&
         chord.velocitySpread >= 0 && chord.velocitySpread <= 100 &&
         (Math.abs(chord.strumSpeed) >= 4 && Math.abs(chord.strumSpeed) <= 360) &&
         chord.strumPattern >= 0 && chord.strumPattern <= 7 &&
-        chord.strumSwing >= 0 && chord.strumSwing <= 100 &&
+        chord.strumSwing >= 0 && chord.strumSwing <= 50 &&
         chord.voicing >= 1 && chord.voicing <= 3
       );
     };

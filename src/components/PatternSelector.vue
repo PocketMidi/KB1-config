@@ -103,7 +103,7 @@ const patterns = computed<Pattern[]>(() => {
       all[4], // exclusive (contract)
       all[6], // user (replaces inclusive/expand)
       all[5]  // random
-    ]
+    ] as Pattern[]
   } else {
     // CHORD mode: Show Expand at position 4 (5th icon)
     return [
@@ -113,7 +113,7 @@ const patterns = computed<Pattern[]>(() => {
       all[4], // exclusive (contract)
       all[3], // inclusive (expand)
       all[5]  // random
-    ]
+    ] as Pattern[]
   }
 })
 </script>

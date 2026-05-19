@@ -446,7 +446,7 @@ export class KB1Protocol {
         minCCValue: 0,
         maxCCValue: 127,
         functionMode: 4, // Sustain
-        onsetTime: 500,  // 500ms release tail
+        onsetTime: 925,  // 925ms release tail
         offsetTime: 0,   // Momentary by default
         onsetType: InterpolationType.LOGARITHMIC,
         offsetType: InterpolationType.LOGARITHMIC,

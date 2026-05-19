@@ -511,11 +511,6 @@ const pushModes: Record<number, string> = {
   0: 'Smooth', 1: 'Peak', 2: 'Static', 3: 'Reset'
 };
 
-const touchModes: Record<number, string> = {
-  // Touch mode 0 remains Gate; chord swing repurpose only affects chord timing control.
-  0: 'Gate', 1: 'Toggle', 2: 'Smooth'
-};
-
 // KB1 Expression parameter names for cycling parameters
 const kb1ExpressionParamNames: Record<number, string> = {
   201: 'Pattern',
@@ -552,7 +547,7 @@ function getLeverLabel(ccNumber: number, functionMode: number, valueMode: number
   }
   // Standard MIDI CC — look up friendly name from CSV map
   const ccEntry = getCCMap().get(ccNumber);
-  const name = ccEntry?.label || `CC ${ccNumber}`;
+  const name = ccEntry?.parameter || `CC ${ccNumber}`;
   const parts = [name];
   if (valueMode === 1) parts.push('Bi');
   const mode = leverModes[functionMode];
@@ -573,15 +568,11 @@ function getPushTouchLabel(ccNumber: number, functionMode: number): string {
   }
   // Standard MIDI CC — look up friendly name
   const ccEntry = getCCMap().get(ccNumber);
-  const name = ccEntry?.label || `CC ${ccNumber}`;
+  const name = ccEntry?.parameter || `CC ${ccNumber}`;
   const mode = pushModes[functionMode];
   if (!mode || mode === 'Smooth') return name;
   return `${name} • ${mode}`;
 }
-
-const valueModeNames: Record<number, string> = {
-  0: 'Uni', 1: 'Bi'
-};
 
 const keyMappingNames: Record<number, string> = {
   0: 'Natural', 1: 'Compact'

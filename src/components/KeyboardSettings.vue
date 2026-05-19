@@ -689,32 +689,6 @@ function stopChordAnim() {
   chordAnimLastTime = 0
 }
 
-// Returns chord tone semitone offsets (from C=0) ordered for the selected arp pattern
-function getArpDisplaySequence(): number[] {
-  const intervals = (chordIntervals[model.value.chord.chordType] || []).map((i: number) => i % 12)
-  const sorted = [...intervals].sort((a: number, b: number) => a - b)
-  const pattern = model.value.chord.strumPattern
-  switch (pattern) {
-    case 2: return [...sorted].reverse()
-    case 3: { const down = sorted.slice(1, -1).reverse(); return [...sorted, ...down] }
-    case 4: {
-      const result: number[] = []; let lo = 0, hi = sorted.length - 1
-      while (lo <= hi) { result.push(sorted[lo++]); if (lo <= hi) result.push(sorted[hi--]) }
-      return result
-    }
-    case 5: {
-      const result: number[] = []; const mid = Math.floor(sorted.length / 2)
-      result.push(sorted[mid]); let lo = mid - 1, hi = mid + 1
-      while (lo >= 0 || hi < sorted.length) {
-        if (lo >= 0) result.push(sorted[lo--])
-        if (hi < sorted.length) result.push(sorted[hi++])
-      }
-      return result
-    }
-    default: return sorted
-  }
-}
-
 function applyArpKeyStyles(absTimeMs: number) {
   const intervals = (chordIntervals[model.value.chord.chordType] || []).map((i: number) => i % 12)
   // Center of the display keyboard in MIDI (G4 = 67 sits roughly in the middle of our layout)
@@ -1998,11 +1972,6 @@ function isNoteActive(midiNote: number): boolean {
     // Always return false so Vue never toggles the 'active' CSS class, which would
     // momentarily apply a CSS background-color and cause a visible pop.
     return false
-  } else if (playMode.value === 'chord_UNUSED') {
-    // (dead branch kept for reference — rAF replaced this)
-    const intervals = chordIntervals[model.value.chord.chordType] || []
-    const noteOffset = (midiNote - 60 + 120) % 12
-    return intervals.some((i: number) => (i % 12) === noteOffset)
   } else if (playMode.value === 'arp' && !isArpUserMode.value) {
     // Arp CHORD mode: rAF owns all styling. Always return false — same reason as chord above.
     return false

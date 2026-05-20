@@ -31,12 +31,12 @@
     <!-- Keyboard Visualization -->
     <div v-if="playMode === 'scale' || playMode === 'chord' || playMode === 'arp'" ref="keyboardRef" class="keyboard-visual" :class="{ 'chromatic-mode': isChromatic, 'arp-user-mode': playMode === 'arp' && isArpUserMode, 'chord-display-mode': playMode === 'chord', 'arp-chord-display-mode': playMode === 'arp' && !isArpUserMode }">
       <!-- Octave meter bars (only in CHORD mode and Arp CHORD sub-mode) - positioned from left -->
-      <div v-if="playMode === 'chord' || (playMode === 'arp' && !isArpUserMode)" ref="octaveMeterRef" class="octave-meter" :class="{ 'position-ready': meterPositionReady }" :style="{ left: meterLeftPosition, right: 'auto' }">
+      <div v-if="playMode === 'chord' || playMode === 'arp'" ref="octaveMeterRef" class="octave-meter" :class="{ 'position-ready': meterPositionReady, 'dimmed': playMode === 'arp' && isArpUserMode }" :style="{ left: meterLeftPosition, right: 'auto' }">
         <button
           v-for="n in 3"
           :key="n"
           class="meter-bar"
-          :class="{ active: voicingValue >= n }"
+          :class="{ active: voicingValue >= n && !(playMode === 'arp' && isArpUserMode) }"
           @click="voicingValue = n"
           @mousedown="handleVoicingMouseDown"
           @mouseenter="handleVoicingMouseMove($event, n)"
@@ -87,6 +87,114 @@
           <div class="note-label">{{ note.name }}</div>
         </div>
       </div>
+    </div>
+
+    <!-- Type / Range selectors — directly under keyboard, all modes -->
+    <div class="inputs under-keyboard-inputs">
+
+      <!-- Scale mode: Scale type + Root note -->
+      <template v-if="playMode === 'scale'">
+        <div class="group">
+          <label>{{ leftLabel }}</label>
+          <button
+            ref="typeTriggerRef"
+            class="picker-trigger"
+            :class="{ 'picker-open': typePickerOpen }"
+            @click="typePickerOpen = true"
+          >
+            {{ selectedTypeLabel }}
+          </button>
+        </div>
+        <div class="static-mood-bar">
+          <span class="mood-text" v-html="currentMood || '&nbsp;'"></span>
+        </div>
+        <div class="group">
+          <label>
+            ROOT NOTE
+            <span class="info-icon" @click.stop="showHelp('rootNote')">i</span>
+          </label>
+          <div class="root-range-row">
+            <NotePickerControl
+              v-model.number="rootNoteValue"
+              :notes="rootNotes"
+              :disabled="isChromatic"
+            />
+          </div>
+        </div>
+      </template>
+
+      <!-- Chord mode: Chord type + Octave range -->
+      <template v-else-if="playMode === 'chord'">
+        <div class="group">
+          <label>{{ leftLabel }}</label>
+          <button
+            ref="typeTriggerRef"
+            class="picker-trigger"
+            :class="{ 'picker-open': typePickerOpen }"
+            @click="typePickerOpen = true"
+          >
+            {{ selectedTypeLabel }}
+          </button>
+        </div>
+        <div class="static-mood-bar">
+          <span class="mood-text" v-html="currentMood || '&nbsp;'"></span>
+        </div>
+        <div class="group root-range-group">
+          <label>
+            OCTAVE RANGE
+            <span class="info-icon" @click.stop="showHelp('voicing')">i</span>
+          </label>
+          <div class="root-range-row">
+            <div class="voicing-num-select">
+              <button
+                v-for="n in 3"
+                :key="n"
+                class="voicing-num-btn"
+                :class="{ active: voicingValue === n }"
+                @click="voicingValue = n"
+              >{{ n }}</button>
+            </div>
+          </div>
+        </div>
+      </template>
+
+      <!-- Arp mode: Chord type + Octave range (grayed out in user mode) -->
+      <template v-else-if="playMode === 'arp'">
+        <div class="group" :class="{ disabled: isArpUserMode }">
+          <label>CHORD TYPE</label>
+          <button
+            ref="typeTriggerRef"
+            class="picker-trigger"
+            :class="{ 'picker-open': typePickerOpen }"
+            :disabled="isArpUserMode"
+            @click="!isArpUserMode && (typePickerOpen = true)"
+          >
+            {{ selectedTypeLabel }}
+          </button>
+        </div>
+        <div class="static-mood-bar" :class="{ disabled: isArpUserMode }">
+          <span class="mood-text" v-html="currentMood || '&nbsp;'"></span>
+        </div>
+        <div class="group root-range-group" :class="{ disabled: isArpUserMode }">
+          <label>
+            OCTAVE RANGE
+            <span class="info-icon" @click.stop="showHelp('voicing')">i</span>
+          </label>
+          <div class="root-range-row">
+            <div class="voicing-num-select">
+              <button
+                v-for="n in 3"
+                :key="n"
+                class="voicing-num-btn"
+                :class="{ active: voicingValue === n && !isArpUserMode }"
+                :disabled="isArpUserMode"
+                @click="!isArpUserMode && (voicingValue = n)"
+              >{{ n }}</button>
+            </div>
+          </div>
+        </div>
+      </template>
+
     </div>
 
     <!-- Inactive Keys Hint Banner (Chromatic Mode Only) -->
@@ -248,63 +356,6 @@
       </div>
     </div>
 
-    <!-- Type/Root Note Selectors (for SCALE mode or BLOCK/STRUM styles) -->
-    <div v-if="playMode === 'scale' || playMode === 'chord'" class="inputs">
-      <div class="group" :class="{ 'root-range-group': playMode === 'chord' }">
-        <label>
-          {{ playMode === 'chord' ? 'OCTAVE RANGE' : 'ROOT NOTE' }}
-          <span v-if="playMode === 'chord'" 
-                class="info-icon" 
-                @click.stop="showHelp('voicing')">
-            i
-          </span>
-          <span v-if="playMode === 'scale'" 
-                class="info-icon" 
-                @click.stop="showHelp('rootNote')">
-            i
-          </span>
-        </label>
-        <div class="root-range-row">
-          <!-- Root note only applies in Scale mode; chord root is determined by which key is pressed -->
-          <NotePickerControl
-            v-if="playMode === 'scale'"
-            v-model.number="rootNoteValue"
-            :notes="rootNotes"
-            :disabled="isChromatic"
-          />
-          
-          <!-- Voicing octave range selector (1, 2, or 3 octaves) -->
-          <div v-if="playMode === 'chord'" class="voicing-num-select">
-            <button
-              v-for="n in 3"
-              :key="n"
-              class="voicing-num-btn"
-              :class="{ active: voicingValue === n }"
-              @click="voicingValue = n"
-            >{{ n }}</button>
-          </div>
-        </div>
-      </div>
-      <div class="input-divider"></div>
-
-      <div class="group">
-        <label>{{ leftLabel }}</label>
-        <button 
-          ref="typeTriggerRef"
-          class="picker-trigger"
-          :class="{ 'picker-open': typePickerOpen }"
-          @click="typePickerOpen = true"
-        >
-          {{ selectedTypeLabel }}
-        </button>
-      </div>
-
-      <!-- Static Mood Description Bar (for SCALE mode, BLOCK style, and STRUM style) -->
-      <div class="static-mood-bar" v-if="(playMode === 'scale' || (playMode === 'chord' && currentMood)) && currentMood">
-        <span class="mood-text" v-html="currentMood"></span>
-      </div>
-    </div>
-
     <!-- Arp Mode: CHORD/USER Toggle and Controls -->
     <div v-if="playMode === 'arp'" class="arp-controls">
       <!-- Mode toggles row -->
@@ -393,46 +444,6 @@
             />
             <span class="unit-label">%</span>
           </div>
-        </div>
-      </div>
-
-      <!-- Root Note/Range and Chord Type (only in CHORD mode) -->
-      <div v-if="!isArpUserMode" class="arp-type-selectors inputs">
-        <div class="group root-range-group">
-          <label>
-            OCTAVE RANGE
-            <span class="info-icon" @click.stop="showHelp('voicing')">i</span>
-          </label>
-          <div class="root-range-row">
-            <!-- Root note has no effect in Arp mode; the played key sets the root -->
-            <!-- Voicing octave range selector (1, 2, or 3 octaves) -->
-            <div class="voicing-num-select">
-              <button
-                v-for="n in 3"
-                :key="n"
-                class="voicing-num-btn"
-                :class="{ active: voicingValue === n }"
-                @click="voicingValue = n"
-              >{{ n }}</button>
-            </div>
-          </div>
-        </div>
-        <div class="input-divider"></div>
-
-        <div class="group">
-          <label>CHORD TYPE</label>
-          <button 
-            ref="typeTriggerRef"
-            class="picker-trigger"
-            @click="typePickerOpen = true"
-          >
-            {{ selectedTypeLabel }}
-          </button>
-        </div>
-
-        <!-- Static Mood Description Bar (for CHORD arp mode) -->
-        <div class="static-mood-bar" v-if="currentMood">
-          <span class="mood-text" v-html="currentMood"></span>
         </div>
       </div>
     </div>
@@ -771,8 +782,8 @@ function updateMeterPosition() {
     return
   }
   
-  // Only calculate position when meter is visible
-  const shouldShowMeter = playMode.value === 'chord' || (playMode.value === 'arp' && !isArpUserMode.value)
+  // Only calculate position when meter is visible (chord or any arp sub-mode)
+  const shouldShowMeter = playMode.value === 'chord' || playMode.value === 'arp'
   if (!shouldShowMeter) {
     meterPositionReady.value = false
     return
@@ -2091,7 +2102,7 @@ function handleKeyClick(midiNote: number) {
 
 /* Keyboard Visualization */
 .keyboard-visual {
-  margin-bottom: var(--kb1-spacing-md);
+  margin-bottom: var(--kb1-spacing-sm);
   display: flex;
   flex-direction: column;
   gap: var(--kb1-spacing-sm);
@@ -2524,7 +2535,7 @@ function handleKeyClick(midiNote: number) {
   gap: var(--kb1-spacing-md);
   padding-top: 0.75rem;
   margin-bottom: 0;
-  padding-bottom: 0.75rem;
+  padding-bottom: 0rem;
   border-top: 1px solid var(--color-divider);
 }
 
@@ -2831,10 +2842,14 @@ function handleKeyClick(midiNote: number) {
 .gate-control {
   padding-top: 0.75rem;
   padding-bottom: 0.75rem;
-  border-bottom: 1px solid var(--color-divider);
 }
 
 .gate-control.disabled {
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+.group.disabled {
   opacity: 0.35;
   pointer-events: none;
 }
@@ -2870,15 +2885,7 @@ function handleKeyClick(midiNote: number) {
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* Advanced Strum Section */
-.advanced-strum-section {
-  margin-top: var(--kb1-spacing-sm);
-  padding: 0.25rem 0.75rem;
-  background: rgba(234, 234, 234, 0.03);
-  border-radius: var(--kb1-radius-sm);
-}
-
-/* Arp Shape Section - same styling as advanced strum content */
+/* Arp Shape Section */
 .arp-shape-section {
   margin-top: var(--kb1-spacing-sm);
   animation: fadeIn 0.3s ease;
@@ -2887,12 +2894,11 @@ function handleKeyClick(midiNote: number) {
 .arp-shape-section .swing-control {
   margin-top: var(--kb1-spacing-md);
   padding-bottom: var(--kb1-spacing-sm);
-  border-bottom: 1px solid var(--color-divider);
 }
 
 /* Arp Rate Section */
 .arp-rate-section {
-  padding-top: 0.25rem;  /* Add space to compensate for missing dots visualization */
+  padding-top: 0rem;  /* Add space to compensate for missing dots visualization */
   border-bottom: 1px solid var(--color-divider);
 }
 
@@ -3082,8 +3088,14 @@ function handleKeyClick(midiNote: number) {
 }
 
 /* Static Mood Bar (for scale/chord modes) */
+.static-mood-bar.disabled {
+  opacity: 0.35;
+  pointer-events: none;
+}
+
 .static-mood-bar {
   margin-top: var(--kb1-spacing-sm);
+  margin-bottom: var(--kb1-spacing-sm);
   padding: var(--kb1-spacing-sm) 0.75rem;
   background: rgba(234, 234, 234, 0.03);
   border-radius: var(--kb1-radius-sm);
@@ -3229,6 +3241,11 @@ function handleKeyClick(midiNote: number) {
 
 .octave-meter.position-ready {
   visibility: visible;
+}
+
+.octave-meter.dimmed {
+  opacity: 0.35;
+  pointer-events: none;
 }
 
 .meter-bar {

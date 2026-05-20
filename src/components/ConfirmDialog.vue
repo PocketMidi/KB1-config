@@ -3,7 +3,6 @@
     <div v-if="visible" class="confirm-overlay" @click.self.stop="handleCancel">
       <div 
         class="confirm-dialog" 
-        :style="dialogStyle"
         @click.stop
       >
         <div class="confirm-message">{{ message }}</div>
@@ -17,11 +16,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref } from 'vue';
 
 export interface ConfirmDialogProps {
   message: string;
-  position?: { x: number; y: number };
 }
 
 const props = defineProps<ConfirmDialogProps>();
@@ -32,11 +30,6 @@ const emit = defineEmits<{
 }>();
 
 const visible = ref(true);
-
-// Always center the dialog - position prop is ignored
-const dialogStyle = computed(() => {
-  return {}; // Use default centered positioning from CSS
-});
 
 function handleConfirm() {
   visible.value = false;

@@ -96,8 +96,6 @@
               stroke-width="0.5"
               class="note-dot"
               @click.stop="removeNote(idx)"
-              @mouseenter="hoverNote(idx)"
-              @mouseleave="unhoverNote()"
             />
           </template>
           <template v-else-if="shouldSplitDot(idx)">
@@ -146,22 +144,9 @@
                 'root-dot': interval === 0
               }"
               @click.stop="removeNote(idx)"
-              @mouseenter="hoverNote(idx)"
-              @mouseleave="unhoverNote()"
             />
           </template>
         </g>
-
-        <!-- Hover indicator for adding notes -->
-        <circle
-          v-if="hoverPosition"
-          :cx="hoverPosition.x"
-          :cy="hoverPosition.y"
-          r="4"
-          :fill="activeDotColor"
-          opacity="0.5"
-          class="hover-indicator"
-        />
       </svg>
 
     <!-- Build Mode Buttons -->
@@ -418,8 +403,6 @@ const templates = ref<Template[]>([
   }
 ])
 
-const hoverPosition = ref<{ x: number, y: number } | null>(null)
-
 // Base intervals from template (before build mode applied)
 const baseIntervals = ref<number[]>([0, 4, 7, 12])
 
@@ -513,15 +496,6 @@ function handleCanvasClick(event: MouseEvent) {
 function removeNote(index: number) {
   if (selectedMode.value !== 'custom') return
   intervals.value = intervals.value.filter((_, i) => i !== index)
-}
-
-// Hover effects
-function hoverNote(_index: number) {
-  // Could preview this note
-}
-
-function unhoverNote() {
-  hoverPosition.value = null
 }
 
 // Select build mode and reorder intervals

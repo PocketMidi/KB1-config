@@ -475,9 +475,6 @@ const communityPresetsRef = ref<InstanceType<typeof CommunityPresets> | null>(nu
 // Legacy refs (keep for device preset functions)
 const nameInput = ref<HTMLInputElement | null>(null);
 
-// Device preset state
-const activeDeviceSlot = ref<number | null>(null);
-
 // Load presets on mount
 onMounted(() => {
   refreshDevicePresets();
@@ -846,17 +843,14 @@ function activateSlot(slot: number) {
   
   emit('load', preset.settings);
   activeSlot.value = slot;
-  activeDeviceSlot.value = null;
-  
-  toast.success(`Applied: "${preset.name}"`);
+
 }
 
 function loadFactoryDefaults() {
   emit('loadFactoryDefaults');
   activeSlot.value = null;
-  activeDeviceSlot.value = null;
-  
-  // Only deactivate the active slot — do NOT touch saved preset slots
+
+  // Only deactivate the active slot— do NOT touch saved preset slots
   toast.success('Defaults loaded');
 }
 

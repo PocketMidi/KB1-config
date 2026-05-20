@@ -174,16 +174,6 @@ const patterns = computed<Pattern[]>(() => {
   opacity: 1;
 }
 
-.current-indicator {
-  position: absolute;
-  bottom: -8px;
-  width: 8px;
-  height: 8px;
-  background: #ff6b35;
-  border-radius: var(--kb1-radius-full);
-  box-shadow: 0 0 6px rgba(255, 107, 53, 0.6);
-}
-
 @media (max-width: 768px) {
   .patterns-grid {
     gap: 0.35rem;

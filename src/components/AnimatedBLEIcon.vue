@@ -17,12 +17,10 @@ import { Vue3Lottie } from 'vue3-lottie';
 
 interface Props {
   size?: number;
-  alt?: string;
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  size: 90,
-  alt: 'Bluetooth icon'
+  size: 90
 });
 
 const bleAnimation = ref<any>(null);

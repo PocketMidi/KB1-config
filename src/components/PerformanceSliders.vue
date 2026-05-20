@@ -176,11 +176,6 @@ const currentColorIndex = ref<number>(0);
 // Color picker state
 const showColorPicker = ref<number | null>(null); // Index of slider showing picker
 
-// Global explainer text for general messages
-const explainerText = ref('');
-const explainerFading = ref(false);
-let explainerTimeout: number | null = null;
-
 // Per-slider explainer text for toggle changes
 const sliderExplainerTexts = ref<Record<number, string>>({});
 const sliderExplainerFading = ref<Record<number, boolean>>({});
@@ -277,7 +272,6 @@ function setControlMode(mode: ControlMode) {
   // Save mode preference and preset
   localStorage.setItem('kb1-control-mode', mode);
   savePreset();
-  showExplainerText(config.description);
 }
 
 // Double-tap/double-click detection for slider reset
@@ -349,23 +343,6 @@ function savePreset() {
     links: links.value,
   };
   SliderPresetStore.saveCurrentState(preset);
-}
-
-// Show global explainer text with fade effect
-function showExplainerText(text: string) {
-  // Clear any existing timeout
-  if (explainerTimeout) {
-    clearTimeout(explainerTimeout);
-  }
-  
-  // Reset fade state
-  explainerFading.value = false;
-  explainerText.value = text;
-  
-  // Start fade out after 2 seconds
-  explainerTimeout = window.setTimeout(() => {
-    explainerFading.value = true;
-  }, 2000);
 }
 
 // Show per-slider explainer text (for toggle buttons)
@@ -899,10 +876,6 @@ function handleFxParamChange(index: number, fxParamId: number) {
   
   // Show explainer text with parameter name 
   const param = FX_PARAMS.find(p => p.id === fxParamId);
-  if (param && param.id > 0) {
-    showExplainerText(param.name);
-  }
-  
   savePreset();
 }
 
@@ -915,10 +888,6 @@ function handleCCChange(index: number, newCC: number) {
   
   // Show explainer text with CC info
   const option = CC_OPTIONS.find(opt => opt.cc === newCC);
-  if (option) {
-    showExplainerText(option.label);
-  }
-  
   savePreset();
 }
 
@@ -956,9 +925,6 @@ function handleLinkMouseMove(event: MouseEvent) {
 }
 
 function handleLinkMouseUp() {
-  if (linkDragState.value !== null) {
-    showExplainerText(linkDragState.value ? 'Linked' : 'Unlinked');
-  }
   isDraggingLinks.value = false;
   linkDragState.value = null;
   document.removeEventListener('mousemove', handleLinkMouseMove);
@@ -997,9 +963,6 @@ function handleLinkTouchMove(event: TouchEvent) {
 }
 
 function handleLinkTouchEnd() {
-  if (linkDragState.value !== null) {
-    showExplainerText(linkDragState.value ? 'Linked' : 'Unlinked');
-  }
   isDraggingLinks.value = false;
   linkDragState.value = null;
 }
@@ -1489,7 +1452,6 @@ function loadPresetData(preset: SliderPreset) {
   links.value = [...preset.links];
   savePreset();
   updatePresetSnapshot();
-  showExplainerText('Preset Loaded');
 }
 
 // Load preset by ID (from dropdown)
@@ -1504,7 +1466,6 @@ function loadPreset(id: string) {
     loadPresetData(preset.preset);
     activePresetId.value = id;
     SliderPresetStore.setActivePresetId(id);
-    showExplainerText(`Loaded: ${preset.name}`);
   }
 }
 
@@ -1526,7 +1487,6 @@ function closePresetModal() {
 // Handle save from modal
 function handleSavePreset() {
   if (!presetName.value.trim()) {
-    showExplainerText('Please enter a preset name');
     return;
   }
   
@@ -1558,7 +1518,6 @@ function saveCurrentAsPreset(name: string, _description?: string) {
   SliderPresetStore.setActivePresetId(preset.id);
   loadSavedPresets();
   updatePresetSnapshot();
-  showExplainerText(`Saved: ${name}`);
 }
 
 // Load all saved presets from storage
@@ -1581,7 +1540,6 @@ function deleteActivePreset() {
   activePresetId.value = null;
   SliderPresetStore.setActivePresetId(null);
   loadSavedPresets();
-  showExplainerText('Preset deleted');
 }
 
 // Expose functions for parent component

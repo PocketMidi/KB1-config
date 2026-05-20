@@ -67,7 +67,6 @@ import { useUIPreferences } from '../composables/useUIPreferences';
 
 const props = defineProps<{
   isConnected: boolean;
-  deviceName?: string;
 }>();
 
 defineEmits<{

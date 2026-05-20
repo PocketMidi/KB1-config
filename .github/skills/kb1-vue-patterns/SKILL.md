@@ -207,3 +207,34 @@ const arpIntervals = computed({
 > **In any setter that can be called as the second of two rapid emits from the same user action, read all correlated state from the local ref (`latestArp`, `latestChord`), not from `model.value`.**
 
 This applies to: `arpIntervals`, `arpBuildMode`, `arpSwingValue`, and any future arp setters in `KeyboardSettings.vue`.
+
+---
+
+## Dead-Path Hygiene (Vue Components)
+
+When touching component code, remove clearly dead paths immediately if behavior is unchanged.
+
+### Safe-Remove Rules
+
+- Remove symbols only when they are provably unused in the same component (`template`, `script`, and `style` scope checks).
+- Prefer conservative removals: unused prop fields, write-only refs, no-op handlers, and CSS classes never referenced by template classes.
+- If uncertain (dynamic class names, external API contracts, parent-provided props), mark as `needs review` and do not delete.
+- After cleanup, run `npx vue-tsc --noEmit` in `KB1-config`.
+
+### Old Dead Paths Removed (May 2026)
+
+- `AnimatedBLEIcon.vue`: removed unused `alt` prop.
+- `ConfirmDialog.vue`: removed ignored `position` prop and dead `dialogStyle` plumbing.
+- `MobileHeader.vue`: removed unused `deviceName` prop.
+- `PatternSelector.vue`: removed unused `.current-indicator` CSS rule.
+- `PresetManager.vue`: removed write-only `activeDeviceSlot` ref and null assignments.
+- `PerformanceSliders.vue`: removed stale global-explainer path (`showExplainerText` family) and leftover dead call.
+- `PatternBuilder.vue`: removed no-op hover path (`hoverNote`/`hoverPosition` indicator bindings).
+- `KeyboardSettings.vue`: removed unused `.advanced-strum-section` CSS block.
+
+### Sweep Pattern (Repeatable)
+
+1. Search symbol references in-file.
+2. Remove high-confidence dead paths only.
+3. Re-run TypeScript check.
+4. Keep notes here for future sessions to avoid reintroducing stale branches.

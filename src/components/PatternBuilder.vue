@@ -26,9 +26,9 @@
         <!-- Root line (0 semitones) -->
         <line x1="0" y1="87.5" x2="400" y2="87.5" stroke="rgba(255, 255, 255, 0.4)" stroke-width="1" />
         
-        <!-- Octave reference lines -->
-        <line x1="0" y1="56" x2="400" y2="56" stroke="rgba(255, 255, 255, 0.15)" stroke-width="1" stroke-dasharray="2,4" />
-        <line x1="0" y1="24.5" x2="400" y2="24.5" stroke="rgba(255, 255, 255, 0.15)" stroke-width="1" stroke-dasharray="2,4" />
+        <!-- Octave reference lines (mid = 6 semitones, top = 12 semitones / 1 octave) -->
+        <line x1="0" y1="64.7" x2="400" y2="64.7" stroke="rgba(255, 255, 255, 0.15)" stroke-width="1" stroke-dasharray="2,4" />
+        <line x1="0" y1="41.9" x2="400" y2="41.9" stroke="rgba(255, 255, 255, 0.15)" stroke-width="1" stroke-dasharray="2,4" />
 
         <!-- Connection line between notes -->
         <polyline
@@ -601,7 +601,7 @@ function getTemplateForChordType(chordType: number): number {
 .strum-builder {
   display: flex;
   flex-direction: column;
-  gap: 0.3rem;
+  gap: 0;
   width: 100%;
 }
 
@@ -713,7 +713,7 @@ function getTemplateForChordType(chordType: number): number {
   display: flex;
   flex-direction: column;
   gap: var(--kb1-spacing-xs);
-  padding: 0.25rem 0;
+  padding: 0rem 0 0;
   width: 100%;
 }
 

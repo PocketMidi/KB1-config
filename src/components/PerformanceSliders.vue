@@ -873,9 +873,7 @@ function handleFxParamChange(index: number, fxParamId: number) {
   if (!slider) return;
   
   slider.fxParam = fxParamId;
-  
-  // Show explainer text with parameter name 
-  const param = FX_PARAMS.find(p => p.id === fxParamId);
+
   savePreset();
 }
 
@@ -885,9 +883,7 @@ function handleCCChange(index: number, newCC: number) {
   if (!slider) return;
   
   slider.cc = newCC;
-  
-  // Show explainer text with CC info
-  const option = CC_OPTIONS.find(opt => opt.cc === newCC);
+
   savePreset();
 }
 

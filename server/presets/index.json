@@ -1,5 +1,42 @@
 {
   "version": "1.0",
-  "lastUpdated": "2026-04-13",
-  "presets": []
+  "lastUpdated": "2026-05-19",
+  "presets": [
+    {
+      "id": "preset_1779149688899_maj-scale-rootnote-control_7j0qeahql",
+      "filename": "preset_1779149688899_majscalerootnotecontrol_7j0qeahql.json",
+      "metadata": {
+        "name": "Maj Scale + RootNote Control",
+        "author": "STARTER",
+        "date": "2026-05-19"
+      }
+    },
+    {
+      "id": "preset_1779149759582_chord-strum_8nohw7d1v",
+      "filename": "preset_1779149759582_chordstrum_8nohw7d1v.json",
+      "metadata": {
+        "name": "Chord Strum",
+        "author": "STARTER",
+        "date": "2026-05-19"
+      }
+    },
+    {
+      "id": "preset_1779149766932_user-arp_euhp5xjn2",
+      "filename": "preset_1779149766932_userarp_euhp5xjn2.json",
+      "metadata": {
+        "name": "User Arp",
+        "author": "STARTER",
+        "date": "2026-05-19"
+      }
+    },
+    {
+      "id": "preset_1779242012078_chord-arp_b5111254u",
+      "filename": "preset_1779242012078_chordarp_b5111254u.json",
+      "metadata": {
+        "name": "Chord Arp",
+        "author": "STARTER",
+        "date": "2026-05-20"
+      }
+    }
+  ]
 }

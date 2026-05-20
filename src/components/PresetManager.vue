@@ -330,6 +330,7 @@ function getDefaultPresets(): (SlotPreset | null)[] {
       description: "cycle thru root notes\n- fwd with P1\n- rev with Touch",
       snapshot: "KB: Maj/C • Compact\nL1: PitchBend • P1: RootNote/FWD\nL2: Vel • Step • P2: Vel • Reset • Touch: RootNote/REV",
       author: "STARTER",
+      isFactoryDefault: true,
       modifiedAt: now,
       settings: {
         lever1: { ccNumber: 208, minCCValue: 0, maxCCValue: 127, stepSize: 1, functionMode: 3, valueMode: 1, onsetTime: 60, offsetTime: 60, onsetType: 0, offsetType: 0 },
@@ -348,6 +349,7 @@ function getDefaultPresets(): (SlotPreset | null)[] {
       description: "cycle thru rate with L1 \ncycle thru note range \nfwd with P1, rev with Touch",
       snapshot: "KB: Maj/C • Strum/Fwd/Incl\nL1: Rate • Step • P1: ChordType/FWD\nL2: Vel • Step • P2: Vel • Reset • Touch: ChordType/REV",
       author: "STARTER",
+      isFactoryDefault: true,
       modifiedAt: now,
       settings: {
         lever1: { ccNumber: 200, minCCValue: 0, maxCCValue: 127, stepSize: 1, functionMode: 2, valueMode: 0, onsetTime: 60, offsetTime: 60, onsetType: 0, offsetType: 0 },
@@ -363,9 +365,10 @@ function getDefaultPresets(): (SlotPreset | null)[] {
     // Slot 3: Chord Arp
     {
       name: "Chord Arp",
-      description: "cycle thru arp speeds with L1\ncycle thru patterns\nfwd with P1, rev with Touch",
-      snapshot: "KB: Chr/C • Natural\nL1: Rate • Step • P1: Pattern/FWD\nL2: Vel • Step • P2: Vel • Touch: Pattern/REV",
+      description: "chord mode with bounce (back and forth)\ncycle thru rates with L1\nfwd with P1, rev with Touch",
+      snapshot: "KB: Chord/C • Natural • Bounce\nL1: Rate • Step • P1: Pattern/FWD\nL2: Vel • Step • P2: Vel • Touch: Pattern/REV",
       author: "STARTER",
+      isFactoryDefault: true,
       modifiedAt: now,
       settings: {
         lever1: { ccNumber: 200, minCCValue: 0, maxCCValue: 127, stepSize: 1, functionMode: 2, valueMode: 0, onsetTime: 60, offsetTime: 60, onsetType: 0, offsetType: 0 },
@@ -374,7 +377,7 @@ function getDefaultPresets(): (SlotPreset | null)[] {
         leverPush2: { ccNumber: 128, minCCValue: 85, maxCCValue: 85, functionMode: 0, onsetTime: 100, offsetTime: 100, onsetType: 0, offsetType: 0 },
         touch: { ccNumber: 201, minCCValue: 0, maxCCValue: 127, functionMode: 1, threshold: 36800, offsetTime: 100 },
         scale: { scaleType: 0, rootNote: 60, keyMapping: 0 },
-        chord: { playMode: 2, chordType: 10, strumEnabled: true, velocitySpread: 10, strumSpeed: 110, strumPattern: 3, strumSwing: 0, gateValue: 35, voicing: 1, arpUserMode: 1, arpLatchMode: 0, buildMode: "user", strumIntervals: [0, 4, 7, 14, 7, 4, 0] },
+        chord: { playMode: 1, chordType: 10, strumEnabled: true, velocitySpread: 10, strumSpeed: 110, strumPattern: 3, strumSwing: 0, gateValue: 35, voicing: 1, arpUserMode: 0, arpLatchMode: 0, buildMode: "updown", strumIntervals: [0, 4, 7, 12, 7, 4, 0] },
         system: { lightSleepTimeout: 300, deepSleepTimeout: 390, bleTimeout: 600 }
       }
     },
@@ -382,8 +385,9 @@ function getDefaultPresets(): (SlotPreset | null)[] {
     {
       name: "User Arp",
       description: "cycle thru arp speeds with L1\ncycle thru patterns\nfwd with P1, rev with Touch",
-      snapshot: "KB: Chr/C • Natural\nL1: Rate • Step • P1: Pattern/FWD\nL2: Vel • Step • P2: Vel • Touch: Pattern/REV",
+      snapshot: "KB: Chr/C • Natural • User\nL1: Rate • Step • P1: Pattern/FWD\nL2: Vel • Step • P2: Vel • Touch: Pattern/REV",
       author: "STARTER",
+      isFactoryDefault: true,
       modifiedAt: now,
       settings: {
         lever1: { ccNumber: 200, minCCValue: 0, maxCCValue: 127, stepSize: 1, functionMode: 2, valueMode: 0, onsetTime: 60, offsetTime: 60, onsetType: 0, offsetType: 0 },

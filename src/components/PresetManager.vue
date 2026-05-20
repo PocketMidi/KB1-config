@@ -326,7 +326,7 @@ function getDefaultPresets(): (SlotPreset | null)[] {
   return [
     // Slot 1: Maj Scale + RootNote Control
     {
-      name: "Maj Scale + RootNote Control",
+      name: "Scale + RootNote",
       description: "cycle thru root notes\n- fwd with P1\n- rev with Touch",
       snapshot: "KB: Maj/C • Compact\nL1: PitchBend • P1: RootNote/FWD\nL2: Vel • Step • P2: Vel • Reset • Touch: RootNote/REV",
       author: "STARTER",
@@ -366,7 +366,7 @@ function getDefaultPresets(): (SlotPreset | null)[] {
     {
       name: "Chord Arp",
       description: "chord mode with bounce (back and forth)\ncycle thru rates with L1\nfwd with P1, rev with Touch",
-      snapshot: "KB: Chord/C • Natural • Bounce\nL1: Rate • Step • P1: Pattern/FWD\nL2: Vel • Step • P2: Vel • Touch: Pattern/REV",
+      snapshot: "KB: M+9/C • Natural • Bounce\nL1: Rate • Step • P1: Pattern/FWD\nL2: Vel • Step • P2: Vel • Touch: Pattern/REV",
       author: "STARTER",
       isFactoryDefault: true,
       modifiedAt: now,
@@ -377,7 +377,7 @@ function getDefaultPresets(): (SlotPreset | null)[] {
         leverPush2: { ccNumber: 128, minCCValue: 85, maxCCValue: 85, functionMode: 0, onsetTime: 100, offsetTime: 100, onsetType: 0, offsetType: 0 },
         touch: { ccNumber: 201, minCCValue: 0, maxCCValue: 127, functionMode: 1, threshold: 36800, offsetTime: 100 },
         scale: { scaleType: 0, rootNote: 60, keyMapping: 0 },
-        chord: { playMode: 1, chordType: 10, strumEnabled: true, velocitySpread: 10, strumSpeed: 110, strumPattern: 3, strumSwing: 0, gateValue: 35, voicing: 1, arpUserMode: 0, arpLatchMode: 0, buildMode: "updown", strumIntervals: [0, 4, 7, 12, 7, 4, 0] },
+        chord: { playMode: 2, chordType: 10, strumEnabled: true, velocitySpread: 10, strumSpeed: 165, strumPattern: 3, strumSwing: 40, gateValue: 35, voicing: 2, arpUserMode: 0, arpLatchMode: 0, buildMode: "updown", strumIntervals: [0, 4, 7, 14, 7, 4, 0] },
         system: { lightSleepTimeout: 300, deepSleepTimeout: 390, bleTimeout: 600 }
       }
     },
@@ -385,7 +385,7 @@ function getDefaultPresets(): (SlotPreset | null)[] {
     {
       name: "User Arp",
       description: "cycle thru arp speeds with L1\ncycle thru patterns\nfwd with P1, rev with Touch",
-      snapshot: "KB: Chr/C • Natural • User\nL1: Rate • Step • P1: Pattern/FWD\nL2: Vel • Step • P2: Vel • Touch: Pattern/REV",
+      snapshot: "KB: M+9/C • Natural • User\nL1: Rate • Step • P1: Pattern/FWD\nL2: Vel • Step • P2: Vel • Touch: Pattern/REV",
       author: "STARTER",
       isFactoryDefault: true,
       modifiedAt: now,
@@ -463,7 +463,8 @@ const snapshotDiffLines = computed(() => {
   // Always regenerate from saved settings so format changes don't cause false diffs
   const savedSnapshot = generateSettingsSnapshot(saved.settings);
   const savedLines = savedSnapshot.split('\n');
-  return liveLines.map((text, i) => ({ text, changed: text !== (savedLines[i] ?? '') }));
+  // Saved preset: always show in white — user sees what they're about to load, not a diff against current device state
+  return savedLines.map(text => ({ text, changed: false }));
 });
 
 // Export metadata (simplified)
@@ -589,6 +590,7 @@ function generateSettingsSnapshot(settings: DeviceSettings): string {
   
   // Line 1: Keyboard mode with detailed info
   const isChordMode = settings.chord.playMode === 1;
+  const isArpMode = settings.chord.playMode === 2;
   const scaleType = scaleNames[settings.scale.scaleType] || '?';
   const rootNote = rootNotes[settings.scale.rootNote % 12] || '?';
   const chordType = chordNames[settings.chord.chordType] || '?';
@@ -601,9 +603,18 @@ function generateSettingsSnapshot(settings: DeviceSettings): string {
     const pattern = settings.chord.strumPattern > 0 ? (patternNames[settings.chord.strumPattern] || '') : '';
     strumState = pattern ? `Strum/${direction}/${pattern}` : `Strum/${direction}`;
   }
+
+  const arpBuildModeLabels: Record<string, string> = {
+    'up': 'FWD', 'down': 'REV', 'updown': 'Bounce',
+    'exclusive': 'Cont', 'random': 'Rand', 'user': 'User'
+  };
   
   if (isChordMode) {
     lines.push(`KB: ${chordType}/${rootNote} • ${strumState}`);
+  } else if (isArpMode) {
+    const buildLabel = arpBuildModeLabels[settings.chord.buildMode || ''] || '';
+    const base = `KB: ${chordType}/${rootNote} • ${keyMapping}`;
+    lines.push(buildLabel ? `${base} • ${buildLabel}` : base);
   } else {
     lines.push(`KB: ${scaleType}/${rootNote} • ${keyMapping}`);
   }

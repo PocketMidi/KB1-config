@@ -7,7 +7,28 @@
  */
 
 header('Content-Type: application/json');
-header('Access-Control-Allow-Origin: *'); // Allow all origins (restrict in production)
+
+// Restrict CORS to known app origins
+$allowedOrigins = [
+    'https://pocketmidi.com',
+    'https://www.pocketmidi.com',
+    'https://pocketmidi.github.io',
+    'http://localhost:5173', // Vite dev server
+];
+$origin = isset($_SERVER['HTTP_ORIGIN']) ? $_SERVER['HTTP_ORIGIN'] : '';
+if (in_array($origin, $allowedOrigins, true)) {
+    header('Access-Control-Allow-Origin: ' . $origin);
+    header('Vary: Origin');
+} else {
+    // Reject unknown origins outright (non-browser requests have no Origin header
+    // and will hit the API key check below instead)
+    if (!empty($origin)) {
+        http_response_code(403);
+        echo json_encode(['error' => 'Origin not allowed']);
+        exit;
+    }
+}
+
 header('Access-Control-Allow-Methods: POST, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type, X-API-Key');
 header('Access-Control-Max-Age: 86400'); // Cache preflight for 24 hours
@@ -33,13 +54,15 @@ define('MAX_PRESETS', 1000); // Prevent spam
 define('RATE_LIMIT_FILE', sys_get_temp_dir() . '/kb1_rate_limit.json');
 define('RATE_LIMIT_REQUESTS', 100); // Max 100 uploads per IP per hour (increase for testing)
 
-// Simple API key (optional - comment out if not using)
-// define('API_KEY', 'your-secret-key-here'); // Generate with: openssl rand -hex 16
-// if (!isset($_SERVER['HTTP_X_API_KEY']) || $_SERVER['HTTP_X_API_KEY'] !== API_KEY) {
-//     http_response_code(401);
-//     echo json_encode(['error' => 'Unauthorized']);
-//     exit;
-// }
+// API key — generate with: openssl rand -hex 16
+// Set this to the same value as VITE_PRESET_API_KEY in the deployed app.
+// IMPORTANT: do NOT commit the real key to git. Set it directly on the server.
+define('API_KEY', getenv('KB1_PRESET_API_KEY') ?: 'REPLACE_WITH_YOUR_KEY');
+if (!isset($_SERVER['HTTP_X_API_KEY']) || $_SERVER['HTTP_X_API_KEY'] !== API_KEY) {
+    http_response_code(401);
+    echo json_encode(['error' => 'Unauthorized']);
+    exit;
+}
 
 // Rate limiting
 function checkRateLimit() {

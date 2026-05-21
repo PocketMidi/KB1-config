@@ -281,7 +281,7 @@ import { useDeviceState } from '../composables/useDeviceState';
 import { useToast } from '../composables/useToast';
 import { useConfirm } from '../composables/useConfirm';
 import { getCCMap } from '../data/ccMap';
-import { PRESET_UPLOAD_ENDPOINT } from '../constants';
+import { PRESET_UPLOAD_ENDPOINT, PRESET_API_KEY } from '../constants';
 import CommunityPresets from './CommunityPresets.vue';
 
 const {
@@ -1129,8 +1129,7 @@ async function confirmExport() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          // Uncomment if using API key authentication:
-          // 'X-API-Key': 'your-api-key-here'
+          ...(PRESET_API_KEY ? { 'X-API-Key': PRESET_API_KEY } : {})
         },
         body: JSON.stringify(presetData)
       });

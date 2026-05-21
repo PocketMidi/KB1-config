@@ -21,6 +21,13 @@ export const PRESET_UPLOAD_ENDPOINT = 'https://pocketmidi.com/upload-preset.php'
 // export const PRESET_UPLOAD_ENDPOINT = null; // Uncomment for local file download during dev
 
 /**
+ * Preset upload API key
+ * Set VITE_PRESET_API_KEY in .env.local for dev, and as a GitHub Actions secret for production.
+ * Must match the API_KEY defined in upload-preset.php on the server.
+ */
+export const PRESET_API_KEY: string | undefined = import.meta.env.VITE_PRESET_API_KEY;
+
+/**
  * Preset storage base URL
  * Where community presets are loaded from
  */

@@ -366,7 +366,7 @@ function getDefaultPresets(): (SlotPreset | null)[] {
     {
       name: "Chord Arp",
       description: "chord mode with bounce (back and forth)\ncycle thru rates with L1\nfwd with P1, rev with Touch",
-      snapshot: "KB: M+9/C • Natural • Bounce\nL1: Rate • Step • P1: Pattern/FWD\nL2: Vel • Step • P2: Vel • Touch: Pattern/REV",
+      snapshot: "KB: Maj/C • Compact • Bounce\nL1: Rate • Step • P1: Pattern/FWD\nL2: Vel • Step • P2: Vel • Reset • Touch: Pattern/REV",
       author: "STARTER",
       isFactoryDefault: true,
       modifiedAt: now,
@@ -374,10 +374,10 @@ function getDefaultPresets(): (SlotPreset | null)[] {
         lever1: { ccNumber: 200, minCCValue: 0, maxCCValue: 127, stepSize: 1, functionMode: 2, valueMode: 0, onsetTime: 60, offsetTime: 60, onsetType: 0, offsetType: 0 },
         leverPush1: { ccNumber: 201, minCCValue: 0, maxCCValue: 127, functionMode: 2, onsetTime: 500, offsetTime: 0, onsetType: 2, offsetType: 2 },
         lever2: { ccNumber: 128, minCCValue: 13, maxCCValue: 127, stepSize: 6, functionMode: 2, valueMode: 0, onsetTime: 100, offsetTime: 100, onsetType: 0, offsetType: 0 },
-        leverPush2: { ccNumber: 128, minCCValue: 85, maxCCValue: 85, functionMode: 0, onsetTime: 100, offsetTime: 100, onsetType: 0, offsetType: 0 },
+        leverPush2: { ccNumber: 128, minCCValue: 85, maxCCValue: 85, functionMode: 3, onsetTime: 100, offsetTime: 100, onsetType: 0, offsetType: 0 },
         touch: { ccNumber: 201, minCCValue: 0, maxCCValue: 127, functionMode: 1, threshold: 36800, offsetTime: 100 },
-        scale: { scaleType: 0, rootNote: 60, keyMapping: 0 },
-        chord: { playMode: 2, chordType: 10, strumEnabled: true, velocitySpread: 10, strumSpeed: 165, strumPattern: 3, strumSwing: 40, gateValue: 35, voicing: 2, arpUserMode: 0, arpLatchMode: 0, buildMode: "updown", strumIntervals: [0, 4, 7, 14, 7, 4, 0] },
+        scale: { scaleType: 1, rootNote: 60, keyMapping: 1 },
+        chord: { playMode: 2, chordType: 0, strumEnabled: true, velocitySpread: 10, strumSpeed: 110, strumPattern: 3, strumSwing: 15, gateValue: 35, voicing: 2, arpUserMode: 0, arpLatchMode: 0, buildMode: "updown", strumIntervals: [0, 4, 7, 12, 7, 4, 0] },
         system: { lightSleepTimeout: 300, deepSleepTimeout: 390, bleTimeout: 600 }
       }
     },
@@ -385,7 +385,7 @@ function getDefaultPresets(): (SlotPreset | null)[] {
     {
       name: "User Arp",
       description: "cycle thru arp speeds with L1\ncycle thru patterns\nfwd with P1, rev with Touch",
-      snapshot: "KB: M+9/C • Natural • User\nL1: Rate • Step • P1: Pattern/FWD\nL2: Vel • Step • P2: Vel • Touch: Pattern/REV",
+      snapshot: "KB: Maj/C • Compact • User\nL1: Rate • Step • P1: Pattern/FWD\nL2: Vel • Step • P2: Vel • Reset • Touch: Pattern/REV",
       author: "STARTER",
       isFactoryDefault: true,
       modifiedAt: now,
@@ -393,10 +393,10 @@ function getDefaultPresets(): (SlotPreset | null)[] {
         lever1: { ccNumber: 200, minCCValue: 0, maxCCValue: 127, stepSize: 1, functionMode: 2, valueMode: 0, onsetTime: 60, offsetTime: 60, onsetType: 0, offsetType: 0 },
         leverPush1: { ccNumber: 201, minCCValue: 0, maxCCValue: 127, functionMode: 2, onsetTime: 500, offsetTime: 0, onsetType: 2, offsetType: 2 },
         lever2: { ccNumber: 128, minCCValue: 13, maxCCValue: 127, stepSize: 6, functionMode: 2, valueMode: 0, onsetTime: 100, offsetTime: 100, onsetType: 0, offsetType: 0 },
-        leverPush2: { ccNumber: 128, minCCValue: 85, maxCCValue: 85, functionMode: 0, onsetTime: 100, offsetTime: 100, onsetType: 0, offsetType: 0 },
+        leverPush2: { ccNumber: 128, minCCValue: 85, maxCCValue: 85, functionMode: 3, onsetTime: 100, offsetTime: 100, onsetType: 0, offsetType: 0 },
         touch: { ccNumber: 201, minCCValue: 0, maxCCValue: 127, functionMode: 1, threshold: 36800, offsetTime: 100 },
-        scale: { scaleType: 0, rootNote: 60, keyMapping: 0 },
-        chord: { playMode: 2, chordType: 10, strumEnabled: true, velocitySpread: 10, strumSpeed: 165, strumPattern: 5, strumSwing: 40, gateValue: 35, voicing: 1, arpUserMode: 1, arpLatchMode: 0, buildMode: "user", strumIntervals: [0, 4, 7, 12, 7, 4, 0] },
+        scale: { scaleType: 1, rootNote: 60, keyMapping: 1 },
+        chord: { playMode: 2, chordType: 0, strumEnabled: true, velocitySpread: 10, strumSpeed: 110, strumPattern: 4, strumSwing: 15, gateValue: 35, voicing: 2, arpUserMode: 1, arpLatchMode: 0, buildMode: "exclusive", strumIntervals: [0, 12, 4, 7] },
         system: { lightSleepTimeout: 300, deepSleepTimeout: 390, bleTimeout: 600 }
       }
     },

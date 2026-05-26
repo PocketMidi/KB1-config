@@ -1,8 +1,10 @@
 # KB1 Config
 
-KB1 Config is the official browser-based configuration and control application for the PocketMidi KB1 MIDI controller. This release delivers a complete, wireless configuration environment with real-time performance control—configure keyboard modes, lever behavior, touch sensitivity, scales, power management, and control 12 performance sliders (with FX/MIX mode for Polyend Tracker integration) directly from your browser over Bluetooth Low Energy. No drivers, no apps to install.
+[![Traffic](https://img.shields.io/badge/analytics-umami-blue)](https://cloud.umami.is/analytics/us/share/X00Oso9T1qydknsS)
 
-**Latest Features v1.5.0:** Voicing Control (1-3 octave chord expansion), Non-blocking strum system, Battery monitoring with USB charging calibration
+KB1 Config is the official browser-based configuration and control application for the PocketMidi KB1 MIDI controller. Configure keyboard modes, lever behavior, touch sensitivity, scales, power management, and control 12 performance sliders (with FX/MIX mode for Polyend Tracker integration) directly from your browser over Bluetooth Low Energy. No drivers, no apps to install.
+
+See the [firmware release notes](https://github.com/PocketMidi/KB1/tree/main/firmware) for the latest features and changelog.
 
 ## Getting Started
 
@@ -45,7 +47,7 @@ Want to explore the interface without hardware? Enable **Evaluation Mode** to in
 
 **Disconnected State**: When disconnected, all controls are shown but grayed out. Click any control to see a prompt to connect.
 
-### ⚠️ Battery Calibration (Firmware v1.3.0+)
+### ⚠️ Battery Calibration
 
 **IMPORTANT:** If you see a gray battery icon with a `?` symbol, your device needs calibration.
 
@@ -197,7 +199,7 @@ The slider interface now supports two distinct control modes, selectable via the
   - All linking and ganging features enabled
   - 4 groups of 3 sliders with color coding
 
-- **MIX Mode** (Master Mixer — requires firmware v1.1.2+):
+- **MIX Mode** (Master Mixer):
   - **Global Mixer** (Sliders 1-4):
     - Delay Send (CC 79) — Orange
     - Reverb Send (CC 80) — Orange

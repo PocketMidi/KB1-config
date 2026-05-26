@@ -782,9 +782,9 @@ function openSlotDialog(slot: number) {
   showSlotDialog.value = true;
   
   nextTick(() => {
-    nameInput.value?.focus();
-    // Only auto-select text for new presets (empty slots)
+    // Only auto-focus/select for new presets — avoids keyboard popup on mobile when editing existing
     if (!existing) {
+      nameInput.value?.focus();
       nameInput.value?.select();
     }
   });

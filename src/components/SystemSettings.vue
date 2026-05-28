@@ -1,7 +1,7 @@
 <template>
   <div class="settings-system">
     <div class="inputs">
-      <button class="btn-reference-guide" @click="openManual">REFERENCE GUIDE ›</button>
+      <button class="btn-reference-guide" @click="openManual">REFERENCE GUIDE</button>
       <div class="input-divider"></div>
       <div class="group">
         <label for="light-sleep">

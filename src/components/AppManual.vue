@@ -177,7 +177,7 @@ const slideDirection = ref<'forward' | 'backward'>('forward')
 
 const currentSteps = computed(() => steps[activeSection.value])
 const currentStepIndex = computed(() => stepIndices.value[activeSection.value])
-const currentStep = computed(() => currentSteps.value[currentStepIndex.value] ?? currentSteps.value[0])
+const currentStep = computed(() => currentSteps.value[currentStepIndex.value] ?? currentSteps.value[0] ?? { title: '', paragraphs: [] })
 const isFirstStep = computed(() => currentStepIndex.value === 0)
 const isLastStep = computed(() => currentStepIndex.value === currentSteps.value.length - 1)
 const stepKey = computed(() => `${activeSection.value}-${currentStepIndex.value}`)
@@ -260,12 +260,14 @@ const touchStartY = ref(0)
 
 function handleTouchStart(e: TouchEvent) {
   const t = e.touches[0]
+  if (!t) return
   touchStartX.value = t.clientX
   touchStartY.value = t.clientY
 }
 
 function handleTouchMove(e: TouchEvent) {
   const t = e.touches[0]
+  if (!t) return
   const deltaX = Math.abs(t.clientX - touchStartX.value)
   const deltaY = t.clientY - touchStartY.value
   // If swiping more horizontally than vertically, prevent scroll
@@ -276,6 +278,7 @@ function handleTouchMove(e: TouchEvent) {
 
 function handleTouchEnd(e: TouchEvent) {
   const t = e.changedTouches[0]
+  if (!t) return
   const deltaX = t.clientX - touchStartX.value
   const deltaY = t.clientY - touchStartY.value
 

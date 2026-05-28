@@ -2,484 +2,91 @@
 
 [![Traffic](https://img.shields.io/badge/analytics-umami-blue)](https://cloud.umami.is/analytics/us/share/X00Oso9T1qydknsS)
 
-KB1 Config is the official browser-based configuration and control application for the PocketMidi KB1 MIDI controller. Configure keyboard modes, lever behavior, touch sensitivity, scales, power management, and control 12 performance sliders (with FX/MIX mode for Polyend Tracker integration) directly from your browser over Bluetooth Low Energy. No drivers, no apps to install.
+Browser-based configuration and control app for the PocketMidi KB1 MIDI controller. Configure keyboard modes, lever & touch pad behavior, power management — plus 12 real-time performance sliders with FX/MIX modes for Polyend Tracker integration. All wirelessly over Bluetooth. No drivers, no install.
+
+**Live app:** [pocketmidi.github.io/KB1-config](https://pocketmidi.github.io/KB1-config)
 
 See the [firmware release notes](https://github.com/PocketMidi/KB1/tree/main/firmware) for the latest features and changelog.
 
-## Getting Started
+## Requirements
 
-### Enable Bluetooth on Your KB1 Hardware
+- **Chrome, Edge, or Opera** on Android or desktop (Web Bluetooth required)
+- **iOS:** Safari does not support Web Bluetooth — recommend [vBrowser](https://vbrowser.co)
 
-**IMPORTANT**: Before connecting to the web app, you must enable Bluetooth on your KB1 device.
 
-**How to Enable Bluetooth:**
-1. **Cross-lever gesture**: Push both levers toward each other (left lever → right, right lever → left) and **hold for 3 seconds**
-2. **Watch for progressive LED feedback:**
-   - Octave arrow LEDs turn ON immediately (gesture detected)
-   - Pink + blue LEDs pulse with increasing speed as you hold
-   - **All LEDs turn OFF** = activation complete, release levers
-3. Repeat the same gesture anytime to toggle Bluetooth on/off
+## Quick Start
 
-**Note:** The gesture is automatically cancelled if any keyboard key is pressed, preventing accidental triggers during performance.
+### 1. Enable Bluetooth on KB1
 
-**Note:** The web app cannot detect your device unless Bluetooth is enabled on the hardware.
+Squeeze both levers together and hold for 3 seconds. LEDs pulse with increasing speed — when pulsing stops, Bluetooth is active; release the levers. The gesture is cancelled if any key is pressed during the hold. Repeat the same gesture to disable Bluetooth.
 
-### Evaluation Mode (Optional)
+### 2. Connect
 
-Want to explore the interface without hardware? Enable **Evaluation Mode** to interact with all settings using simulated device data—perfect for learning the interface, testing configurations, or exploring community presets before purchasing.
+Tap the **Bluetooth status icon** in the upper left. Select KB1 from the browser's pairing dialog. Once connected, settings load automatically from the device and populate all KEYBOARD, LEVER, PRESS, and TOUCH values. When disconnected, controls remain visible but grayed out — tap any control for a prompt to connect.
 
-**To Enable**: Click the KB1 Configurator title (top-center) 5 times rapidly. A modal will appear to toggle the mode on/off.
+### 3. Edit & Send
 
-**What Works**: All interface features, settings adjustments, preset management, and community preset browsing work normally with mock data.
+Change any settings under KEYBOARD, LEVER, PRESS, or TOUCH. When ready, tap the bouncing amber arrow in the upper right to send all changes to KB1. Changes are applied to device RAM immediately.
 
-**What Doesn't**: No Bluetooth hardware communication (requires real KB1 hardware).
+### 4. Presets
 
-### Connecting to Your KB1 Device
+The first 4 of 8 slots are pre-filled with STARTER presets that can be overwritten. Tap any slot to save a snapshot of current settings and give it a name, author, and optional description. **Apply** loads a preset into the app and arms the amber send arrow. **NVS** syncs the slot to the matching slot on KB1 — these persist on the hardware independently of the app. **Cloud** opens a community space to share your preset or browse and load presets uploaded by other KB1 users. **Load Defaults** restores all factory starter presets.
 
-**Browser Connection:**
-1. Ensure Bluetooth is enabled on your KB1 hardware (see above)
-2. Click the **CONNECTED / DISCONNECTED** status in the top-right navigation bar
-3. Select your KB1 device from the browser's Bluetooth pairing dialog
-4. Once connected, the status will turn blue and display "CONNECTED"
-5. Click **Load from Device** to fetch current settings from your hardware
+## Tabs
 
-**First Time Users**: A helpful overlay will explain the connection process on your first visit.
+- **SETTINGS** — Keyboard mode (Scale/Chord), lever/press/touch CC mapping, presets, and system/power settings
+- **SLIDERS** — 12 real-time performance sliders with FX/MIX/COMBO modes
 
-**Disconnected State**: When disconnected, all controls are shown but grayed out. Click any control to see a prompt to connect.
+## Sliders
 
-### ⚠️ Battery Calibration
+### Modes
 
-**IMPORTANT:** If you see a gray battery icon with a `?` symbol, your device needs calibration.
+- **FX** — Controls 12 performance effects (CC 51–62)
+- **MIX** — Controls master mix levels: 4 global mixer controls plus individual volume for 8 tracks
+- **COMBO** — Assign any CC freely to each slider
 
-**Why?** Fresh firmware cannot measure battery voltage—it estimates by tracking usage. Without calibration, it doesn't know if your battery is at 100% or 20%.
+Mode selection persists in browser cache.
 
-**How to Calibrate:**
-1. Connect USB cable to your KB1
-2. Charge for **ONE continuous 5.5+ hour session**
-3. **Do NOT unplug during this time!**
-4. Battery meter will automatically show accurate percentage
+### Setup
 
-**⚠️ CRITICAL - All-or-Nothing Calibration:**
-- The 5 hour charge **MUST be continuous** in ONE session
-- If you unplug before 5 hours, the timer **resets to ZERO**
-- Partial charges **do NOT accumulate** (3hrs + 2.5hrs ≠ calibrated)
-- This is **intentional** to ensure accurate baseline
-- **Only needs to happen ONCE** - future USB connections just pause discharge
+Tap a color swatch to change it. Link icons gang sliders together — tap one link icon, or drag across multiple to link a range. Linked sliders move together and share settings. Toggle **UNI/BI** for unipolar or bipolar range. Toggle **MOM/LAT** for spring-back or hold behavior.
 
-**Until Calibrated:** The battery meter shows "Needs Calibration" and battery percentage is unreliable. Complete a full charge cycle before trusting battery estimates.
+### Live Mode
 
-**After Calibration:** The meter provides accurate runtime estimates (±10%) based on measured power consumption.
+Press **GO LIVE** and rotate your device to landscape — all 12 sliders go fullscreen for performance use. Drag vertically to send MIDI CC in real time. To exit: swipe horizontally across the screen (more than ~100px), then rotate back to portrait. On desktop, GO LIVE does not enter fullscreen — setup and live mode are visible simultaneously.
 
----
+→ [Full user guide with all settings documented](docs/USER_GUIDE.md)
 
-## SETTINGS Tab
+## Battery Calibration
 
-### KEYBOARD
+After flashing firmware, the battery meter shows a `?` until calibrated. Charge continuously for 5.5+ hours in one uninterrupted session — do not unplug early or the timer resets to zero. Only needs to happen once.
 
-**Scale Mode** — Play quantized notes based on selected scale type:
-- Choose from multiple scale types (Chromatic, Major, Minor, Pentatonic, Blues, etc.)
-- Set root note (C, C#, D, etc.)
-- Toggle between Mapped Mode (spaced keys repeat) and Efficient Mode (dense, all keys used)
+## Evaluation Mode
 
-**Chord Mode** — Play full chords with each key press:
-- Choose chord type: Major, Minor, Diminished, Augmented, Sus2, Sus4, Power, Major7, Minor7, Dominant7
-- Toggle between Chord Mode (all notes together) and Strum Mode (cascaded notes)
-- Adjust velocity spread (0-100%) for dynamic chord voicing
-- Set strum speed (5-100ms) for cascading notes
+No hardware? Click the KB1 logo **5× rapidly** to enable Evaluation Mode — full UI exploration with simulated device data.
 
-### LEVER 1
+## Development
 
-Configure the first lever for continuous control:
-- **CC Number**: Choose MIDI CC from Polyend map with descriptions
-- **CC Range**: Set min/max values (0-127)
-- **Step Size**: Quantize movement to steps
-- **Function Mode**: Uni/Bi-directional, Momentary, Toggle
-- **Value Mode**: Jump, Hook, Pickup, Latch
-- **Interpolation**: Onset/offset timing (0-5000ms) and curve type (Linear, S-Curve, Logarithmic)
+**Requirements:** Node.js 18+, Chrome/Edge/Opera
 
-### PRESS 1
-
-Configure the first push button:
-- **CC Number**: Choose MIDI CC with descriptions
-- **CC Range**: Set min/max values
-- **Function Mode**: Trigger, Momentary, Toggle
-- **Interpolation**: Onset/offset timing and curves
-
-### LEVER 2
-
-Configure the second lever for continuous control:
-- **CC Number**: Choose MIDI CC from Polyend map with descriptions
-- **CC Range**: Set min/max values (0-127)
-- **Step Size**: Quantize movement to steps
-- **Function Mode**: Uni/Bi-directional, Momentary, Toggle
-- **Value Mode**: Jump, Hook, Pickup, Latch
-- **Interpolation**: Onset/offset timing (0-5000ms) and curve type (Linear, S-Curve, Logarithmic)
-
-### PRESS 2
-
-Configure the second push button:
-- **CC Number**: Choose MIDI CC with descriptions
-- **CC Range**: Set min/max values
-- **Function Mode**: Trigger, Momentary, Toggle
-- **Interpolation**: Onset/offset timing and curves
-
-### TOUCH
-
-Configure the capacitive touch sensor:
-- **CC Number**: Choose MIDI CC
-- **CC Range**: Set output range
-- **Function Mode**: Trigger, Momentary
-- **Threshold**: Adjust touch sensitivity (0-65535, default: 24000, lower = more sensitive)
-
-### PRESETS
-
-The Preset Manager offers two storage systems for different use cases:
-
-**Community Tab (Work + Share):**
-- **Your Working Presets**: Save unlimited presets to browser localStorage
-  - Perfect for experimenting and iterating on configurations
-  - Persists between sessions (until browser cache cleared)
-  - Create, rename, export, import, and delete presets
-  - Quick actions: + New, Import, Export
-- **Browse Shared**: Load community presets shared by other users
-  - Discover configurations from the community
-  - Load to try instantly, save to your working presets to keep
-
-**Archive Tab (Cold Storage):**
-- **Stored on Device**: 8 preset slots in device flash memory
-  - Survive browser resets and cache clears
-  - Permanently stored on device hardware
-  - Perfect for your final, go-to configurations
-  - Load, Save, and Delete for each slot
-
-**Workflow:** Experiment in Working Presets → Refine → Archive your favorites to device → Share exceptional ones with the community
-
-### SYSTEM
-
-**Power Management** — Customize sleep and timeout intervals:
-
-**Sleep Behavior:**
-- **Without Web App Connection:**
-  - After Light Sleep timeout (default: 5 min idle) → device enters light sleep with pulsing LEDs
-  - 90 seconds of LED pulsing (fixed warning period)
-  - Then device enters deep sleep (lowest power)
-  - Only touch sensor can wake from deep sleep
-  
-- **With Web App Connected:**
-  - While web app is actively connected and sending keepalive pings, sleep timers are continuously reset
-  - BLE Timeout setting controls how long since last ping before allowing sleep to proceed
-  - This keeps device awake while you're actively configuring settings
-  - Once sleep is entered, Bluetooth radio turns off and only touch sensor can wake the device
-  - Reopening web app after sleep requires touching the sensor first to wake the device
-
-**Settings:**
-- **Light Sleep**: Time until pulsing LEDs begin (3-10 minutes, default: 5 min)
-- **BLE Timeout**: Keepalive reprieve while web app is connected (5-20 minutes, default: 10 min)
-
-**Note**: Deep sleep automatically occurs 90 seconds after light sleep begins (fixed LED warning period).
-
-**Actions:**
-- **Load from Device**: Fetch current settings from KB1 hardware
-- **Reset to Defaults**: Restore factory default settings
-- **Save to Device**: Apply changes to RAM and automatically save to flash memory
-
----
-
-## SLIDERS Tab
-
-The SLIDERS tab provides 12 customizable performance sliders for real-time MIDI CC control with dual mode support:
-
-**Control Modes:**
-
-The slider interface now supports two distinct control modes, selectable via the **FX|MIX** toggle button in the header:
-
-- **FX Mode** (Performance Effects):
-  - CC 51-62: Traditional performance effects control
-  - Full bipolar/unipolar support
-  - All linking and ganging features enabled
-  - 4 groups of 3 sliders with color coding
-
-- **MIX Mode** (Master Mixer):
-  - **Global Mixer** (Sliders 1-4):
-    - Delay Send (CC 79) — Orange
-    - Reverb Send (CC 80) — Orange
-    - Dry Level (CC 81) — Orange
-    - Line Level (CC 82) — Orange
-    - Independent operation (no ganging)
-  - **Track Mixer** (Sliders 5-12):
-    - Track 1-8 Volumes (CC 71-78)
-    - Color coded: Red (1-2), Green (3-4), Cyan (5-6), Violet (7-8)
-    - Link buttons available for grouping tracks
-  - Unipolar mode enforced (0-127 range matches Polyend Tracker specs)
-  - Mode persists across sessions
-
-**Setup Mode** (Portrait or Desktop):
-- **Mode Toggle**: Tap **FX|MIX** button to switch between control modes
-- **Color Selection**: Tap color swatch or drag vertical picker to choose from 12 colors (FX mode only — MIX mode uses fixed colors)
-- **Momentary/Latched Toggle**: Tap "M" or "L" button for spring-back or hold behavior
-- **Bipolar/Unipolar Toggle**: Tap "BI" or "UNI" button to switch modes (disabled in MIX mode)
-- **Link Sliders**: Drag across "link" icons between sliders to gang them (conditional visibility in MIX mode)
-- **CC Assignment**: Each slider mapped per mode (51-62 in FX, 71-82 in MIX)
-
-**Live Mode** (Mobile - Landscape Fullscreen):
-- **Enter**: Rotate device to landscape (iOS shows rotation animation)
-- **Fullscreen**: Sliders fill the entire screen for performance
-- **Control**: Drag sliders vertically to send MIDI CC in real-time
-- **Exit**: Swipe horizontally >100px, then rotate back to portrait (iOS prompts with rotation animation)
-- **Momentary**: Release touch on momentary sliders springs back to 0 with smooth animation
-
-**Slider Features:**
-- **Color Coded**: 12 rainbow colors for visual organization
-- **Gang Control**: Linked sliders move together and share settings
-- **Visual Feedback**: Colored fill shows current value with minimum visible height
-- **Bipolar Mode**: Center line divider, both positive/negative fill from center
-- **Unipolar Mode**: Bottom-up fill, 0-100% range
-
-**Desktop Use:**
-- All features work with mouse on desktop
-- Setup and live modes available simultaneously
-- Click and drag sliders for control
-
-**Recommended iOS Browser:**
-
-For the best experience on iOS devices, we recommend using **[vBrowser](https://vbrowser.co)** to access the KB1 web configurator. vBrowser provides reliable Web Bluetooth support and accurate touch handling for all 12 performance sliders.
-
-**V Browser Setup (iOS):**
-1. Download **V Browser** from the App Store
-2. Go to **iOS Settings > V Browser > Bluetooth** and toggle **ON**
-3. Open V Browser and navigate to the KB1 Configurator URL
-4. If you see a "Bluetooth Required" prompt, tap OK — this is V Browser requesting iOS permission
-
-## Configuration Flexibility
-
-The KB1 system offers **~10²⁷ total unique configurations** (approximately 1 octillion possible combinations). When focusing on the most commonly adjusted parameters—CC numbers, min/max values, function modes, and interpolation curves—there are still **~10¹⁰ to 10¹² practical combinations** (10-100 billion distinct configurations).
-
-**Storage & Sharing:**
-- Unlimited working presets in browser for experimentation
-- 8 archive slots on device for permanent storage
-- Community sharing for discovering and contributing configurations
-
-The system is extraordinarily flexible for any performance or production workflow.
-
-## Features
-
-### Core Capabilities
-- **Wireless Configuration** - Full device setup via Web Bluetooth (no drivers, no apps)
-- **Real-time Control** - 12 performance sliders with MIDI CC output
-- **Flexible Presets** - Unlimited browser storage + 8 device archive slots
-- **Community Sharing** - Browse and load presets from other users
-- **Evaluation Mode** - Test interface without hardware (click logo 5x)
-
-### Device Configuration
-- **Keyboard Modes** - Scale and Chord modes with extensive customization
-- **Physical Controls** - Configure 2 levers, 2 push buttons, and touch sensor
-- **Power Management** - Customize sleep timeouts and Bluetooth keep-alive
-- **MIDI Mapping** - Polyend CC map with descriptions for all controls
-
-### Interface Features
-- **KB1 Theme** - Custom dark UI with light/dark theme toggle
-- **Responsive Design** - Mobile-first, scales to desktop
-- **Live Mode** - Fullscreen landscape sliders for performance
-- **Connection Modals** - First-time intro and contextual connection prompts
-- **Visual Feedback** - Real-time parameter updates and unsaved change indicators
-
-## Technology Stack
-
-- **Vue 3** with Composition API
-- **TypeScript** for type safety
-- **Vite** for fast development and optimized builds
-- **Web Bluetooth API** for device communication
-- **GitHub Actions** for automated deployment
-
-## Project Structure
-
-```
-src/
-├── App.vue                   # Main app with tab navigation & connection management
-├── main.ts                   # Application entry point
-├── constants.ts              # App-wide constants
-├── ble/
-│   ├── bleClient.ts          # Web Bluetooth transport layer
-│   └── kb1Protocol.ts        # KB1 device protocol encoding/decoding
-├── pages/
-│   ├── MobileScales.vue      # SETTINGS tab (scales, system, presets)
-│   ├── MobileControls.vue    # CONTROLS tab (levers, touch sensor)
-│   └── MobileSliders.vue     # SLIDERS tab (12 performance sliders)
-├── components/
-│   ├── AccordionSection.vue          # Expandable accordion container
-│   ├── AnimatedBLEIcon.vue           # Bluetooth icon with breathing animation
-│   ├── CCMappingCard.vue             # CC configuration card
-│   ├── ConnectionStatus.vue          # Connection status indicator
-│   ├── ContextualConnectionModal.vue # "Connect to use" modal
-│   ├── FirstTimeOverlay.vue          # First-time user intro
-│   ├── LeverSettings.vue             # Lever configuration component
-│   ├── LeverPushSettings.vue         # Lever push configuration
-│   ├── TouchSettings.vue             # Touch sensor settings
-│   ├── ScaleSettings.vue             # Scale configuration
-│   ├── SystemSettings.vue            # Power/timeout settings
-│   ├── PresetManager.vue             # Preset save/load/manage
-│   ├── PerformanceSliders.vue        # 12-slider performance interface
-│   ├── NotePickerControl.vue         # Note selection dropdown
-│   └── ValueControl.vue              # Numeric value input
-├── composables/
-│   └── useDeviceState.ts     # Central device state management
-├── services/
-│   └── midiBle.ts            # BLE MIDI real-time control
-├── state/
-│   ├── presets.ts            # Complete device preset storage
-│   └── sliderPresets.ts      # Slider configuration storage
-├── data/
-│   └── ccMap.ts              # Polyend CC map with descriptions
-└── styles/
-    ├── slider.css            # Slider component styles
-    └── themes/
-        └── kb1.css           # KB1 theme variables & global styles
-```
-
-## Configuration Flexibility (Expanded)
-
-The KB1 system offers **~10²⁷ total unique configurations** (approximately 1 octillion possible combinations). When focusing on the most commonly adjusted parameters—CC numbers, min/max values, function modes, and interpolation curves—there are still **~10¹⁰ to 10¹² practical combinations** (10-100 billion distinct configurations).
-
-**Storage & Sharing:**
-- Unlimited working presets in browser for experimentation and refinement
-- 8 archive slots on device flash for permanent, reliable storage
-- Community preset sharing via GitHub for discovering and contributing configurations
-
-The system is extraordinarily flexible for any performance or production workflow, from live electronic music to studio production.
-
-- Node.js 18+ and npm
-- A browser with Web Bluetooth support (Chrome, Edge, Opera)
-- HTTPS connection (required for Web Bluetooth API)
-- KB1 hardware device (or enable Evaluation Mode for UI testing)
-
-### Installation
-
-1. Clone the repository:
 ```bash
 git clone https://github.com/PocketMidi/KB1-config.git
 cd KB1-config
-```
-
-2. Install dependencies:
-```bash
 npm install
+npm run dev       # http://localhost:5173
+npm run build     # Output to dist/
 ```
 
-3. Run development server:
-```bash
-npm run dev
-```
-
-4. **Optional - Evaluation Mode**: To test the UI without hardware, open the app and click the KB1 logo (top-left) 5 times rapidly.
-
-5. Open your browser to `http://localhost:5173` (or the URL shown in terminal)
-
-**Note:** For Web Bluetooth to work in development, you may need to:
-- Use `localhost` (works over HTTP)
-- Or set up HTTPS for your dev server
-- Or use Chrome flags for testing: `chrome://flags/#unsafely-treat-insecure-origin-as-secure`
-
-### Building for Production
-
-```bash
-npm run build
-```
-
-The built files will be in the `dist/` directory, ready for deployment.
-
-### Preview Production Build
-
-```bash
-npm run preview
-```
-
-## Development Notes
-
-### Development Mode (Testing Without Hardware)
-
-The app includes a **DEV_MODE** flag for testing the UI without a physical KB1 device:
-
-**To toggle:**
-- Edit `src/composables/useDeviceState.ts` line 17:
-### Evaluation Mode
-
-To test the interface without KB1 hardware:
-
-1. Open the app in your browser
-2. Click the KB1 logo (top-left corner) 5 times rapidly
-3. A modal will appear - toggle Evaluation Mode on
-
-**When Evaluation Mode is enabled:**
-- App auto-connects with simulated device "KB1 (Evaluation Mode)"
-- All settings and controls are populated with default mock data
-- Changes are logged to console but not sent to hardware
-- Perfect for exploring the UI, testing configurations, and browsing community presets
-
-**Note**: Evaluation Mode state persists in browser localStorage and can be toggled on/off anytime via the logo clicks.
-
-### KB1 Protocol Implementation
-
-The BLE communication layer is fully implemented with the KB1 firmware protocol:
-
-**BLE Configuration** (`src/ble/bleClient.ts`):
-- Service UUID: `f22b99e8-81ab-4e46-abff-79a74a1f2ff3`
-- Direct characteristic access for all settings (Lever, LeverPush, Touch, Scale, System)
-- MIDI characteristic: `eb58b31b-d963-4c7d-9a11-e8aabec2fe32`
-- Keep-alive characteristic maintains connection (60s interval, 10min firmware grace period)
-
-**Protocol Encoding** (`src/ble/kb1Protocol.ts`):
-- Binary encoding/decoding for all settings (little-endian int32)
-- Settings read/written directly to BLE characteristics
-- Validation and default value creation
-- Type-safe interfaces for all device settings
-
-### Browser Compatibility
-
-Web Bluetooth API is supported in:
-- ✅ Chrome/Chromium 56+
-- ✅ Edge 79+
-- ✅ Opera 43+
-- ✅ vBrowser (iOS) - **Recommended** Web Bluetooth browser for iOS devices
-- ❌ Firefox (requires flag)
-- ❌ Safari (not supported)
-
-**iOS Users:** Safari does not support Web Bluetooth. We recommend using **[vBrowser](https://vbrowser.co)** for the best Web Bluetooth experience on iOS devices. vBrowser provides reliable connectivity and accurate touch control for all 12 performance sliders.
-
-For the best experience on desktop/Android, use Chrome, Edge, or Opera.
-
-### HTTPS Requirement
-
-The Web Bluetooth API requires a secure context (HTTPS) except for `localhost`. When deploying:
-
-- GitHub Pages provides HTTPS automatically
-- Use a service with HTTPS support
-- Or set up SSL certificates for your domain
+Web Bluetooth works on `localhost` without HTTPS.
 
 ## Deployment
 
-### GitHub Pages (Automated)
+Includes a GitHub Actions workflow that auto-deploys to GitHub Pages on push to `main`. Go to Settings → Pages → set Source to "GitHub Actions".
 
-This repository includes a GitHub Actions workflow that automatically deploys to GitHub Pages when you push to the `main` branch.
+## Technology
 
-**To enable:**
-
-1. Go to your repository Settings → Pages
-2. Set Source to "GitHub Actions"
-3. Push to the `main` branch
-4. The site will be available at `https://pocketmidi.github.io/KB1-config/`
-
-### Manual Deployment
-
-Build the project and deploy the `dist/` folder to any static hosting service that supports HTTPS.
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit issues or pull requests.
+Vue 3 · TypeScript · Vite · Web Bluetooth API
 
 ## License
 
-See the [LICENSE](LICENSE) file for details.
-
-## Acknowledgments
-
-Built with Vue 3, Vite, and the Web Bluetooth API to provide a seamless wireless configuration experience for the PocketMidi KB1 device.
+See [LICENSE](LICENSE).

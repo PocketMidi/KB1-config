@@ -1,6 +1,8 @@
 <template>
   <div class="settings-system">
     <div class="inputs">
+      <button class="btn-reference-guide" @click="openManual">REFERENCE GUIDE ›</button>
+      <div class="input-divider"></div>
       <div class="group">
         <label for="light-sleep">
           SLEEP TIMEOUT
@@ -111,6 +113,7 @@
           :title="props.isConnected ? 'Load current settings from KB1' : 'Connect to KB1 to refresh settings'"
         >REFRESH FROM DEVICE</button>
       </div>
+
     </div>
   </div>
   
@@ -136,6 +139,7 @@ import { computed, ref, watch, onMounted } from 'vue'
 import { useHaptics } from '../composables/useHaptics'
 import { useUIPreferences } from '../composables/useUIPreferences'
 import { useBatteryModal } from '../composables/useBatteryModal'
+import { useManual } from '../composables/useManual'
 import { useToast } from '../composables/useToast'
 import ValueControl from './ValueControl.vue'
 
@@ -159,6 +163,8 @@ const model = computed({
   get: () => props.modelValue,
   set: v => emit('update:modelValue', v)
 })
+
+const { openManual } = useManual()
 
 // Detect iOS
 const isIOSDevice = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
@@ -666,6 +672,28 @@ const formatTime = (seconds: number): string => {
 .button-group {
   display: flex;
   gap: var(--kb1-spacing-xs);
+}
+
+.btn-reference-guide {
+  width: 100%;
+  padding: 0.55rem 0.75rem;
+  background: transparent;
+  border: 1px solid rgba(185, 170, 95, 0.3);
+  border-radius: var(--kb1-radius-sm);
+  color: var(--ui-highlight, #b9aa5f);
+  font-family: var(--kb1-font-family);
+  font-size: var(--kb1-font-input);
+  font-weight: var(--kb1-font-weight-normal);
+  text-transform: uppercase;
+  letter-spacing: var(--kb1-letter-spacing-wide);
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-reference-guide:hover {
+  background: rgba(185, 170, 95, 0.08);
+  border-color: rgba(185, 170, 95, 0.55);
 }
 
 .config-btn {

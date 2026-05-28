@@ -6,12 +6,14 @@ import FirstTimeOverlay from './components/FirstTimeOverlay.vue';
 import ContextualConnectionModal from './components/ContextualConnectionModal.vue';
 import BatteryMeter from './components/BatteryMeter.vue';
 import BatteryModal from './components/BatteryModal.vue';
+import AppManual from './components/AppManual.vue';
 import ToastNotification from './components/ToastNotification.vue';
 import ConfirmDialog from './components/ConfirmDialog.vue';
 import { useDeviceState } from './composables/useDeviceState';
 import { useToast } from './composables/useToast';
 import { useConfirm } from './composables/useConfirm';
 import { useBatteryModal } from './composables/useBatteryModal';
+import { useManual } from './composables/useManual';
 import { useUIPreferences } from './composables/useUIPreferences';
 import { FIRST_TIME_BLE_INTRO_KEY } from './constants';
 import './styles/themes/kb1.css';
@@ -27,6 +29,7 @@ const {
 const { dialogs, remove: removeDialog } = useConfirm();
 const { batteryMonitoringEnabled } = useUIPreferences();
 const { showBatteryModal, openBatteryModal, closeBatteryModal } = useBatteryModal();
+const { showManual, closeManual } = useManual();
 
 const { toasts, remove, success } = useToast();
 
@@ -342,6 +345,9 @@ function handleTabClick(tabId: Tab) {
       @dismiss="handleContextualDismiss"
     />
     
+    <!-- User Manual -->
+    <AppManual :is-open="showManual" @close="closeManual" />
+
     <!-- Battery Modal -->
     <BatteryModal 
       :is-open="showBatteryModal"

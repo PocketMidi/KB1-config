@@ -306,6 +306,7 @@
             </div>
           </label>
           <div class="duration-control-wrapper">
+            <span v-if="!isChordStyle" class="unit-label unit-label-left">ms</span>
             <ValueControl
               v-model="smartSliderValue"
               :min="smartSliderMin"
@@ -323,6 +324,7 @@
               :display-formatter="isChordStyle ? undefined : strumDisplayFormatter"
               :left-disabled="strumLeftDisabled"
               :right-disabled="strumRightDisabled"
+              :class="{ 'rate-dual-display': !isChordStyle }"
             />
             <span class="unit-label">{{ smartSliderUnit }}</span>
           </div>
@@ -393,6 +395,7 @@
         <div class="group">
           <label>RATE</label>
           <div class="duration-control-wrapper">
+            <span class="unit-label unit-label-left">ms</span>
             <ValueControl
               v-model="arpSpeedValue"
               :min="5"
@@ -406,8 +409,9 @@
               :display-formatter="arpDisplayFormatter"
               :left-disabled="arpLeftDisabled"
               :right-disabled="arpRightDisabled"
+              class="rate-dual-display"
             />
-            <span class="unit-label">ms</span>
+            <span class="unit-label">BPM</span>
           </div>
         </div>
       </div>
@@ -1119,9 +1123,9 @@ watch(
   }
 )
 
-// Display formatter for arp speed - always show positive value
+// Display formatter for arp speed - show ms and 1/16 BPM side by side
 const arpDisplayFormatter = (value: number): string => {
-  return `${value}`
+  return `${value} / ${Math.round(15000 / value)}`
 }
 
 // Disable arrows at actual extremes (5-360)
@@ -1518,12 +1522,12 @@ const chordSwingPieChartPath = computed(() => {
 })
 
 const smartSliderUnit = computed(() => {
-  return isChordStyle.value ? '' : 'ms'
+  return isChordStyle.value ? '' : 'BPM'
 })
 
-// Display formatter for strum speed - always show positive value (direction shown by toggle)
+// Display formatter for strum speed - show ms and 1/16 BPM side by side
 const strumDisplayFormatter = (value: number): string => {
-  return `${value}`
+  return `${value} / ${Math.round(15000 / value)}`
 }
 
 // Disable arrows at actual extremes (5-360)
@@ -2900,6 +2904,20 @@ function handleKeyClick(midiNote: number) {
 .arp-rate-section {
   padding-top: 0rem;  /* Add space to compensate for missing dots visualization */
   border-bottom: 1px solid var(--color-divider);
+}
+
+/* Widen the value input for dual ms / BPM display */
+.rate-dual-display :deep(.input-wrapper) {
+  width: 115px;
+}
+
+/* Tighten arrow-to-number gap for dual display (default is 22px) */
+.rate-dual-display :deep(.value-input) {
+  padding: 0 22px; /* ← increase to add gap, decrease to tighten */
+}
+
+.unit-label-left {
+  margin-right: 2px;
 }
 
 /* Override group padding specifically for RATE row */

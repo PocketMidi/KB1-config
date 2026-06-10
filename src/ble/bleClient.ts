@@ -1063,8 +1063,13 @@ export class BLEClient {
       return;
     }
     
+    // Check connection first
+    if (!this.device || !this.device.gatt?.connected) {
+      throw new Error('Device not connected. Please connect to KB1 first.');
+    }
+    
     if (!this.batteryControlCharacteristic) {
-      throw new Error('Battery control not supported');
+      throw new Error('Battery control characteristic not available. Try reconnecting.');
     }
 
     try {
@@ -1074,7 +1079,17 @@ export class BLEClient {
       console.log('🔋 Battery reset command sent - waiting for recalibration');
     } catch (error) {
       console.error('Failed to reset battery:', error);
-      throw error;
+      // Provide more specific error based on DOMException type
+      if (error instanceof Error) {
+        if (error.name === 'NetworkError') {
+          throw new Error('Connection lost. Please reconnect and try again.');
+        } else if (error.name === 'NotSupportedError') {
+          throw new Error('Battery control not supported by this device.');
+        } else if (error.message) {
+          throw error; // Re-throw with original message
+        }
+      }
+      throw new Error('Failed to send command to device. Check connection.');
     }
   }
 
@@ -1091,8 +1106,13 @@ export class BLEClient {
       return;
     }
     
+    // Check connection first
+    if (!this.device || !this.device.gatt?.connected) {
+      throw new Error('Device not connected. Please connect to KB1 first.');
+    }
+    
     if (!this.batteryControlCharacteristic) {
-      throw new Error('Battery control not supported');
+      throw new Error('Battery control characteristic not available. Try reconnecting.');
     }
 
     if (percentage < 0 || percentage > 100) {
@@ -1106,7 +1126,17 @@ export class BLEClient {
       console.log(`🔋 Battery set to ${percentage}% command sent`);
     } catch (error) {
       console.error('Failed to set battery percentage:', error);
-      throw error;
+      // Provide more specific error based on DOMException type
+      if (error instanceof Error) {
+        if (error.name === 'NetworkError') {
+          throw new Error('Connection lost. Please reconnect and try again.');
+        } else if (error.name === 'NotSupportedError') {
+          throw new Error('Battery control not supported by this device.');
+        } else if (error.message) {
+          throw error; // Re-throw with original message
+        }
+      }
+      throw new Error('Failed to send command to device. Check connection.');
     }
   }
 

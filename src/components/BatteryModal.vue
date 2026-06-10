@@ -439,9 +439,12 @@ async function confirmRecalibrate() {
     await resetBattery();
     // Success - battery is now uncalibrated (254)
     // Modal stays open and reactively updates to show new state
+    toast.success('Battery reset successfully');
   } catch (error) {
     console.error('Battery recalibration failed:', error);
-    // No toast - UI shows result (icon stays at current % if BLE write fails)
+    // Show specific error message
+    const errorMessage = error instanceof Error ? error.message : 'Failed to reset battery';
+    toast.error(errorMessage);
   } finally {
     isRecalibrating.value = false;
     showConfirmation.value = false; // Close dialog after reset completes
@@ -500,7 +503,9 @@ async function handleSetBatteryPercent() {
     await syncBatteryStatus();
   } catch (error) {
     console.error('Failed to set battery %:', error);
-    toast.error('Failed to set battery %');
+    // Show specific error message from bleClient
+    const errorMessage = error instanceof Error ? error.message : 'Failed to set battery %';
+    toast.error(errorMessage);
   } finally {
     isSettingBattery.value = false;
   }

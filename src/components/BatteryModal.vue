@@ -393,11 +393,6 @@ const advancedSectionOpen = ref(false);
 const devBatteryPercent = ref(0);  // Start at 0 to force user selection
 const isSettingBattery = ref(false);
 
-// Legacy dev mode refs (can be removed if no other references)
-const devModeUnlocked = ref(false);
-const clickCount = ref(0);
-const clickTimer = ref<number | null>(null);
-
 // Calculate large battery fill width (max 90 for visual)
 const fillWidthLarge = computed(() => {
   const percentage = estimatedPercentage.value;
@@ -461,29 +456,6 @@ function cancelRecalibrate() {
 
 function handleTogglePercentage() {
   toggleShowPercentage();
-}
-
-// Handle battery icon clicks for dev mode unlock
-function handleBatteryClick() {
-  clickCount.value++;
-  
-  // Reset timer
-  if (clickTimer.value) {
-    clearTimeout(clickTimer.value);
-  }
-  
-  // 5 clicks within 2 seconds = unlock
-  if (clickCount.value >= 5) {
-    devModeUnlocked.value = true;
-    devBatteryPercent.value = 0;  // Force user to set a value (Set button disabled at 0)
-    clickCount.value = 0;
-    return;
-  }
-  
-  // Reset counter after 2 seconds
-  clickTimer.value = window.setTimeout(() => {
-    clickCount.value = 0;
-  }, 2000);
 }
 
 // Set battery percentage via BLE (dev mode)

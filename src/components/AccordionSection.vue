@@ -96,8 +96,9 @@
           <div class="accordion-title-row">
             <h3 class="accordion-title-text">
               {{ title }}
-              <span v-if="titleSuffix" class="title-suffix" :class="{ fading: titleSuffixFading }">{{ titleSuffix }}</span>
+              <span v-if="titleSuffix && isOpen" class="title-suffix" :class="{ fading: titleSuffixFading }">{{ titleSuffix }}</span>
             </h3>
+            <span v-if="showModifiedIndicator" class="modified-indicator">●</span>
             <slot name="header-right">
               <div v-if="midiCc !== undefined" class="midi-cc-display">
                 MIDI CC <span class="midi-cc-number">{{ midiCc }}</span>
@@ -132,6 +133,7 @@ const props = defineProps<{
   defaultOpen?: boolean;
   titleSuffix?: string;
   titleSuffixFading?: boolean;
+  showModifiedIndicator?: boolean;  // Show pulsing dot when modified by preset load
   showKeyboardIcon?: boolean;  // Show keyboard icon (filled when open, outline when closed)
   showLever1Icon?: boolean;    // Show Lever 1 icon
   showLever2Icon?: boolean;    // Show Lever 2 icon (same as L1)
@@ -300,6 +302,20 @@ defineExpose({
 .title-suffix.fading {
   opacity: 0;
   transition: opacity 2s ease-out;
+}
+
+.modified-indicator {
+  margin-right: 5px;
+  margin-top: -3px;
+  font-size: 12px;
+  line-height: 12px;
+  color: var(--ui-highlight);
+  animation: subtle-pulse 2.5s ease-in-out infinite;
+}
+
+@keyframes subtle-pulse {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1.0; }
 }
 
 .accordion-section.is-open .accordion-title-text {

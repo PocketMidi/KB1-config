@@ -20,6 +20,7 @@
         :id="'keyboard'"
         :default-open="false"
         :show-keyboard-icon="true"
+        :show-modified-indicator="keyboardModified"
       >
         <template #header-right>
           <div v-if="playMode === 'arp' && arpUserMode" class="root-note-display">
@@ -53,6 +54,7 @@
         :show-lever1-icon="true"
         :title-suffix="lever1Suffix"
         :title-suffix-fading="lever1SuffixFading"
+        :show-modified-indicator="lever1Modified"
       >
         <LeverSettings
           title="Lever"
@@ -82,6 +84,7 @@
         :show-press1-icon="true"
         :title-suffix="leverPush1Suffix"
         :title-suffix-fading="leverPush1SuffixFading"
+        :show-modified-indicator="leverPush1Modified"
       >
         <LeverPushSettings
           title="Press"
@@ -113,6 +116,7 @@
         :show-lever2-icon="true"
         :title-suffix="lever2Suffix"
         :title-suffix-fading="lever2SuffixFading"
+        :show-modified-indicator="lever2Modified"
       >
         <LeverSettings
           title="Lever"
@@ -142,6 +146,7 @@
         :show-press2-icon="true"
         :title-suffix="leverPush2Suffix"
         :title-suffix-fading="leverPush2SuffixFading"
+        :show-modified-indicator="leverPush2Modified"
       >
         <LeverPushSettings
           title="Press"
@@ -171,6 +176,7 @@
         :id="'touch-sensor'"
         :default-open="false"
         :show-touch-icon="true"
+        :show-modified-indicator="touchModified"
       >
         <TouchSettings
           title="TOUCH"
@@ -192,8 +198,6 @@
       <AccordionSection
         ref="presetsAccordion"
         title="PRESETS"
-        :title-suffix="presetsSuffix"
-        :title-suffix-fading="presetsSuffixFading"
         :subtitle="presetsSubtitle"
         :id="'presets'"
         :default-open="false"
@@ -205,7 +209,6 @@
           @load="handlePresetLoad"
           @loadFactoryDefaults="handleResetDefaults"
           @preset-activated="handlePresetActivated"
-          @slot-name-display="handleSlotNameDisplay"
           @slot-count="handleSlotCount"
         />
       </AccordionSection>
@@ -293,16 +296,11 @@ const activePresetId = ref<string | null>(PresetStore.getActivePresetId());
 const activePresetName = ref<string>('');
 
 // State for temporary accordion title suffix (fade-in/out effect)
+// Temporary suffix text (shown when accordion is open and user makes changes)
 const keyboardSuffix = ref<string>('');
 const keyboardSuffixFading = ref<boolean>(false);
 let keyboardFadeTimeoutId: number | null = null;
 let keyboardClearTimeoutId: number | null = null;
-
-const presetsSuffix = ref<string>('');
-const presetsSuffixFading = ref<boolean>(false);
-const presetSlotCount = ref<number>(0);
-let presetsFadeTimeoutId: ReturnType<typeof setTimeout> | null = null;
-let presetsClearTimeoutId: ReturnType<typeof setTimeout> | null = null;
 
 const lever1Suffix = ref<string>('');
 const lever1SuffixFading = ref<boolean>(false);
@@ -323,6 +321,17 @@ const leverPush2Suffix = ref<string>('');
 const leverPush2SuffixFading = ref<boolean>(false);
 let leverPush2FadeTimeoutId: number | null = null;
 let leverPush2ClearTimeoutId: number | null = null;
+
+// Modified indicator state (for preset load feedback - shows dot when accordion closed)
+const keyboardModified = ref<boolean>(false);
+const lever1Modified = ref<boolean>(false);
+const leverPush1Modified = ref<boolean>(false);
+const lever2Modified = ref<boolean>(false);
+const leverPush2Modified = ref<boolean>(false);
+const touchModified = ref<boolean>(false);
+
+// Preset slot count tracking (for subtitle display)
+const presetSlotCount = ref<number>(0);
 
 // Load CC map on mount
 onMounted(async () => {
@@ -348,8 +357,6 @@ watch(() => localSettings.value.chord.arpLatchMode, (newValue) => {
 onBeforeUnmount(() => {
   if (keyboardFadeTimeoutId) clearTimeout(keyboardFadeTimeoutId);
   if (keyboardClearTimeoutId) clearTimeout(keyboardClearTimeoutId);
-  if (presetsFadeTimeoutId) clearTimeout(presetsFadeTimeoutId);
-  if (presetsClearTimeoutId) clearTimeout(presetsClearTimeoutId);
   if (lever1FadeTimeoutId) clearTimeout(lever1FadeTimeoutId);
   if (lever1ClearTimeoutId) clearTimeout(lever1ClearTimeoutId);
   if (leverPush1FadeTimeoutId) clearTimeout(leverPush1FadeTimeoutId);
@@ -704,23 +711,6 @@ function getTouchSubtitle(touch: TouchSettingsType): string {
   return `${paramName} | ${mode}`;
 }
 
-// Handle profile and mode change events from lever components
-function handleSlotNameDisplay(name: string) {
-  if (presetsFadeTimeoutId) clearTimeout(presetsFadeTimeoutId);
-  if (presetsClearTimeoutId) clearTimeout(presetsClearTimeoutId);
-  presetsSuffix.value = ` ${name}`;
-  presetsSuffixFading.value = false;
-  presetsFadeTimeoutId = setTimeout(() => {
-    presetsSuffixFading.value = true;
-    presetsFadeTimeoutId = null;
-  }, 500);
-  presetsClearTimeoutId = setTimeout(() => {
-    presetsSuffix.value = '';
-    presetsSuffixFading.value = false;
-    presetsClearTimeoutId = null;
-  }, 2500);
-}
-
 function handleSlotCount(count: number) {
   presetSlotCount.value = count;
 }
@@ -829,6 +819,7 @@ function handleKeyboardChange() {
   markChanged();
 }
 
+// Temporary suffix handlers (show text when accordion is open and user makes changes)
 function handleMappingChange(mappingName: string) {
   if (keyboardFadeTimeoutId) clearTimeout(keyboardFadeTimeoutId);
   if (keyboardClearTimeoutId) clearTimeout(keyboardClearTimeoutId);
@@ -950,12 +941,27 @@ function handleLeverPush2BehaviourChanged(behaviourName: string) {
 }
 
 function handlePresetLoad(settings: DeviceSettings) {
+  // Capture old settings for comparison
+  const oldSettings = localSettings.value;
+  
+  // Update settings
   localSettings.value = JSON.parse(JSON.stringify(settings));
   
   // Ensure offsetTime has a default value for older presets that don't have it
   if (localSettings.value.touch.offsetTime === undefined) {
     localSettings.value.touch.offsetTime = 0; // Default to FWD mode
   }
+  
+  // Compare and mark modified sections
+  keyboardModified.value = 
+    JSON.stringify(oldSettings.scale) !== JSON.stringify(settings.scale) ||
+    JSON.stringify(oldSettings.chord) !== JSON.stringify(settings.chord);
+  
+  lever1Modified.value = JSON.stringify(oldSettings.lever1) !== JSON.stringify(settings.lever1);
+  leverPush1Modified.value = JSON.stringify(oldSettings.leverPush1) !== JSON.stringify(settings.leverPush1);
+  lever2Modified.value = JSON.stringify(oldSettings.lever2) !== JSON.stringify(settings.lever2);
+  leverPush2Modified.value = JSON.stringify(oldSettings.leverPush2) !== JSON.stringify(settings.leverPush2);
+  touchModified.value = JSON.stringify(oldSettings.touch) !== JSON.stringify(settings.touch);
   
   hasChanges.value = true; // Arm the Send button - user controls when to send
 }
@@ -985,6 +991,14 @@ async function handleResetDefaults() {
     resetToDefaults();
     localSettings.value = JSON.parse(JSON.stringify(deviceSettings.value));
     hasChanges.value = true;
+    
+    // Clear all modified indicators
+    keyboardModified.value = false;
+    lever1Modified.value = false;
+    leverPush1Modified.value = false;
+    lever2Modified.value = false;
+    leverPush2Modified.value = false;
+    touchModified.value = false;
   } catch (error) {
     console.error('Failed to reset to defaults:', error);
     toast.error('Failed to reset to defaults');
@@ -1033,6 +1047,31 @@ watchEffect(() => {
   if (touchAccordion.value?.isOpen) count++;
   if (systemAccordion.value?.isOpen) count++;
   openAccordionCount.value = count;
+});
+
+// Clear modified indicators when accordions are opened
+watch(() => keyboardAccordion.value?.isOpen, (isOpen) => {
+  if (isOpen) keyboardModified.value = false;
+});
+
+watch(() => lever1Accordion.value?.isOpen, (isOpen) => {
+  if (isOpen) lever1Modified.value = false;
+});
+
+watch(() => leverPush1Accordion.value?.isOpen, (isOpen) => {
+  if (isOpen) leverPush1Modified.value = false;
+});
+
+watch(() => lever2Accordion.value?.isOpen, (isOpen) => {
+  if (isOpen) lever2Modified.value = false;
+});
+
+watch(() => leverPush2Accordion.value?.isOpen, (isOpen) => {
+  if (isOpen) leverPush2Modified.value = false;
+});
+
+watch(() => touchAccordion.value?.isOpen, (isOpen) => {
+  if (isOpen) touchModified.value = false;
 });
 
 function closeAllAccordions() {

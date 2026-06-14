@@ -4,7 +4,7 @@
       <!-- Header -->
       <div class="modal-header">
         <div class="header-left">
-          <div class="battery-visual" @click="handleBatteryClick" style="cursor: pointer;" title="Click 5 times for dev mode">
+          <div class="battery-visual">
             <svg 
               viewBox="0 0 120 60" 
               class="battery-header-icon"
@@ -160,21 +160,22 @@
           </div>
         </div>
 
-        <!-- Dev Mode (Hidden) -->
-        <div v-if="devModeUnlocked" class="dev-mode-section">
-          <div class="dev-mode-header">
-            <span>BATTERY LEVEL</span>
-            <button class="dev-close" @click="devModeUnlocked = false">×</button>
-          </div>
-          <div class="action-row">
+        <!-- Advanced Section (Collapsible) -->
+        <div class="advanced-section">
+          <button class="advanced-header" @click="advancedSectionOpen = !advancedSectionOpen">
+            <span>ADVANCED</span>
+            <span class="advanced-arrow" :class="{ open: advancedSectionOpen }">▼</span>
+          </button>
+          <div v-if="advancedSectionOpen" class="advanced-content">
+            <p class="warning-text">⚠️ Reset Battery calibration and charge tracking.</p>
             <button 
-              class="action-button dev-button"
+              class="action-button override-button"
               @click="handleSetBatteryPercent"
               :disabled="!props.isConnected || isSettingBattery || devBatteryPercent === 0"
             >
-              {{ isSettingBattery ? 'Setting...' : 'Set' }}
+              {{ isSettingBattery ? 'Setting...' : 'Set Level' }}
             </button>
-            <div class="dev-value-wrapper">
+            <div class="override-value-wrapper">
               <ValueControl
                 v-model="devBatteryPercent"
                 :min="0"
@@ -387,10 +388,13 @@ const showConfirmation = ref(false);
 const showSpeakerHelp = ref(false);
 const showPowerModeHelp = ref(false);
 
-// Dev Mode: Secret menu for manual battery % setting
-const devModeUnlocked = ref(false);
+// Advanced section: Collapsible manual battery % override
+const advancedSectionOpen = ref(false);
 const devBatteryPercent = ref(0);  // Start at 0 to force user selection
 const isSettingBattery = ref(false);
+
+// Legacy dev mode refs (can be removed if no other references)
+const devModeUnlocked = ref(false);
 const clickCount = ref(0);
 const clickTimer = ref<number | null>(null);
 
@@ -1435,7 +1439,111 @@ input:checked + .toggle-slider:before {
   box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
 }
 
-/* Dev Mode */
+/* Advanced Section (Collapsible) */
+.advanced-section {
+  margin-bottom: 12px;
+  background: rgba(156, 163, 175, 0.08);
+  border: 1px solid rgba(156, 163, 175, 0.25);
+  border-radius: var(--kb1-radius-md);
+  overflow: hidden;
+}
+
+.advanced-header {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  background: transparent;
+  border: none;
+  color: #d1d5db;
+  font-size: var(--kb1-font-label);
+  font-weight: var(--kb1-font-weight-semibold);
+  text-transform: var(--kb1-text-transform-uppercase);
+  letter-spacing: var(--kb1-letter-spacing-wide);
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.advanced-header:hover {
+  background: rgba(156, 163, 175, 0.15);
+}
+
+.advanced-arrow {
+  font-size: 10px;
+  color: #9ca3af;
+  transition: transform 0.2s ease;
+  display: inline-block;
+}
+
+.advanced-arrow.open {
+  transform: rotate(180deg);
+}
+
+.advanced-content {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 12px 8px;
+  padding: 12px;
+  background: transparent;
+  border-top: 1px solid rgba(156, 163, 175, 0.25);
+}
+
+.warning-text {
+  grid-column: 1 / -1;
+  margin: 0;
+  color: #d1d5db;
+  font-size: 0.75rem;
+  line-height: 1.4;
+}
+
+.override-button {
+  background: rgba(106, 104, 83, 0.35);
+  border: 1px solid rgba(106, 104, 83, 0.4);
+  color: #EAEAEA;
+  font-weight: var(--kb1-font-weight-normal);
+}
+
+.override-button:hover:not(:disabled) {
+  background: rgba(106, 104, 83, 0.6);
+  border-color: rgba(106, 104, 83, 0.7);
+  transform: translateY(-2px);
+}
+
+.override-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  color: #848484;
+}
+
+.override-value-wrapper {
+  display: flex;
+  align-items: center;
+  gap: var(--kb1-spacing-xs);
+}
+
+/* Legacy manual override styles (can be removed if no conflicts) */
+.manual-override-section {
+  margin-bottom: 12px;
+  padding: 12px;
+  background-color: rgba(106, 104, 83, 0.15);
+  border: 1px solid rgba(106, 104, 83, 0.3);
+  border-radius: var(--kb1-radius-lg);
+}
+
+.manual-override-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  font-size: var(--kb1-font-label);
+  font-weight: var(--kb1-font-weight-semibold);
+  color: #d1d5db;
+  text-transform: var(--kb1-text-transform-uppercase);
+  letter-spacing: var(--kb1-letter-spacing-wide);
+}
+
+/* Legacy dev mode styles (can be removed if no other references) */
 .dev-mode-section {
   margin-bottom: 12px;
   padding: 12px;

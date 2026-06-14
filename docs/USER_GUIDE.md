@@ -39,22 +39,38 @@ No hardware? Click the KB1 logo **5 times rapidly** to enable Evaluation Mode. T
 
 ### Battery Calibration
 
-After flashing new firmware, the battery meter shows a gray `?` icon until calibrated.
+**Uncalibrated Devices** show a gray `?` icon until calibrated. Once calibrated, flashing firmware preserves your calibration (NVS partition is backed up/restored).
 
-**Why?** Firmware estimates battery life by tracking usage time — it has no direct voltage measurement. A fresh install doesn't know if the battery is at 100% or 20%.
+**Why calibrate?** Firmware estimates battery life by tracking usage time — it has no direct voltage measurement. A fresh device doesn't know if the battery is at 100% or 20%.
 
 **How to calibrate:**
-1. Connect USB cable to KB1
-2. Leave charging for **one continuous 5.5+ hour session**
-3. **Do not unplug during this time** — the timer resets to zero if interrupted
-4. Battery meter will automatically mark as calibrated and show accurate percentage
+1. **Power device ON first** (ensure it's running on battery, not plugged in)
+2. **Then connect USB cable** to KB1 — pink/blue LEDs should pulse
+3. Charge for **5+ hours total** — partial sessions accumulate automatically
+4. **Computer sleep is OK** — after 3 minutes, charging continues even if computer sleeps
+5. Battery meter will automatically mark as calibrated and show accurate percentage
 
-Partial charges do not accumulate (3 hrs + 2.5 hrs ≠ calibrated). This ensures an accurate baseline. Only needs to happen **once**.
+**Why power on first?** The charge controller has two modes set at boot: If USB is connected when device boots, it enters bypass/power mode (device powered, battery NOT charging). If device boots on battery THEN computer USB is plugged in, it enters charging mode (device powered AND battery charging). **If LEDs don't pulse after connecting USB,** disconnect USB, wait 5 seconds, and reconnect.
+
+**Partial charges will accumulate** — 3 hours today + 2.5 hours tomorrow = calibrated! The firmware tracks total charge time across sessions as long as it is connected to a computer. Only needs to happen **once**.
+
+**LED Pulse Duration:** Charging LEDs pulse for the estimated time needed to reach 100% (minimum 30 minutes). Fresh battery = ~5 hours. Battery at 80% = ~1 hour. LEDs stop when estimated charge complete OR battery reaches 100%.
+
+**Edge case:** If computer goes to sleep then you unplug USB, LEDs may pulse briefly until timer expires (they stop naturally when device loses power if actually unplugged).
 
 **After calibration:** Battery estimates are accurate to ±10% based on measured consumption:
 - Active mode: ~95mA drain
 - Light sleep: ~2mA drain
 - Deep sleep: ~0.014mA drain
+
+**Manual Battery Adjustment:**
+If battery % seems incorrect after calibration, you can manually override it:
+1. Open Battery Status modal (battery icon in top-right)
+2. Click "ADVANCED" section to expand
+3. Use value control to set correct percentage
+4. Click "Set Level" — this resets charge tracking and recalculates timing
+
+⚠️ **Only use manual override if calibration is incorrect.** Proper calibration (5-hour charge) is more accurate.
 
 ---
 

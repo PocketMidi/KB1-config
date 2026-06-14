@@ -5,7 +5,7 @@
 /**
  * Application version (synced with firmware version)
  */
-export const APP_VERSION = '2.0.1';
+export const APP_VERSION = '2.1.0';
 
 /**
  * localStorage key for tracking if the user has seen the first-time BLE intro overlay

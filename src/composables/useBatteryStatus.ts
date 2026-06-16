@@ -349,6 +349,35 @@ function getPowerModeLabel(): string {
   }
 }
 
+/**
+ * Apply pending battery set if one exists
+ * Called after connection to ensure manual set completes even if BLE was unavailable
+ */
+async function applyPendingBatterySet() {
+  const pending = localStorage.getItem('kb1-pending-battery-set');
+  if (!pending) return;
+  
+  const percentage = parseInt(pending, 10);
+  if (isNaN(percentage) || percentage < 1 || percentage > 100) {
+    console.warn('Invalid pending battery set value:', pending);
+    localStorage.removeItem('kb1-pending-battery-set');
+    return;
+  }
+  
+  console.log(`📦 Applying pending battery set: ${percentage}%`);
+  
+  try {
+    await bleClient.setBatteryPercentage(percentage);
+    console.log(`✅ Pending battery set applied: ${percentage}%`);
+    localStorage.removeItem('kb1-pending-battery-set');
+    // Sync to refresh display
+    await syncBatteryStatus();
+  } catch (error) {
+    console.warn('Failed to apply pending battery set, will retry next connection:', error);
+    // Keep the pending value for next connection
+  }
+}
+
 export function useBatteryStatus() {
   return {
     // State
@@ -375,5 +404,6 @@ export function useBatteryStatus() {
     resetBattery,
     toggleShowPercentage,
     setSpeakerMinutes,
+    applyPendingBatterySet,
   };
 }

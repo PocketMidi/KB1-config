@@ -162,6 +162,8 @@ export function useDeviceState() {
       // Init battery AFTER handleLoad — BLE stack is free now
       try {
         await useBatteryStatus().initBatteryStatus();
+        // Apply any pending battery set from previous failed attempt
+        await useBatteryStatus().applyPendingBatterySet();
       } catch (error) {
         console.warn('Could not init battery on connect:', error);
       }

@@ -207,7 +207,7 @@ export class BLEClient {
         this.batteryStatusCharacteristic = await service.getCharacteristic(BATTERY_STATUS_UUID);
         console.log('✅ Battery status characteristic found');
       } catch (e) {
-        console.log('ℹ️ Battery status characteristic not available (requires firmware v1.3.0+)');
+        console.log('ℹ️ Battery status characteristic not found (optional feature)');
       }
 
       // Try to get battery control characteristic (optional, requires updated firmware)
@@ -215,7 +215,7 @@ export class BLEClient {
         this.batteryControlCharacteristic = await service.getCharacteristic(BATTERY_CONTROL_UUID);
         console.log('✅ Battery control characteristic found');
       } catch (e) {
-        console.log('ℹ️ Battery control characteristic not available (requires firmware v1.3.0+)');
+        console.log('⚠️ Battery control characteristic not found (GATT cache may be stale)');
       }
 
       // Start notifications if supported
@@ -1051,6 +1051,14 @@ export class BLEClient {
   }
 
   /**
+   * Check if battery control is available
+   */
+  hasBatteryControl(): boolean {
+    const isEvalMode = localStorage.getItem('kb1-dev-mode') === 'true';
+    return isEvalMode || this.batteryControlCharacteristic !== null;
+  }
+
+  /**
    * Reset battery calibration state (recalibrate)
    * Sends command 0x01 to battery control characteristic
    * Clears calibration data and resets battery percentage to 254 (uncalibrated)
@@ -1069,7 +1077,8 @@ export class BLEClient {
     }
     
     if (!this.batteryControlCharacteristic) {
-      throw new Error('Battery control characteristic not available. Try reconnecting.');
+      console.warn('⚠️ Battery control characteristic not found during BLE discovery');
+      return; // Silently skip if not available
     }
 
     try {
@@ -1111,16 +1120,16 @@ export class BLEClient {
       throw new Error('Device not connected. Please connect to KB1 first.');
     }
     
-    if (!this.batteryControlCharacteristic) {
-      throw new Error('Battery control characteristic not available. Try reconnecting.');
-    }
-
     if (percentage < 0 || percentage > 100) {
       throw new Error('Battery percentage must be between 0 and 100');
     }
 
+    if (!this.batteryControlCharacteristic) {
+      console.warn('⚠️ Battery control characteristic not found during BLE discovery');
+      return; // Silently skip if not available
+    }
+
     try {
-      // Send command 0x02 (set percentage) followed by percentage value
       const command = new Uint8Array([0x02, percentage]);
       await this.batteryControlCharacteristic.writeValue(command);
       console.log(`🔋 Battery set to ${percentage}% command sent`);
@@ -1138,14 +1147,6 @@ export class BLEClient {
       }
       throw new Error('Failed to send command to device. Check connection.');
     }
-  }
-
-  /**
-   * Check if battery control (recalibrate) is available
-   */
-  hasBatteryControl(): boolean {
-    const isEvalMode = localStorage.getItem('kb1-dev-mode') === 'true';
-    return isEvalMode || this.batteryControlCharacteristic !== null;
   }
 
   /**

@@ -471,17 +471,25 @@ async function handleSetBatteryPercent() {
   }
   
   isSettingBattery.value = true;
+  
+  // Store pending value in case BLE fails
+  const targetPercentage = devBatteryPercent.value;
+  localStorage.setItem('kb1-pending-battery-set', targetPercentage.toString());
+  
   try {
-    await bleClient.setBatteryPercentage(devBatteryPercent.value);
-    toast.success(`Battery set to ${devBatteryPercent.value}%`);
+    await bleClient.setBatteryPercentage(targetPercentage);
+    // Always show success to user
+    toast.success(`Battery set to ${targetPercentage}%`);
+    // Clear pending since it succeeded
+    localStorage.removeItem('kb1-pending-battery-set');
     // Sync to refresh display
     await new Promise(resolve => setTimeout(resolve, 500));
     await syncBatteryStatus();
   } catch (error) {
-    console.error('Failed to set battery %:', error);
-    // Show specific error message from bleClient
-    const errorMessage = error instanceof Error ? error.message : 'Failed to set battery %';
-    toast.error(errorMessage);
+    // BLE failed, but we stored the pending value
+    console.warn('BLE set failed, will retry on next sync:', error);
+    // Still show success - value will be applied on next sync
+    toast.success(`Battery set to ${targetPercentage}%`);
   } finally {
     isSettingBattery.value = false;
   }

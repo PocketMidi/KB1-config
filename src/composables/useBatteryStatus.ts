@@ -98,6 +98,9 @@ async function syncBatteryStatus() {
     batteryStatus.value = status;
     lastSyncTime.value = Date.now();
     
+    // If we successfully read battery data, mark as available so icon shows
+    isAvailable.value = true;
+    
     // Check for low battery alerts
     checkLowBatteryAlert(status.percentage);
   } catch (error) {

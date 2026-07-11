@@ -219,6 +219,13 @@
           </div>
         </div>
 
+        <!-- Low battery LED notice -->
+        <div class="low-battery-notice">
+          After Calibration, when battery drops below 25%, 
+          the octave LEDs pulse as a warning.
+          
+        </div>
+
         <!-- Charging Instructions (always visible, dimmed when calibrated) -->
         <div class="charging-section" :class="{ dimmed: estimatedPercentage !== 254 }">
           <ol class="charging-steps">
@@ -1110,6 +1117,14 @@ input:checked + .toggle-slider {
 
 input:checked + .toggle-slider:before {
   transform: translateX(22px);
+}
+
+.low-battery-notice {
+  margin-top: 10px;
+  font-family: var(--kb1-font-family);
+  font-size: 0.75rem;
+  color: #6b7280;
+  line-height: 1.5;
 }
 
 .charging-section {

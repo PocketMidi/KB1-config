@@ -21,6 +21,7 @@
         :default-open="false"
         :show-keyboard-icon="true"
         :show-modified-indicator="keyboardModified"
+        :outlined="true"
       >
         <template #header-right>
           <div v-if="playMode === 'arp' && arpUserMode" class="root-note-display">
@@ -55,6 +56,7 @@
         :title-suffix="lever1Suffix"
         :title-suffix-fading="lever1SuffixFading"
         :show-modified-indicator="lever1Modified"
+        :outlined="true"
       >
         <LeverSettings
           title="Lever"
@@ -85,6 +87,7 @@
         :title-suffix="leverPush1Suffix"
         :title-suffix-fading="leverPush1SuffixFading"
         :show-modified-indicator="leverPush1Modified"
+        :outlined="true"
       >
         <LeverPushSettings
           title="Press"
@@ -117,6 +120,7 @@
         :title-suffix="lever2Suffix"
         :title-suffix-fading="lever2SuffixFading"
         :show-modified-indicator="lever2Modified"
+        :outlined="true"
       >
         <LeverSettings
           title="Lever"
@@ -147,6 +151,7 @@
         :title-suffix="leverPush2Suffix"
         :title-suffix-fading="leverPush2SuffixFading"
         :show-modified-indicator="leverPush2Modified"
+        :outlined="true"
       >
         <LeverPushSettings
           title="Press"
@@ -177,6 +182,7 @@
         :default-open="false"
         :show-touch-icon="true"
         :show-modified-indicator="touchModified"
+        :outlined="true"
       >
         <TouchSettings
           title="TOUCH"
@@ -202,6 +208,7 @@
         :id="'presets'"
         :default-open="false"
         :show-preset-icon="true"
+        :outlined="true"
       >
         <PresetManager
           :current-settings="localSettings"
@@ -223,6 +230,7 @@
           :id="'system-settings'"
           :default-open="false"
           :show-system-icon="true"
+          :outlined="true"
         >
           <SystemSettings
             v-model="localSettings.system"
@@ -1097,8 +1105,8 @@ defineExpose({
 .collapse-all-bar {
   width: 100%;
   padding: var(--kb1-spacing-sm) var(--kb1-spacing-md);
-  background: rgba(106, 104, 83, 0.2);
-  border: none;
+  background: var(--outlined-bg);
+  border: 1px solid var(--outlined-border);
   border-radius: var(--kb1-radius-lg);
   color: #848484;
   font-family: var(--kb1-font-family);
@@ -1106,16 +1114,22 @@ defineExpose({
   text-align: left;
   cursor: pointer;
   margin-bottom: 6px;
-  transition: background 0.2s, color 0.2s;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
 }
 
 .collapse-all-bar:hover {
-  background: rgba(106, 104, 83, 0.6);
+  background: var(--outlined-bg-hover);
+  border-color: var(--outlined-border-hover);
   color: rgba(234, 234, 234, 0.8);
 }
 
 .collapse-all-bar:active {
-  background: rgba(106, 104, 83, 0.8);
+  background: var(--outlined-bg-active);
+  border-color: var(--outlined-border-active);
+}
+
+.collapse-all-bar:focus {
+  outline: none;
 }
 
 /* Collapse fade transition */
@@ -1178,11 +1192,6 @@ defineExpose({
   pointer-events: auto !important;
 }
 
-/* Blue accent border to show System is always available */
-.system-settings-wrapper :deep(.accordion-header) {
-  border-color: rgba(74, 158, 255, 0.3) !important;
-  box-shadow: 0 0 0 1px rgba(74, 158, 255, 0.15) !important;
-}
 
 @media (min-width: 769px) {
   .mobile-scales-tab {

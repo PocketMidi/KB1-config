@@ -2129,14 +2129,14 @@ defineExpose({
 .btn-mode-toggle {
   flex: 0 0 auto;
   padding: 0.25rem 0.5rem;
-  background: rgba(106, 104, 83, 0.35);
-  border: 1px solid rgba(106, 104, 83, 0.4);
+  background: var(--outlined-bg);
+  border: 1px solid var(--outlined-border);
   color: var(--kb1-text-primary);
   font-size: var(--kb1-font-small);
   font-weight: var(--kb1-font-weight-medium);
   border-radius: var(--kb1-radius-sm);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: background 0.15s, border-color 0.15s;
   font-family: var(--kb1-font-family);
   white-space: nowrap;
   display: flex;
@@ -2145,13 +2145,13 @@ defineExpose({
 }
 
 .btn-mode-toggle:hover {
-  background: rgba(106, 104, 83, 0.6);
-  border-color: rgba(106, 104, 83, 0.7);
+  background: var(--outlined-bg-hover);
+  border-color: var(--outlined-border-hover);
 }
 
 .btn-mode-toggle:active {
-  background: rgba(106, 104, 83, 0.8);
-  border-color: rgba(106, 104, 83, 0.9);
+  background: var(--outlined-bg-active);
+  border-color: var(--outlined-border-active);
 }
 
 .btn-mode-toggle span {
@@ -2242,9 +2242,10 @@ defineExpose({
   align-items: center;
   gap: 0.01rem;
   padding: 0.125rem 1rem;
-  background: rgba(106, 104, 83, 0.2);
+  background: var(--outlined-bg);
+  border: 1px solid var(--outlined-border);
   border-radius: var(--kb1-radius-md);
-  transition: background 0.2s;
+  transition: background 0.15s, border-color 0.15s;
   position: relative;
   min-height: 30px; /* Consistent height across all modes */
 }
@@ -2258,7 +2259,8 @@ defineExpose({
 }
 
 .slider-row:hover {
-  background: rgba(106, 104, 83, 0.3);
+  background: var(--outlined-bg-hover);
+  border-color: var(--outlined-border-hover);
 }
 
 .color-section {
@@ -2459,8 +2461,8 @@ defineExpose({
 
 .explainer-label {
   padding: 0.15rem 0.3rem;
-  background: rgba(106, 104, 83, 0.35);
-  border: 1px solid rgba(106, 104, 83, 0.4);
+  background: var(--outlined-bg);
+  border: 1px solid var(--outlined-border);
   border-radius: 3px;
   color: #b9aa5f;
   font-size: var(--kb1-font-small);
@@ -2583,14 +2585,14 @@ defineExpose({
 .slider-toggle-btn {
   flex: 0 0 auto;
   padding: 0.15rem 0.375rem;
-  background: rgba(106, 104, 83, 0.35);
-  border: 1px solid rgba(106, 104, 83, 0.4);
+  background: var(--outlined-bg);
+  border: 1px solid var(--outlined-border);
   color: var(--kb1-text-primary);
   font-size: var(--kb1-font-badge);
   font-weight: var(--kb1-font-weight-medium);
   border-radius: var(--kb1-radius-sm);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: background 0.15s, border-color 0.15s;
   font-family: var(--kb1-font-family);
   white-space: nowrap;
   display: flex;
@@ -2600,13 +2602,13 @@ defineExpose({
 }
 
 .slider-toggle-btn:hover:not(.disabled) {
-  background: rgba(106, 104, 83, 0.6);
-  border-color: rgba(106, 104, 83, 0.7);
+  background: var(--outlined-bg-hover);
+  border-color: var(--outlined-border-hover);
 }
 
 .slider-toggle-btn:active:not(.disabled) {
-  background: rgba(106, 104, 83, 0.8);
-  border-color: rgba(106, 104, 83, 0.9);
+  background: var(--outlined-bg-active);
+  border-color: var(--outlined-border-active);
 }
 
 .slider-toggle-btn span {
@@ -3230,28 +3232,28 @@ defineExpose({
 .preset-dropdown {
   flex: 1;
   padding: 0.3rem 0.5rem;
-  background: rgba(106, 104, 83, 0.2);
-  border: 1px solid rgba(106, 104, 83, 0.25);
+  background: var(--outlined-bg);
+  border: 1px solid var(--outlined-border);
   color: var(--kb1-text-primary);
   font-size: var(--kb1-font-input);
   font-weight: var(--kb1-font-weight-medium);
   border-radius: var(--kb1-radius-sm);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: background 0.15s, border-color 0.15s;
   font-family: var(--kb1-font-family);
   outline: none;
   max-width: calc(100% - 130px); /* Reduced to make room for info icon */
 }
 
 .preset-dropdown:hover {
-  background: rgba(106, 104, 83, 0.35);
-  border-color: rgba(106, 104, 83, 0.4);
+  background: var(--outlined-bg-hover);
+  border-color: var(--outlined-border-hover);
 }
 
 .preset-dropdown:focus {
-  background: rgba(106, 104, 83, 0.4);
-  border-color: var(--ui-highlight);
-  box-shadow: 0 0 0 1px rgba(116, 196, 255, 0.3);
+  background: var(--outlined-bg-active);
+  border-color: var(--outlined-border-hover);
+  box-shadow: none;
 }
 
 .preset-dropdown option {
@@ -3266,27 +3268,28 @@ defineExpose({
   width: 26px;
   height: 26px;
   padding: 0;
-  background: rgba(106, 104, 83, 0.2);
-  border: 1px solid rgba(106, 104, 83, 0.25);
+  background: var(--outlined-bg);
+  border: 1px solid var(--outlined-border);
   color: var(--kb1-text-primary);
   font-size: var(--kb1-font-heading);
   font-weight: var(--kb1-font-weight-normal);
   line-height: var(--kb1-line-height-tight);
   border-radius: var(--kb1-radius-sm);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: background 0.15s, border-color 0.15s;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .btn-delete-preset:hover {
-  background: rgba(106, 104, 83, 0.35);
-  border-color: rgba(106, 104, 83, 0.4);
+  background: var(--outlined-bg-hover);
+  border-color: var(--outlined-border-hover);
 }
 
 .btn-delete-preset:active {
-  background: rgba(106, 104, 83, 0.5);
+  background: var(--outlined-bg-active);
+  border-color: var(--outlined-border-active);
   transform: scale(0.95);
 }
 
@@ -3339,25 +3342,26 @@ defineExpose({
 .btn-zero-preset {
   flex: 0 0 auto;
   padding: 0.3rem 0.75rem;
-  background: rgba(106, 104, 83, 0.2);
-  border: 1px solid rgba(106, 104, 83, 0.25);
+  background: var(--outlined-bg);
+  border: 1px solid var(--outlined-border);
   color: var(--kb1-text-primary);
   font-size: var(--kb1-font-label);
   font-weight: var(--kb1-font-weight-semibold);
   border-radius: var(--kb1-radius-sm);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: background 0.15s, border-color 0.15s;
   font-family: var(--kb1-font-family);
   letter-spacing: 0.5px;
 }
 
 .btn-zero-preset:hover {
-  background: rgba(106, 104, 83, 0.35);
-  border-color: rgba(106, 104, 83, 0.4);
+  background: var(--outlined-bg-hover);
+  border-color: var(--outlined-border-hover);
 }
 
 .btn-zero-preset:active {
-  background: rgba(106, 104, 83, 0.5);
+  background: var(--outlined-bg-active);
+  border-color: var(--outlined-border-active);
   transform: scale(0.98);
 }
 

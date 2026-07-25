@@ -82,6 +82,8 @@ body.android-device {
   --ui-highlight-rgb: 185, 170, 95; /* RGB version for rgba() usage */
   --ui-highlight-hover: #c4b56d; /* Lighter version for hovers */
   --ui-highlight-active: #a89954; /* Darker version for active states */
+
+  --logo-color: #72716c; /* Header SVG logo stroke color */
   
   /* ===== Battery Colors ===== */
   --battery-good: #5dad6b; /* Healthy battery level - muted green */
@@ -187,6 +189,16 @@ body.android-device {
   /* --kb1-letter-spacing-* = KERNING (horizontal space between letters) */
   /* --kb1-line-height-* = LEADING (vertical space between lines of text) */
   
+  /* ===== Outlined Element Style (GO LIVE pattern) ===== */
+  /* Used by accordion headers, collapse-all bar, slider rows, mode toggles, etc. */
+  --outlined-bg:            rgba(234, 234, 234, 0.04);
+  --outlined-border:        rgba(234, 234, 234, 0.35);
+  --outlined-bg-hover:      rgba(234, 234, 234, 0.08);
+  --outlined-border-hover:  rgba(234, 234, 234, 0.55);
+  --outlined-bg-active:     rgba(234, 234, 234, 0.12);
+  --outlined-border-active: rgba(234, 234, 234, 0.65);
+  --outlined-bg-open:       rgba(183, 182, 165, 0.14); /* open/expanded state */
+
   /* ===== Border Radius ===== */
   --kb1-radius-sm: 4px;
   --kb1-radius-md: 6px;

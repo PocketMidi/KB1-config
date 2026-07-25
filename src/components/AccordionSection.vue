@@ -1,5 +1,5 @@
 <template>
-  <div class="accordion-section" :class="{ 'is-open': isOpen }">
+  <div class="accordion-section" :class="{ 'is-open': isOpen, 'is-outlined': outlined }"> 
     <button 
       class="accordion-header" 
       @click="toggle"
@@ -142,7 +142,8 @@ const props = defineProps<{
   showTouchIcon?: boolean;     // Show Touch icon
   showPresetIcon?: boolean;    // Show Preset icon
   showSystemIcon?: boolean;    // Show System icon
-}>();
+  outlined?: boolean;          // GO LIVE style: outline + faint tint when closed, outline gone when open
+}>(); 
 
 const isOpen = ref(props.defaultOpen ?? false);
 
@@ -203,6 +204,38 @@ defineExpose({
 
 .accordion-header:active {
   background: rgba(106, 104, 83, 0.8); /* Brightest when pressed */
+}
+
+.accordion-header:focus {
+  outline: none;
+}
+
+.accordion-header:focus-visible {
+  outline: none;
+}
+
+/* Outlined variant — GO LIVE button style */
+.accordion-section.is-outlined .accordion-header {
+  background: var(--outlined-bg);
+  border: 1px solid var(--outlined-border);
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.accordion-section.is-outlined .accordion-header:hover {
+  background: var(--outlined-bg-hover);
+  border-color: var(--outlined-border-hover);
+}
+
+.accordion-section.is-outlined .accordion-header:active {
+  background: var(--outlined-bg-active);
+  border-color: var(--outlined-border-active);
+}
+
+.accordion-section.is-outlined.is-open .accordion-header {
+  background: var(--outlined-bg-open);
+  border: 1px solid transparent; /* Keeps box model identical, visually gone */
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
 }
 
 .accordion-content-wrapper {

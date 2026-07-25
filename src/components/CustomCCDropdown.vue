@@ -126,11 +126,11 @@ onUnmounted(() => {
 
 .dropdown-selected {
   padding: 0.15rem 0.3rem;
-  background: rgba(106, 104, 83, 0.35);
-  border: 1px solid rgba(106, 104, 83, 0.4);
+  background: var(--outlined-bg);
+  border: 1px solid var(--outlined-border);
   border-radius: var(--kb1-radius-sm);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: background 0.15s, border-color 0.15s;
   display: flex;
   align-items: center;
   gap: 0.2rem;
@@ -138,8 +138,8 @@ onUnmounted(() => {
 }
 
 .dropdown-selected:hover {
-  background: rgba(106, 104, 83, 0.5);
-  border-color: rgba(106, 104, 83, 0.6);
+  background: var(--outlined-bg-hover);
+  border-color: var(--outlined-border-hover);
 }
 
 .dropdown-arrow {
@@ -155,7 +155,7 @@ onUnmounted(() => {
   right: 0;
   margin-top: 2px;
   background: #1a1a1a;
-  border: 1px solid rgba(106, 104, 83, 0.6);
+  border: 1px solid var(--outlined-border-hover);
   border-radius: var(--kb1-radius-sm);
   max-height: 300px;
   overflow-y: auto;

@@ -587,7 +587,7 @@ body {
 .disconnected-state {
   filter: grayscale(100%);
   position: relative;
-  opacity: 0.8;
+  opacity: 0.5;
 }
 
 .disconnected-state::before {

@@ -915,14 +915,14 @@ function dismissHelp() {
   flex: 0 0 auto;
   margin-left: auto; /* Push to far right */
   padding: 0.15rem 0.375rem;
-  background: rgba(106, 104, 83, 0.35);
-  border: 1px solid rgba(106, 104, 83, 0.4);
+  background: var(--outlined-bg);
+  border: 1px solid var(--outlined-border);
   color: var(--kb1-text-primary, #EAEAEA);
   font-size: var(--kb1-font-badge);
   font-weight: var(--kb1-font-weight-medium);
   border-radius: var(--kb1-radius-sm);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: background 0.15s, border-color 0.15s;
   font-family: var(--kb1-font-family);
   white-space: nowrap;
   display: flex;
@@ -933,20 +933,20 @@ function dismissHelp() {
 }
 
 .toggle-btn:hover:not(:disabled) {
-  background: rgba(106, 104, 83, 0.6);
-  border-color: rgba(106, 104, 83, 0.7);
+  background: var(--outlined-bg-hover);
+  border-color: var(--outlined-border-hover);
 }
 
 .toggle-btn:active:not(:disabled) {
-  background: rgba(106, 104, 83, 0.8);
-  border-color: rgba(106, 104, 83, 0.9);
+  background: var(--outlined-bg-active);
+  border-color: var(--outlined-border-active);
 }
 
 .toggle-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
-  background: rgba(106, 104, 83, 0.2);
-  border-color: rgba(106, 104, 83, 0.25);
+  background: var(--outlined-bg);
+  border-color: var(--outlined-border);
 }
 
 .toggle-btn span {

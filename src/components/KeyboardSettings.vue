@@ -2550,14 +2550,14 @@ function handleKeyClick(midiNote: number) {
 .toggle-btn {
   flex: 0 0 auto;
   padding: 0.25rem 0.6rem;
-  background: rgba(106, 104, 83, 0.35);
-  border: 1px solid rgba(106, 104, 83, 0.4);
+  background: var(--outlined-bg);
+  border: 1px solid var(--outlined-border);
   color: var(--kb1-text-primary, #EAEAEA);
   font-size: var(--kb1-font-caption);
   font-weight: var(--kb1-font-weight-medium);
   border-radius: var(--kb1-radius-sm);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: background 0.15s, border-color 0.15s;
   font-family: var(--kb1-font-family);
   white-space: nowrap;
   display: flex;
@@ -2567,20 +2567,20 @@ function handleKeyClick(midiNote: number) {
 }
 
 .toggle-btn:hover:not(:disabled) {
-  background: rgba(106, 104, 83, 0.6);
-  border-color: rgba(106, 104, 83, 0.7);
+  background: var(--outlined-bg-hover);
+  border-color: var(--outlined-border-hover);
 }
 
 .toggle-btn:active:not(:disabled) {
-  background: rgba(106, 104, 83, 0.8);
-  border-color: rgba(106, 104, 83, 0.9);
+  background: var(--outlined-bg-active);
+  border-color: var(--outlined-border-active);
 }
 
 .toggle-btn:disabled {
   opacity: 0.3;
   cursor: not-allowed;
-  background: rgba(106, 104, 83, 0.1);
-  border-color: rgba(106, 104, 83, 0.2);
+  background: var(--outlined-bg);
+  border-color: var(--outlined-border);
 }
 
 .toggle-btn span {

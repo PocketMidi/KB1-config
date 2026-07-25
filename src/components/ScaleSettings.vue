@@ -371,8 +371,8 @@ function isRootNote(midiNote: number): boolean {
   align-items: center;
   gap: 0.5rem;
   padding: 0.25rem 0.75rem;
-  background: rgba(106, 104, 83, 0.2);
-  border: 1px solid rgba(106, 104, 83, 0.3);
+  background: var(--outlined-bg);
+  border: 1px solid var(--outlined-border);
   border-radius: var(--kb1-radius-md);
   font-family: var(--kb1-font-family-mono);
   font-size: var(--kb1-font-label);
@@ -380,13 +380,13 @@ function isRootNote(midiNote: number): boolean {
   letter-spacing: var(--kb1-letter-spacing-wide);
   color: var(--kb1-text-secondary);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: background 0.15s, border-color 0.15s;
   flex-shrink: 0;
 }
 
 .toggle-button:hover:not(:disabled) {
-  background: rgba(106, 104, 83, 0.35);
-  border-color: rgba(106, 104, 83, 0.5);
+  background: var(--outlined-bg-hover);
+  border-color: var(--outlined-border-hover);
 }
 
 .toggle-button:disabled {
@@ -404,7 +404,7 @@ function isRootNote(midiNote: number): boolean {
 }
 
 .toggle-button .divider {
-  color: rgba(106, 104, 83, 0.5);
+  color: var(--outlined-border-hover);
   font-weight: var(--kb1-font-weight-normal);
 }
 

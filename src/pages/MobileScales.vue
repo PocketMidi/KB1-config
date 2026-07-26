@@ -205,6 +205,8 @@
         ref="presetsAccordion"
         title="PRESETS"
         :subtitle="presetsSubtitle"
+        :right-label="activePresetSlot !== null ? 'preset' : undefined"
+        :right-value="activePresetSlot !== null ? activePresetSlot + 1 : undefined"
         :id="'presets'"
         :default-open="false"
         :show-preset-icon="true"
@@ -217,6 +219,7 @@
           @loadFactoryDefaults="handleResetDefaults"
           @preset-activated="handlePresetActivated"
           @slot-count="handleSlotCount"
+          @active-slot-change="handleActiveSlotChange"
         />
       </AccordionSection>
       
@@ -340,6 +343,9 @@ const touchModified = ref<boolean>(false);
 
 // Preset slot count tracking (for subtitle display)
 const presetSlotCount = ref<number>(0);
+const activePresetSlot = ref<number | null>(null);
+const activePresetSlotName = ref<string | null>(null);
+const activePresetSlotAuthor = ref<string | null>(null);
 
 // Load CC map on mount
 onMounted(async () => {
@@ -639,9 +645,11 @@ const keyboardSubtitle = computed(() => {
 });
 
 const presetsSubtitle = computed(() => {
-  // Show slot usage: "3 of 8 slots"
-  const slotText = presetSlotCount.value === 1 ? 'slot' : 'slots';
-  return `${presetSlotCount.value} of 8 ${slotText}`;
+  if (activePresetSlot.value !== null && activePresetSlotName.value) {
+    const author = activePresetSlotAuthor.value || 'USER';
+    return `${author} / ${activePresetSlotName.value}`;
+  }
+  return 'SYSTEM / Defaults';
 });
 
 // Helper functions to generate subtitles for lever accordion headers
@@ -721,6 +729,12 @@ function getTouchSubtitle(touch: TouchSettingsType): string {
 
 function handleSlotCount(count: number) {
   presetSlotCount.value = count;
+}
+
+function handleActiveSlotChange(slot: number | null, name: string | null, author: string | null) {
+  activePresetSlot.value = slot;
+  activePresetSlotName.value = name;
+  activePresetSlotAuthor.value = author;
 }
 
 // Watch for device settings changes

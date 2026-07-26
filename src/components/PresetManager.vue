@@ -94,8 +94,16 @@
     <div v-if="showSlotDialog" class="modal-overlay" @click.self.stop="showSlotDialog = false">
       <div class="modal-dialog">
         <div class="modal-header">
-          <h3>{{ getSlotPreset(editingSlot) ? 'Edit Preset' : 'Save Preset' }}</h3>
-          <button class="close-btn" @click.stop="showSlotDialog = false">×</button>
+          <h3>{{ getSlotPreset(editingSlot) ? 'Update Preset' : 'Save Preset' }}</h3>
+          <div class="header-actions">
+            <button
+              v-if="getSlotPreset(editingSlot)"
+              class="btn-apply-header"
+              @click.stop="activateSlot(editingSlot); showSlotDialog = false"
+              title="Load these settings into the app"
+            >Apply</button>
+            <button class="close-btn" @click.stop="showSlotDialog = false">×</button>
+          </div>
         </div>
         
         <div class="form-group">
@@ -150,16 +158,18 @@
             @click.stop="deleteCurrentSlot"
             title="Delete this preset"
           >Delete</button>
+          <button
+            v-if="getDefaultPresets()[editingSlot] !== null"
+            class="btn-secondary btn-restore"
+            :disabled="!canRestoreStarter"
+            @click.stop="restoreStarterPreset(editingSlot)"
+            title="Restore this slot to its original starter preset"
+          >Restore</button>
           <div class="modal-buttons-right">
             <button class="btn-secondary" @click.stop="showSlotDialog = false">Cancel</button>
-            <button 
-              v-if="getSlotPreset(editingSlot)"
-              class="btn-secondary"
-              @click.stop="activateSlot(editingSlot); showSlotDialog = false"
-              title="Load these settings into the app"
-            >Apply</button>
-            <button class="btn-primary" @click.stop="confirmSlotSave" :disabled="!slotName.trim()">
-              Save
+            <button class="btn-primary" @click.stop="confirmSlotSave"
+              :disabled="!slotName.trim() || (!!getSlotPreset(editingSlot) && !hasChangesFromSlot)">
+              {{ getSlotPreset(editingSlot) ? 'Update' : 'Save' }}
             </button>
           </div>
         </div>
@@ -304,6 +314,7 @@ const emit = defineEmits<{
   (e: 'load', settings: DeviceSettings): void;
   (e: 'slotCount', count: number, total: number): void;
   (e: 'loadFactoryDefaults'): void;
+  (e: 'activeSlotChange', slot: number | null, name: string | null, author: string | null): void;
 }>();
 
 // 8-Slot Preset System (localStorage)
@@ -465,6 +476,23 @@ const snapshotDiffLines = computed(() => {
   const savedLines = savedSnapshot.split('\n');
   // Saved preset: always show in white — user sees what they're about to load, not a diff against current device state
   return savedLines.map(text => ({ text, changed: false }));
+});
+
+// True when current app settings differ from the editing slot's saved settings
+const hasChangesFromSlot = computed(() => {
+  const preset = getSlotPreset(editingSlot.value);
+  if (!preset) return false;
+  return JSON.stringify(props.currentSettings) !== JSON.stringify(preset.settings);
+});
+
+// True when the slot has drifted from its original starter preset (Restore becomes meaningful)
+const canRestoreStarter = computed(() => {
+  const starter = getDefaultPresets()[editingSlot.value];
+  if (!starter) return false;
+  const current = getSlotPreset(editingSlot.value);
+  if (!current) return true; // slot is empty but starter exists
+  return JSON.stringify(current.settings) !== JSON.stringify(starter.settings)
+    || current.name !== starter.name;
 });
 
 // Export metadata (simplified)
@@ -852,19 +880,41 @@ function deleteCurrentSlot() {
   slotDescription.value = '';
 }
 
+function restoreStarterPreset(slot: number) {
+  const starter = getDefaultPresets()[slot];
+  if (!starter) return;
+
+  const newSlots = [...slots.value];
+  newSlots[slot] = starter;
+  slots.value = newSlots;
+  saveSlotsToStorage(newSlots);
+
+  // Clear active slot if it was this one (settings no longer match)
+  if (activeSlot.value === slot) {
+    activeSlot.value = null;
+    emit('activeSlotChange', null, null, null);
+  }
+
+  toast.success(`Slot ${slot + 1} restored to "${starter.name}"`);
+  showSlotDialog.value = false;
+  slotName.value = '';
+  slotAuthor.value = '';
+  slotDescription.value = '';
+}
+
 function activateSlot(slot: number) {
   const preset = getSlotPreset(slot);
   if (!preset) return;
   
   emit('load', preset.settings);
   activeSlot.value = slot;
-
+  emit('activeSlotChange', slot, preset.name, preset.author ?? null);
 }
 
 function loadFactoryDefaults() {
   emit('loadFactoryDefaults');
   activeSlot.value = null;
-
+  emit('activeSlotChange', null, null, null);
   // Only deactivate the active slot— do NOT touch saved preset slots
   toast.success('Defaults loaded');
 }
@@ -1279,8 +1329,8 @@ function downloadJSON(json: string, filename: string) {
 }
 
 .preset-slot.active {
-  border-color: #4A90E2;
-  background: rgba(74, 144, 226, 0.05);
+  border-color: var(--toast-success-border);
+  background: rgba(74, 79, 90, 0.08);
 }
 
 @keyframes slot-saved-pulse {
@@ -1388,8 +1438,8 @@ function downloadJSON(json: string, filename: string) {
 }
 
 .btn-action.active {
-  background: rgba(74, 144, 226, 0.2);
-  border-color: #4A90E2;
+  background: rgba(74, 79, 90, 0.35);
+  border-color: var(--toast-success-border);
 }
 
 .btn-cloud-empty {
@@ -1451,7 +1501,7 @@ function downloadJSON(json: string, filename: string) {
 }
 
 .button-indicator-cloud {
-  background: #4A90E2;
+  background: var(--outlined-border-hover);
 }
 
 @keyframes pulse {
@@ -1786,7 +1836,7 @@ function downloadJSON(json: string, filename: string) {
 }
 
 .active-indicator {
-  color: #6A6853;
+  color: var(--ui-highlight);
   font-size: var(--kb1-font-tiny); /* 10px - slightly larger for readability */
 }
 
@@ -1831,12 +1881,41 @@ function downloadJSON(json: string, filename: string) {
 }
 
 .btn-delete {
-  color: rgba(255, 68, 68, 0.8) !important;
+  color: var(--btn-danger-color) !important;
 }
 
 .btn-delete:hover:not(:disabled) {
-  background: rgba(255, 68, 68, 0.15) !important;
-  color: #ff4444 !important;
+  background: var(--btn-danger-bg-hover) !important;
+  color: var(--btn-danger-color-hover) !important;
+}
+
+.btn-restore {
+  color: rgba(185, 170, 95, 0.7);
+  border-color: rgba(185, 170, 95, 0.2);
+}
+
+.btn-restore:hover {
+  color: var(--ui-highlight);
+  border-color: rgba(185, 170, 95, 0.4);
+  background: rgba(185, 170, 95, 0.08);
+}
+
+.btn-apply-header {
+  padding: 0.2rem 0.75rem;
+  background: rgba(234, 234, 234, 0.05);
+  border: 1px solid rgba(205, 205, 205, 0.2);
+  border-radius: var(--kb1-radius-sm);
+  color: #CDCDCD;
+  font-size: var(--kb1-font-input);
+  font-family: var(--kb1-font-family);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-apply-header:hover {
+  background: rgba(234, 234, 234, 0.1);
+  border-color: rgba(205, 205, 205, 0.35);
+  color: #EAEAEA;
 }
 
 .preset-menu {
@@ -1872,11 +1951,11 @@ function downloadJSON(json: string, filename: string) {
 }
 
 .preset-menu button.btn-danger {
-  color: #ff4444;
+  color: var(--btn-danger-color);
 }
 
 .preset-menu button.btn-danger:hover {
-  background: rgba(255, 68, 68, 0.1);
+  background: var(--btn-danger-bg-hover);
 }
 
 .menu-divider {
@@ -2063,8 +2142,8 @@ textarea.input-text {
 .btn-delete {
   padding: 0.25rem 1rem;
   background: transparent;
-  border: 1px solid rgba(239, 68, 68, 0.3);
-  color: rgba(239, 68, 68, 0.8);
+  border: 1px solid var(--btn-danger-border);
+  color: var(--btn-danger-color);
   font-size: var(--kb1-font-input);
   font-weight: var(--kb1-font-weight-normal);
   border-radius: var(--kb1-radius-sm);
@@ -2074,16 +2153,16 @@ textarea.input-text {
 }
 
 .btn-delete:hover {
-  background: rgba(239, 68, 68, 0.15);
-  border-color: rgba(239, 68, 68, 0.6);
-  color: #ef4444;
+  background: var(--btn-danger-bg-hover);
+  border-color: var(--btn-danger-border);
+  color: var(--btn-danger-color-hover);
 }
 
 .btn-primary {
   padding: 0.25rem 1rem;
-  background: #6A6853;
+  background: var(--btn-action-bg);
   border: none;
-  color: #EAEAEA;
+  color: var(--btn-action-color);
   font-size: var(--kb1-font-input);
   font-weight: var(--kb1-font-weight-medium);
   border-radius: var(--kb1-radius-sm);
@@ -2093,11 +2172,12 @@ textarea.input-text {
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: #7A7863;
+  background: var(--btn-action-bg-hover);
 }
 
 .btn-primary:disabled {
-  opacity: 0.5;
+  background: var(--btn-action-bg-disabled);
+  opacity: 0.6;
   cursor: not-allowed;
 }
 

@@ -1295,9 +1295,9 @@ input:checked + .toggle-slider:before {
 
 .btn-modal-close {
   padding: 0.25rem 1rem;
-  background: #6A6853;
+  background: var(--btn-action-bg);
   border: none;
-  color: #EAEAEA;
+  color: var(--btn-action-color);
   font-size: 0.8125rem;
   font-weight: 500;
   border-radius: 4px;
@@ -1307,7 +1307,7 @@ input:checked + .toggle-slider:before {
 }
 
 .btn-modal-close:hover {
-  background: #7A7863;
+  background: var(--btn-action-bg-hover);
 }
 
 .btn-modal-close:active {

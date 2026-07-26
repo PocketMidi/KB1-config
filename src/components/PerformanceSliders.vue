@@ -210,6 +210,12 @@ const savedPresets = ref<NamedSliderPreset[]>([]);
 const activePresetId = ref<string | null>(null);
 const presetName = ref('');
 const presetDescription = ref('');
+const presetNameInput = ref<HTMLInputElement | null>(null);
+
+// Computed active preset object
+const activePreset = computed(() =>
+  activePresetId.value ? savedPresets.value.find(p => p.id === activePresetId.value) ?? null : null
+);
 const initialPresetSnapshot = ref<string | null>(null);
 
 // Track if current state has unsaved changes
@@ -231,6 +237,29 @@ function updatePresetSnapshot() {
   });
 }
 
+// Per-mode state storage keys
+const MODE_STATE_KEYS: Record<ControlMode, string> = {
+  fx: 'kb1.sliders.state.fx',
+  mix: 'kb1.sliders.state.mix',
+  combo: 'kb1.sliders.state.combo',
+};
+
+function saveModeState(mode: ControlMode) {
+  localStorage.setItem(MODE_STATE_KEYS[mode], JSON.stringify({
+    sliders: sliders.value,
+    links: links.value,
+  }));
+}
+
+function loadModeState(mode: ControlMode): { sliders: SliderConfig[], links: boolean[] } | null {
+  try {
+    const raw = localStorage.getItem(MODE_STATE_KEYS[mode]);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
 // Generate random preset name
 function generatePresetName() {
   presetName.value = generateRandomName();
@@ -240,36 +269,47 @@ function generatePresetName() {
 
 // Set control mode (direct selection, not cycling)
 function setControlMode(mode: ControlMode) {
+  // Save current mode state before switching
+  saveModeState(controlMode.value);
+
   controlMode.value = mode;
-  
   const config = MODE_CONFIG[mode];
-  
-  // Update all slider CCs and colors based on mode
-  sliders.value.forEach((slider, i) => {
-    // In COMBO mode, preserve existing CCs; otherwise use mode defaults
-    if (mode !== 'combo') {
-      slider.cc = config.ccs[i] ?? 51;
-    }
-    slider.color = config.colors[i] ?? '#FF0000';
-    
-    // Force unipolar in mixer mode (all Polyend mixer CCs are 0-127)
-    if (mode === 'mix') {
-      slider.bipolar = false;
-      // Reset value to 0 to avoid confusion
-      slider.value = 0;
-      
-      // Ungang first 4 sliders (global mixer controls) - each gets unique gangId
-      if (i < 4) {
-        slider.gangId = i;
-        // Clear links between first 4 sliders
-        if (i < 3) {
-          links.value[i] = false;
+
+  // Try to restore saved state for this mode
+  const savedState = loadModeState(mode);
+  if (savedState && savedState.sliders?.length === 12) {
+    sliders.value = savedState.sliders;
+    links.value = savedState.links?.length === 11 ? savedState.links : new Array(11).fill(false);
+    // Ensure CCs, colors and backwards-compat fields are current
+    sliders.value.forEach((slider, i) => {
+      if (mode !== 'combo') slider.cc = config.ccs[i] ?? 51;
+      slider.color = config.colors[i] ?? '#FF0000';
+      if (slider.fxParam === undefined) slider.fxParam = 0;
+      if (mode === 'mix') {
+        slider.bipolar = false;
+        if (i < 4) {
+          slider.gangId = i;
+          if (i < 3) links.value[i] = false;
         }
       }
+    });
+  } else {
+    // No saved state for this mode — initialize fresh
+    sliders.value = [];
+    for (let i = 0; i < 12; i++) {
+      sliders.value.push({
+        cc: config.ccs[i] ?? 51 + i,
+        color: config.colors[i] ?? '#FF0000',
+        bipolar: false,
+        momentary: false,
+        gangId: i,
+        value: 0,
+        fxParam: 0,
+      });
     }
-  });
-  
-  // Save mode preference and preset
+    links.value = new Array(11).fill(false);
+  }
+
   localStorage.setItem('kb1-control-mode', mode);
   savePreset();
 }
@@ -286,38 +326,49 @@ watch(isPortrait, (newVal) => {
 function initializeSliders() {
   // Load saved mode preference
   const savedMode = localStorage.getItem('kb1-control-mode') as ControlMode | null;
-  if (savedMode === 'fx' || savedMode === 'mix') {
+  if (savedMode === 'fx' || savedMode === 'mix' || savedMode === 'combo') {
     controlMode.value = savedMode;
   }
-  
-  const savedPreset = SliderPresetStore.loadCurrentState();
-  if (savedPreset && savedPreset.sliders && savedPreset.links) {
-    sliders.value = savedPreset.sliders;
-    links.value = savedPreset.links;
-    // Update CCs and colors based on current mode (in case mode changed)
+
+  // Try per-mode state first
+  const savedState = loadModeState(controlMode.value);
+  if (savedState && savedState.sliders?.length === 12) {
+    sliders.value = savedState.sliders;
+    links.value = savedState.links?.length === 11 ? savedState.links : new Array(11).fill(false);
     const config = MODE_CONFIG[controlMode.value];
     sliders.value.forEach((slider, i) => {
-      slider.cc = config.ccs[i] ?? 51;
+      if (controlMode.value !== 'combo') slider.cc = config.ccs[i] ?? 51;
       slider.color = config.colors[i] ?? '#FF0000';
-      
-      // Add fxParam if missing (backwards compatibility)
-      if (slider.fxParam === undefined) {
-        slider.fxParam = 0;
-      }
-      
-      // In mixer mode, ensure first 4 sliders are ungrouped
+      if (slider.fxParam === undefined) slider.fxParam = 0;
       if (controlMode.value === 'mix' && i < 4) {
         slider.gangId = i;
-        // Clear links between first 4 sliders
-        if (i < 3) {
-          links.value[i] = false;
-        }
+        if (i < 3) links.value[i] = false;
       }
     });
     return;
   }
-  
-  // Default configuration based on current mode
+
+  // Fall back to legacy single-key state (backward compat)
+  const savedPreset = SliderPresetStore.loadCurrentState();
+  if (savedPreset && savedPreset.sliders && savedPreset.links) {
+    sliders.value = savedPreset.sliders;
+    links.value = savedPreset.links;
+    const config = MODE_CONFIG[controlMode.value];
+    sliders.value.forEach((slider, i) => {
+      if (controlMode.value !== 'combo') slider.cc = config.ccs[i] ?? 51;
+      slider.color = config.colors[i] ?? '#FF0000';
+      if (slider.fxParam === undefined) slider.fxParam = 0;
+      if (controlMode.value === 'mix' && i < 4) {
+        slider.gangId = i;
+        if (i < 3) links.value[i] = false;
+      }
+    });
+    // Migrate to per-mode key
+    saveModeState(controlMode.value);
+    return;
+  }
+
+  // Default fresh init for current mode
   const config = MODE_CONFIG[controlMode.value];
   sliders.value = [];
   for (let i = 0; i < 12; i++) {
@@ -326,7 +377,7 @@ function initializeSliders() {
       color: config.colors[i] ?? '#FF0000',
       bipolar: false,
       momentary: false,
-      gangId: i, // Each starts in its own gang
+      gangId: i,
       value: 0,
       fxParam: 0, // No parameter selected by default
     });
@@ -343,6 +394,7 @@ function savePreset() {
     links: links.value,
   };
   SliderPresetStore.saveCurrentState(preset);
+  saveModeState(controlMode.value);
 }
 
 // Show per-slider explainer text (for toggle buttons)
@@ -641,15 +693,17 @@ function handleTrackTouchEnd(event: TouchEvent) {
 
 // Reset to defaults (full reset - colors, settings, values)
 function resetToDefaults() {
+  const config = MODE_CONFIG[controlMode.value];
   sliders.value = [];
   for (let i = 0; i < 12; i++) {
     sliders.value.push({
-      cc: 51 + i,
-      color: DEFAULT_COLORS[i] || '#FF0000',
+      cc: config.ccs[i] ?? 51 + i,
+      color: config.colors[i] ?? '#FF0000',
       bipolar: false,
       momentary: false,
       gangId: i,
       value: 0,
+      fxParam: 0,
     });
   }
   links.value = new Array(11).fill(false);
@@ -1467,10 +1521,27 @@ function loadPreset(id: string) {
 
 // Open preset modal for saving/editing
 function openPresetModal() {
+  const active = activePreset.value;
+  if (active) {
+    // Update mode: pre-fill with active preset
+    editingPreset.value = active;
+    presetName.value = active.name;
+    presetDescription.value = '';
+  } else {
+    // Create mode: blank
+    editingPreset.value = null;
+    presetName.value = '';
+    presetDescription.value = '';
+  }
+  showPresetModal.value = true;
+}
+
+// Switch to create mode from within the modal
+function switchToCreateMode() {
   editingPreset.value = null;
   presetName.value = '';
   presetDescription.value = '';
-  showPresetModal.value = true;
+  nextTick(() => presetNameInput.value?.focus());
 }
 
 // Close preset modal
@@ -1947,11 +2018,12 @@ defineExpose({
   <!-- Preset Save Modal -->
   <div v-if="showPresetModal" class="preset-modal-overlay" @click="closePresetModal">
     <div class="preset-modal-dialog" @click.stop>
-      <h3>{{ editingPreset ? 'Edit Preset' : 'Save Preset' }}</h3>
+      <h3>{{ editingPreset ? 'Update Preset' : 'Save Preset' }}</h3>
       
       <div class="form-group">
         <label>Preset Name</label>
         <input 
+          ref="presetNameInput"
           v-model="presetName" 
           type="text" 
           class="input-text"
@@ -1976,7 +2048,10 @@ defineExpose({
       
       <div class="modal-buttons">
         <button class="btn-secondary" @click="closePresetModal">Cancel</button>
-        <button class="btn-primary" @click="handleSavePreset" :disabled="!presetName.trim()">Save</button>
+        <button v-if="editingPreset" class="btn-secondary" @click="switchToCreateMode">Save as New</button>
+        <button class="btn-primary" @click="handleSavePreset" :disabled="!presetName.trim()">
+          {{ editingPreset ? 'Update' : 'Save' }}
+        </button>
       </div>
     </div>
   </div>
@@ -3447,8 +3522,8 @@ textarea.input-text {
 
 .btn-secondary {
   padding: 0.25rem 1rem;
-  background: rgba(106, 104, 83, 0.2);
-  border: 1px solid rgba(106, 104, 83, 0.3);
+  background: var(--outlined-bg);
+  border: 1px solid var(--outlined-border);
   color: var(--kb1-text-primary);
   font-size: var(--kb1-font-input);
   font-weight: var(--kb1-font-weight-medium);
@@ -3459,15 +3534,20 @@ textarea.input-text {
 }
 
 .btn-secondary:hover {
-  background: rgba(106, 104, 83, 0.35);
-  border-color: rgba(106, 104, 83, 0.4);
+  background: var(--outlined-bg-hover);
+  border-color: var(--outlined-border-hover);
+}
+
+.btn-secondary:active {
+  background: var(--outlined-bg-active);
+  border-color: var(--outlined-border-active);
 }
 
 .btn-primary {
   padding: 0.25rem 1rem;
-  background: #6A6853;
+  background: var(--btn-action-bg);
   border: none;
-  color: #EAEAEA;
+  color: var(--btn-action-color);
   font-size: var(--kb1-font-input);
   font-weight: var(--kb1-font-weight-medium);
   border-radius: var(--kb1-radius-sm);
@@ -3477,11 +3557,12 @@ textarea.input-text {
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: #7A7863;
+  background: var(--btn-action-bg-hover);
 }
 
 .btn-primary:disabled {
-  opacity: 0.5;
+  background: var(--btn-action-bg-disabled);
+  opacity: 0.6;
   cursor: not-allowed;
 }
 

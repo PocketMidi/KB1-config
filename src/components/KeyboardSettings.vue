@@ -3221,7 +3221,7 @@ function handleKeyClick(midiNote: number) {
   width: 5px;
   height: 20px;
   border-radius: 2.5px;
-  background: #6a6853;
+  background: var(--btn-action-bg);
   transition: all 0.2s ease;
 }
 

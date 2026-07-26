@@ -96,12 +96,15 @@
           <div class="accordion-title-row">
             <h3 class="accordion-title-text">
               {{ title }}
-              <span v-if="titleSuffix && isOpen" class="title-suffix" :class="{ fading: titleSuffixFading }">{{ titleSuffix }}</span>
             </h3>
             <span v-if="showModifiedIndicator" class="modified-indicator">●</span>
+            <span v-if="titleSuffix" class="title-suffix" :class="{ fading: titleSuffixFading }">{{ titleSuffix }}</span>
             <slot name="header-right">
               <div v-if="midiCc !== undefined" class="midi-cc-display">
                 MIDI CC <span class="midi-cc-number">{{ midiCc }}</span>
+              </div>
+              <div v-else-if="rightLabel !== undefined && rightValue !== undefined" class="midi-cc-display">
+                {{ rightLabel }} <span class="midi-cc-number">{{ rightValue }}</span>
               </div>
             </slot>
             <span class="accordion-icon">{{ isOpen ? '−' : '+' }}</span>
@@ -129,6 +132,8 @@ const props = defineProps<{
   title: string;
   subtitle?: string;
   midiCc?: number;
+  rightLabel?: string;       // White label text shown on the right (e.g. 'preset')
+  rightValue?: string | number; // Amber value shown after rightLabel (e.g. 2)
   id?: string;
   defaultOpen?: boolean;
   titleSuffix?: string;

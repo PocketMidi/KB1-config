@@ -658,14 +658,14 @@ const formatTime = (seconds: number): string => {
 
 /* Danger variant - muted red tint on active */
 .toggle-switch.danger-btn.active .toggle-track {
-  background: rgba(239, 68, 68, 0.3);
-  border-color: rgba(239, 68, 68, 0.5);
+  background: var(--btn-danger-bg-hover);
+  border-color: var(--btn-danger-border);
 }
 .toggle-switch.danger-btn.active .toggle-thumb {
-  background: #ef4444;
+  background: var(--btn-danger-color-hover);
 }
 .toggle-switch.danger-btn.active .toggle-label-right {
-  color: #ef4444;
+  color: var(--btn-danger-color-hover);
 }
 
 /* CONFIG SETTINGS button group */
@@ -738,13 +738,13 @@ const formatTime = (seconds: number): string => {
 }
 
 .config-btn.danger:hover:not(.active) {
-  color: #ef4444;
-  border-color: #ef4444;
+  color: var(--btn-danger-color-hover);
+  border-color: var(--btn-danger-border);
 }
 
 .config-btn.danger.active {
-  background: rgba(239, 68, 68, 0.15);
-  border-color: rgba(239, 68, 68, 0.5);
-  color: #ef4444;
+  background: var(--btn-danger-bg-hover);
+  border-color: var(--btn-danger-border);
+  color: var(--btn-danger-color-hover);
 }
 </style>

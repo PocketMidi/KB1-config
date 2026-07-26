@@ -161,11 +161,11 @@ function formatDate(timestamp: number): string {
 }
 
 function handleResetToZero() {
-  toast.success('Sliders reset to zero');
+  toast.success('Sliders Reset to Zero');
 }
 
 function handleResetToDefaults() {
-  toast.success('Sliders reset to defaults');
+  toast.success('Parameters Reset to Defaults');
 }
 
 // Helper methods for parent component
@@ -291,17 +291,18 @@ defineExpose({
 }
 
 .btn-primary {
-  background: #6A6853;
+  background: var(--btn-action-bg);
   border: none;
-  color: #EAEAEA;
+  color: var(--btn-action-color);
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: #7A7863;
+  background: var(--btn-action-bg-hover);
 }
 
 .btn-primary:disabled {
-  opacity: 0.5;
+  background: var(--btn-action-bg-disabled);
+  opacity: 0.6;
   cursor: not-allowed;
 }
 

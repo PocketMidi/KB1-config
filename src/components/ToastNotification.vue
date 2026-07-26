@@ -1,7 +1,6 @@
 <template>
   <Transition name="toast">
     <div v-if="visible" class="toast" :class="`toast-${type}`">
-      <span class="toast-icon">{{ icon }}</span>
       <span class="toast-message">{{ message }}</span>
     </div>
   </Transition>
@@ -27,20 +26,13 @@ const emit = defineEmits<{
 
 const visible = ref(false);
 
-const icon = {
-  success: '',
-  error: '',
-  info: '',
-  warning: ''
-}[props.type];
-
 onMounted(() => {
   visible.value = true;
   
   if (props.duration > 0) {
     setTimeout(() => {
       visible.value = false;
-      setTimeout(() => emit('close'), 300); // Wait for transition
+      setTimeout(() => emit('close'), 300);
     }, props.duration);
   }
 });
@@ -50,22 +42,17 @@ onMounted(() => {
 .toast {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 16px 24px;
+  padding: 12px 20px;
   border-radius: var(--kb1-radius-lg);
   font-size: var(--kb1-font-input);
   font-weight: var(--kb1-font-weight-medium);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  font-family: var(--kb1-font-family);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
   backdrop-filter: blur(10px);
-  min-width: 280px;
-  max-width: 420px;
+  min-width: 240px;
+  max-width: 400px;
   pointer-events: auto;
-}
-
-.toast-icon {
-  font-size: var(--kb1-font-heading);
-  font-weight: var(--kb1-font-weight-bold);
-  flex-shrink: 0;
+  color: #EAEAEA;
 }
 
 .toast-message {
@@ -74,30 +61,25 @@ onMounted(() => {
 }
 
 .toast-success {
-  background: rgba(76, 175, 80, 0.45);
-  border: 1px solid rgba(76, 175, 80, 0.5);
-  color: #EAEAEA;
+  background: var(--toast-success-bg);
+  border: 1px solid var(--toast-success-border);
 }
 
 .toast-error {
-  background: rgba(244, 67, 54, 0.45);
-  border: 1px solid rgba(244, 67, 54, 0.5);
-  color: #EAEAEA;
+  background: var(--toast-error-bg);
+  border: 1px solid var(--toast-error-border);
 }
 
 .toast-warning {
-  background: rgba(255, 152, 0, 0.45);
-  border: 1px solid rgba(255, 152, 0, 0.5);
-  color: #EAEAEA;
+  background: var(--toast-warning-bg);
+  border: 1px solid var(--toast-warning-border);
 }
 
 .toast-info {
-  background: rgba(33, 150, 243, 0.45);
-  border: 1px solid rgba(33, 150, 243, 0.5);
-  color: #EAEAEA;
+  background: var(--toast-info-bg);
+  border: 1px solid var(--toast-info-border);
 }
 
-/* Transition */
 .toast-enter-active,
 .toast-leave-active {
   transition: all 0.3s ease;

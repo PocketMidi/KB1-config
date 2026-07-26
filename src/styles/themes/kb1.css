@@ -189,15 +189,40 @@ body.android-device {
   /* --kb1-letter-spacing-* = KERNING (horizontal space between letters) */
   /* --kb1-line-height-* = LEADING (vertical space between lines of text) */
   
-  /* ===== Outlined Element Style (GO LIVE pattern) ===== */
+  /* ===== Outlined Element Style ===== */
   /* Used by accordion headers, collapse-all bar, slider rows, mode toggles, etc. */
   --outlined-bg:            rgba(234, 234, 234, 0.04);
-  --outlined-border:        rgba(234, 234, 234, 0.35);
+  --outlined-border:        rgba(234, 234, 234, 0.28);
   --outlined-bg-hover:      rgba(234, 234, 234, 0.08);
   --outlined-border-hover:  rgba(234, 234, 234, 0.55);
   --outlined-bg-active:     rgba(234, 234, 234, 0.12);
   --outlined-border-active: rgba(234, 234, 234, 0.65);
   --outlined-bg-open:       rgba(183, 182, 165, 0.14); /* open/expanded state */
+
+  /* ===== Action Button (Save / Update / Confirm) ===== */
+  /* Replaces hardcoded warm olive (#6A6853). Desaturated slate — neutral, calm, not warm. */
+  --btn-action-bg:          #4a4f5a;
+  --btn-action-bg-hover:    #575d6a;
+  --btn-action-bg-disabled: rgba(74, 79, 90, 0.4);
+  --btn-action-color:       #EAEAEA;
+
+  /* ===== Danger Button (Delete / Destructive) ===== */
+  /* Replaces hardcoded bright red (#ff4444). Desaturated — clearly danger, not garish. */
+  --btn-danger-color:       rgba(185, 80, 80, 0.85);
+  --btn-danger-color-hover: #c05555;
+  --btn-danger-bg-hover:    rgba(150, 60, 60, 0.12);
+  --btn-danger-border:      rgba(175, 70, 70, 0.30);
+
+  /* ===== Toast Notifications ===== */
+  /* Desaturated to match button palette — semantic distinctions via muted hues. */
+  --toast-success-bg:      rgba(74, 79, 90, 0.65);   /* slate — btn-action palette */
+  --toast-success-border:  rgba(74, 79, 90, 0.70);
+  --toast-error-bg:        rgba(160, 70, 70, 0.40);   /* desaturated red — btn-danger palette */
+  --toast-error-border:    rgba(175, 70, 70, 0.55);
+  --toast-warning-bg:      rgba(185, 170, 95, 0.25);  /* amber — ui-highlight palette */
+  --toast-warning-border:  rgba(185, 170, 95, 0.45);
+  --toast-info-bg:         rgba(234, 234, 234, 0.07); /* neutral — outlined palette */
+  --toast-info-border:     rgba(234, 234, 234, 0.28);
 
   /* ===== Border Radius ===== */
   --kb1-radius-sm: 4px;

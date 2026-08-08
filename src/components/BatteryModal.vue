@@ -231,7 +231,13 @@
           <ol class="charging-steps">
             <li><strong>Switch ON battery power</strong></li>
             <li>Connect to computer USB — charging auto-detected</li>
-            <li>Initial calibration requires 5 hour charge</li>
+            <li v-if="calibrationProgressPct === 0">Initial calibration requires 5 hour charge</li>
+            <li v-else>
+              Calibration in progress — ~{{ calibrationHoursRemaining }} remaining
+              <div class="calibration-progress-bar">
+                <div class="calibration-progress-fill" :style="{ width: calibrationProgressPct + '%' }"></div>
+              </div>
+            </li>
           </ol>
         </div>
       </div>
@@ -331,6 +337,7 @@ const props = defineProps<Props>();
 const emit = defineEmits<Emits>();
 
 const {
+  batteryStatus,
   batteryColor,
   estimatedPercentage,
   showPercentage,
@@ -394,6 +401,27 @@ const isRecalibrating = ref(false);
 const showConfirmation = ref(false);
 const showSpeakerHelp = ref(false);
 const showPowerModeHelp = ref(false);
+
+// Calibration progress (for uncalibrated devices with partial charge history)
+const CALIBRATION_FULL_MS = 18000000; // 5 hours in ms
+
+const calibrationProgressPct = computed(() => {
+  const ms = batteryStatus.value?.accumulatedChargeMs ?? 0;
+  if (!ms) return 0;
+  return Math.min(100, Math.round((ms / CALIBRATION_FULL_MS) * 100));
+});
+
+const calibrationHoursRemaining = computed(() => {
+  const ms = batteryStatus.value?.accumulatedChargeMs ?? 0;
+  const remainingMs = Math.max(0, CALIBRATION_FULL_MS - ms);
+  const hours = remainingMs / 3600000;
+  if (hours >= 1) {
+    const h = Math.floor(hours);
+    const m = Math.round((hours - h) * 60);
+    return m > 0 ? `${h}h ${m}m` : `${h}h`;
+  }
+  return `${Math.round(hours * 60)}m`;
+});
 
 // Advanced section: Collapsible manual battery % override
 const advancedSectionOpen = ref(false);

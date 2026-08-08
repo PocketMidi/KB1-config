@@ -187,6 +187,8 @@ export interface BatteryStatus {
   usbConnected: boolean;
   /** Calibration timestamp: seconds since boot when calibration completed (0 = never calibrated) */
   calibrationTimestamp: number;
+  /** Accumulated charge ms toward initial 5-hour calibration (includes live session if currently charging) */
+  accumulatedChargeMs?: number;
   /** Last update timestamp (client-side) */
   lastUpdate?: number;
 }
@@ -816,23 +818,27 @@ export function decodePresetList(data: DataView): DevicePresetMetadata[] {
  * Format: [percentage(1 byte)][remainingSeconds(4 bytes LE)][usbConnected(1 byte)][calibrationTimestamp(4 bytes LE)]
  */
 export function decodeBatteryStatus(data: DataView): BatteryStatus {
-  // Support both old (6 bytes) and new (10 bytes) protocol for backwards compatibility
+  // Support old (6 bytes), v1.x (10 bytes), and v2.2+ (14 bytes) protocol
   if (data.byteLength < 6) {
-    throw new Error(`Invalid battery status data length: ${data.byteLength}, expected 6 or 10 bytes`);
+    throw new Error(`Invalid battery status data length: ${data.byteLength}, expected 6+ bytes`);
   }
   
   const percentage = data.getUint8(0);
   const remainingSeconds = data.getUint32(1, true); // Little-endian
   const usbConnected = data.getUint8(5) === 1;
   
-  // Read calibration timestamp if available (new protocol)
+  // Read calibration timestamp if available (v1.x+ protocol)
   const calibrationTimestamp = data.byteLength >= 10 ? data.getUint32(6, true) : 0;
+  
+  // Read accumulated charge ms if available (v2.2+ protocol)
+  const accumulatedChargeMs = data.byteLength >= 14 ? data.getUint32(10, true) : undefined;
   
   return {
     percentage,
     remainingSeconds,
     usbConnected,
     calibrationTimestamp,
+    accumulatedChargeMs,
     lastUpdate: Date.now(),
   };
 }

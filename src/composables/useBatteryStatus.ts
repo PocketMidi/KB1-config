@@ -20,6 +20,21 @@ const isDevMode = () => devModeRef.value;
  */
 export function setDevModeInBattery(enabled: boolean) {
   devModeRef.value = enabled;
+  if (enabled) {
+    // Mock an uncalibrated device with 3 hours of accumulated charge progress
+    batteryStatus.value = {
+      percentage: 254,
+      remainingSeconds: 0,
+      usbConnected: false,
+      calibrationTimestamp: 0,
+      accumulatedChargeMs: 10800000, // 3 hours — simulates partial calibration charge
+      lastUpdate: Date.now(),
+    };
+    isAvailable.value = true;
+  } else {
+    batteryStatus.value = null;
+    isAvailable.value = false;
+  }
 }
 
 // Battery state
@@ -113,7 +128,7 @@ async function syncBatteryStatus() {
  * Estimates drain based on time elapsed since last sync
  */
 function getEstimatedPercentage(): number {
-  if (isDevMode()) return 88; // Mock battery for eval mode
+  if (isDevMode()) return batteryStatus.value?.percentage ?? 254; // Use mock battery state in eval mode
   if (!batteryStatus.value) return 254;
   
   const syncedPercentage = batteryStatus.value.percentage;

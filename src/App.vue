@@ -26,12 +26,14 @@ const {
   devMode,
   setDevMode,
 } = useDeviceState();
-const { dialogs, remove: removeDialog } = useConfirm();
+const { dialogs, remove: removeDialog, confirm } = useConfirm();
 const { batteryMonitoringEnabled } = useUIPreferences();
 const { showBatteryModal, openBatteryModal, closeBatteryModal } = useBatteryModal();
 const { showManual, closeManual } = useManual();
 
-const { toasts, remove, success } = useToast();
+const { toasts, remove, success, warning, info } = useToast();
+
+const V_BROWSER_APP_STORE_URL = 'https://apps.apple.com/us/app/the-v-browser/id6446792641';
 
 // Single unified tab state
 type Tab = 'settings' | 'sliders';
@@ -141,22 +143,29 @@ const isBrave = computed(() => {
   return /Brave/i.test(navigator.userAgent) || (navigator as any).brave !== undefined;
 });
 
+const isSafari = computed(() => {
+  const userAgent = navigator.userAgent;
+  return isIOS.value && /Safari/i.test(userAgent) && !/CriOS|FxiOS|EdgiOS|OPiOS|SamsungBrowser|Chrome|Chromium|Brave/i.test(userAgent);
+});
+
 // Dynamic warning message based on platform
 const bluetoothWarningMessage = computed(() => {
-  if (isIOS.value) {
-    return '⚠️ Web Bluetooth not supported on iOS Safari. Download V Browser from the App Store.';
+  if (isSafari.value) {
+    return 'Bluetooth is not supported in Safari. Use V Browser from the App Store for Bluetooth access.';
+  } else if (isIOS.value) {
+    return 'Web Bluetooth is unavailable in this iOS browser. Use V Browser from the App Store.';
   } else if (isFirefox.value) {
     return isAndroid.value 
-      ? '⚠️ Web Bluetooth untested in Firefox. Chrome, Edge, or Samsung Internet are recommended.'
-      : '⚠️ Web Bluetooth untested in Firefox. Chrome or Edge are recommended.';
+      ? 'Web Bluetooth is untested in Firefox. Chrome, Edge, or Samsung Internet are recommended.'
+      : 'Web Bluetooth is untested in Firefox. Chrome or Edge are recommended.';
   } else if (isBrave.value) {
     return isAndroid.value
-      ? '⚠️ Web Bluetooth untested in Brave. Chrome, Edge, or Samsung Internet are recommended.'
-      : '⚠️ Web Bluetooth untested in Brave. Chrome or Edge are recommended.';
+      ? 'Web Bluetooth is untested in Brave. Chrome, Edge, or Samsung Internet are recommended.'
+      : 'Web Bluetooth is untested in Brave. Chrome or Edge are recommended.';
   } else if (isAndroid.value) {
-    return '⚠️ Web Bluetooth untested in this browser. Chrome, Edge, or Samsung Internet are recommended.';
+    return 'Web Bluetooth is untested in this browser. Chrome, Edge, or Samsung Internet are recommended.';
   } else {
-    return '⚠️ Web Bluetooth untested in this browser. Chrome or Edge are recommended.';
+    return 'Web Bluetooth is untested in this browser. Chrome or Edge are recommended.';
   }
 });
 
@@ -210,6 +219,25 @@ onMounted(() => {
 });
 
 async function handleConnect() {
+  if (isSafari.value) {
+    const openStore = await confirm(
+      'Bluetooth is not supported in Safari on iPhone or iPad.\nUse The V Browser for KB1 Bluetooth.\n\nWould you like to open The V Browser in the App Store?'
+    );
+
+    if (openStore) {
+      window.open(V_BROWSER_APP_STORE_URL, '_blank', 'noopener,noreferrer');
+      info('Opened App Store search for V Browser.');
+    } else {
+      warning('Use V Browser to connect over Bluetooth on iOS.');
+    }
+    return;
+  }
+
+  if (!isBluetoothAvailable.value) {
+    warning(bluetoothWarningMessage.value, 4500);
+    return;
+  }
+
   try {
     await connect();
     
@@ -221,6 +249,7 @@ async function handleConnect() {
     success('Connected via Bluetooth');
   } catch (error) {
     console.error('Connection failed:', error);
+    warning('Bluetooth connection failed. Please try again.', 4000);
   }
 }
 
@@ -393,10 +422,10 @@ function handleTabClick(tabId: Tab) {
           <div v-if="showTapCounter" class="tap-counter">{{ logoClickCount }}</div>
         </div>
       </div>
-      
-      <div v-if="!isBluetoothAvailable" class="warning-banner">
+      <div v-if="!isMobile && !isBluetoothAvailable" class="warning-banner">
         {{ bluetoothWarningMessage }}
       </div>
+      
     </header>
     
     <!-- Unified Tab Navigation with Bluetooth Controls -->
@@ -697,12 +726,12 @@ body {
 }
 
 .warning-banner {
-  padding: 1rem 2rem;
-  background: rgba(239, 68, 68, 0.1);
-  border-top: 1px solid #ef4444;
-  color: #fca5a5;
+  padding: 0.8rem 2rem;
+  background: rgba(var(--ui-highlight-rgb), 0.12);
+  border-top: 1px solid rgba(var(--ui-highlight-rgb), 0.28);
+  color: var(--color-text);
   text-align: center;
-  font-size: 0.8125rem; /* 13px */
+  font-size: 0.8125rem;
 }
 
 /* Tab Navigation Wrapper - sticky with background */

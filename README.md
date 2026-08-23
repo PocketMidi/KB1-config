@@ -59,7 +59,12 @@ Press **GO LIVE** and rotate your device to landscape — all 12 sliders go full
 
 ## Battery Calibration
 
-After flashing firmware, the battery meter shows a `?` until calibrated. Charge continuously for 5.5+ hours in one uninterrupted session — do not unplug early or the timer resets to zero. Only needs to happen once.
+After flashing firmware, the battery meter shows ? until calibrated. To calibrate:
+Power on the KB1 on battery — USB must not be connected at boot, or the session won't be tracked (power-cycle on battery first if needed).
+Plug into a computer's USB port to begin charging.
+Charge for 5.5+ hours total. Progress is saved automatically — if you unplug early, accumulated time picks up again next session rather than resetting.
+Once the full 5.5 hours accumulates, the battery is calibrated to 100% and the meter reports accurate percentages from then on.
+Only needs to happen once.
 
 ## Evaluation Mode
 

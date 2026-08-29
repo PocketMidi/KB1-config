@@ -10,9 +10,10 @@ This directory contains the server-side PHP script for handling community preset
    To: public_html/upload-preset.php
    ```
 
-2. **Create the presets directory:**
+2. **Create the presets directory and upload .htaccess:**
    ```
    Create: public_html/presets/
+   Upload: server/presets/.htaccess -> public_html/presets/.htaccess (enables CORS headers)
    ```
 
 3. **Set directory permissions:**

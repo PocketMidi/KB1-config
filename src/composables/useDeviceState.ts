@@ -486,20 +486,8 @@ export function useDeviceState() {
     const isBrave = /Brave/i.test(userAgent) || (navigator as any).brave !== undefined;
     if (isBrave) return false;
     
-    // On Android, only Chrome, Edge, and Samsung Internet are tested and supported
-    const isAndroid = /Android/i.test(userAgent);
-    if (isAndroid) {
-      const isChrome = /Chrome/i.test(userAgent) && !/Edg/i.test(userAgent) && !/SamsungBrowser/i.test(userAgent) && !/OPR/i.test(userAgent);
-      const isEdge = /Edg/i.test(userAgent);
-      const isSamsung = /SamsungBrowser/i.test(userAgent);
-      return isChrome || isEdge || isSamsung;
-    }
-    
-    // On desktop, only Chrome and Edge are tested and supported
-    const isChrome = /Chrome/i.test(userAgent) && !/Edg/i.test(userAgent) && !/OPR/i.test(userAgent);
-    const isEdge = /Edg/i.test(userAgent);
-    
-    return isChrome || isEdge;
+    // Any other browser exposing navigator.bluetooth is allowed (e.g. Opera, Chrome, Edge, Samsung Internet)
+    return true;
   });
 
   /**

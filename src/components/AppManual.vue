@@ -14,7 +14,7 @@
 
           <!-- Header -->
           <div class="manual-header" @click="close">
-            <span class="manual-title">REFERENCE GUIDE</span>
+            <span class="manual-title">USER GUIDE</span>
             <button class="close-btn" @click.stop="close">×</button>
           </div>
 

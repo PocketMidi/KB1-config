@@ -5,6 +5,7 @@ import { bleClient } from '../ble/bleClient';
 import { SliderPresetStore, type SliderPreset, type NamedSliderPreset } from '../state/sliderPresets';
 import { generateRandomName } from '../state/presets';
 import CustomCCDropdown from './CustomCCDropdown.vue';
+import UserGuideLauncher from './UserGuideLauncher.vue';
 
 const emit = defineEmits<{
   'reset-to-zero': [],
@@ -1830,6 +1831,8 @@ defineExpose({
           ></div>
         </template>
       </div>
+
+      <UserGuideLauncher class="sliders-user-guide" />
       
       <!-- Preset Bar -->
       <div class="preset-bar">
@@ -3235,6 +3238,10 @@ defineExpose({
 }
 
 /* === PRESET BAR === */
+.sliders-user-guide {
+  margin-top: var(--kb1-spacing-sm);
+}
+
 .preset-bar {
   display: flex;
   align-items: center;

@@ -22,6 +22,11 @@
           <div class="section-tabs">
             <button
               class="section-tab"
+              :class="{ active: activeSection === 'setup' }"
+              @click="setSection('setup')"
+            >SETUP</button>
+            <button
+              class="section-tab"
               :class="{ active: activeSection === 'settings' }"
               @click="setSection('settings')"
             >SETTINGS</button>
@@ -96,10 +101,10 @@ const emit = defineEmits<{ (e: 'close'): void }>()
 
 // ── Content ──────────────────────────────────────────────────────────────────
 
-type Section = 'settings' | 'sliders'
+type Section = 'setup' | 'settings' | 'sliders'
 
 const steps: Record<Section, { title: string; paragraphs: string[] }[]> = {
-  settings: [
+  setup: [
     {
       title: 'Bluetooth',
       paragraphs: [
@@ -124,6 +129,35 @@ const steps: Record<Section, { title: string; paragraphs: string[] }[]> = {
         'Changes are applied to device RAM immediately.',
       ],
     },
+  ],
+  settings: [
+    {
+      title: 'Keyboard',
+      paragraphs: [
+        'Scale: Choose Scale Type and Root Note. Natural preserves the keyboard layout; Compact packs scale notes together. Chromatic uses all 12 notes, so Root Note and mapping controls are disabled.',
+        'Chord: Chord Type and Octave Range define the notes. Block plays them together; Strum adds direction, rate, and swing.',
+        'Arp: Chord mode uses Chord Type and Octave Range. User mode builds custom intervals instead, using pattern shape, rate, and swing.',
+      ],
+    },
+    {
+      title: 'Levers & Press',
+      paragraphs: [
+        'Category and Parameter mirror Polyend Tracker controls and assign the selected function to Lever or Press 1 or 2.',
+        'Lever UNI/BI selects one-way or bipolar movement. Press uses MOM/LAT, or REV/FWD for cycling parameters. Available choices follow the selected parameter.',
+        'Lin changes evenly; Exp emphasizes the upper range; Log emphasizes the lower range; P&D rises then returns; Inc advances in fixed steps.',
+        'Min, Max, Duration, and Steps adapt to the selected parameter and profile. Unavailable controls are disabled automatically.',
+      ],
+    },
+    {
+      title: 'Touch',
+      paragraphs: [
+        'Touch uses the same Category, Parameter, Min, and Max workflow as Press, with real-time capacitive input.',
+        'Cont (Continuous) sends a changing value across the selected range. FWD returns to Min on release; REV returns to Max.',
+        'Togg (Toggle) alternates between Min and Max with each touch.',
+        'Gate (Momentary) sends Max while touched and returns to Min when released. Cycling parameters use REV/FWD and may lock the mode.',
+        'Threshold sets touch sensitivity: 0 is most sensitive; 100 is least sensitive.',
+      ],
+    },
     {
       title: 'Presets',
       paragraphs: [
@@ -140,28 +174,35 @@ const steps: Record<Section, { title: string; paragraphs: string[] }[]> = {
     {
       title: 'Modes',
       paragraphs: [
-        'FX mode controls 12 performance effects (CC 51–62).',
-        ' MIX mode controls master mix levels (4 global mixer controls & volume for 8 tracks).',
-        ' COMBO mode allows assignment of any CC to any slider.',
-        'Mode selection persists in browser cache.',
+        'FX controls 12 Polyend Tracker FX slots (CC 51–62), each with an assignable effect parameter.',
+        'Mix provides 4 master controls and volume for 8 tracks.',
+        'Combo allows custom assignment from the available FX, mix, and track CCs.',
+        'Each mode remembers its configuration in the browser.',
       ],
     },
     {
-      title: 'Setup',
+      title: 'Configure',
       paragraphs: [
-        'Color swatches are editable.',
-        'link icons gang controls (tap, drag for multiple).',
-        'Toggle UNI/BI for unipolar or bipolar range. ',
-        'Toggle MOM/LAT for spring-back or hold behavior.',
-
+        'Tap a color swatch to identify or group sliders visually.',
+        'Tap link icons to group adjacent sliders, or drag across links to change several.',
+        'In FX mode, UNI (Unipolar) uses a one-way range; BI (Bipolar) moves around a center value.',
+        'MOM (Momentary) returns on release; LAT (Latch) holds its value.',
+      ],
+    },
+    {
+      title: 'Capture',
+      paragraphs: [
+        'Tap the camera to capture the current slider configuration as a named snapshot.',
+        'Select captured snapshots from the menu. They are stored in this browser.',
+        'Clear restores the current mode to its default configuration.',
       ],
     },
     {
       title: 'Live',
       paragraphs: [
-        'Press "GO LIVE" button and rotate mobile screen to enter fullscreen mode for performance use.',
-        'To exit: swipe horizontally across the screen (more than ~100px), then rotate back to portrait.',
-        'On desktop, "GO LIVE" does not enter full screen mode.',
+        'Tap Go Live to open the performance layout. Mobile devices prompt for landscape orientation.',
+        'Double-tap a latched slider to reset it. Triple-tap between sliders to reset all values.',
+        'Swipe horizontally to exit Live mode. On desktop, Go Live does not enter fullscreen.',
       ],
     },
   ],
@@ -170,9 +211,10 @@ const steps: Record<Section, { title: string; paragraphs: string[] }[]> = {
 // ── State ─────────────────────────────────────────────────────────────────────
 
 const STORAGE_KEY = 'kb1-manual-state'
+const sectionOrder: Section[] = ['setup', 'settings', 'sliders']
 
-const activeSection = ref<Section>('settings')
-const stepIndices = ref<Record<Section, number>>({ settings: 0, sliders: 0 })
+const activeSection = ref<Section>('setup')
+const stepIndices = ref<Record<Section, number>>({ setup: 0, settings: 0, sliders: 0 })
 const slideDirection = ref<'forward' | 'backward'>('forward')
 
 const currentSteps = computed(() => steps[activeSection.value])
@@ -190,8 +232,11 @@ function loadState() {
     const raw = localStorage.getItem(STORAGE_KEY)
     if (!raw) return
     const state = JSON.parse(raw)
-    if (state.section === 'settings' || state.section === 'sliders') {
+    if (sectionOrder.includes(state.section)) {
       activeSection.value = state.section
+    }
+    if (typeof state.setupStep === 'number') {
+      stepIndices.value.setup = Math.min(state.setupStep, steps.setup.length - 1)
     }
     if (typeof state.settingsStep === 'number') {
       stepIndices.value.settings = Math.min(state.settingsStep, steps.settings.length - 1)
@@ -206,6 +251,7 @@ function saveState() {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify({
       section: activeSection.value,
+      setupStep: stepIndices.value.setup,
       settingsStep: stepIndices.value.settings,
       slidersStep: stepIndices.value.sliders,
     }))
@@ -223,7 +269,9 @@ watch(() => props.isOpen, (open) => {
 
 function setSection(section: Section) {
   if (section === activeSection.value) return
-  slideDirection.value = section === 'sliders' ? 'forward' : 'backward'
+  slideDirection.value = sectionOrder.indexOf(section) > sectionOrder.indexOf(activeSection.value)
+    ? 'forward'
+    : 'backward'
   activeSection.value = section
   saveState()
 }

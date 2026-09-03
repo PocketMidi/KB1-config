@@ -108,9 +108,11 @@ const steps: Record<Section, { title: string; paragraphs: string[] }[]> = {
     {
       title: 'Bluetooth',
       paragraphs: [
+        'The Configurator requires a Bluetooth connection to KB1, so hardware controls remain grayed out until connected.',
         'To enable Bluetooth, squeeze both levers together and hold for 3 seconds.',
         'LEDs will pulse with increasing speed. When pulsing stops, Bluetooth is active. Release.',
         'Repeat the same gesture to disable Bluetooth.',
+        'To explore without hardware, tap the top Configurator logo 5 times, then enable Evaluation Mode. Repeat to disable it. Evaluation Mode uses simulated data and does not communicate with KB1.',
       ],
     },
     {

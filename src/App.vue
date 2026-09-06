@@ -718,10 +718,10 @@ body {
   -webkit-touch-callout: none; /* Disable iOS callout */
 }
 
-/* Logo - consistent size across all screens (mobile size from original) */
+/* Logo size is controlled by the header logo tokens in themes/kb1.css */
 .header-logo {
   width: 100%;
-  height: 40px;
+  height: var(--header-logo-height);
   color: var(--logo-color);
 }
 
@@ -1077,7 +1077,7 @@ body {
   
   .header-logo {
     width: 100%;
-    height: 40px;
+    height: var(--header-logo-height-compact);
   }
   
   .nav-tab {

@@ -145,7 +145,8 @@ const isBrave = computed(() => {
 
 const isSafari = computed(() => {
   const userAgent = navigator.userAgent;
-  return isIOS.value && /Safari/i.test(userAgent) && !/CriOS|FxiOS|EdgiOS|OPiOS|SamsungBrowser|Chrome|Chromium|Brave/i.test(userAgent);
+  const hasWebBluetooth = 'bluetooth' in navigator;
+  return isIOS.value && !hasWebBluetooth && /Safari/i.test(userAgent) && !/CriOS|FxiOS|EdgiOS|OPiOS|SamsungBrowser|Chrome|Chromium|Brave/i.test(userAgent);
 });
 
 // Dynamic warning message based on platform

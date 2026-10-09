@@ -1,5 +1,7 @@
 # KB1 Typography System Reference
 
+The current token values live in [kb1.css](src/styles/themes/kb1.css). This reference describes those tokens; component-specific overrides may still exist.
+
 ## Quick Reference - Semantic Variables
 
 ### Font Sizes (in order)
@@ -10,7 +12,7 @@
 --kb1-font-small: 0.7rem;       /* 11.2px - small secondary text */
 --kb1-font-label: 0.75rem;      /* 12px - STANDARD labels, controls, body text */
 --kb1-font-body: 0.75rem;       /* 12px - same as label */
---kb1-font-input: 0.8125rem;    /* 13px - input fields (legacy, may deprecate) */
+--kb1-font-input: 0.75rem;      /* 12px - matches label size */
 --kb1-font-medium: 0.875rem;    /* 14px - slightly larger body text */
 --kb1-font-large: 0.9375rem;    /* 15px - emphasized text */
 --kb1-font-subhead: 1rem;       /* 16px - section subheadings */
@@ -76,7 +78,7 @@ font-size: 0.65rem;    → var(--kb1-font-badge)
 font-size: 0.6875rem;  → var(--kb1-font-caption)
 font-size: 0.7rem;     → var(--kb1-font-small)
 font-size: 0.75rem;    → var(--kb1-font-label)    /* NEW STANDARD */
-font-size: 0.8125rem;  → var(--kb1-font-input)    /* or --kb1-font-label to modernize */
+font-size: 0.8125rem;  → var(--kb1-font-input)    /* now 12px; choose by semantic role */
 font-size: 0.875rem;   → var(--kb1-font-medium)
 font-size: 0.9375rem;  → var(--kb1-font-large)
 font-size: 1rem;       → var(--kb1-font-subhead)
@@ -136,4 +138,4 @@ letter-spacing: 0.05em;     → var(--kb1-letter-spacing-wide)
 
 ## Last Updated
 
-April 25, 2026 - Complete typography system established
+October 9, 2026 - Input-size reference aligned with current theme tokens.

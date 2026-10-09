@@ -1,280 +1,146 @@
-# KB1 Config — User Guide
+# KB1 Config - User Guide
 
-Complete reference for the KB1 Configurator web app. For setup, see the [README](../README.md).
+Reference for the current Configurator interface. For installation and development, see the [README](../README.md).
 
----
+The app's **USER GUIDE** covers SETUP, SETTINGS, and SLIDERS. The **i** buttons explain individual settings. For hardware setup, charging, and Tracker MIDI settings, use [KB1 Studio's User Guide](https://pocketmidi.github.io/KB1-studio/).
 
-## Getting Started
+## Connect and Send
 
-### Enable Bluetooth on KB1
+1. On KB1, squeeze both levers toward each other and hold for 3 seconds. LEDs pulse with increasing speed; release when all LEDs turn off. Repeat to disable Bluetooth. A held keyboard key cancels the gesture.
+2. Tap the **Bluetooth status icon in the upper left**, then select KB1 in the browser pairing dialog.
+3. Settings load automatically into KEYBOARD, LEVER, PRESS, and TOUCH. Disconnected controls remain visible but grayed out.
+4. Edit settings, then tap the **bouncing amber Send arrow in the upper right** to send them to KB1.
 
-**Before connecting**, Bluetooth must be enabled on the hardware:
+Sending applies settings immediately and persists them to device flash. Applying a browser preset alone does not send it to hardware.
 
-1. Push both levers toward each other (left lever → right, right lever → left) and **hold for 3 seconds**
-2. Watch for LED feedback:
-   - Octave arrow LEDs turn on immediately (gesture detected)
-   - Pink + blue LEDs pulse with increasing speed as you hold
-   - **All LEDs turn off** = activation complete, release levers
-3. Repeat the same gesture anytime to toggle Bluetooth on/off
-
-The gesture is automatically cancelled if any keyboard key is pressed during the hold.
-
-### Connecting the App
-
-1. Ensure Bluetooth is enabled on your KB1 (see above)
-2. Click **CONNECTED / DISCONNECTED** in the top-right navigation bar
-3. Select your KB1 device from the browser's Bluetooth pairing dialog
-4. Once connected, status turns blue and displays "CONNECTED"
-5. Click **Load from Device** to fetch current settings from hardware
-
-**First time users:** A helpful overlay will explain the connection process on your first visit.
-
-### Saving Changes
-
-After editing any setting, a bouncing amber arrow appears in the upper right. Click it to send all changes to the device. Settings are saved to device flash memory automatically.
+To reload the hardware's current settings, open SYSTEM and tap **REFRESH FROM DEVICE**. This replaces editable app settings and discards unsent edits.
 
 ### Evaluation Mode
 
-No hardware? Click the KB1 logo **5 times rapidly** to enable Evaluation Mode. The app auto-connects with simulated device data — all settings, controls, and preset features work normally. Nothing is sent to hardware.
+Tap the top Configurator logo **5 times**, then enable **Evaluation Mode**. Repeat to disable it. This uses simulated device data; nothing is sent to KB1.
 
-### Battery Calibration
+### Browser Requirements
 
-**Uncalibrated Devices** show a gray `?` icon until calibrated. Once calibrated, flashing firmware preserves your calibration (NVS partition is backed up/restored).
+Use Chrome, Edge, or Opera on desktop or Android. Web Bluetooth requires HTTPS, except on localhost. Safari and Firefox do not support this connection.
 
-**Why calibrate?** Firmware estimates battery life by tracking usage time — it has no direct voltage measurement. A fresh device doesn't know if the battery is at 100% or 20%.
+For iOS, [V Browser](https://vbrowser.co) is recommended. Enable its Bluetooth permission in iOS Settings before connecting.
 
-**How to calibrate:**
-1. **Power device ON first** (ensure it's running on battery, not plugged in)
-2. **Then connect USB cable** to KB1 — pink/blue LEDs should pulse
-3. Charge for **5+ hours total** — partial sessions accumulate automatically
-4. **Computer sleep is OK** — after 3 minutes, charging continues even if computer sleeps
-5. Battery meter will automatically mark as calibrated and show accurate percentage
+## SETTINGS
 
-**Why power on first?** The charge controller has two modes set at boot: If USB is connected when device boots, it enters bypass/power mode (device powered, battery NOT charging). If device boots on battery THEN computer USB is plugged in, it enters charging mode (device powered AND battery charging). **If LEDs don't pulse after connecting USB,** disconnect USB, wait 5 seconds, and reconnect.
-
-**Partial charges will accumulate** — 3 hours today + 2.5 hours tomorrow = calibrated! The firmware tracks total charge time across sessions as long as it is connected to a computer. Only needs to happen **once**.
-
-**LED Pulse Duration:** Charging LEDs pulse for the estimated time needed to reach 100% (minimum 30 minutes). Fresh battery = ~5 hours. Battery at 80% = ~1 hour. LEDs stop when estimated charge complete OR battery reaches 100%.
-
-**Edge case:** If computer goes to sleep then you unplug USB, LEDs may pulse briefly until timer expires (they stop naturally when device loses power if actually unplugged).
-
-**After calibration:** Battery estimates are accurate to ±10% based on measured consumption:
-- Active mode: ~95mA drain
-- Light sleep: ~2mA drain
-- Deep sleep: ~0.014mA drain
-
-**Manual Battery Adjustment:**
-If battery % seems incorrect after calibration, you can manually override it:
-1. Open Battery Status modal (battery icon in top-right)
-2. Click "ADVANCED" section to expand
-3. Use value control to set correct percentage
-4. Click "Set Level" — this resets charge tracking and recalculates timing
-
-⚠️ **Only use manual override if calibration is incorrect.** Proper calibration (5-hour charge) is more accurate.
-
----
-
-## SETTINGS Tab
+KEYBOARD, LEVER 1/2, PRESS 1/2, TOUCH, PRESETS, and SYSTEM are sections within SETTINGS.
 
 ### KEYBOARD
 
-**Scale Mode** — Play notes quantized to a musical scale:
-- **Scale Type**: Chromatic, Major, Minor, Pentatonic, Blues, and more
-- **Root Note**: C, C#, D, etc.
-- **Key Layout**:
-  - *Mapped Mode* — spaced keys, repeats at octave boundaries
-  - *Efficient Mode* — dense layout, all 19 keys used
+- **Scale**: Select **SCALE TYPE** and **ROOT NOTE**. **Natural** preserves the keyboard layout; **Compact** packs scale notes together. Chromatic uses all 12 notes, so root-note and mapping controls are disabled.
+- **Chord**: **CHORD TYPE** and **OCTAVE RANGE** (1, 2, or 3) define the notes. **Block** plays them together; **Strum** adds direction, rate, and swing.
+- **Arp (Arpeggiator)**: Plays the selected notes one at a time. **Chord** mode uses chord type and octave range. **User** mode builds custom intervals instead. Pattern shape, rate, and swing control playback.
 
-**Chord Mode** — Play full chords with each key press:
-- **Chord Type**: Major, Minor, Diminished, Augmented, Sus2, Sus4, Power, Major7, Minor7, Dominant7
-- **Chord/Strum Toggle**: All notes simultaneously, or cascaded strum
-- **Velocity Spread** (Chord mode): 0–100% dynamic chord voicing
-- **Strum Speed** (Strum mode): 5–100ms between cascaded notes
+Use the keyboard section's **i** buttons for parameter-specific behavior and ranges.
+
+### LEVER 1 / LEVER 2
+
+- **CATEGORY** filters the available assignments; **PARAMETER** selects the MIDI **CC (Control Change)** or KB1 function.
+- **UNI (Unipolar) / BI (Bipolar)** selects a one-way range or a range around a center value.
+- The profile buttons are **Lin**, **Exp**, **Log**, **P&D**, and **Inc**:
+  - **Lin (Linear)** changes evenly.
+  - **Exp (Exponential)** emphasizes the upper range.
+  - **Log (Logarithmic)** emphasizes the lower range.
+  - **P&D (Peak & Decay)** rises then returns.
+  - **Inc (Incremental)** advances in fixed steps.
+- **MIN (Minimum) / MAX (Maximum)** sets the output range in the selected parameter's displayed units. Do not assume every assignment uses raw MIDI values 0-127.
+- **DURATION** appears for timed profiles (100-2000 ms). **STEPS** appears for incremental profiles.
+- **Pitch Bend** uses its own duration control (0-100 ms) instead of the normal range controls.
+
+Available profiles, ranges, and toggles depend on the selected parameter. Disabled choices are intentional.
+
+### PRESS 1 / PRESS 2
+
+Press controls use the same **CATEGORY**, **PARAMETER**, and profile workflow as levers.
+
+- **MOM (Momentary) / LAT (Latched)** selects return-on-release or hold behavior.
+- Cycling parameters use **REV (Reverse) / FWD (Forward)** instead.
+- **MIN / MAX**, **DURATION**, and the incremental step control adapt to the parameter and profile.
+- Reset and Sustain assignments have dedicated behavior and lock unavailable controls.
+
+### TOUCH
+
+Touch uses **CATEGORY**, **PARAMETER**, **MIN**, and **MAX**, with three mode buttons:
+
+- **Cont (Continuous)**: Sends a changing value across the selected range. **FWD** returns to Min on release; **REV** returns to Max.
+- **Togg (Toggle)**: Alternates between Min and Max with each touch.
+- **Gate (Momentary)**: Sends Max while touched and returns to Min on release.
+
+Cycling parameters use **REV / FWD** and may lock the mode.
+
+**THRESHOLD** is displayed from **0 to 100**: 0 is most sensitive, 100 is least sensitive. Raw firmware threshold values are not the app's user-facing scale. Touch does not expose the lever/press interpolation profile selector.
 
 ### PRESETS
 
-Two storage systems for different use cases:
+The app displays **8 browser slots**, saved in this browser rather than on KB1. The first 4 contain overwritable STARTER presets.
 
-**Community Tab:**
-- **Working Presets** — Unlimited presets saved to browser localStorage. Persist between sessions until browser cache is cleared. Create, rename, export, import, delete.
-- **Browse Shared** — Load community presets from other users. Save any to your working presets to keep.
+- Tap a slot to save a snapshot of current keyboard, lever, press, touch, and system settings with a name and optional metadata. Slider configurations are captured separately in SLIDERS.
+- **Apply** loads a preset into the app only and arms the Send arrow. Tap the bouncing amber Send arrow to send its settings to KB1.
+- **NVS (Non-Volatile Storage)** is memory on KB1 that retains saved settings when powered off. This action uses the matching numbered slot on KB1. Device slots persist independently of browser storage.
+- To save a browser preset to KB1, use **Apply → Send arrow → NVS**. The device save command snapshots KB1's current settings, not unsent browser edits.
+- **Cloud** opens sharing for a populated slot, or community browsing for an empty slot.
+- **Load Defaults** resets the editable configuration to defaults and arms the send arrow. It does not replace saved browser preset slots or send settings automatically.
 
-**Archive Tab:**
-- **Device Slots** — 8 preset slots stored in device flash. Survive browser resets and cache clears. Load, Save, and Delete per slot.
+Browser slots and device slots are distinct. Browser presets are local to this browser and device; clearing site data removes them, but does not erase presets already synced to KB1. Cloud sharing is a separate action, not an automatic backup.
 
-**Recommended workflow:** Experiment in Working Presets → refine → archive favorites to device → share exceptional ones with the community.
+If the browser slot is empty and the device slot is populated, **NVS** recalls that device preset on KB1 and imports it into the browser slot. If both slots have the same name, the current app reports them as synced without comparing their settings; a matching name is not verification that edited values were saved again.
 
 ### SYSTEM
 
-**Power Management — Sleep Behavior:**
+- **SLEEP TIMEOUT**: 180-600 seconds (3-10 minutes), default 300 seconds. After idle timeout, LEDs warn for 90 seconds before deep sleep. Deep-sleep timing is automatic, not independently editable.
+- **BLE TIMEOUT**: 300-1200 seconds (5-20 minutes), default 600 seconds. App keepalive traffic prevents sleep while configuring.
+- **BATTERY MONITORING**: Shows or hides the battery icon; tracking continues in the background.
+- **PARAMETER RESOLUTION**: Choose 1 or 5 for fine or faster adjustments. Some controls use their own fixed steps.
+- **HAPTIC FEEDBACK**: Enable or disable supported vibration feedback; this setting is hidden on iOS.
+- **HINTS & MESSAGES - RESTORE**: Re-enables dismissed hints.
+- **CONFIG SETTINGS - REFRESH FROM DEVICE**: Replaces editable app settings with settings from the connected KB1, discarding unsent edits.
 
-*Without web app connected:*
-- After Light Sleep timeout (default: 5 min idle) → pulsing LEDs begin
-- 90 seconds of LED pulsing (fixed warning period)
-- Then device enters deep sleep
-- Only touch sensor can wake from deep sleep
+BLE is disabled when the device enters sleep. The touchpad is the wake source from deep sleep; wake KB1 before reconnecting.
 
-*With web app connected:*
-- Keepalive pings from the app continuously reset sleep timers
-- BLE Timeout setting controls how long after the last ping before sleep can proceed
-- Once sleep is entered, BLE radio turns off — touch the sensor to wake before reconnecting
+### Battery Calibration
 
-**Settings:**
-- **Light Sleep**: Time until pulsing LEDs begin (3–10 minutes, default: 5 min)
-- **BLE Timeout**: Keepalive grace period while app is connected (5–20 minutes, default: 10 min)
-- Deep sleep occurs automatically 90 seconds after light sleep begins (fixed)
+Enable **BATTERY MONITORING** to see the battery icon. An uncalibrated device displays `?`.
 
-**Actions:**
-- **Load from Device** — Fetch current settings from KB1 hardware
-- **Reset to Defaults** — Restore factory default settings
-- **Save to Device** — Apply and save all changes to flash
+For tracked charging, start KB1 on battery **before** connecting USB to a computer. The current firmware accumulates about **5 hours total** across charging sessions, saving progress between sessions. USB connected at boot enters bypass/power mode instead; disconnect USB, power-cycle on battery, then reconnect to start a tracked session.
 
----
+The meter is a time-based estimate, not a direct voltage measurement. Normal Studio firmware updates preserve calibration through NVS backup/restore; **Clear device data on update** intentionally erases it.
 
-## CONTROLS Tab
+See [Studio's charging guide](https://pocketmidi.github.io/KB1-studio/) for LED signals and troubleshooting.
 
-All four controls (Lever 1, Lever 2, Press 1, Press 2) and the Touch sensor share a common set of parameters. Lever controls have the full set; push buttons and touch have a subset.
+## SLIDERS
 
-### CC Mapping (all controls)
+Twelve real-time performance sliders have three modes:
 
-- **CC Number**: Choose from the Polyend CC map with descriptions
-- **CC Range**: Set min and max output values (0–127)
+- **FX (Effects)**: Polyend Tracker effect slots, MIDI **CC (Control Change)** messages 51-62, with assignable effect parameters.
+- **MIX**: Four master controls plus volume for eight tracks.
+- **COMBO**: Custom assignments from the available FX, mix, and track CCs.
 
-### Lever Settings
+Each mode remembers its configuration in this browser, not in KB1 device preset slots.
 
-- **Step Size**: Quantize lever movement to discrete steps (0 = continuous)
-- **Function Mode**:
-  - *Unidirectional* — 0 to max, lever travels one way
-  - *Bidirectional* — centered at rest, ± range
-  - *Momentary* — returns to 0 on release
-  - *Toggle* — alternates between min and max on press
-- **Value Mode** — Controls how the output tracks the lever position:
-  - *Jump* — output jumps immediately to lever position
-  - *Hook* — output waits until lever catches the current value, then tracks
-  - *Pickup* — output engages when lever reaches last-sent value
-  - *Latch* — holds last value until lever moves significantly
-- **Interpolation**: Smooth transitions on onset and offset
-  - Onset time: 0–5000ms ramp-up
-  - Offset time: 0–5000ms ramp-down
-  - Curve: Linear, S-Curve, or Logarithmic
+Slider movements send MIDI values immediately while connected. Unlike settings edits, they do not require the Send arrow.
 
-### Push Button Settings (Press 1 / Press 2)
+### Configure and Capture
 
-- **Function Mode**: Trigger, Momentary, Toggle
-- **Interpolation**: Onset/offset timing and curve type
+- Tap a color swatch to identify or group sliders.
+- Tap adjacent link icons to group sliders, or drag across links to change several.
+- **UNI / BI** controls range where supported; **MOM / LAT** selects return-on-release or hold behavior.
+- Tap the camera to capture the slider configuration as a named snapshot, separate from keyboard and control presets. Select saved snapshots from the menu; they are saved in this browser, not on KB1.
+- Clearing site data removes these browser snapshots.
+- **Clear** restores the current mode's default configuration.
 
-### Touch Sensor Settings
+### Live
 
-- **Function Mode**: Trigger, Momentary
-- **Threshold**: Touch sensitivity (0–65535, default: 24000 — lower = more sensitive)
-- **Interpolation**: Onset/offset timing and curve type
+Tap **GO LIVE**. Mobile devices prompt for landscape orientation; rotating alone is not the entry action. On desktop, Go Live does not enter fullscreen.
 
----
+- Drag vertically to send values in real time. Linked sliders move together.
+- Double-tap a latched slider to reset it.
+- Triple-tap between sliders to reset all values.
+- Swipe horizontally to exit Live mode.
 
-## SLIDERS Tab
+## Maintaining This Guide
 
-12 real-time MIDI CC performance sliders with dual mode support.
-
-### FX / MIX Mode Toggle
-
-Tap the **FX|MIX** button in the header to switch modes.
-
-**FX Mode** (Performance Effects):
-- CC 51–62
-- Full bipolar/unipolar support
-- 4 groups of 3 sliders, color coded
-
-**MIX Mode** (Master Mixer for Polyend Tracker):
-- *Global Mixer* (Sliders 1–4):
-  - Delay Send (CC 79), Reverb Send (CC 80), Dry Level (CC 81), Line Level (CC 82)
-  - Independent — no ganging
-- *Track Mixer* (Sliders 5–12):
-  - Track 1–8 volumes (CC 71–78)
-  - Color coded: Red (1–2), Green (3–4), Cyan (5–6), Violet (7–8)
-- Unipolar mode enforced (matches Polyend Tracker 0–127 specs)
-- Mode persists across sessions
-
-### Setup Mode (Portrait / Desktop)
-
-- **Color Selection**: Tap color swatch or drag vertical picker (FX mode only — MIX uses fixed colors)
-- **Momentary/Latched**: Tap **M** or **L** button — momentary springs back to 0 on release
-- **Bipolar/Unipolar**: Tap **BI** or **UNI** (disabled in MIX mode)
-- **Link Sliders**: Drag across link icons between sliders to gang them together
-
-### Live Mode (Mobile — Landscape Fullscreen)
-
-- **Enter**: Rotate device to landscape
-- **Exit**: Swipe horizontally >100px, then rotate back to portrait
-- All 12 sliders fill the screen for performance use
-- Linked sliders move together
-- Momentary sliders spring back on release with smooth animation
-
-### iOS Note
-
-Safari does not support Web Bluetooth. Use **[vBrowser](https://vbrowser.co)** for the best experience on iOS (reliable Bluetooth + accurate touch for all 12 sliders).
-
-To set up vBrowser:
-1. Download from the App Store
-2. Go to iOS Settings → V Browser → Bluetooth → toggle ON
-3. Open vBrowser and navigate to the KB1 Configurator URL
-
----
-
-## Development Reference
-
-### Protocol
-
-BLE communication uses the KB1 firmware protocol:
-- **Service UUID**: `f22b99e8-81ab-4e46-abff-79a74a1f2ff3`
-- **MIDI characteristic**: `eb58b31b-d963-4c7d-9a11-e8aabec2fe32`
-- **Keep-alive**: 60s interval, 10-minute firmware grace period
-- Settings encoded as binary (little-endian int32) via `src/ble/kb1Protocol.ts`
-
-**Preset BLE Characteristics:**
-- SAVE: `d3a7b321-0001-4000-8000-000000000009`
-- LOAD: `d3a7b321-0001-4000-8000-00000000000a`
-- LIST: `d3a7b321-0001-4000-8000-00000000000b`
-- DELETE: `d3a7b321-0001-4000-8000-00000000000c`
-
-### Project Structure
-
-```
-src/
-├── App.vue                   # Main app with tab navigation & connection management
-├── main.ts                   # Application entry point
-├── constants.ts              # App-wide constants
-├── ble/
-│   ├── bleClient.ts          # Web Bluetooth transport layer
-│   └── kb1Protocol.ts        # KB1 device protocol encoding/decoding
-├── pages/
-│   ├── MobileScales.vue      # SETTINGS tab
-│   ├── MobileControls.vue    # CONTROLS tab
-│   └── MobileSliders.vue     # SLIDERS tab
-├── components/               # Reusable UI components
-├── composables/
-│   └── useDeviceState.ts     # Central device state management
-├── services/
-│   └── midiBle.ts            # BLE MIDI real-time control
-├── state/
-│   ├── presets.ts            # Device preset storage
-│   └── sliderPresets.ts      # Slider configuration storage
-├── data/
-│   └── ccMap.ts              # Polyend CC map with descriptions
-└── styles/
-    ├── slider.css            # Slider component styles
-    └── themes/
-        └── kb1.css           # KB1 theme variables & global styles
-```
-
-### Browser Compatibility
-
-| Browser | Support |
-|---|---|
-| Chrome / Chromium 56+ | ✅ |
-| Edge 79+ | ✅ |
-| Opera 43+ | ✅ |
-| vBrowser (iOS) | ✅ Recommended for iOS |
-| Firefox | ❌ |
-| Safari | ❌ |
-
-Web Bluetooth requires HTTPS (except `localhost`). GitHub Pages provides HTTPS automatically.
+Keep labels and explanations aligned with [AppManual.vue](../src/components/AppManual.vue) and the current settings components. Verify behavior against the firmware when the app guide and implementation disagree. Keep hardware instructions in Studio's User Guide, developer setup in the repository READMEs, and protocol details in [kb1Protocol.ts](../src/ble/kb1Protocol.ts) and [bleClient.ts](../src/ble/bleClient.ts), rather than duplicating UUIDs or binary layouts here.

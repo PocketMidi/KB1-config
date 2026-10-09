@@ -260,19 +260,22 @@
         <div class="help-modal-body">
           <div class="help-section">
             <h4>Save a Preset</h4>
-            <p>Click any slot to save current settings with a name for easy reference.</p>
+            <p>Click any slot to save a named snapshot of the current keyboard, lever, press, touch, and system settings in this browser, not on <em>KB1</em>. Slider configurations are captured separately in SLIDERS.</p>
           </div>
           <div class="help-section">
             <h4>Apply</h4>
-            <p>Loads the preset into config app ready to send to <em>KB1</em>.</p>
+            <p>Loads the preset into the app only. Tap the bouncing amber Send arrow to send its settings to <em>KB1</em>.</p>
           </div>
           <div class="help-section">
             <h4>NVS (Device Storage)</h4>
-            <p>Syncs a preset to the same slot number on the <em>KB1</em> device. Settings persist even when disconnected.</p>
+            <p>NVS means Non-Volatile Storage: memory on <em>KB1</em> that retains saved settings when powered off.</p>
+            <p>To save: Apply the preset, tap the bouncing amber Send arrow, then tap NVS. This uses the same slot number on <em>KB1</em> and stores the current device settings, not unsent app edits.</p>
+            <p>An empty browser slot can import the device preset. Matching names are treated as already synced without comparing settings.</p>
           </div>
           <div class="help-section">
             <h4>Cloud Presets</h4>
             <p>Share presets with the community or browse and load presets created by other <em>KB1</em> users.</p>
+            <p>Cloud sharing is not automatic. Browser presets are local to this browser and device; clearing site data removes them, but not presets saved to <em>KB1</em> with NVS.</p>
           </div>
         </div>
         <div class="help-modal-footer">
@@ -2608,4 +2611,3 @@ textarea.input-text {
   position: relative; /* For absolute positioning of checkbox */
 }
 </style>
-
